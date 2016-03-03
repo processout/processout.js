@@ -15,7 +15,10 @@ var startProcessOut = function() {
                 });
             }, function(err) {
                 loading = false;
-                window.location.href = button.attr('href');
+                console.log('Could not properly load the modal');
+                button.on('click', function() {
+                    window.location.href = button.attr('href');
+                });
             });
 
             button.on('click', function() {
