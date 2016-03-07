@@ -4,18 +4,41 @@ var startProcessOut = function() {
     (function( $ ) {
         // Loop through each modal button
         $('.processout-modal-button').each(function() {
-            var button  = $(this);
+            var button    = $(this);
+            var loading   = false;
+            var modal     = null;
+            button.on('mouseover', function() {
+                if (loading || (modal != null && ! modal.isDeleted()))
+                    return;
 
-            button.on('click', function() {
-                var oldCursor = $('body').css('cursor');
-                $('body').css('cursor', 'wait');
-                processOut.urlModal(button.attr('href'), function(modal) {
-                    $('body').css('cursor', oldCursor);
-                    modal.show();
+                loading = true;
+                modal   = processOut.urlModal(button.attr('href'), function(modal) {
+                    button.on('click', function() {
+                        if (modal.isDeleted())
+                            return;
+
+                        loading = false;
+                        $('body').css('cursor', 'auto');
+                        modal.show();
+                    });
                 }, function(err) {
                     console.log('Could not properly load the modal');
-                    window.location.href = button.attr('href');
+                    button.on('click', function() {
+                        loading = false;
+                        $('body').css('cursor', 'auto');
+                        window.location.href = button.attr('href');
+                    });
                 });
+            });
+
+            button.on('click', function() {
+                if (! loading)
+                    return false;
+
+                $('body').css('cursor', 'wait');
+                setTimeout(function () {
+                    button.trigger('click');
+                }, 500);
 
                 return false;
             });

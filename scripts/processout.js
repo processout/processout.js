@@ -97,7 +97,7 @@ var ProcessOut;
     var Modal = (function () {
         /**
          * Modal constructor
-         * @param  {[domElement]} iframe
+         * @param  {domElement} iframe
          * @param  {string}       uniqId
          */
         function Modal(iframe, uniqId) {
@@ -111,14 +111,19 @@ var ProcessOut;
              * @type {String}
              */
             this.namespace = 'processout';
+            /**
+             * Specifies if the modal was deleted
+             * @type {Boolean}
+             */
+            this.deleted = false;
             this.iframe = iframe;
             this.uniqId = uniqId;
         }
         /**
          * Show the modal
-         * @param  {[callback]} success
-         * @param  {[callback]} error
-         * @return {[void]}
+         * @param  {callback} success
+         * @param  {callback} error
+         * @return {void}
          */
         Modal.prototype.show = function (success, error) {
             var modal = this;
@@ -173,7 +178,7 @@ var ProcessOut;
         };
         /**
          * Hide the modal
-         * @return {[void]}
+         * @return {void}
          */
         Modal.prototype.hide = function () {
             // Hide the modal
@@ -181,6 +186,14 @@ var ProcessOut;
             // Put the scroll back
             $('body').css('overflow', '');
             this.iframe.remove();
+            this.deleted = true;
+        };
+        /**
+         * Specifies if the modal was deleted
+         * @return {Boolean}
+         */
+        Modal.prototype.isDeleted = function () {
+            return this.deleted;
         };
         return Modal;
     })();

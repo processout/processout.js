@@ -111,13 +111,13 @@ module ProcessOut {
     class Modal {
         /**
          * Modal iFrame
-         * @type {[domElement]}
+         * @type {domElement}
          */
         iframe;
 
         /**
          * Unique ID of the modal
-         * @type {string}
+         * @type {String}
          */
         uniqId: string;
 
@@ -134,8 +134,14 @@ module ProcessOut {
         namespace = 'processout';
 
         /**
+         * Specifies if the modal was deleted
+         * @type {Boolean}
+         */
+        deleted = false;
+
+        /**
          * Modal constructor
-         * @param  {[domElement]} iframe
+         * @param  {domElement} iframe
          * @param  {string}       uniqId
          */
         constructor(iframe, uniqId: string) {
@@ -145,9 +151,9 @@ module ProcessOut {
 
         /**
          * Show the modal
-         * @param  {[callback]} success
-         * @param  {[callback]} error
-         * @return {[void]}
+         * @param  {callback} success
+         * @param  {callback} error
+         * @return {void}
          */
         show(success, error) {
             var modal   = this;
@@ -212,7 +218,7 @@ module ProcessOut {
 
         /**
          * Hide the modal
-         * @return {[void]}
+         * @return {void}
          */
         hide() {
             // Hide the modal
@@ -221,6 +227,16 @@ module ProcessOut {
             $('body').css('overflow', '');
 
             this.iframe.remove();
+
+            this.deleted = true;
+        }
+
+        /**
+         * Specifies if the modal was deleted
+         * @return {Boolean}
+         */
+        isDeleted() {
+            return this.deleted;
         }
     }
 }
