@@ -5,29 +5,17 @@ var startProcessOut = function() {
         // Loop through each modal button
         $('.processout-modal-button').each(function() {
             var button  = $(this);
-            var loading = true;
-            processOut.urlModal(button.attr('href'), function(modal) {
-                button.on('click', function() {
-                    loading = false;
-                    modal.show();
-
-                    return false;
-                });
-            }, function(err) {
-                loading = false;
-                console.log('Could not properly load the modal');
-                button.on('click', function() {
-                    window.location.href = button.attr('href');
-                });
-            });
 
             button.on('click', function() {
-                // We want to retry until the iframe finished loading, or failed
-                // to load
-                if (loading)
-                    setTimeout(function(){
-                        button.trigger('click');
-                    }, 500);
+                var oldCursor = $('body').css('cursor');
+                $('body').css('cursor', 'wait');
+                processOut.urlModal(button.attr('href'), function(modal) {
+                    $('body').css('cursor', oldCursor);
+                    modal.show();
+                }, function(err) {
+                    console.log('Could not properly load the modal');
+                    window.location.href = button.attr('href');
+                });
 
                 return false;
             });

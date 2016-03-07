@@ -19,6 +19,12 @@ module ProcessOut {
         checkoutEdpoint = "https://checkout.processout.com";
 
         /**
+         * Timeout before considering the modal could not be loaded
+         * @type {Number}
+         */
+        timeout = 50000;
+
+        /**
          * ProcessOut constructor
          * @param  {string} projectId ProcessOut project ID
          */
@@ -53,7 +59,7 @@ module ProcessOut {
                         message: "Could not properly load the modal.",
                         code: "modal.network-error"
                     });
-            }, 5000);
+            }, this.timeout);
             iframe.load(function() {
                 clearTimeout(iframeError);
                 if (typeof(success) === typeof(Function))
@@ -116,6 +122,18 @@ module ProcessOut {
         uniqId: string;
 
         /**
+         * Timeout before considering the modal could not be shown
+         * @type {Number}
+         */
+        timeout = 500;
+
+        /**
+         * Namespace used when sending messages to iframe
+         * @type {String}
+         */
+        namespace = 'processout';
+
+        /**
          * Modal constructor
          * @param  {[domElement]} iframe
          * @param  {string}       uniqId
@@ -136,7 +154,7 @@ module ProcessOut {
             var iframe  = modal.iframe;
             var iframeW = iframe.get(0).contentWindow;
             var frameid = modal.uniqId;
-            iframeW.postMessage('check ' + frameid, '*');
+            iframeW.postMessage(this.namespace + ' ' + frameid + ' check', '*');
             var redirectTimeout =
                 setTimeout(function(){
                     if (typeof(error) === typeof(Function))
@@ -144,16 +162,18 @@ module ProcessOut {
                             message: "The modal does not seem to be available.",
                             code: "modal.unavailable"
                         });
-                }, 1000);
+                }, this.timeout);
+            var oldCursor = $('body').css('cursor');
 
             function receiveMessage(event) {
                 var eventSplit = event.data.split(' ');
-                var action     = eventSplit[0];
-
-                if (eventSplit[1] != undefined && eventSplit[1] != frameid)
+                if (eventSplit[0] != modal.namespace)
                     return;
 
-                switch (action) {
+                if (eventSplit[1] != frameid)
+                    return;
+
+                switch (eventSplit[2]) {
                     case 'openModal':
                         // Clear the timeout
                         clearTimeout(redirectTimeout);
@@ -167,7 +187,8 @@ module ProcessOut {
                         $(window).trigger('resize');
                         // Show the iframe
                         iframe.fadeIn(200);
-                        iframeW.postMessage('launch', '*');
+                        iframeW.postMessage(
+                            modal.namespace + ' ' + frameid + ' launch', '*');
                         if (typeof(success) === typeof(Function))
                             success(iframe);
                         break;
@@ -176,8 +197,13 @@ module ProcessOut {
                         modal.hide();
                         break;
 
+                    case 'url':
+                        window.location.href = eventSplit[3];
+                        break;
+
                     default:
-                        window.location.href = event.data;
+                        console.log('Could not read event action from modal.',
+                            event.data);
                         break;
                 }
             }
@@ -193,6 +219,8 @@ module ProcessOut {
             this.iframe.fadeOut(200);
             // Put the scroll back
             $('body').css('overflow', '');
+
+            this.iframe.remove();
         }
     }
 }
