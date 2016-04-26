@@ -41,11 +41,17 @@ module ProcessOut {
          */
         urlModal(url: string, success, error) {
             var uniqId = Math.random().toString(36).substr(2, 9);
-            var iframe = $('<iframe/>');
+            var iframe = jQuery('<iframe/>');
             iframe.addClass('processout-iframe')
                 .attr('id', 'processout-iframe-' + uniqId)
                 .attr('src', url)
-                .attr('style', 'position: fixed; z-index: 999999; top: 0; left: 0; background: none;')
+                .attr('style', 'position: fixed; top: 0; left: 0; background: none;'
+                    // We need to use translateZ instead of z-index, otherwise
+                    // z-index might not work on some mobiles
+                    +'-webkit-transform:translateZ(1px);'
+                    +'-moz-transform:translateZ(1px);'
+                    +'-o-transform:translateZ(1px);'
+                    +'transform:translateZ(1px);')
                 .attr('frameborder', '0')
                 .attr('allowtransparency', 'true');
 
@@ -169,7 +175,7 @@ module ProcessOut {
                             code: "modal.unavailable"
                         });
                 }, this.timeout);
-            var oldCursor = $('body').css('cursor');
+            var oldCursor = jQuery('body').css('cursor');
 
             function receiveMessage(event) {
                 var eventSplit = event.data.split(' ');
@@ -184,13 +190,13 @@ module ProcessOut {
                         // Clear the timeout
                         clearTimeout(redirectTimeout);
                         // Make sure that we can't scroll behind the modal
-                        $('body').css('overflow', 'hidden');
+                        jQuery('body').css('overflow', 'hidden');
                         // Make sure our iframe is of the correct dimension
-                        $(window).resize(function() {
-                            iframe.width($(window).outerWidth());
-                            iframe.height($(window).outerHeight());
+                        jQuery(window).resize(function() {
+                            iframe.width(jQuery(window).outerWidth());
+                            iframe.height(jQuery(window).outerHeight());
                         });
-                        $(window).trigger('resize');
+                        jQuery(window).trigger('resize');
                         // Show the iframe
                         iframe.fadeIn(200);
                         iframeW.postMessage(
@@ -223,8 +229,8 @@ module ProcessOut {
         hide() {
             // Hide the modal
             this.iframe.fadeOut(200);
-            // Put the scroll back
-            $('body').css('overflow', '');
+            // Put the scrollbar back
+            jQuery('body').css('overflow', '');
 
             this.iframe.remove();
 
