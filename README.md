@@ -1,8 +1,6 @@
 ProcessOut.js
 =====================
 
-[![Code Climate](https://codeclimate.com/github/ProcessOut/processout.js/badges/gpa.svg)](https://codeclimate.com/github/ProcessOut/processout.js)
-
 Dependencies
 ------------
 
