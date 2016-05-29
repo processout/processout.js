@@ -94,9 +94,23 @@ processOut.urlModal('https://checkout.processout.com/uid',
 function(modal) {
 	// The modal is now ready, we may show it to the customer
 	modal.show();
+
+	// callbacks may also be passed to show():
+	modal.show(function(m) {
+		// On Shown
+
+	}, function(m) {
+		// On hidden
+
+	}, function(e) {
+		// Error
+
+	})
+
 	// ...
-	// For some reason, we want to hide the modal form the customer
+	// For some reason, we want to hide the modal from the customer
 	modal.hide();
+
 }, function(err) {
 
 });
