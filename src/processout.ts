@@ -157,11 +157,12 @@ module ProcessOut {
 
         /**
          * Show the modal
-         * @param  {callback} success
-         * @param  {callback} error
+         * @param  {Function} onShow
+         * @param  {Function} onHide
+         * @param  {Function} error
          * @return {void}
          */
-        show(success, error) {
+        show(onShow, onHide, error) {
             var modal   = this;
             var iframe  = modal.iframe;
             var iframeW = iframe.get(0).contentWindow;
@@ -201,12 +202,14 @@ module ProcessOut {
                         iframe.fadeIn(200);
                         iframeW.postMessage(
                             modal.namespace + ' ' + frameid + ' launch', '*');
-                        if (typeof(success) === typeof(Function))
-                            success(iframe);
+                        if (typeof(onShow) === typeof(Function))
+                            onShow(this);
                         break;
 
                     case 'closeModal':
                         modal.hide();
+                        if (typeof(onHide) === typeof(Function))
+                            onHide(this);
                         break;
 
                     case 'url':
