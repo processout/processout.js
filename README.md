@@ -88,7 +88,7 @@ var processOut = new ProcessOut.ProcessOut('projectID');
 #### Create a modal object and interact with it
 
 ```js
-processOut.urlModal('https://checkout.processout.com/uid',
+processOut.newModal('https://checkout.processout.com/uid',
 function(modal) {
 	// The modal is now ready, we may show it to the customer
 	modal.show();
@@ -111,6 +111,30 @@ function(modal) {
 
 }, function(err) {
 
+});
+```
+
+#### White-label integration
+
+ProcessOut.js also provides you with a way to completely blend your ProcessOut integration in your website, without any ProcessOut branding.
+
+```js
+// We are going to have two gateways with forms: Stripe, Gocardless
+// Stripe: cc-name, cc-number, cc-expiry, cc-cvv
+// Gocardless: IBAN
+// and the rest is going to be links
+
+processOut.setTemplates({
+	'credit-card': '...',
+	'sepa': '...',
+	'link': '<a href="#">{gateway_name}</a>'
+});
+
+processOut.findInvoice('uid', function(invoice) {
+	var gateways = invoice.gateway();
+	for (i = 0; i < gateways.length; i++) {
+		$('#gateways-wrapper').append(gateways[i].html());
+	}
 });
 ```
 

@@ -1,3 +1,5 @@
+/// <reference path="../references.ts" />
+
 var startProcessOut = function() {
     var processOut = new ProcessOut.ProcessOut('');
 
@@ -11,7 +13,7 @@ var startProcessOut = function() {
                 return;
 
             loading = true;
-            modal   = processOut.urlModal(button.attr('href'), function(modal) {
+            modal   = processOut.newModal(button.attr('href'), function(modal) {
                 button.on('click', function() {
                     if (modal.isDeleted())
                         return;

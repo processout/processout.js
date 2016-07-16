@@ -1,120 +1,21 @@
+/// <reference path="../references.ts" />
+
 /**
  * ProcessOut module/namespace
  */
 module ProcessOut {
-    /**
-     * ProcessOut class
-     */
-    export class ProcessOut {
-        /**
-         * Project ID
-         * @type {string}
-         */
-        projectId: string;
-
-        /**
-         * ProcessOut checkout endpoint
-         * @type {string}
-         */
-        checkoutEdpoint = "https://checkout.processout.com";
-
-        /**
-         * Timeout before considering the modal could not be loaded
-         * @type {Number}
-         */
-        timeout = 50000;
-
-        /**
-         * ProcessOut constructor
-         * @param  {string} projectId ProcessOut project ID
-         */
-        constructor(projectId: string) {
-            this.projectId = projectId;
-        }
-
-        /**
-         * Create a new modal
-         * @param  {string}   url
-         * @param  {callback} success
-         * @param  {callback} error
-         * @return {void}
-         */
-        urlModal(url: string, success, error) {
-            var uniqId = Math.random().toString(36).substr(2, 9);
-            var iframe = jQuery('<iframe/>');
-            iframe.addClass('processout-iframe')
-                .attr('id', 'processout-iframe-' + uniqId)
-                .attr('src', url)
-                .attr('style', 'position: fixed; top: 0; left: 0; background: none;'
-                    // We need to use translateZ instead of z-index, otherwise
-                    // z-index might not work on some mobiles
-                    +'-webkit-transform:translateZ(1px);'
-                    +'-moz-transform:translateZ(1px);'
-                    +'-o-transform:translateZ(1px);'
-                    +'transform:translateZ(1px);')
-                .attr('frameborder', '0')
-                .attr('allowtransparency', 'true');
-
-            // Hide and add our iframe to the DOM
-            iframe.hide();
-            iframe.appendTo('body');
-
-            var iframeError = setTimeout(function() {
-                if (typeof(error) === typeof(Function))
-                    error({
-                        message: "Could not properly load the modal.",
-                        code: "modal.network-error"
-                    });
-            }, this.timeout);
-            iframe.load(function() {
-                clearTimeout(iframeError);
-                if (typeof(success) === typeof(Function))
-                    success(new Modal(iframe, uniqId));
-            });
-        }
-
-        /**
-         * Create a new invoice modal
-         * @param  {string}     id
-         * @param  {[callback]} success
-         * @param  {[callback]} error
-         * @return {void}
-         */
-        invoiceModal(id: string, success, error) {
-            return this.urlModal(this.checkoutEdpoint + '/' + id,
-                success, error);
-        }
-
-        /**
-         * Create a new recurring invoice modal
-         * @param  {string}     id
-         * @param  {[callback]} success
-         * @param  {[callback]} error
-         * @return {void}
-         */
-        recurringInvoiceModal(id: string, success, error) {
-            return this.urlModal(this.checkoutEdpoint + '/recurring-invoices/' +
-                id, success, error);
-        }
-
-        /**
-         * Create a new authorization modal
-         * @param  {string}     id
-         * @param  {[callback]} success
-         * @param  {[callback]} error
-         * @return {void}
-         */
-        authorizationModal(customerId: string, success, error) {
-            return this.urlModal(this.checkoutEdpoint + '/authorizations/' +
-                this.projectId + '/customers/' + customerId,
-                success, error);
-        }
-    }
 
     /**
-     * ProcessOut modal class
+     * ProcessOut Modal class
      */
-    class Modal {
+    export class Modal {
+
+        /**
+         * ProcessOut instance
+         * @type {ProcessOut}
+         */
+        instance: ProcessOut;
+
         /**
          * Modal iFrame
          * @type {domElement}
@@ -126,12 +27,6 @@ module ProcessOut {
          * @type {String}
          */
         uniqId: string;
-
-        /**
-         * Timeout before considering the modal could not be shown
-         * @type {Number}
-         */
-        timeout = 500;
 
         /**
          * Namespace used when sending messages to iframe
@@ -148,11 +43,12 @@ module ProcessOut {
         /**
          * Modal constructor
          * @param  {domElement} iframe
-         * @param  {string}       uniqId
+         * @param  {string}     uniqId
          */
-        constructor(iframe, uniqId: string) {
-            this.iframe = iframe;
-            this.uniqId = uniqId;
+        constructor(instance: ProcessOut, iframe, uniqId: string) {
+            this.instance = instance;
+            this.iframe   = iframe;
+            this.uniqId   = uniqId;
         }
 
         /**
@@ -175,7 +71,7 @@ module ProcessOut {
                             message: "The modal does not seem to be available.",
                             code: "modal.unavailable"
                         });
-                }, this.timeout);
+                }, this.instance.timeout);
             var oldCursor = jQuery('body').css('cursor');
 
             function receiveMessage(event) {
@@ -247,5 +143,7 @@ module ProcessOut {
         isDeleted() {
             return this.deleted;
         }
+
     }
+    
 }
