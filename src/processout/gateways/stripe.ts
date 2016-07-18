@@ -48,7 +48,7 @@ module ProcessOut.Gateways {
          * @param {callback?} error
          * @return {void}
          */
-        handleForm(el: HTMLElement, success: (gateway: string) => void,
+        protected handleForm(el: HTMLElement, success: (gateway: string) => void,
             error: (err: Error) => void): void {
 
             Stripe.setPublishableKey(this.getPublicKey("public_key"));
@@ -129,7 +129,7 @@ module ProcessOut.Gateways {
          * @param {callback?} error
          * @return {void}
          */
-        handleOneOff(el: HTMLElement, success: (gateway: string) => void,
+        protected handleOneOff(el: HTMLElement, success: (gateway: string) => void,
             error: (err: Error) => void): void {
 
             return this.handleForm(el, success, error);
@@ -142,7 +142,7 @@ module ProcessOut.Gateways {
          * @param {callback?} error
          * @return {void}
          */
-        handleRecurring(el: HTMLElement, success: (gateway: string) => void,
+        protected handleRecurring(el: HTMLElement, success: (gateway: string) => void,
             error: (err: Error) => void): void {
 
             return this.handleForm(el, success, error);

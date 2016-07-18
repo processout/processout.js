@@ -91,7 +91,7 @@ module ProcessOut.Gateways {
          * ProcessOut API
          * @return {Object}
          */
-        getCustomerObject(): any {
+        protected getCustomerObject(): any {
             if (!this.instance.customer) {
                 return {};
             }
@@ -113,7 +113,7 @@ module ProcessOut.Gateways {
          * Get the endpoint for the current flow
          * @return {string}
          */
-        getEndpoint(async: boolean): string {
+        protected getEndpoint(async: boolean): string {
             switch (this.flow) {
             case Flow.OneOff:
                 if (!async)
@@ -137,7 +137,7 @@ module ProcessOut.Gateways {
          * Return the default template for redirections
          * @return {string}
          */
-        htmlLink(): string {
+        protected htmlLink(): string {
             return `<form action="" method="POST" class="${this.instance.classNames('link-form')}">
                         <div class="${this.instance.classNames('link-submit-upper-wrapper')}">
                             <div class="${this.instance.classNames('link-submit-lower-wrapper')}">
@@ -147,13 +147,8 @@ module ProcessOut.Gateways {
                     </form>`;
         }
 
-        /**
-         * Return the default template for credit cards
-         * @return {string}
-         */
-        htmlCreditCard(): string {
-            return `<form action="#" method="POST" class="${this.instance.classNames('credit-card-form')}">
-                        <div class="${this.instance.classNames('credit-card-number-upper-wrapper')}">
+        protected _htmlCreditCard(): string {
+            return `    <div class="${this.instance.classNames('credit-card-number-upper-wrapper')}">
                             <div class="${this.instance.classNames('credit-card-number-lower-wrapper')}">
                                 <label class="${this.instance.classNames('credit-card-number-label')}">Card number</label>
                                 <input type="text" size="20" placeholder="8888 8888 8888 8888" autocomplete="cc-number" class="${this.instance.classNames('credit-card-number-input')}" />
@@ -182,7 +177,33 @@ module ProcessOut.Gateways {
                             <div class="${this.instance.classNames('credit-card-submit-lower-wrapper')}">
                                 <input type="submit" class="${this.instance.classNames('credit-card-submit')}" value="Pay now!">
                             </div>
+                        </div>`;
+        }
+
+        /**
+         * Return the default template for credit cards
+         * @return {string}
+         */
+        protected htmlCreditCard(): string {
+            return `<form action="#" method="POST" class="${this.instance.classNames('credit-card-form')}">
+                        ${this._htmlCreditCard()}
+                    </form>`;
+        }
+
+        /**
+         * Return the default template for credit cards, and asks for the card
+         * holder name as well
+         * @return {string}
+         */
+        protected htmlCreditCardWithName(): string {
+            return `<form action="#" method="POST" class="${this.instance.classNames('credit-card-form', 'credit-card-form-name')}">
+                        <div class="${this.instance.classNames('credit-card-name-upper-wrapper')}">
+                            <div class="${this.instance.classNames('credit-card-name-lower-wrapper')}">
+                                <label class="${this.instance.classNames('credit-card-name-label')}">Card holder name</label>
+                                <input type="text" size="20" placeholder="John Smith" class="${this.instance.classNames('credit-card-name-input')}" />
+                            </div>
                         </div>
+                        ${this._htmlCreditCard()}
                     </form>`;
         }
 
@@ -263,7 +284,7 @@ module ProcessOut.Gateways {
          * @param {callback?} error
          * @return {void}
          */
-        abstract handleOneOff(el: HTMLElement, success: (gateway: string) => void,
+        protected abstract handleOneOff(el: HTMLElement, success: (gateway: string) => void,
             error: (err: Error) => void): void;
 
         /**
@@ -273,7 +294,7 @@ module ProcessOut.Gateways {
          * @param {callback?} error
          * @return {void}
          */
-        abstract handleRecurring(el: HTMLElement, success: (gateway: string) => void,
+        protected abstract handleRecurring(el: HTMLElement, success: (gateway: string) => void,
             error: (err: Error) => void): void;
 
         /**

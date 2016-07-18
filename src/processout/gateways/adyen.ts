@@ -37,7 +37,7 @@ module ProcessOut.Gateways {
          */
         html(): string {
             return `<div class="${this.instance.classNames('gateway-form-wrapper', 'gateway-adyen')}">
-                        ${this.htmlCreditCard()}
+                        ${this.htmlCreditCardWithName()}
                     </div>`;
         }
 
@@ -48,7 +48,7 @@ module ProcessOut.Gateways {
          * @param {callback?} error
          * @return {void}
          */
-        handleForm(el: HTMLElement, success: (gateway: string) => void,
+        protected handleForm(el: HTMLElement, success: (gateway: string) => void,
             error: (err: Error) => void): void {
 
             var Adyen = adyen.encrypt.createEncryption(
@@ -58,6 +58,8 @@ module ProcessOut.Gateways {
             // We disable submit button to prevent from multiple submition
             submitButton.setAttribute("disabled", "1");
 
+            var namef = el.getElementsByClassName(this.instance.classNames(
+                "credit-card-name-input"))[0];
             var numberf = el.getElementsByClassName(this.instance.classNames(
                 "credit-card-number-input"))[0];
             var cvcf = el.getElementsByClassName(this.instance.classNames(
@@ -87,7 +89,7 @@ module ProcessOut.Gateways {
             data.token = Adyen.encrypt({
                 number:         (<HTMLInputElement> numberf).value,
                 cvc:            (<HTMLInputElement> cvcf).value,
-                holderName:     name,
+                holderName:     (<HTMLInputElement> namef).value,
                 expiryMonth:    Number((<HTMLInputElement> expmonthf).value),
                 expiryYear:     Number((<HTMLInputElement> expyearf).value),
                 generationtime: Math.floor(Date.now() / 1000) // Timestamp
@@ -128,7 +130,7 @@ module ProcessOut.Gateways {
          * @param {callback?} error
          * @return {void}
          */
-        handleOneOff(el: HTMLElement, success: (gateway: string) => void,
+        protected handleOneOff(el: HTMLElement, success: (gateway: string) => void,
             error: (err: Error) => void): void {
 
             return this.handleForm(el, success, error);
@@ -141,7 +143,7 @@ module ProcessOut.Gateways {
          * @param {callback?} error
          * @return {void}
          */
-        handleRecurring(el: HTMLElement, success: (gateway: string) => void,
+        protected handleRecurring(el: HTMLElement, success: (gateway: string) => void,
             error: (err: Error) => void): void {
 
             return this.handleForm(el, success, error);
