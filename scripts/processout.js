@@ -350,6 +350,63 @@ var ProcessOut;
 var ProcessOut;
 (function (ProcessOut) {
     /**
+     * ProcessOut Invoice class
+     */
+    var RecurringInvoice = (function () {
+        /**
+         * Invoice constructor
+         */
+        function RecurringInvoice(instance) {
+            this.instance = instance;
+        }
+        /**
+         * Find the requested recurring invoice by its UID
+         * @param {string} uid
+         * @param {callback} success
+         * @param {callback} error
+         */
+        RecurringInvoice.prototype.find = function (uid, success, error) {
+            var t = this;
+            t.uid = uid;
+            t.instance.apiRequest("get", "/recurring-invoices/" + uid, {}, function (data, code, jqxhr) {
+                t.data = data;
+                t.instance.apiRequest("get", "/recurring-invoices/" + uid + "/gateways", {}, function (data, code, jqxhr) {
+                    t.gatewaysList = [];
+                    for (var i = 0; i < data.gateways.length; i++) {
+                        t.gatewaysList[i] = ProcessOut.Gateways.Handler.buildGateway(t.instance, data.gateways[i], "/recurring-invoices/" + uid, ProcessOut.Flow.OneOff);
+                    }
+                    success(t);
+                }, function () {
+                    error({
+                        code: ProcessOut.ErrorCode.ResourceNotFound,
+                        message: "The recurring invoice's gateways could not be fetched."
+                    });
+                });
+            }, function () {
+                error({
+                    code: ProcessOut.ErrorCode.ResourceNotFound,
+                    message: "The recurring invoice could not be found."
+                });
+            });
+        };
+        /**
+         * Get the available gateways list for this invoice
+         * @return {Gateways.Gateway[]}
+         */
+        RecurringInvoice.prototype.gateways = function () {
+            return this.gatewaysList;
+        };
+        return RecurringInvoice;
+    })();
+    ProcessOut.RecurringInvoice = RecurringInvoice;
+})(ProcessOut || (ProcessOut = {}));
+/// <reference path="../references.ts" />
+/**
+ * ProcessOut module/namespace
+ */
+var ProcessOut;
+(function (ProcessOut) {
+    /**
      * ProcessOut payment flow enum
      */
     (function (Flow) {
@@ -937,6 +994,7 @@ var ProcessOut;
 /// <reference path="processout/processout.ts" />
 /// <reference path="processout/modal.ts" />
 /// <reference path="processout/invoice.ts" />
+/// <reference path="processout/recurringinvoice.ts" />
 /// <reference path="processout/customer.ts" />
 /// <reference path="processout/flow.ts" />
 /// <reference path="processout/error.ts" />
@@ -946,60 +1004,3 @@ var ProcessOut;
 /// <reference path="processout/gateways/checkoutcom.ts" />
 /// <reference path="processout/gateways/link.ts" />
 /// <reference path="../references.ts" />
-/// <reference path="../references.ts" />
-/**
- * ProcessOut module/namespace
- */
-var ProcessOut;
-(function (ProcessOut) {
-    /**
-     * ProcessOut Invoice class
-     */
-    var RecurringInvoice = (function () {
-        /**
-         * Invoice constructor
-         */
-        function RecurringInvoice(instance) {
-            this.instance = instance;
-        }
-        /**
-         * Find the requested recurring invoice by its UID
-         * @param {string} uid
-         * @param {callback} success
-         * @param {callback} error
-         */
-        RecurringInvoice.prototype.find = function (uid, success, error) {
-            var t = this;
-            t.uid = uid;
-            t.instance.apiRequest("get", "/recurring-invoices/" + uid, {}, function (data, code, jqxhr) {
-                t.data = data;
-                t.instance.apiRequest("get", "/recurring-invoices/" + uid + "/gateways", {}, function (data, code, jqxhr) {
-                    t.gatewaysList = [];
-                    for (var i = 0; i < data.gateways.length; i++) {
-                        t.gatewaysList[i] = ProcessOut.Gateways.Handler.buildGateway(t.instance, data.gateways[i], "/recurring-invoices/" + uid, ProcessOut.Flow.OneOff);
-                    }
-                    success(t);
-                }, function () {
-                    error({
-                        code: ProcessOut.ErrorCode.ResourceNotFound,
-                        message: "The recurring invoice's gateways could not be fetched."
-                    });
-                });
-            }, function () {
-                error({
-                    code: ProcessOut.ErrorCode.ResourceNotFound,
-                    message: "The recurring invoice could not be found."
-                });
-            });
-        };
-        /**
-         * Get the available gateways list for this invoice
-         * @return {Gateways.Gateway[]}
-         */
-        RecurringInvoice.prototype.gateways = function () {
-            return this.gatewaysList;
-        };
-        return RecurringInvoice;
-    })();
-    ProcessOut.RecurringInvoice = RecurringInvoice;
-})(ProcessOut || (ProcessOut = {}));

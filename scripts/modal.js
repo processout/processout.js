@@ -158,6 +158,17 @@ var ProcessOut;
             var invoice = new ProcessOut_1.Invoice(this);
             invoice.find(uid, success, error);
         };
+        /**
+         * Find a recurring invoice by its ID
+         * @param  {string}   uid
+         * @param  {callback} success
+         * @param  {callback} error
+         * @return {void}
+         */
+        ProcessOut.prototype.findRecurringInvoice = function (uid, success, error) {
+            var invoice = new ProcessOut_1.RecurringInvoice(this);
+            invoice.find(uid, success, error);
+        };
         return ProcessOut;
     })();
     ProcessOut_1.ProcessOut = ProcessOut;
@@ -333,6 +344,63 @@ var ProcessOut;
     ProcessOut.Invoice = Invoice;
 })(ProcessOut || (ProcessOut = {}));
 /// <reference path="../references.ts" />
+/**
+ * ProcessOut module/namespace
+ */
+var ProcessOut;
+(function (ProcessOut) {
+    /**
+     * ProcessOut Invoice class
+     */
+    var RecurringInvoice = (function () {
+        /**
+         * Invoice constructor
+         */
+        function RecurringInvoice(instance) {
+            this.instance = instance;
+        }
+        /**
+         * Find the requested recurring invoice by its UID
+         * @param {string} uid
+         * @param {callback} success
+         * @param {callback} error
+         */
+        RecurringInvoice.prototype.find = function (uid, success, error) {
+            var t = this;
+            t.uid = uid;
+            t.instance.apiRequest("get", "/recurring-invoices/" + uid, {}, function (data, code, jqxhr) {
+                t.data = data;
+                t.instance.apiRequest("get", "/recurring-invoices/" + uid + "/gateways", {}, function (data, code, jqxhr) {
+                    t.gatewaysList = [];
+                    for (var i = 0; i < data.gateways.length; i++) {
+                        t.gatewaysList[i] = ProcessOut.Gateways.Handler.buildGateway(t.instance, data.gateways[i], "/recurring-invoices/" + uid, ProcessOut.Flow.OneOff);
+                    }
+                    success(t);
+                }, function () {
+                    error({
+                        code: ProcessOut.ErrorCode.ResourceNotFound,
+                        message: "The recurring invoice's gateways could not be fetched."
+                    });
+                });
+            }, function () {
+                error({
+                    code: ProcessOut.ErrorCode.ResourceNotFound,
+                    message: "The recurring invoice could not be found."
+                });
+            });
+        };
+        /**
+         * Get the available gateways list for this invoice
+         * @return {Gateways.Gateway[]}
+         */
+        RecurringInvoice.prototype.gateways = function () {
+            return this.gatewaysList;
+        };
+        return RecurringInvoice;
+    })();
+    ProcessOut.RecurringInvoice = RecurringInvoice;
+})(ProcessOut || (ProcessOut = {}));
+/// <reference path="../references.ts" />
 /// <reference path="../references.ts" />
 /**
  * ProcessOut module/namespace
@@ -480,9 +548,12 @@ var ProcessOut;
                             return this.resourceURL + ("/gateways/" + this.name + "/charges");
                     case ProcessOut.Flow.Recurring:
                     case ProcessOut.Flow.OneClickAuthorization:
-                        return this.resourceURL + ("/gateways/" + this.name + "/tokens");
+                        if (!async)
+                            return this.resourceURL + ("/gateways/" + this.name);
+                        else
+                            return this.resourceURL + ("/gateways/" + this.name + "/tokens");
                     default:
-                        throw new Error("Could not find flow");
+                        throw new Error("Could not find flow.");
                 }
             };
             /**
@@ -492,12 +563,23 @@ var ProcessOut;
             Gateway.prototype.htmlLink = function () {
                 return "<form action=\"\" method=\"POST\" class=\"" + this.instance.classNames('link-form') + "\">\n                        <div class=\"" + this.instance.classNames('link-submit-upper-wrapper') + "\">\n                            <div class=\"" + this.instance.classNames('link-submit-lower-wrapper') + "\">\n                                <input type=\"submit\" class=\"" + this.instance.classNames('link-submit') + "\" value=\"Pay now!\">\n                            </div>\n                        </div>\n                    </form>";
             };
+            Gateway.prototype._htmlCreditCard = function () {
+                return "    <div class=\"" + this.instance.classNames('credit-card-number-upper-wrapper') + "\">\n                            <div class=\"" + this.instance.classNames('credit-card-number-lower-wrapper') + "\">\n                                <label class=\"" + this.instance.classNames('credit-card-number-label') + "\">Card number</label>\n                                <input type=\"text\" size=\"20\" placeholder=\"8888 8888 8888 8888\" autocomplete=\"cc-number\" class=\"" + this.instance.classNames('credit-card-number-input') + "\" />\n                            </div>\n                        </div>\n                        <div class=\"" + this.instance.classNames('credit-card-expiry-month-upper-wrapper') + "\">\n                            <div class=\"" + this.instance.classNames('credit-card-expiry-month-lower-wrapper') + "\">\n                                <label class=\"" + this.instance.classNames('credit-card-expiry-month-label') + "\">Expiry month</label>\n                                <input type=\"text\" placeholder=\"MM\" autocomplete=\"cc-exp-month\" class=\"" + this.instance.classNames('credit-card-expiry-month-input') + "\" />\n                            </div>\n                        </div>\n                        <div class=\"" + this.instance.classNames('credit-card-expiry-year-upper-wrapper') + "\">\n                            <div class=\"" + this.instance.classNames('credit-card-expiry-year-lower-wrapper') + "\">\n                                <label class=\"" + this.instance.classNames('credit-card-expiry-year-label') + "\">Expiry year</label>\n                                <input type=\"text\" placeholder=\"YYYY\" autocomplete=\"cc-exp-year\" class=\"" + this.instance.classNames('credit-card-expiry-year-input') + "\" />\n                            </div>\n                        </div>\n                        <div class=\"" + this.instance.classNames('credit-card-cvc-upper-wrapper') + "\">\n                            <div class=\"" + this.instance.classNames('credit-card-cvc-lower-wrapper') + "\">\n                                <label class=\"" + this.instance.classNames('credit-card-cvc-label') + "\">CVC</label>\n                                <input type=\"text\" size=\"4\" placeholder=\"123\" autocomplete=\"off\" class=\"" + this.instance.classNames('credit-card-cvc-input') + "\" />\n                            </div>\n                        </div>\n\n                        <div class=\"" + this.instance.classNames('credit-card-submit-upper-wrapper') + "\">\n                            <div class=\"" + this.instance.classNames('credit-card-submit-lower-wrapper') + "\">\n                                <input type=\"submit\" class=\"" + this.instance.classNames('credit-card-submit') + "\" value=\"Pay now!\">\n                            </div>\n                        </div>";
+            };
             /**
              * Return the default template for credit cards
              * @return {string}
              */
             Gateway.prototype.htmlCreditCard = function () {
-                return "<form action=\"#\" method=\"POST\" class=\"" + this.instance.classNames('credit-card-form') + "\">\n                        <div class=\"" + this.instance.classNames('credit-card-number-upper-wrapper') + "\">\n                            <div class=\"" + this.instance.classNames('credit-card-number-lower-wrapper') + "\">\n                                <label class=\"" + this.instance.classNames('credit-card-number-label') + "\">Card number</label>\n                                <input type=\"text\" size=\"20\" placeholder=\"8888 8888 8888 8888\" autocomplete=\"cc-number\" class=\"" + this.instance.classNames('credit-card-number-input') + "\" />\n                            </div>\n                        </div>\n                        <div class=\"" + this.instance.classNames('credit-card-expiry-month-upper-wrapper') + "\">\n                            <div class=\"" + this.instance.classNames('credit-card-expiry-month-lower-wrapper') + "\">\n                                <label class=\"" + this.instance.classNames('credit-card-expiry-month-label') + "\">Expiry month</label>\n                                <input type=\"text\" placeholder=\"MM\" autocomplete=\"cc-exp-month\" class=\"" + this.instance.classNames('credit-card-expiry-month-input') + "\" />\n                            </div>\n                        </div>\n                        <div class=\"" + this.instance.classNames('credit-card-expiry-year-upper-wrapper') + "\">\n                            <div class=\"" + this.instance.classNames('credit-card-expiry-year-lower-wrapper') + "\">\n                                <label class=\"" + this.instance.classNames('credit-card-expiry-year-label') + "\">Expiry year</label>\n                                <input type=\"text\" placeholder=\"YYYY\" autocomplete=\"cc-exp-year\" class=\"" + this.instance.classNames('credit-card-expiry-year-input') + "\" />\n                            </div>\n                        </div>\n                        <div class=\"" + this.instance.classNames('credit-card-cvc-upper-wrapper') + "\">\n                            <div class=\"" + this.instance.classNames('credit-card-cvc-lower-wrapper') + "\">\n                                <label class=\"" + this.instance.classNames('credit-card-cvc-label') + "\">CVC</label>\n                                <input type=\"text\" size=\"4\" placeholder=\"123\" autocomplete=\"off\" class=\"" + this.instance.classNames('credit-card-cvc-input') + "\" />\n                            </div>\n                        </div>\n\n                        <div class=\"" + this.instance.classNames('credit-card-submit-upper-wrapper') + "\">\n                            <div class=\"" + this.instance.classNames('credit-card-submit-lower-wrapper') + "\">\n                                <input type=\"submit\" class=\"" + this.instance.classNames('credit-card-submit') + "\" value=\"Pay now!\">\n                            </div>\n                        </div>\n                    </form>";
+                return "<form action=\"#\" method=\"POST\" class=\"" + this.instance.classNames('credit-card-form') + "\">\n                        " + this._htmlCreditCard() + "\n                    </form>";
+            };
+            /**
+             * Return the default template for credit cards, and asks for the card
+             * holder name as well
+             * @return {string}
+             */
+            Gateway.prototype.htmlCreditCardWithName = function () {
+                return "<form action=\"#\" method=\"POST\" class=\"" + this.instance.classNames('credit-card-form', 'credit-card-form-name') + "\">\n                        <div class=\"" + this.instance.classNames('credit-card-name-upper-wrapper') + "\">\n                            <div class=\"" + this.instance.classNames('credit-card-name-lower-wrapper') + "\">\n                                <label class=\"" + this.instance.classNames('credit-card-name-label') + "\">Card holder name</label>\n                                <input type=\"text\" size=\"20\" placeholder=\"John Smith\" class=\"" + this.instance.classNames('credit-card-name-input') + "\" />\n                            </div>\n                        </div>\n                        " + this._htmlCreditCard() + "\n                    </form>";
             };
             /**
              * Append the gateway html to the given html element, and return the
@@ -538,13 +620,29 @@ var ProcessOut;
             Gateway.prototype.setup = function () {
                 //
             };
+            /**
+             * Handle the gateway's form submission
+             * @param {HTMLElement} el
+             * @param {callback?} success
+             * @param {callback?} error
+             * @return {void}
+             */
+            Gateway.prototype.handle = function (el, success, error) {
+                switch (this.flow) {
+                    case ProcessOut.Flow.OneOff:
+                        return this.handleOneOff(el, success, error);
+                    case ProcessOut.Flow.Recurring:
+                        return this.handleRecurring(el, success, error);
+                    default:
+                        throw new Error("The flow may be not handled.");
+                }
+            };
             return Gateway;
         })();
         Gateways.Gateway = Gateway;
     })(Gateways = ProcessOut.Gateways || (ProcessOut.Gateways = {}));
 })(ProcessOut || (ProcessOut = {}));
 /// <reference path="../../references.ts" />
-/// <amd-dependency path="https://js.stripe.com/v2/" />
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -569,16 +667,31 @@ var ProcessOut;
             function StripeGateway(instance, data, actionURL, flow) {
                 _super.call(this, instance, data, actionURL, flow);
             }
+            /**
+             * Setup the current gateway (such as loading the required js library)
+             * @return {void}
+             */
             StripeGateway.prototype.setup = function () {
                 var f = document.createElement("script");
                 f.setAttribute("type", "text/javascript");
                 f.setAttribute("src", "https://js.stripe.com/v2/");
                 document.body.appendChild(f);
             };
+            /**
+             * Get the gateway's HTML
+             * @return {string}
+             */
             StripeGateway.prototype.html = function () {
                 return "<div class=\"" + this.instance.classNames('gateway-form-wrapper', 'gateway-stripe') + "\">\n                        " + this.htmlCreditCard() + "\n                    </div>";
             };
-            StripeGateway.prototype.handle = function (el, success, error) {
+            /**
+             * Stripe uses the same code for one-off, recurring and authorizations
+             * @param {HTMLElement} el
+             * @param {callback?} success
+             * @param {callback?} error
+             * @return {void}
+             */
+            StripeGateway.prototype.handleForm = function (el, success, error) {
                 Stripe.setPublishableKey(this.getPublicKey("public_key"));
                 var submitButton = el.querySelector("input[type=\"submit\"]");
                 // We disable submit button to prevent from multiple submition
@@ -637,6 +750,26 @@ var ProcessOut;
                     });
                 }
             };
+            /**
+             * Handle the gateway's form submission for one-off payments
+             * @param {HTMLElement} el
+             * @param {callback?} success
+             * @param {callback?} error
+             * @return {void}
+             */
+            StripeGateway.prototype.handleOneOff = function (el, success, error) {
+                return this.handleForm(el, success, error);
+            };
+            /**
+             * Handle the gateway's form submission for recurring invoice payments
+             * @param {HTMLElement} el
+             * @param {callback?} success
+             * @param {callback?} error
+             * @return {void}
+             */
+            StripeGateway.prototype.handleRecurring = function (el, success, error) {
+                return this.handleForm(el, success, error);
+            };
             return StripeGateway;
         })(Gateways.Gateway);
         Gateways.StripeGateway = StripeGateway;
@@ -661,6 +794,10 @@ var ProcessOut;
             function CheckoutcomGateway(instance, data, actionURL, flow) {
                 _super.call(this, instance, data, actionURL, flow);
             }
+            /**
+             * Setup the current gateway (such as loading the required js library)
+             * @return {void}
+             */
             CheckoutcomGateway.prototype.setup = function () {
                 var f = document.createElement("script");
                 f.setAttribute("type", "text/javascript");
@@ -668,10 +805,22 @@ var ProcessOut;
                 f.setAttribute("data-namespace", "CKOAPI");
                 document.body.appendChild(f);
             };
+            /**
+             * Get the gateway's HTML
+             * @return {string}
+             */
             CheckoutcomGateway.prototype.html = function () {
                 return "<div class=\"" + this.instance.classNames('gateway-form-wrapper', 'gateway-checkoutcom') + "\">\n                        " + this.htmlCreditCard() + "\n                    </div>";
             };
-            CheckoutcomGateway.prototype.handle = function (el, success, error) {
+            /**
+             * Checkout.com uses the same code for one-off, recurring and
+             * authorizations
+             * @param {HTMLElement} el
+             * @param {callback?} success
+             * @param {callback?} error
+             * @return {void}
+             */
+            CheckoutcomGateway.prototype.handleForm = function (el, success, error) {
                 var submitButton = el.querySelector("input[type=\"submit\"]");
                 // We disable submit button to prevent from multiple submition
                 submitButton.setAttribute("disabled", "1");
@@ -706,7 +855,7 @@ var ProcessOut;
                     }, function (v) {
                         if (!v.id)
                             return;
-                        // Stripe token correctly generated, let's charge it
+                        // Checkout.com token correctly generated, let's charge it
                         var data = t.getCustomerObject();
                         data.token = v.id;
                         t.instance.apiRequest("post", t.getEndpoint(true), data, function (resp) {
@@ -740,6 +889,26 @@ var ProcessOut;
                     });
                 }
             };
+            /**
+             * Handle the gateway's form submission for one-off payments
+             * @param {HTMLElement} el
+             * @param {callback?} success
+             * @param {callback?} error
+             * @return {void}
+             */
+            CheckoutcomGateway.prototype.handleOneOff = function (el, success, error) {
+                return this.handleForm(el, success, error);
+            };
+            /**
+             * Handle the gateway's form submission for recurring invoice payments
+             * @param {HTMLElement} el
+             * @param {callback?} success
+             * @param {callback?} error
+             * @return {void}
+             */
+            CheckoutcomGateway.prototype.handleRecurring = function (el, success, error) {
+                return this.handleForm(el, success, error);
+            };
             return CheckoutcomGateway;
         })(Gateways.Gateway);
         Gateways.CheckoutcomGateway = CheckoutcomGateway;
@@ -765,10 +934,22 @@ var ProcessOut;
             function LinkGateway(instance, data, actionURL, flow) {
                 _super.call(this, instance, data, actionURL, flow);
             }
+            /**
+             * Get the gateway's HTML
+             * @return {string}
+             */
             LinkGateway.prototype.html = function () {
                 return "<div class=\"" + this.instance.classNames('gateway-form-wrapper', "gateway-" + this.name) + "\">\n                        " + this.htmlLink() + "\n                    </div>";
             };
-            LinkGateway.prototype.handle = function (el, success, error) {
+            /**
+             * Checkout.com uses the same code for one-off, recurring and
+             * authorizations
+             * @param {HTMLElement} el
+             * @param {callback?} success
+             * @param {callback?} error
+             * @return {void}
+             */
+            LinkGateway.prototype.handleForm = function (el, success, error) {
                 var t = this;
                 this.instance.apiRequest("get", this.getEndpoint(false), this.getCustomerObject(), function (resp) {
                     if (!resp.success) {
@@ -786,6 +967,26 @@ var ProcessOut;
                     });
                 });
             };
+            /**
+             * Handle the gateway's form submission for one-off payments
+             * @param {HTMLElement} el
+             * @param {callback?} success
+             * @param {callback?} error
+             * @return {void}
+             */
+            LinkGateway.prototype.handleOneOff = function (el, success, error) {
+                return this.handleForm(el, success, error);
+            };
+            /**
+             * Handle the gateway's form submission for recurring invoice payments
+             * @param {HTMLElement} el
+             * @param {callback?} success
+             * @param {callback?} error
+             * @return {void}
+             */
+            LinkGateway.prototype.handleRecurring = function (el, success, error) {
+                return this.handleForm(el, success, error);
+            };
             return LinkGateway;
         })(Gateways.Gateway);
         Gateways.LinkGateway = LinkGateway;
@@ -794,6 +995,7 @@ var ProcessOut;
 /// <reference path="processout/processout.ts" />
 /// <reference path="processout/modal.ts" />
 /// <reference path="processout/invoice.ts" />
+/// <reference path="processout/recurringinvoice.ts" />
 /// <reference path="processout/customer.ts" />
 /// <reference path="processout/flow.ts" />
 /// <reference path="processout/error.ts" />

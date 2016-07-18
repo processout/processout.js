@@ -10,4 +10,5 @@
 /// <reference path="processout/gateways/gateway.ts" />
 /// <reference path="processout/gateways/stripe.ts" />
 /// <reference path="processout/gateways/checkoutcom.ts" />
+/// <reference path="processout/gateways/adyen.ts" />
 /// <reference path="processout/gateways/link.ts" />
