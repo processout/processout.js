@@ -18,13 +18,25 @@ module ProcessOut.Gateways {
             super(instance, data, actionURL, flow);
         }
 
+        /**
+         * Get the gateway's HTML
+         * @return {string}
+         */
         html(): string {
             return `<div class="${this.instance.classNames('gateway-form-wrapper', `gateway-${this.name}`)}">
                         ${this.htmlLink()}
                     </div>`;
         }
 
-        handle(el: HTMLElement, success: (gateway: string) => void,
+        /**
+         * Checkout.com uses the same code for one-off, recurring and
+         * authorizations
+         * @param {HTMLElement} el
+         * @param {callback?} success
+         * @param {callback?} error
+         * @return {void}
+         */
+        handleForm(el: HTMLElement, success: (gateway: string) => void,
             error: (err: Error) => void): void {
 
             var t = this;
@@ -46,6 +58,32 @@ module ProcessOut.Gateways {
                         message: err
                     });
                 });
+        }
+
+        /**
+         * Handle the gateway's form submission for one-off payments
+         * @param {HTMLElement} el
+         * @param {callback?} success
+         * @param {callback?} error
+         * @return {void}
+         */
+        handleOneOff(el: HTMLElement, success: (gateway: string) => void,
+            error: (err: Error) => void): void {
+
+            return this.handleForm(el, success, error);
+        }
+
+        /**
+         * Handle the gateway's form submission for recurring invoice payments
+         * @param {HTMLElement} el
+         * @param {callback?} success
+         * @param {callback?} error
+         * @return {void}
+         */
+        handleRecurring(el: HTMLElement, success: (gateway: string) => void,
+            error: (err: Error) => void): void {
+
+            return this.handleForm(el, success, error);
         }
 
     }

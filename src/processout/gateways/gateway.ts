@@ -123,10 +123,13 @@ module ProcessOut.Gateways {
 
             case Flow.Recurring:
             case Flow.OneClickAuthorization:
-                return this.resourceURL+`/gateways/${this.name}/tokens`;
+                if (!async)
+                    return this.resourceURL+`/gateways/${this.name}`;
+                else
+                    return this.resourceURL+`/gateways/${this.name}/tokens`;
 
             default:
-                throw new Error("Could not find flow");
+                throw new Error("Could not find flow.");
             }
         }
 
@@ -239,7 +242,38 @@ module ProcessOut.Gateways {
          * @param {callback?} error
          * @return {void}
          */
-        abstract handle(el: HTMLElement, success: (gateway: string) => void,
+        handle(el: HTMLElement, success: (gateway: string) => void,
+            error: (err: Error) => void): void {
+
+            switch (this.flow) {
+            case Flow.OneOff:
+                return this.handleOneOff(el, success, error);
+            case Flow.Recurring:
+                return this.handleRecurring(el, success, error);
+
+            default:
+                throw new Error("The flow may be not handled.");
+            }
+        }
+
+        /**
+         * Handle the gateway's form submission for one-off payments
+         * @param {HTMLElement} el
+         * @param {callback?} success
+         * @param {callback?} error
+         * @return {void}
+         */
+        abstract handleOneOff(el: HTMLElement, success: (gateway: string) => void,
+            error: (err: Error) => void): void;
+
+        /**
+         * Handle the gateway's form submission for recurring invoice payments
+         * @param {HTMLElement} el
+         * @param {callback?} success
+         * @param {callback?} error
+         * @return {void}
+         */
+        abstract handleRecurring(el: HTMLElement, success: (gateway: string) => void,
             error: (err: Error) => void): void;
 
         /**

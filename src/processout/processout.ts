@@ -194,6 +194,20 @@ module ProcessOut {
             invoice.find(uid, success, error);
         }
 
+        /**
+         * Find a recurring invoice by its ID
+         * @param  {string}   uid
+         * @param  {callback} success
+         * @param  {callback} error
+         * @return {void}
+         */
+        findRecurringInvoice(uid: string, success: (invoice: RecurringInvoice) => void,
+            error: (err: Error) => void): void {
+
+            var invoice = new RecurringInvoice(this);
+            invoice.find(uid, success, error);
+        }
+
     }
 
 }
