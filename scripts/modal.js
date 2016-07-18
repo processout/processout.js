@@ -373,7 +373,7 @@ var ProcessOut;
                 t.instance.apiRequest("get", "/recurring-invoices/" + uid + "/gateways", {}, function (data, code, jqxhr) {
                     t.gatewaysList = [];
                     for (var i = 0; i < data.gateways.length; i++) {
-                        t.gatewaysList[i] = ProcessOut.Gateways.Handler.buildGateway(t.instance, data.gateways[i], "/recurring-invoices/" + uid, ProcessOut.Flow.OneOff);
+                        t.gatewaysList[i] = ProcessOut.Gateways.Handler.buildGateway(t.instance, data.gateways[i], "/recurring-invoices/" + uid, ProcessOut.Flow.Recurring);
                     }
                     success(t);
                 }, function () {
@@ -633,6 +633,8 @@ var ProcessOut;
                         return this.handleOneOff(el, success, error);
                     case ProcessOut.Flow.Recurring:
                         return this.handleRecurring(el, success, error);
+                    case ProcessOut.Flow.OneClickAuthorization:
+                        return this.handleOneClickAuthorization(el, success, error);
                     default:
                         throw new Error("The flow may be not handled.");
                 }
@@ -768,6 +770,17 @@ var ProcessOut;
              * @return {void}
              */
             StripeGateway.prototype.handleRecurring = function (el, success, error) {
+                return this.handleForm(el, success, error);
+            };
+            /**
+             * Handle the gateway's form submission for one-click authorizations
+             * flow
+             * @param {HTMLElement} el
+             * @param {callback?} success
+             * @param {callback?} error
+             * @return {void}
+             */
+            StripeGateway.prototype.handleOneClickAuthorization = function (el, success, error) {
                 return this.handleForm(el, success, error);
             };
             return StripeGateway;
@@ -909,9 +922,156 @@ var ProcessOut;
             CheckoutcomGateway.prototype.handleRecurring = function (el, success, error) {
                 return this.handleForm(el, success, error);
             };
+            /**
+             * Handle the gateway's form submission for one-click authorizations
+             * flow
+             * @param {HTMLElement} el
+             * @param {callback?} success
+             * @param {callback?} error
+             * @return {void}
+             */
+            CheckoutcomGateway.prototype.handleOneClickAuthorization = function (el, success, error) {
+                return this.handleForm(el, success, error);
+            };
             return CheckoutcomGateway;
         })(Gateways.Gateway);
         Gateways.CheckoutcomGateway = CheckoutcomGateway;
+    })(Gateways = ProcessOut.Gateways || (ProcessOut.Gateways = {}));
+})(ProcessOut || (ProcessOut = {}));
+/// <reference path="../../references.ts" />
+/**
+ * ProcessOut Gateways module/namespace
+ */
+var ProcessOut;
+(function (ProcessOut) {
+    var Gateways;
+    (function (Gateways) {
+        /**
+         * ProcessOut Gateway class
+         */
+        var AdyenGateway = (function (_super) {
+            __extends(AdyenGateway, _super);
+            /**
+             * Constructor, copies data to object
+             */
+            function AdyenGateway(instance, data, actionURL, flow) {
+                _super.call(this, instance, data, actionURL, flow);
+            }
+            /**
+             * Setup the current gateway (such as loading the required js library)
+             * @return {void}
+             */
+            AdyenGateway.prototype.setup = function () {
+                var f = document.createElement("script");
+                f.setAttribute("type", "text/javascript");
+                f.setAttribute("src", "https://cdn.processout.com/scripts/adyen.encrypt.nodom.min.js");
+                document.body.appendChild(f);
+            };
+            /**
+             * Get the gateway's HTML
+             * @return {string}
+             */
+            AdyenGateway.prototype.html = function () {
+                return "<div class=\"" + this.instance.classNames('gateway-form-wrapper', 'gateway-adyen') + "\">\n                        " + this.htmlCreditCardWithName() + "\n                    </div>";
+            };
+            /**
+             * Stripe uses the same code for one-off, recurring and authorizations
+             * @param {HTMLElement} el
+             * @param {callback?} success
+             * @param {callback?} error
+             * @return {void}
+             */
+            AdyenGateway.prototype.handleForm = function (el, success, error) {
+                var Adyen = adyen.encrypt.createEncryption(this.getPublicKey("merchant_account"), {});
+                var submitButton = el.querySelector("input[type=\"submit\"]");
+                // We disable submit button to prevent from multiple submition
+                submitButton.setAttribute("disabled", "1");
+                var namef = el.getElementsByClassName(this.instance.classNames("credit-card-name-input"))[0];
+                var numberf = el.getElementsByClassName(this.instance.classNames("credit-card-number-input"))[0];
+                var cvcf = el.getElementsByClassName(this.instance.classNames("credit-card-cvc-input"))[0];
+                var expmonthf = el.getElementsByClassName(this.instance.classNames("credit-card-expiry-month-input"))[0];
+                var expyearf = el.getElementsByClassName(this.instance.classNames("credit-card-expiry-year-input"))[0];
+                var validate = Adyen.validate({
+                    "number": numberf.value,
+                    "cvc": cvcf.value,
+                    "month": Number(expmonthf.value),
+                    "year": Number(expyearf.value)
+                });
+                for (var k in validate) {
+                    if (!validate[k]) {
+                        error({
+                            code: ProcessOut.ErrorCode.GatewayInvalidInput,
+                            message: "The provided credit card is invalid."
+                        });
+                        return;
+                    }
+                }
+                var data = t.getCustomerObject();
+                data.token = Adyen.encrypt({
+                    number: numberf.value,
+                    cvc: cvcf.value,
+                    holderName: namef.value,
+                    expiryMonth: Number(expmonthf.value),
+                    expiryYear: Number(expyearf.value),
+                    generationtime: Math.floor(Date.now() / 1000) // Timestamp
+                });
+                var t = this;
+                this.instance.apiRequest("post", this.getEndpoint(true), data, function (resp) {
+                    submitButton.removeAttribute("disabled");
+                    if (!resp.success) {
+                        error({
+                            code: ProcessOut.ErrorCode.GatewayError,
+                            message: resp.message
+                        });
+                        return;
+                    }
+                    if (/^https?:\/\/checkout\.processout\.((com)|(ninja)|(dev))\//.test(resp.url)) {
+                        success(t.name);
+                        return;
+                    }
+                    window.location.href = resp.url;
+                }, function (request, err) {
+                    submitButton.removeAttribute("disabled");
+                    error({
+                        code: ProcessOut.ErrorCode.GatewayError,
+                        message: err
+                    });
+                });
+            };
+            /**
+             * Handle the gateway's form submission for one-off payments
+             * @param {HTMLElement} el
+             * @param {callback?} success
+             * @param {callback?} error
+             * @return {void}
+             */
+            AdyenGateway.prototype.handleOneOff = function (el, success, error) {
+                return this.handleForm(el, success, error);
+            };
+            /**
+             * Handle the gateway's form submission for recurring invoice payments
+             * @param {HTMLElement} el
+             * @param {callback?} success
+             * @param {callback?} error
+             * @return {void}
+             */
+            AdyenGateway.prototype.handleRecurring = function (el, success, error) {
+                return this.handleForm(el, success, error);
+            };
+            /**
+             * Handle the gateway's form submission for one-click authorizations
+             * flow
+             * @param {HTMLElement} el
+             * @param {callback?} success
+             * @param {callback?} error
+             * @return {void}
+             */
+            AdyenGateway.prototype.handleOneClickAuthorization = function (el, success, error) {
+                return this.handleForm(el, success, error);
+            };
+            return AdyenGateway;
+        })(Gateways.Gateway);
+        Gateways.AdyenGateway = AdyenGateway;
     })(Gateways = ProcessOut.Gateways || (ProcessOut.Gateways = {}));
 })(ProcessOut || (ProcessOut = {}));
 /// <reference path="../../references.ts" />
@@ -987,6 +1147,17 @@ var ProcessOut;
             LinkGateway.prototype.handleRecurring = function (el, success, error) {
                 return this.handleForm(el, success, error);
             };
+            /**
+             * Handle the gateway's form submission for one-click authorizations
+             * flow
+             * @param {HTMLElement} el
+             * @param {callback?} success
+             * @param {callback?} error
+             * @return {void}
+             */
+            LinkGateway.prototype.handleOneClickAuthorization = function (el, success, error) {
+                return this.handleForm(el, success, error);
+            };
             return LinkGateway;
         })(Gateways.Gateway);
         Gateways.LinkGateway = LinkGateway;
@@ -1003,6 +1174,7 @@ var ProcessOut;
 /// <reference path="processout/gateways/gateway.ts" />
 /// <reference path="processout/gateways/stripe.ts" />
 /// <reference path="processout/gateways/checkoutcom.ts" />
+/// <reference path="processout/gateways/adyen.ts" />
 /// <reference path="processout/gateways/link.ts" />
 /// <reference path="../references.ts" />
 var startProcessOut = function () {
