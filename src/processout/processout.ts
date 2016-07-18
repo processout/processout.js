@@ -14,7 +14,7 @@ module ProcessOut {
          * Project ID
          * @type {string}
          */
-        projectId: string;
+        projectID: string;
 
         /**
          * Timeout before considering the modal could not be loaded
@@ -36,11 +36,15 @@ module ProcessOut {
 
         /**
          * ProcessOut constructor
-         * @param  {string} projectId ProcessOut project ID
+         * @param  {string} projectID ProcessOut project ID
          */
-        constructor(projectId: string) {
-            this.projectId = projectId;
+        constructor(projectID: string) {
+            this.projectID = projectID;
 
+            if (this.projectID == "") {
+                console.log("No project ID was specified, skipping setup.");
+                return;
+            }
             this.setup();
         }
 
@@ -88,7 +92,7 @@ module ProcessOut {
                 method: method,
                 headers: {
                     "API-Version": "1.1.0.0",
-                    "Authorization": "Basic " + btoa(this.projectId+':')
+                    "Authorization": "Basic " + btoa(this.projectID+':')
                 },
                 url: this.endpoint("api", path),
                 data: data,

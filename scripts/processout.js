@@ -10,9 +10,9 @@ var ProcessOut;
     var ProcessOut = (function () {
         /**
          * ProcessOut constructor
-         * @param  {string} projectId ProcessOut project ID
+         * @param  {string} projectID ProcessOut project ID
          */
-        function ProcessOut(projectId) {
+        function ProcessOut(projectID) {
             /**
              * Timeout before considering the modal could not be loaded
              * @type {Number}
@@ -23,7 +23,11 @@ var ProcessOut;
              * @type {string}
              */
             this.cssPrefix = "processout-";
-            this.projectId = projectId;
+            this.projectID = projectID;
+            if (this.projectID == "") {
+                console.log("No project ID was specified, skipping setup.");
+                return;
+            }
             this.setup();
         }
         /**
@@ -71,7 +75,7 @@ var ProcessOut;
                 method: method,
                 headers: {
                     "API-Version": "1.1.0.0",
-                    "Authorization": "Basic " + btoa(this.projectId + ':')
+                    "Authorization": "Basic " + btoa(this.projectID + ':')
                 },
                 url: this.endpoint("api", path),
                 data: data,
