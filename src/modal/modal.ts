@@ -1,48 +1,50 @@
 /// <reference path="../references.ts" />
 
 var startProcessOut = function() {
-    var processOut = new ProcessOut.ProcessOut('');
+    // The project ID is not required for a simple modal use
+    var processOut = new ProcessOut.ProcessOut("");
 
     // Loop through each modal button
-    jQuery('.processout-modal-button').each(function() {
-        var button    = jQuery(this);
+    var buttons = document.querySelectorAll(".processout-modal-button");
+    for (var i in buttons) {
+        var button = buttons[i];
         var loading   = false;
         var modal     = null;
-        button.on('mouseover', function() {
+        button.addEventListener("onmouseover", function() {
             if (loading || (modal != null && ! modal.isDeleted()))
                 return;
 
             loading = true;
-            modal   = processOut.newModal(button.attr('href'), function(modal) {
-                button.on('click', function() {
+            modal   = processOut.newModal(button.getAttribute("href"), function(modal) {
+                button.addEventListener("onclick", function() {
                     if (modal.isDeleted())
                         return;
 
                     loading = false;
-                    jQuery('body').css('cursor', 'auto');
+                    document.body.style.cursor = "auto";
                     modal.show();
                 });
             }, function(err) {
-                console.log('Could not properly load the modal');
-                button.on('click', function() {
+                console.log("Could not properly load the modal");
+                button.addEventListener("onclick", function() {
                     loading = false;
-                    jQuery('body').css('cursor', 'auto');
-                    window.location.href = button.attr('href');
+                    document.body.style.cursor = "auto";
+                    window.location.href = button.getAttribute("href");
                 });
             });
         });
 
-        button.on('click', function() {
+        button.addEventListener("onclick", function() {
             if (! loading)
                 return false;
 
-            jQuery('body').css('cursor', 'wait');
+            document.body.style.cursor = "wait";
             setTimeout(function () {
-                button.trigger('click');
+                (<HTMLElement>button).click();
             }, 500);
 
             return false;
         });
-    });
+    };
 }
 startProcessOut();
