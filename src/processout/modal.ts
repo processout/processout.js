@@ -58,24 +58,26 @@ module ProcessOut {
          * @param  {Function} error
          * @return {void}
          */
-        show(onShow, onHide, error) {
+        show(onShow?: (modal: Modal) => void, onHide?: (modal: Modal) => void,
+            error?: (err: Error) => void) {
+                
             var modal   = this;
             var iframe  = modal.iframe;
             var iframeW = iframe.get(0).contentWindow;
             var frameid = modal.uniqId;
-            iframeW.postMessage(this.namespace + ' ' + frameid + ' check', '*');
+            iframeW.postMessage(`${this.namespace} ${frameid} check`, "*");
             var redirectTimeout =
                 setTimeout(function(){
                     if (typeof(error) === typeof(Function))
-                        error({
+                        error(<Error> {
                             message: "The modal does not seem to be available.",
-                            code: "modal.unavailable"
+                            code:    "modal.unavailable"
                         });
                 }, this.instance.timeout);
-            var oldCursor = jQuery('body').css('cursor');
+            var oldCursor = jQuery("body").css("cursor");
 
             function receiveMessage(event) {
-                var eventSplit = event.data.split(' ');
+                var eventSplit = event.data.split(" ");
                 if (eventSplit[0] != modal.namespace)
                     return;
 
@@ -83,37 +85,36 @@ module ProcessOut {
                     return;
 
                 switch (eventSplit[2]) {
-                    case 'openModal':
+                    case "openModal":
                         // Clear the timeout
                         clearTimeout(redirectTimeout);
                         // Make sure that we can't scroll behind the modal
-                        jQuery('body').css('overflow', 'hidden');
+                        jQuery("body").css("overflow", "hidden");
                         // Make sure our iframe is of the correct dimension
                         jQuery(window).resize(function() {
                             iframe.width(jQuery(window).outerWidth());
                             iframe.height(jQuery(window).outerHeight());
                         });
-                        jQuery(window).trigger('resize');
+                        jQuery(window).trigger("resize");
                         // Show the iframe
                         iframe.fadeIn(200);
-                        iframeW.postMessage(
-                            modal.namespace + ' ' + frameid + ' launch', '*');
+                        iframeW.postMessage(`${modal.namespace} ${frameid} launch`, "*");
                         if (typeof(onShow) === typeof(Function))
                             onShow(this);
                         break;
 
-                    case 'closeModal':
+                    case "closeModal":
                         modal.hide();
                         if (typeof(onHide) === typeof(Function))
                             onHide(this);
                         break;
 
-                    case 'url':
+                    case "url":
                         window.location.href = eventSplit[3];
                         break;
 
                     default:
-                        console.log('Could not read event action from modal.',
+                        console.log("Could not read event action from modal.",
                             event.data);
                         break;
                 }
@@ -129,7 +130,7 @@ module ProcessOut {
             // Hide the modal
             this.iframe.fadeOut(200);
             // Put the scrollbar back
-            jQuery('body').css('overflow', '');
+            jQuery("body").css("overflow", "");
 
             this.iframe.remove();
 
@@ -145,5 +146,5 @@ module ProcessOut {
         }
 
     }
-    
+
 }

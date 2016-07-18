@@ -130,10 +130,19 @@ processOut.setTemplates({
 	'link': '<a href="#">{gateway_name}</a>'
 });
 
+function success(gatewayName) {
+	alert('Payment success for gateway: '+gatewayName);
+}
+
+function error() {
+	alert('Oops.. an error occurred during the customer checkout.');
+}
+
 processOut.findInvoice('uid', function(invoice) {
 	var gateways = invoice.gateway();
 	for (i = 0; i < gateways.length; i++) {
-		$('#gateways-wrapper').append(gateways[i].html());
+		var form = gateways[i].appendTo($('#gateways-wrapper'));
+		gateways[i].hook(form, success, error);
 	}
 });
 ```

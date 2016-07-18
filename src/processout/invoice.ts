@@ -47,26 +47,37 @@ module ProcessOut {
          * @param {callback} success
          * @param {callback} error
          */
-        find(uid: string, success, error) {
-            this.uid = uid;
+        find(uid: string, success: (invoice: Invoice) => void,
+            error: (err: Error) => void) {
 
-            this.instance.apiRequest("get", "/invoices/"+uid, {},
+            var t = this;
+
+            t.uid = uid;
+            t.instance.apiRequest("get", `/invoices/${uid}`, {},
             function(data, code, jqxhr) {
-                this.data = data;
+                t.data = data;
 
-                this.instance.apiRequest("get", "/invoices/"+uid+"/gateways", {},
+                t.instance.apiRequest("get", `/invoices/${uid}/gateways`, {},
                 function(data, code, jqxhr) {
+                    t.gatewaysList = [];
                     for (var i = 0; i < data.gateways.length; i++) {
-                        this.gatewaysList[i] = Gateways.Manager.buildGateway(this.instance,
-                            data);
+                        t.gatewaysList[i] = Gateways.Handler.buildGateway(
+                            t.instance, data.gateways[i], `/invoices/${uid}`,
+                            Flow.OneOff);
                     }
 
-                    success(this);
+                    success(t);
                 }, function() {
-                    error();
+                    error(<Error>{
+                        code: ErrorCode.ResourceNotFound,
+                        message: "The invoice's gateways could not be fetched."
+                    });
                 });
             }, function() {
-                error();
+                error(<Error>{
+                    code: ErrorCode.ResourceNotFound,
+                    message: "The invoice could not be found."
+                });
             });
         }
 
@@ -77,7 +88,7 @@ module ProcessOut {
         gateways(): Gateways.Gateway[] {
             return this.gatewaysList;
         }
-        
+
     }
 
 }
