@@ -1,6 +1,7 @@
 /// <reference path="processout/processout.ts" />
 /// <reference path="processout/modal.ts" />
 /// <reference path="processout/invoice.ts" />
+/// <reference path="processout/recurringinvoice.ts" />
 /// <reference path="processout/customer.ts" />
 /// <reference path="processout/flow.ts" />
 /// <reference path="processout/error.ts" />
