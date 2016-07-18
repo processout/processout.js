@@ -1,5 +1,4 @@
 /// <reference path="../../references.ts" />
-/// <amd-dependency path="https://js.stripe.com/v2/" />
 
 /// <reference path="../../definitions/stripe.d.ts" />
 
