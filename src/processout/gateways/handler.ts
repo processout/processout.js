@@ -24,6 +24,8 @@ module ProcessOut.Gateways {
             switch (data.name) {
             case "stripe":
                 return new StripeGateway(instance, data, resourceURL, flow);
+            case "checkoutcom":
+                return new CheckoutcomGateway(instance, data, resourceURL, flow);
             }
 
             // Defaulting to link gateway

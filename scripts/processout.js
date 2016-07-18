@@ -24,6 +24,7 @@ var ProcessOut;
              */
             this.cssPrefix = "processout-";
             this.projectId = projectId;
+            this.setup();
         }
         /**
          * Get the ProcessOut endpoint of the given subdomain
@@ -81,6 +82,21 @@ var ProcessOut;
                 error: function (request, err) {
                     error(request, err);
                 }
+            });
+        };
+        ProcessOut.prototype.setup = function () {
+            this.apiRequest("get", "/gateways", {}, function (data, code, jqxhr) {
+                if (!data.success) {
+                    throw new Error(data.message);
+                }
+                for (var _i = 0, _a = data.gateways; _i < _a.length; _i++) {
+                    var gateway = _a[_i];
+                    var g = ProcessOut_1.Gateways.Handler.buildGateway(this, gateway, "", ProcessOut_1.Flow.None);
+                    console.log(g);
+                    g.setup();
+                }
+            }, function () {
+                throw new Error("Could not load project's gateways. Are you sure your project ID is valid?");
             });
         };
         /**
@@ -322,10 +338,14 @@ var ProcessOut;
  */
 var ProcessOut;
 (function (ProcessOut) {
+    /**
+     * ProcessOut payment flow enum
+     */
     (function (Flow) {
-        Flow[Flow["OneOff"] = 1] = "OneOff";
-        Flow[Flow["Recurring"] = 2] = "Recurring";
-        Flow[Flow["OneClickAuthorization"] = 3] = "OneClickAuthorization";
+        Flow[Flow["None"] = 1] = "None";
+        Flow[Flow["OneOff"] = 2] = "OneOff";
+        Flow[Flow["Recurring"] = 3] = "Recurring";
+        Flow[Flow["OneClickAuthorization"] = 4] = "OneClickAuthorization";
     })(ProcessOut.Flow || (ProcessOut.Flow = {}));
     var Flow = ProcessOut.Flow;
 })(ProcessOut || (ProcessOut = {}));
@@ -341,6 +361,7 @@ var ProcessOut;
         ErrorCode.ProcessOutUnavailable = "processout.unavailable";
         ErrorCode.ResourceNotFound = "resource.not-found";
         ErrorCode.GatewayError = "gateway.error";
+        ErrorCode.GatewayInvalidInput = "gateway.invalid-input";
         return ErrorCode;
     })();
     ProcessOut.ErrorCode = ErrorCode;
@@ -371,6 +392,8 @@ var ProcessOut;
                 switch (data.name) {
                     case "stripe":
                         return new Gateways.StripeGateway(instance, data, resourceURL, flow);
+                    case "checkoutcom":
+                        return new Gateways.CheckoutcomGateway(instance, data, resourceURL, flow);
                 }
                 // Defaulting to link gateway
                 return new Gateways.LinkGateway(instance, data, resourceURL, flow);
@@ -496,6 +519,7 @@ var ProcessOut;
              * @param {HTMLElement} el
              * @param {callback?} success
              * @param {callback?} error
+             * @return {void}
              */
             Gateway.prototype.hook = function (el, success, error) {
                 if (el.jquery)
@@ -505,6 +529,13 @@ var ProcessOut;
                     t.handle(el, success, error);
                     return false;
                 };
+            };
+            /**
+             * Setup the current gateway (such as loading the required js library)
+             * @return {void}
+             */
+            Gateway.prototype.setup = function () {
+                //
             };
             return Gateway;
         })();
@@ -537,6 +568,12 @@ var ProcessOut;
             function StripeGateway(instance, data, actionURL, flow) {
                 _super.call(this, instance, data, actionURL, flow);
             }
+            StripeGateway.prototype.setup = function () {
+                var f = document.createElement("script");
+                f.setAttribute("type", "text/javascript");
+                f.setAttribute("src", "https://js.stripe.com/v2/");
+                document.body.appendChild(f);
+            };
             StripeGateway.prototype.html = function () {
                 return "<div class=\"" + this.instance.classNames('gateway-form-wrapper', 'gateway-stripe') + "\">\n                        " + this.htmlCreditCard() + "\n                    </div>";
             };
@@ -560,7 +597,7 @@ var ProcessOut;
                         if (response.error) {
                             submitButton.removeAttribute("disabled");
                             error({
-                                code: ProcessOut.ErrorCode.GatewayError,
+                                code: ProcessOut.ErrorCode.GatewayInvalidInput,
                                 message: response.error.message
                             });
                             return;
@@ -592,14 +629,119 @@ var ProcessOut;
                     });
                 }
                 catch (err) {
-                    // Re-enable the button and throw the error again
                     submitButton.removeAttribute("disabled");
-                    throw err;
+                    error({
+                        code: ProcessOut.ErrorCode.GatewayError,
+                        message: err
+                    });
                 }
             };
             return StripeGateway;
         })(Gateways.Gateway);
         Gateways.StripeGateway = StripeGateway;
+    })(Gateways = ProcessOut.Gateways || (ProcessOut.Gateways = {}));
+})(ProcessOut || (ProcessOut = {}));
+/// <reference path="../../references.ts" />
+/**
+ * ProcessOut Gateways module/namespace
+ */
+var ProcessOut;
+(function (ProcessOut) {
+    var Gateways;
+    (function (Gateways) {
+        /**
+         * ProcessOut Gateway class
+         */
+        var CheckoutcomGateway = (function (_super) {
+            __extends(CheckoutcomGateway, _super);
+            /**
+             * Constructor, copies data to object
+             */
+            function CheckoutcomGateway(instance, data, actionURL, flow) {
+                _super.call(this, instance, data, actionURL, flow);
+            }
+            CheckoutcomGateway.prototype.setup = function () {
+                var f = document.createElement("script");
+                f.setAttribute("type", "text/javascript");
+                f.setAttribute("src", "https://cdn.checkout.com/sandbox/js/checkoutkit.js");
+                f.setAttribute("data-namespace", "CKOAPI");
+                document.body.appendChild(f);
+            };
+            CheckoutcomGateway.prototype.html = function () {
+                return "<div class=\"" + this.instance.classNames('gateway-form-wrapper', 'gateway-checkoutcom') + "\">\n                        " + this.htmlCreditCard() + "\n                    </div>";
+            };
+            CheckoutcomGateway.prototype.handle = function (el, success, error) {
+                var submitButton = el.querySelector("input[type=\"submit\"]");
+                // We disable submit button to prevent from multiple submition
+                submitButton.setAttribute("disabled", "1");
+                var numberf = el.getElementsByClassName(this.instance.classNames("credit-card-number-input"))[0];
+                var cvcf = el.getElementsByClassName(this.instance.classNames("credit-card-cvc-input"))[0];
+                var expmonthf = el.getElementsByClassName(this.instance.classNames("credit-card-expiry-month-input"))[0];
+                var expyearf = el.getElementsByClassName(this.instance.classNames("credit-card-expiry-year-input"))[0];
+                var t = this;
+                try {
+                    CKOAPI.configure({
+                        publicKey: t.getPublicKey("public_key"),
+                        apiError: function (event) {
+                            submitButton.removeAttribute("disabled");
+                            // 7xxx errors are validation errors
+                            if (event.data.errorCode[0] == "7")
+                                error({
+                                    code: ProcessOut.ErrorCode.GatewayInvalidInput,
+                                    message: event.data.message
+                                });
+                            else
+                                error({
+                                    code: ProcessOut.ErrorCode.GatewayError,
+                                    message: event.data.message
+                                });
+                        }
+                    });
+                    CKOAPI.createCardToken({
+                        "number": numberf.value,
+                        "cvv": cvcf.value,
+                        "expiryMonth": Number(expmonthf.value),
+                        "expiryYear": Number(expyearf.value)
+                    }, function (v) {
+                        if (!v.id)
+                            return;
+                        // Stripe token correctly generated, let's charge it
+                        var data = t.getCustomerObject();
+                        data.token = v.id;
+                        t.instance.apiRequest("post", t.getEndpoint(true), data, function (resp) {
+                            submitButton.removeAttribute("disabled");
+                            if (!resp.success) {
+                                error({
+                                    code: ProcessOut.ErrorCode.GatewayError,
+                                    message: resp.message
+                                });
+                                return;
+                            }
+                            if (/^https?:\/\/checkout\.processout\.((com)|(ninja)|(dev))\//.test(resp.url)) {
+                                success(t.name);
+                                return;
+                            }
+                            window.location.href = resp.url;
+                        }, function (request, err) {
+                            submitButton.removeAttribute("disabled");
+                            error({
+                                code: ProcessOut.ErrorCode.GatewayError,
+                                message: err
+                            });
+                        });
+                    });
+                }
+                catch (err) {
+                    submitButton.removeAttribute("disabled");
+                    error({
+                        code: ProcessOut.ErrorCode.GatewayError,
+                        message: err
+                    });
+                }
+            };
+            return CheckoutcomGateway;
+        })(Gateways.Gateway);
+        Gateways.CheckoutcomGateway = CheckoutcomGateway;
     })(Gateways = ProcessOut.Gateways || (ProcessOut.Gateways = {}));
 })(ProcessOut || (ProcessOut = {}));
 /// <reference path="../../references.ts" />
@@ -657,5 +799,6 @@ var ProcessOut;
 /// <reference path="processout/gateways/handler.ts" />
 /// <reference path="processout/gateways/gateway.ts" />
 /// <reference path="processout/gateways/stripe.ts" />
+/// <reference path="processout/gateways/checkoutcom.ts" />
 /// <reference path="processout/gateways/link.ts" />
 /// <reference path="../references.ts" />

@@ -40,6 +40,8 @@ module ProcessOut {
          */
         constructor(projectId: string) {
             this.projectId = projectId;
+
+            this.setup();
         }
 
         /**
@@ -97,6 +99,24 @@ module ProcessOut {
                 error: function(request, err) {
                     error(request, err);
                 }
+            });
+        }
+
+        setup(): void {
+            this.apiRequest("get", `/gateways`, {},
+            function(data, code, jqxhr) {
+                if (!data.success) {
+                    throw new Error(data.message);
+                }
+
+                for (var gateway of data.gateways) {
+                    var g = Gateways.Handler.buildGateway(
+                        this, gateway, "", Flow.None);
+                    console.log(g);
+                    g.setup();
+                }
+            }, function() {
+                throw new Error("Could not load project's gateways. Are you sure your project ID is valid?");
             });
         }
 

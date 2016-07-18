@@ -5,8 +5,12 @@
  */
 module ProcessOut {
 
+    /**
+     * ProcessOut payment flow enum
+     */
     export enum Flow {
-        OneOff                = 1,
+        None                  = 1,
+        OneOff,
         Recurring,
         OneClickAuthorization
     }

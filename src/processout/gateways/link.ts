@@ -25,7 +25,7 @@ module ProcessOut.Gateways {
         }
 
         handle(el: HTMLElement, success: (gateway: string) => void,
-            error: (err: Error) => void) {
+            error: (err: Error) => void): void {
 
             var t = this;
             this.instance.apiRequest("get", this.getEndpoint(false),

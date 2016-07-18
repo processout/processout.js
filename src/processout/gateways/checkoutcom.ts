@@ -1,7 +1,6 @@
 /// <reference path="../../references.ts" />
-/// <amd-dependency path="https://js.stripe.com/v2/" />
 
-/// <reference path="../../definitions/stripe.d.ts" />
+declare var CKOAPI: any;
 
 /**
  * ProcessOut Gateways module/namespace
@@ -11,7 +10,7 @@ module ProcessOut.Gateways {
     /**
      * ProcessOut Gateway class
      */
-    export class StripeGateway extends Gateway {
+    export class CheckoutcomGateway extends Gateway {
 
         /**
          * Constructor, copies data to object
@@ -23,21 +22,20 @@ module ProcessOut.Gateways {
         setup(): void {
             var f = document.createElement("script");
             f.setAttribute("type", "text/javascript");
-            f.setAttribute("src", "https://js.stripe.com/v2/");
+            f.setAttribute("src", "https://cdn.checkout.com/sandbox/js/checkoutkit.js");
+            f.setAttribute("data-namespace", "CKOAPI");
 
             document.body.appendChild(f);
         }
 
         html(): string {
-            return `<div class="${this.instance.classNames('gateway-form-wrapper', 'gateway-stripe')}">
+            return `<div class="${this.instance.classNames('gateway-form-wrapper', 'gateway-checkoutcom')}">
                         ${this.htmlCreditCard()}
                     </div>`;
         }
 
         handle(el: HTMLElement, success: (gateway: string) => void,
             error: (err: Error) => void): void {
-
-            Stripe.setPublishableKey(this.getPublicKey("public_key"));
 
             var submitButton = el.querySelector(`input[type="submit"]`);
             // We disable submit button to prevent from multiple submition
@@ -54,25 +52,35 @@ module ProcessOut.Gateways {
 
             var t = this;
             try {
-                Stripe.card.createToken({
-                    number:    (<HTMLInputElement> numberf).value,
-                    cvc:       (<HTMLInputElement> cvcf).value,
-                    exp_month: Number((<HTMLInputElement> expmonthf).value),
-                    exp_year:  Number((<HTMLInputElement> expyearf).value)
-                }, function(status, response) {
-                    if (response.error) {
+                (<any>CKOAPI).configure({
+                    publicKey: t.getPublicKey("public_key"),
+                    apiError: function (event) {
                         submitButton.removeAttribute("disabled");
-                        error(<Error>{
-                            code:    ErrorCode.GatewayInvalidInput,
-                            message: response.error.message
-                        });
-
-                        return;
+                        // 7xxx errors are validation errors
+                        if (event.data.errorCode[0] == "7")
+                            error(<Error>{
+                                code: ErrorCode.GatewayInvalidInput,
+                                message: event.data.message
+                            });
+                        else
+                            error(<Error>{
+                                code: ErrorCode.GatewayError,
+                                message: event.data.message
+                            });
                     }
+                });
+                (<any>CKOAPI).createCardToken({
+                    "number":      (<HTMLInputElement> numberf).value,
+                    "cvv":         (<HTMLInputElement> cvcf).value,
+                    "expiryMonth": Number((<HTMLInputElement> expmonthf).value),
+                    "expiryYear":  Number((<HTMLInputElement> expyearf).value)
+                }, function(v) {
+                    if (!v.id)
+                        return;
 
-                    // Stripe token correctly generated, let's charge it
+                    // Checkout.com token correctly generated, let's charge it
                     var data   = t.getCustomerObject();
-                    data.token = response.id;
+                    data.token = v.id;
                     t.instance.apiRequest("post", t.getEndpoint(true), data,
                         function(resp) {
                             submitButton.removeAttribute("disabled");

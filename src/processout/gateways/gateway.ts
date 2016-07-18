@@ -208,9 +208,10 @@ module ProcessOut.Gateways {
          * @param {HTMLElement} el
          * @param {callback?} success
          * @param {callback?} error
+         * @return {void}
          */
         hook(el: any, success: (gateway: string) => void,
-            error: (err: Error) => void) {
+            error: (err: Error) => void): void {
 
             if (el.jquery)
                 el = el[0];
@@ -223,9 +224,28 @@ module ProcessOut.Gateways {
             };
         }
 
-        abstract handle(el: HTMLElement, success: (gateway: string) => void,
-            error: (err: Error) => void);
+        /**
+         * Setup the current gateway (such as loading the required js library)
+         * @return {void}
+         */
+        setup(): void {
+            //
+        }
 
+        /**
+         * Handle the gateway's form submission
+         * @param {HTMLElement} el
+         * @param {callback?} success
+         * @param {callback?} error
+         * @return {void}
+         */
+        abstract handle(el: HTMLElement, success: (gateway: string) => void,
+            error: (err: Error) => void): void;
+
+        /**
+         * Get the gateway's HTML
+         * @return {string}
+         */
         abstract html(): string;
 
     }

@@ -9,6 +9,7 @@ module ProcessOut {
         static ProcessOutUnavailable = "processout.unavailable";
         static ResourceNotFound      = "resource.not-found";
         static GatewayError          = "gateway.error";
+        static GatewayInvalidInput   = "gateway.invalid-input";
     }
 
     /**
