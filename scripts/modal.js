@@ -1186,32 +1186,34 @@ var startProcessOut = function () {
     var processOut = new ProcessOut.ProcessOut("");
     // Loop through each modal button
     var buttons = document.querySelectorAll(".processout-modal-button");
-    for (var i in buttons) {
+    for (var i = 0; i < buttons.length; i++) {
         var button = buttons[i];
         var loading = false;
         var modal = null;
-        button.addEventListener("onmouseover", function () {
+        console.log(button);
+        button.onmouseover = function () {
             if (loading || (modal != null && !modal.isDeleted()))
                 return;
             loading = true;
+            // console.log(button);
             modal = processOut.newModal(button.getAttribute("href"), function (modal) {
-                button.addEventListener("onclick", function () {
+                button.onclick = function () {
                     if (modal.isDeleted())
                         return;
                     loading = false;
                     document.body.style.cursor = "auto";
                     modal.show();
-                });
+                };
             }, function (err) {
                 console.log("Could not properly load the modal");
-                button.addEventListener("onclick", function () {
+                button.onclick = function () {
                     loading = false;
                     document.body.style.cursor = "auto";
                     window.location.href = button.getAttribute("href");
-                });
+                };
             });
-        });
-        button.addEventListener("onclick", function () {
+        };
+        button.onclick = function () {
             if (!loading)
                 return false;
             document.body.style.cursor = "wait";
@@ -1219,7 +1221,7 @@ var startProcessOut = function () {
                 button.click();
             }, 500);
             return false;
-        });
+        };
     }
     ;
 };

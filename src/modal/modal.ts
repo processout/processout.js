@@ -6,36 +6,37 @@ var startProcessOut = function() {
 
     // Loop through each modal button
     var buttons = document.querySelectorAll(".processout-modal-button");
-    for (var i in buttons) {
-        var button = buttons[i];
-        var loading   = false;
-        var modal     = null;
-        button.addEventListener("onmouseover", function() {
-            if (loading || (modal != null && ! modal.isDeleted()))
+    for (var i = 0; i < buttons.length; i++) {
+        var button  = <HTMLElement>buttons[i];
+        var loading = false;
+        var modal   = null;
+
+        button.onmouseover = function() {
+            if (loading || (modal != null && !modal.isDeleted()))
                 return;
 
             loading = true;
             modal   = processOut.newModal(button.getAttribute("href"), function(modal) {
-                button.addEventListener("onclick", function() {
+                button.onclick = function() {
                     if (modal.isDeleted())
                         return;
 
-                    loading = false;
+                    loading                    = false;
                     document.body.style.cursor = "auto";
                     modal.show();
-                });
+                }
             }, function(err) {
                 console.log("Could not properly load the modal");
-                button.addEventListener("onclick", function() {
-                    loading = false;
+                button.onclick = function() {
+                    loading                    = false;
                     document.body.style.cursor = "auto";
-                    window.location.href = button.getAttribute("href");
-                });
+                    window.location.href       = button.getAttribute("href");
+                }
             });
-        });
+        }
 
-        button.addEventListener("onclick", function() {
-            if (! loading)
+        button.onclick = function() {
+            if (!loading)
                 return false;
 
             document.body.style.cursor = "wait";
@@ -44,7 +45,7 @@ var startProcessOut = function() {
             }, 500);
 
             return false;
-        });
+        }
     };
 }
 startProcessOut();
