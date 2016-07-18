@@ -7,35 +7,35 @@
 <body>
 	<h2>ProcessOut White Label</h2>
 
-    <div id="gateways-wrapper"></div>
+	<div id="gateways-wrapper"></div>
 
 	<script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
 	<script src="https://js.stripe.com/v2/"></script>
 	<script src="scripts/processout.js"></script>
 
-    <script>
-        $(document).ready(function() {
-            var processOut = new ProcessOut.ProcessOut('008a8331-db1b-4cf4-b905-e21fd4aa78e9');
-            console.log(processOut);
+	<script>
+		$(document).ready(function() {
+			var processOut = new ProcessOut.ProcessOut('008a8331-db1b-4cf4-b905-e21fd4aa78e9');
+			console.log(processOut);
 
-            function success(gatewayName) {
-            	alert('Payment success for gateway: '+gatewayName);
-            }
+			function success(gatewayName) {
+				alert('Payment success for gateway: '+gatewayName);
+			}
 
-            function error(err) {
+			function error(err) {
 				console.log(err);
-            	alert('Oops.. an error occurred during the customer checkout.');
-            }
+				alert('Oops.. an error occurred during the customer checkout.');
+			}
 
-            processOut.findInvoice('3622e38e-0173-46a9-a13c-2f45e476cee5', function(invoice) {
-            	var gateways = invoice.gateways();
-            	for (i = 0; i < gateways.length; i++) {
-            		var form = gateways[i].appendTo($('#gateways-wrapper'));
+			processOut.findInvoice('3622e38e-0173-46a9-a13c-2f45e476cee5', function(invoice) {
+				var gateways = invoice.gateways();
+				for (i = 0; i < gateways.length; i++) {
+					var form = gateways[i].appendTo($('#gateways-wrapper'));
 					console.log(form);
-            		gateways[i].hook(form, success, error);
-            	}
-            }, error);
-        });
-    </script>
+					gateways[i].hook(form, success, error);
+				}
+			}, error);
+		});
+	</script>
 </body>
 </html>
