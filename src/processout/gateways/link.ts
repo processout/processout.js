@@ -86,6 +86,20 @@ module ProcessOut.Gateways {
             return this.handleForm(el, success, error);
         }
 
+        /**
+         * Handle the gateway's form submission for one-click authorizations
+         * flow
+         * @param {HTMLElement} el
+         * @param {callback?} success
+         * @param {callback?} error
+         * @return {void}
+         */
+        protected handleOneClickAuthorization(el: HTMLElement,
+            success: (gateway: string) => void, error: (err: Error) => void): void {
+
+            return this.handleForm(el, success, error);
+        }
+
     }
 
 }

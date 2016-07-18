@@ -271,6 +271,8 @@ module ProcessOut.Gateways {
                 return this.handleOneOff(el, success, error);
             case Flow.Recurring:
                 return this.handleRecurring(el, success, error);
+            case Flow.OneClickAuthorization:
+                return this.handleOneClickAuthorization(el, success, error);
 
             default:
                 throw new Error("The flow may be not handled.");
@@ -296,6 +298,17 @@ module ProcessOut.Gateways {
          */
         protected abstract handleRecurring(el: HTMLElement, success: (gateway: string) => void,
             error: (err: Error) => void): void;
+
+        /**
+         * Handle the gateway's form submission for one-click authorizations
+         * flow
+         * @param {HTMLElement} el
+         * @param {callback?} success
+         * @param {callback?} error
+         * @return {void}
+         */
+        protected abstract handleOneClickAuthorization(el: HTMLElement,
+            success: (gateway: string) => void, error: (err: Error) => void): void;
 
         /**
          * Get the gateway's HTML

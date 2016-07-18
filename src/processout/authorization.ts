@@ -8,7 +8,7 @@ module ProcessOut {
     /**
      * ProcessOut Invoice class
      */
-    export class RecurringInvoice {
+    export class Authorization {
 
         /**
          * ProcessOut instance
@@ -42,41 +42,41 @@ module ProcessOut {
         }
 
         /**
-         * Find the requested recurring invoice by its UID
+         * Find the requested authorization by its UID
          * @param {string} uid
          * @param {callback} success
          * @param {callback} error
          */
-        find(uid: string, success: (invoice: RecurringInvoice) => void,
+        find(uid: string, success: (invoice: Authorization) => void,
             error: (err: Error) => void) {
 
             var t = this;
 
             t.uid = uid;
-            t.instance.apiRequest("get", `/recurring-invoices/${uid}`, {},
+            t.instance.apiRequest("get", `/authorizations/${uid}`, {},
             function(data, code, jqxhr) {
                 t.data = data;
 
-                t.instance.apiRequest("get", `/recurring-invoices/${uid}/gateways`, {},
+                t.instance.apiRequest("get", `/authorizations/${uid}/gateways`, {},
                 function(data, code, jqxhr) {
                     t.gatewaysList = [];
                     for (var i = 0; i < data.gateways.length; i++) {
                         t.gatewaysList[i] = Gateways.Handler.buildGateway(
-                            t.instance, data.gateways[i], `/recurring-invoices/${uid}`,
-                            Flow.Recurring);
+                            t.instance, data.gateways[i], `/authorizations/${uid}`,
+                            Flow.OneClickAuthorization);
                     }
 
                     success(t);
                 }, function() {
                     error(<Error>{
                         code: ErrorCode.ResourceNotFound,
-                        message: "The recurring invoice's gateways could not be fetched."
+                        message: "The authorization's gateways could not be fetched."
                     });
                 });
             }, function() {
                 error(<Error>{
                     code: ErrorCode.ResourceNotFound,
-                    message: "The recurring invoice could not be found."
+                    message: "The authorization could not be found."
                 });
             });
         }
