@@ -1,0 +1,6 @@
+"compilerOptions": {
+    "removeComments": true,
+    "outFile": "../../scripts/modal.js",
+    "compileOnSave": false,
+    "buildOnSave": false
+},

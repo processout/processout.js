@@ -1,0 +1,6 @@
+"compilerOptions": {
+    "removeComments": true,
+    "outFile": "../../scripts/processout.js",
+    "compileOnSave": false,
+    "buildOnSave": false
+}
