@@ -1,0 +1,47 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+	<title>ProcessOut payment page whitelabel</title>
+</head>
+<body>
+	<h2>ProcessOut White Label</h2>
+
+	<div id="gateways-wrapper"></div>
+
+	<script src="scripts/processout.js"></script>
+	<script>
+		(function() {
+			var processOut = new ProcessOut.ProcessOut('008a8331-db1b-4cf4-b905-e21fd4aa78e9');
+			console.log(processOut);
+
+			function success(gatewayName) {
+				alert('Payment success for gateway: '+gatewayName);
+			}
+
+			function error(err) {
+				console.log(err);
+				alert('Oops.. an error occurred during the customer checkout.');
+			}
+
+			processOut.findInvoice('3622e38e-0173-46a9-a13c-2f45e476cee5', function(invoice) {
+				var gateways = invoice.gateways();
+				var wrapper = document.getElementById('gateways-wrapper');
+				for (i = 0; i < gateways.length; i++) {
+					var form = gateways[i].appendTo(wrapper);
+					// form is the DOM element corresponding the generated
+					// payment form of the gateway
+					console.log(form);
+
+					// We can hook the form submission so that processout.js
+					// handles it automatically.
+					// Otherwise, we could also manually call
+					// gateways[i].handle(form, success, error)
+					// when the form is submitted
+					gateways[i].hook(form, success, error);
+				}
+			}, error);
+		})();
+	</script>
+</body>
+</html>
