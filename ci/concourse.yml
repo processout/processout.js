@@ -3,7 +3,7 @@ resources:
   type: git
   source:
     branch: master
-    uri: git@github.com:ProcessOut/processout.js
+    uri: https://github.com/ProcessOut/processout.js.git
 
 - name: processoutjs-git-pr
   type: pull-request
