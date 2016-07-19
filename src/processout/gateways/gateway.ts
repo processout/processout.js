@@ -208,6 +208,14 @@ module ProcessOut.Gateways {
         }
 
         /**
+         * Return the default template for SEPA payments (EU bank transfers)
+         * @return {string}
+         */
+        protected htmlSEPA(): string {
+            return `SEPA payments are not supported yet.`;
+        }
+
+        /**
          * Append the gateway html to the given html element, and return the
          * inner created form
          * @param {HTMLElement} root

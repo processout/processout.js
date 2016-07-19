@@ -26,6 +26,10 @@ module ProcessOut.Gateways {
                 return new StripeGateway(instance, data, resourceURL, flow);
             case "checkoutcom":
                 return new CheckoutcomGateway(instance, data, resourceURL, flow);
+            case "adyen":
+                return new AdyenGateway(instance, data, resourceURL, flow);
+            case "checkoutcom":
+                return new GocardlessGateway(instance, data, resourceURL, flow);
             }
 
             // Defaulting to link gateway

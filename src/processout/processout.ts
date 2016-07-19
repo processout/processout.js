@@ -35,6 +35,13 @@ module ProcessOut {
         customer: Customer;
 
         /**
+        * Debug mode (will for instance load the sandboxed libraries of the
+        * gateways instead of the live ones)
+        * @type {string}
+        */
+        debug = false;
+
+        /**
          * ProcessOut constructor
          * @param  {string} projectID ProcessOut project ID
          */

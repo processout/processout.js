@@ -26,7 +26,10 @@ module ProcessOut.Gateways {
         setup(): void {
             var f = document.createElement("script");
             f.setAttribute("type", "text/javascript");
-            f.setAttribute("src", "https://cdn.checkout.com/sandbox/js/checkoutkit.js");
+            if (this.instance.debug)
+                f.setAttribute("src", "https://cdn.checkout.com/sandbox/js/checkoutkit.js");
+            else
+                f.setAttribute("src", "https://cdn.checkout.com/js/checkoutkit.js");
             f.setAttribute("data-namespace", "CKOAPI");
 
             document.body.appendChild(f);
