@@ -1,0 +1,65 @@
+resources:
+- name: processoutjs-git-master
+  type: git
+  source:
+    branch: master
+    uri: git@github.com:ProcessOut/processout.js
+
+- name: processoutjs-git-pr
+  type: pull-request
+  source:
+    repo: ProcessOut/processout.js
+
+- name: processoutjs-docker-image
+  type: docker-image
+  source:
+    email: {{docker-hub-email}}
+    username: {{docker-hub-username}}
+    password: {{docker-hub-password}}
+    repository: {{docker-create-concourse-go-image}}
+
+
+resource_types:
+- name: pull-request
+  type: docker-image
+  source:
+    repository: jtarchie/pr
+
+
+jobs:
+- name: processoutjs-test
+  plan:
+  - get: processoutjs-git-master
+    trigger: true
+    params:
+      submodules: none
+  - task: tests
+    file: processoutjs-git-master/ci/tasks/processoutjs-test.yml
+    privileged: true
+
+- name: processoutjs-build-docker-image
+  public: true
+  serial: true
+  plan:
+  - get: processoutjs-git-master
+    passed: [processoutjs-test]
+    trigger: true
+  - put: processoutjs-docker-image
+    params:
+      build: processoutjs-docker-image/ci
+
+- name: processoutjs-pull-request
+  plan:
+  - get: processoutjs-git-pr
+    trigger: true
+  - put: processoutjs-git-pr
+    params:
+      path: processoutjs-git-pr
+      status: pending
+  - task: tests
+    file: processoutjs-git-master/ci/tasks/processoutjs-test.yml
+    privileged: true
+  - put: processoutjs-git-pr
+    params:
+      path: processoutjs-git-pr
+      status: success

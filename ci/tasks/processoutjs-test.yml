@@ -1,0 +1,18 @@
+---
+platform: linux
+image_resource:
+  type: docker-image
+  source:
+    repository: manuelhuez/golang-docker
+    tag: v1
+run:
+  path: sh
+  args:
+  - -exc
+  - |
+    
+    make test
+  dir: ""
+inputs:
+- name: api-git-master
+  path: gopath/src/github.com/processout/api
