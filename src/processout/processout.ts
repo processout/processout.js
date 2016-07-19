@@ -42,6 +42,19 @@ module ProcessOut {
         debug = false;
 
         /**
+        * Dictionary containing the custom templates defined by the merchant
+        * @type {Object}
+        */
+        customTemplates = {};
+
+        /**
+        * List of all the possible templates
+        * @type {string[]}
+        */
+        protected availableTemplates = ["link", "credit-card",
+            "credit-card-with-name", "sepa"];
+
+        /**
          * ProcessOut constructor
          * @param  {string} projectID ProcessOut project ID
          */
@@ -167,6 +180,30 @@ module ProcessOut {
          */
         getCustomer(): Customer {
             return this.customer;
+        }
+
+        /**
+         * Set the template code
+         * @param {string} name
+         * @param {string} value
+         * @return {void}
+         */
+        setTemplate(name: string, value: string): void {
+            if (this.availableTemplates.indexOf(name) <= -1)
+                throw new Error(`The template ${name} is not supported.`);
+
+            this.customTemplates[name] = value;
+        }
+
+        /**
+         * Reset the template code to the default one
+         * @return {void}
+         */
+        resetTemplate(name: string, value: string): void {
+            if (this.availableTemplates.indexOf(name) <= -1)
+                throw new Error(`The template ${name} is not supported.`);
+
+            delete this.customTemplates[name];
         }
 
         /**

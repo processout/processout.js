@@ -65,10 +65,10 @@ module ProcessOut.Gateways {
             this.resourceURL = resourceURL;
             this.flow        = flow;
 
-            this.name        = data.name;
-            this.displayName = data.display_name;
-            this.publicKeys  = data.public_keys;
-            this.supportedMethod     = data.supported_methods;
+            this.name            = data.name;
+            this.displayName     = data.display_name;
+            this.publicKeys      = data.public_keys;
+            this.supportedMethod = data.supported_methods;
         }
 
         /**
@@ -138,6 +138,9 @@ module ProcessOut.Gateways {
          * @return {string}
          */
         protected htmlLink(): string {
+            if ("link" in this.instance.customTemplates)
+                return this.instance.customTemplates["link"];
+
             return `<form action="" method="POST" class="${this.instance.classNames('link-form')}">
                         <div class="${this.instance.classNames('link-submit-upper-wrapper')}">
                             <div class="${this.instance.classNames('link-submit-lower-wrapper')}">
@@ -185,6 +188,9 @@ module ProcessOut.Gateways {
          * @return {string}
          */
         protected htmlCreditCard(): string {
+            if ("credit-card" in this.instance.customTemplates)
+                return this.instance.customTemplates["credit-card"];
+
             return `<form action="#" method="POST" class="${this.instance.classNames('credit-card-form')}">
                         ${this._htmlCreditCard()}
                     </form>`;
@@ -196,6 +202,9 @@ module ProcessOut.Gateways {
          * @return {string}
          */
         protected htmlCreditCardWithName(): string {
+            if ("credit-card-with-name" in this.instance.customTemplates)
+                return this.instance.customTemplates["credit-card-with-name"];
+
             return `<form action="#" method="POST" class="${this.instance.classNames('credit-card-form', 'credit-card-form-name')}">
                         <div class="${this.instance.classNames('credit-card-name-upper-wrapper')}">
                             <div class="${this.instance.classNames('credit-card-name-lower-wrapper')}">
@@ -212,6 +221,9 @@ module ProcessOut.Gateways {
          * @return {string}
          */
         protected htmlSEPA(): string {
+            if ("sepa" in this.instance.customTemplates)
+                return this.instance.customTemplates["sepa"];
+
             return `SEPA payments are not supported yet.`;
         }
 
@@ -231,6 +243,10 @@ module ProcessOut.Gateways {
             root.appendChild(div);
 
             var form = (<HTMLElement>div.firstChild).querySelector("form");
+
+            if (form == null)
+                console.log("Warning: there doesn't seem to be any form in your gateway template. Please make sure to use one, otherwise you will not be able to use hooks and automated gateway handling.");
+
             return <HTMLElement>form;
         }
 
@@ -244,6 +260,11 @@ module ProcessOut.Gateways {
          */
         hook(el: any, success: (gateway: string) => void,
             error: (err: Error) => void): void {
+
+            if (el == null) {
+                console.log("Warning: element passed to hook is null. ProcessOut will not hook the payment form.");
+                return;
+            }
 
             if (el.jquery)
                 el = el[0];
