@@ -10,14 +10,6 @@ resources:
   source:
     repo: ProcessOut/processout.js
 
-- name: processoutjs-docker-image
-  type: docker-image
-  source:
-    email: {{docker-hub-email}}
-    username: {{docker-hub-username}}
-    password: {{docker-hub-password}}
-    repository: {{docker-create-concourse-go-image}}
-
 
 resource_types:
 - name: pull-request
@@ -36,17 +28,6 @@ jobs:
   - task: tests
     file: processoutjs-git-master/ci/tasks/processoutjs-test.yml
     privileged: true
-
-- name: processoutjs-build-docker-image
-  public: true
-  serial: true
-  plan:
-  - get: processoutjs-git-master
-    passed: [processoutjs-test]
-    trigger: true
-  - put: processoutjs-docker-image
-    params:
-      build: processoutjs-docker-image/ci
 
 - name: processoutjs-pull-request
   plan:
