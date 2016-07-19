@@ -54,8 +54,8 @@ module ProcessOut.Gateways {
                     window.location.href = resp.customer_action.url;
                 }, function (request, err) {
                     error(<Error>{
-                        code:    ErrorCode.GatewayError,
-                        message: err
+                        code:    ErrorCode.ProcessOutUnavailable,
+                        message: "An error occured trying to communicate with ProcessOut"
                     });
                 });
         }

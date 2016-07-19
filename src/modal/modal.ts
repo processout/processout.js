@@ -7,45 +7,53 @@ var startProcessOut = function() {
     // Loop through each modal button
     var buttons = document.querySelectorAll(".processout-modal-button");
     for (var i = 0; i < buttons.length; i++) {
-        var button  = <HTMLElement>buttons[i];
-        var loading = false;
-        var modal   = null;
+        var handleButton = function() {
+            var button  = <HTMLElement>buttons[i];
+            var loading = false;
+            var modal   = null;
 
-        button.onmouseover = function() {
-            if (loading || (modal != null && !modal.isDeleted()))
-                return;
+            var preclick = function() {
+                if (!loading)
+                    return false;
 
-            loading = true;
-            modal   = processOut.newModal(button.getAttribute("href"), function(modal) {
-                button.onclick = function() {
-                    if (modal.isDeleted())
-                        return;
+                document.body.style.cursor = "wait";
+                setTimeout(function () {
+                    (<HTMLElement>button).click();
+                }, 500);
 
-                    loading                    = false;
-                    document.body.style.cursor = "auto";
-                    modal.show();
-                }
-            }, function(err) {
-                console.log("Could not properly load the modal");
-                button.onclick = function() {
-                    loading                    = false;
-                    document.body.style.cursor = "auto";
-                    window.location.href       = button.getAttribute("href");
-                }
-            });
-        }
-
-        button.onclick = function() {
-            if (!loading)
                 return false;
+            };
 
-            document.body.style.cursor = "wait";
-            setTimeout(function () {
-                (<HTMLElement>button).click();
-            }, 500);
+            button.onmouseover = function() {
+                if (loading || (modal != null && !modal.isDeleted()))
+                    return;
 
-            return false;
+                var error = function(err) {
+                    console.log("Could not properly load the modal");
+                    console.log(err);
+                    window.location.href = button.getAttribute("href");
+                };
+
+                loading = true;
+                modal   = processOut.newModal(button.getAttribute("href"), function(modal) {
+                    button.onclick = function() {
+                        if (modal.isDeleted())
+                            return false;
+
+                        loading                    = false;
+                        document.body.style.cursor = "auto";
+                        modal.show();
+
+                        button.onclick = preclick;
+
+                        return false;
+                    }
+                }, error);
+            }
+
+            button.onclick = preclick;
         }
+        handleButton();
     };
 }
 startProcessOut();

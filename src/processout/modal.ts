@@ -18,9 +18,9 @@ module ProcessOut {
 
         /**
          * Modal iFrame
-         * @type {domElement}
+         * @type {HTMLIFrameElement}
          */
-        iframe;
+        iframe: HTMLIFrameElement;
 
         /**
          * Unique ID of the modal
@@ -42,10 +42,10 @@ module ProcessOut {
 
         /**
          * Modal constructor
-         * @param  {domElement} iframe
+         * @param  {HTMLIFrameElement} iframe
          * @param  {string}     uniqId
          */
-        constructor(instance: ProcessOut, iframe, uniqId: string) {
+        constructor(instance: ProcessOut, iframe: HTMLIFrameElement, uniqId: string) {
             this.instance = instance;
             this.iframe   = iframe;
             this.uniqId   = uniqId;
@@ -60,10 +60,10 @@ module ProcessOut {
          */
         show(onShow?: (modal: Modal) => void, onHide?: (modal: Modal) => void,
             error?: (err: Error) => void) {
-                
+
             var modal   = this;
             var iframe  = modal.iframe;
-            var iframeW = iframe.get(0).contentWindow;
+            var iframeW = iframe.contentWindow;
             var frameid = modal.uniqId;
             iframeW.postMessage(`${this.namespace} ${frameid} check`, "*");
             var redirectTimeout =
@@ -74,7 +74,6 @@ module ProcessOut {
                             code:    "modal.unavailable"
                         });
                 }, this.instance.timeout);
-            var oldCursor = jQuery("body").css("cursor");
 
             function receiveMessage(event) {
                 var eventSplit = event.data.split(" ");
@@ -89,15 +88,15 @@ module ProcessOut {
                         // Clear the timeout
                         clearTimeout(redirectTimeout);
                         // Make sure that we can't scroll behind the modal
-                        jQuery("body").css("overflow", "hidden");
+                        document.body.style.overflow = "hidden";
                         // Make sure our iframe is of the correct dimension
-                        jQuery(window).resize(function() {
-                            iframe.width(jQuery(window).outerWidth());
-                            iframe.height(jQuery(window).outerHeight());
-                        });
-                        jQuery(window).trigger("resize");
+                        window.onresize = function() {
+                            iframe.width = window.outerWidth + "px";
+                            iframe.height = window.outerHeight + "px";
+                        }
+                        window.dispatchEvent(new Event('resize'));
                         // Show the iframe
-                        iframe.fadeIn(200);
+                        iframe.style.display = "block";
                         iframeW.postMessage(`${modal.namespace} ${frameid} launch`, "*");
                         if (typeof(onShow) === typeof(Function))
                             onShow(this);
@@ -128,9 +127,9 @@ module ProcessOut {
          */
         hide() {
             // Hide the modal
-            this.iframe.fadeOut(200);
+            this.iframe.style.display = "none";
             // Put the scrollbar back
-            jQuery("body").css("overflow", "");
+            document.body.style.overflow = "";
 
             this.iframe.remove();
 

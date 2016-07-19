@@ -108,8 +108,8 @@ module ProcessOut.Gateways {
                         }, function (request, err) {
                             submitButton.removeAttribute("disabled");
                             error(<Error>{
-                                code:    ErrorCode.GatewayError,
-                                message: err
+                                code:    ErrorCode.ProcessOutUnavailable,
+                                message: "An error occured trying to communicate with ProcessOut"
                             });
                         });
                 });
