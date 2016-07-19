@@ -94,13 +94,13 @@ function(modal) {
 	modal.show();
 
 	// callbacks may also be passed to show():
-	modal.show(function(m) {
+	modal.show(function(modal) {
 		// On Shown
 
-	}, function(m) {
+	}, function(modal) {
 		// On hidden
 
-	}, function(e) {
+	}, function(error) {
 		// Error
 
 	})
