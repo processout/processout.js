@@ -23,6 +23,12 @@ var ProcessOut;
              * @type {string}
              */
             this.cssPrefix = "processout-";
+            /**
+            * Debug mode (will for instance load the sandboxed libraries of the
+            * gateways instead of the live ones)
+            * @type {string}
+            */
+            this.debug = false;
             this.projectID = projectID;
             if (this.projectID == "") {
                 console.log("No project ID was specified, skipping setup.");
@@ -479,6 +485,10 @@ var ProcessOut;
                         return new Gateways.StripeGateway(instance, data, resourceURL, flow);
                     case "checkoutcom":
                         return new Gateways.CheckoutcomGateway(instance, data, resourceURL, flow);
+                    case "adyen":
+                        return new Gateways.AdyenGateway(instance, data, resourceURL, flow);
+                    case "checkoutcom":
+                        return new Gateways.GocardlessGateway(instance, data, resourceURL, flow);
                 }
                 // Defaulting to link gateway
                 return new Gateways.LinkGateway(instance, data, resourceURL, flow);
@@ -596,6 +606,13 @@ var ProcessOut;
              */
             Gateway.prototype.htmlCreditCardWithName = function () {
                 return "<form action=\"#\" method=\"POST\" class=\"" + this.instance.classNames('credit-card-form', 'credit-card-form-name') + "\">\n                        <div class=\"" + this.instance.classNames('credit-card-name-upper-wrapper') + "\">\n                            <div class=\"" + this.instance.classNames('credit-card-name-lower-wrapper') + "\">\n                                <label class=\"" + this.instance.classNames('credit-card-name-label') + "\">Card holder name</label>\n                                <input type=\"text\" size=\"20\" placeholder=\"John Smith\" class=\"" + this.instance.classNames('credit-card-name-input') + "\" />\n                            </div>\n                        </div>\n                        " + this._htmlCreditCard() + "\n                    </form>";
+            };
+            /**
+             * Return the default template for SEPA payments (EU bank transfers)
+             * @return {string}
+             */
+            Gateway.prototype.htmlSEPA = function () {
+                return "SEPA payments are not supported yet.";
             };
             /**
              * Append the gateway html to the given html element, and return the
@@ -830,7 +847,10 @@ var ProcessOut;
             CheckoutcomGateway.prototype.setup = function () {
                 var f = document.createElement("script");
                 f.setAttribute("type", "text/javascript");
-                f.setAttribute("src", "https://cdn.checkout.com/sandbox/js/checkoutkit.js");
+                if (this.instance.debug)
+                    f.setAttribute("src", "https://cdn.checkout.com/sandbox/js/checkoutkit.js");
+                else
+                    f.setAttribute("src", "https://cdn.checkout.com/js/checkoutkit.js");
                 f.setAttribute("data-namespace", "CKOAPI");
                 document.body.appendChild(f);
             };
@@ -1091,6 +1111,91 @@ var ProcessOut;
     })(Gateways = ProcessOut.Gateways || (ProcessOut.Gateways = {}));
 })(ProcessOut || (ProcessOut = {}));
 /// <reference path="../../references.ts" />
+/**
+ * ProcessOut Gateways module/namespace
+ */
+var ProcessOut;
+(function (ProcessOut) {
+    var Gateways;
+    (function (Gateways) {
+        /**
+         * ProcessOut Gateway class
+         */
+        var GocardlessGateway = (function (_super) {
+            __extends(GocardlessGateway, _super);
+            /**
+             * Constructor, copies data to object
+             */
+            function GocardlessGateway(instance, data, actionURL, flow) {
+                _super.call(this, instance, data, actionURL, flow);
+            }
+            /**
+             * Setup the current gateway (such as loading the required js library)
+             * @return {void}
+             */
+            GocardlessGateway.prototype.setup = function () {
+                var f = document.createElement("script");
+                f.setAttribute("type", "text/javascript");
+                if (this.instance.debug)
+                    f.setAttribute("src", "https://pay-sandbox.gocardless.com/js/beta");
+                else
+                    f.setAttribute("src", "https://pay.gocardless.com/js/beta");
+                document.body.appendChild(f);
+            };
+            /**
+             * Get the gateway's HTML
+             * @return {string}
+             */
+            GocardlessGateway.prototype.html = function () {
+                return "<div class=\"" + this.instance.classNames('gateway-form-wrapper', 'gateway-gocardless') + "\">\n                        " + this.htmlSEPA() + "\n                    </div>";
+            };
+            /**
+             * Stripe uses the same code for one-off, recurring and authorizations
+             * @param {HTMLElement} el
+             * @param {callback?} success
+             * @param {callback?} error
+             * @return {void}
+             */
+            GocardlessGateway.prototype.handleForm = function (el, success, error) {
+                throw new Error("GoCardless is not supported by processout.js yet.");
+            };
+            /**
+             * Handle the gateway's form submission for one-off payments
+             * @param {HTMLElement} el
+             * @param {callback?} success
+             * @param {callback?} error
+             * @return {void}
+             */
+            GocardlessGateway.prototype.handleOneOff = function (el, success, error) {
+                throw new Error("GoCardless does not support one-off payments.");
+            };
+            /**
+             * Handle the gateway's form submission for recurring invoice payments
+             * @param {HTMLElement} el
+             * @param {callback?} success
+             * @param {callback?} error
+             * @return {void}
+             */
+            GocardlessGateway.prototype.handleRecurring = function (el, success, error) {
+                return this.handleForm(el, success, error);
+            };
+            /**
+             * Handle the gateway's form submission for one-click authorizations
+             * flow
+             * @param {HTMLElement} el
+             * @param {callback?} success
+             * @param {callback?} error
+             * @return {void}
+             */
+            GocardlessGateway.prototype.handleOneClickAuthorization = function (el, success, error) {
+                return this.handleForm(el, success, error);
+            };
+            return GocardlessGateway;
+        })(Gateways.Gateway);
+        Gateways.GocardlessGateway = GocardlessGateway;
+    })(Gateways = ProcessOut.Gateways || (ProcessOut.Gateways = {}));
+})(ProcessOut || (ProcessOut = {}));
+/// <reference path="../../references.ts" />
 /// <amd-dependency path="https://js.stripe.com/v2/" />
 /**
  * ProcessOut Gateways module/namespace
@@ -1191,6 +1296,7 @@ var ProcessOut;
 /// <reference path="processout/gateways/stripe.ts" />
 /// <reference path="processout/gateways/checkoutcom.ts" />
 /// <reference path="processout/gateways/adyen.ts" />
+/// <reference path="processout/gateways/gocardless.ts" />
 /// <reference path="processout/gateways/link.ts" />
 /// <reference path="../references.ts" />
 /**
