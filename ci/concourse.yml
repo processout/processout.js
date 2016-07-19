@@ -27,7 +27,6 @@ jobs:
       submodules: none
   - task: tests
     file: processoutjs-git-master/ci/tasks/processoutjs-test.yml
-    privileged: true
 
 - name: processoutjs-pull-request
   plan:
@@ -39,7 +38,6 @@ jobs:
       status: pending
   - task: tests
     file: processoutjs-git-master/ci/tasks/processoutjs-test.yml
-    privileged: true
   - put: processoutjs-git-pr
     params:
       path: processoutjs-git-pr
