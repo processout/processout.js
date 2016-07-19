@@ -1193,7 +1193,7 @@ var ProcessOut;
 /// <reference path="processout/gateways/adyen.ts" />
 /// <reference path="processout/gateways/link.ts" />
 /// <reference path="../references.ts" />
-var startProcessOut = function () {
+(function () {
     // The project ID is not required for a simple modal use
     var processOut = new ProcessOut.ProcessOut("");
     // Loop through each modal button
@@ -1238,5 +1238,4 @@ var startProcessOut = function () {
         handleButton();
     }
     ;
-};
-startProcessOut();
+})();

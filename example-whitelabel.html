@@ -9,11 +9,9 @@
 
 	<div id="gateways-wrapper"></div>
 
-	<script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
 	<script src="scripts/processout.js"></script>
-
 	<script>
-		$(document).ready(function() {
+		(function() {
 			var processOut = new ProcessOut.ProcessOut('008a8331-db1b-4cf4-b905-e21fd4aa78e9');
 			console.log(processOut);
 
@@ -28,13 +26,22 @@
 
 			processOut.findInvoice('3622e38e-0173-46a9-a13c-2f45e476cee5', function(invoice) {
 				var gateways = invoice.gateways();
+				var wrapper = document.getElementById('gateways-wrapper');
 				for (i = 0; i < gateways.length; i++) {
-					var form = gateways[i].appendTo($('#gateways-wrapper'));
+					var form = gateways[i].appendTo(wrapper);
+					// form is the DOM element corresponding the generated
+					// payment form of the gateway
 					console.log(form);
+
+					// We can hook the form submission so that processout.js
+					// handles it automatically.
+					// Otherwise, we could also manually call
+					// gateways[i].handle(form, success, error)
+					// when the form is submitted
 					gateways[i].hook(form, success, error);
 				}
 			}, error);
-		});
+		})();
 	</script>
 </body>
 </html>
