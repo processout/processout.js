@@ -40,6 +40,17 @@ var ProcessOut;
             */
             this.availableTemplates = ["link", "credit-card",
                 "credit-card-with-name", "sepa"];
+            // We want to make sure ProcessOut.js is loaded from ProcessOut CDN.
+            var scripts = document.getElementsByTagName("script");
+            var ok = false;
+            for (var i = 0; i < scripts.length; i++) {
+                if (/^https?:\/\/cdn\.processout\.((com)|(ninja)|(dev))\//.test(scripts[i].getAttribute("src"))) {
+                    ok = true;
+                }
+            }
+            if (!ok) {
+                throw new Error("ProcessOut.js was not loaded from ProcessOut CDN. Please do not host ProcessOut.js yourself but rather use ProcessOut CDN: https://cdn.processout.com/processout-min.js");
+            }
             this.projectID = projectID;
             if (this.projectID == "") {
                 console.log("No project ID was specified, skipping setup.");
@@ -805,11 +816,18 @@ var ProcessOut;
                                 });
                                 return;
                             }
-                            if (/^https?:\/\/checkout\.processout\.((com)|(ninja)|(dev))\//.test(resp.url)) {
+                            var url = resp.customer_action.url;
+                            // Redirect URL is empty
+                            if (url == undefined || url == "") {
                                 success(t.name);
                                 return;
                             }
-                            window.location.href = resp.url;
+                            // Redirect URL is ProcessOut
+                            if (/^https?:\/\/checkout\.processout\.((com)|(ninja)|(dev))\//.test(url)) {
+                                success(t.name);
+                                return;
+                            }
+                            window.location.href = url;
                         }, function (request, err) {
                             submitButton.removeAttribute("disabled");
                             error({
@@ -958,11 +976,18 @@ var ProcessOut;
                                 });
                                 return;
                             }
-                            if (/^https?:\/\/checkout\.processout\.((com)|(ninja)|(dev))\//.test(resp.url)) {
+                            var url = resp.customer_action.url;
+                            // Redirect URL is empty
+                            if (url == undefined || url == "") {
                                 success(t.name);
                                 return;
                             }
-                            window.location.href = resp.url;
+                            // Redirect URL is ProcessOut
+                            if (/^https?:\/\/checkout\.processout\.((com)|(ninja)|(dev))\//.test(url)) {
+                                success(t.name);
+                                return;
+                            }
+                            window.location.href = url;
                         }, function (request, err) {
                             submitButton.removeAttribute("disabled");
                             error({
@@ -1103,11 +1128,18 @@ var ProcessOut;
                         });
                         return;
                     }
-                    if (/^https?:\/\/checkout\.processout\.((com)|(ninja)|(dev))\//.test(resp.url)) {
+                    var url = resp.customer_action.url;
+                    // Redirect URL is empty
+                    if (url == undefined || url == "") {
                         success(t.name);
                         return;
                     }
-                    window.location.href = resp.url;
+                    // Redirect URL is ProcessOut
+                    if (/^https?:\/\/checkout\.processout\.((com)|(ninja)|(dev))\//.test(url)) {
+                        success(t.name);
+                        return;
+                    }
+                    window.location.href = url;
                 }, function (request, err) {
                     submitButton.removeAttribute("disabled");
                     error({

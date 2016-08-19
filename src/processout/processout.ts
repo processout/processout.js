@@ -59,6 +59,21 @@ module ProcessOut {
          * @param  {string} projectID ProcessOut project ID
          */
         constructor(projectID: string) {
+            // We want to make sure ProcessOut.js is loaded from ProcessOut CDN.
+            var scripts = document.getElementsByTagName("script");
+            var ok = false;
+            for (var i = 0; i < scripts.length; i++) {
+                if (/^https?:\/\/cdn\.processout\.((com)|(ninja)|(dev))\//.test(
+                    scripts[i].getAttribute("src"))) {
+
+                    ok = true;
+                }
+            }
+
+            if (!ok) {
+                throw new Error("ProcessOut.js was not loaded from ProcessOut CDN. Please do not host ProcessOut.js yourself but rather use ProcessOut CDN: https://cdn.processout.com/processout-min.js")
+            }
+
             this.projectID = projectID;
 
             if (this.projectID == "") {

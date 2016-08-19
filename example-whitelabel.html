@@ -9,7 +9,7 @@
 
 	<div id="gateways-wrapper"></div>
 
-	<script src="scripts/processout.js"></script>
+	<script src="http://cdn.processout.dev/scripts/processout.js"></script>
 	<script>
 		(function() {
 			var processOut = new ProcessOut.ProcessOut('18f0e0c7-19d7-49c3-ad58-494a449b813b');
@@ -24,7 +24,7 @@
 				alert('Oops.. an error occurred during the customer checkout: '+err.message);
 			}
 
-			processOut.findInvoice('fe8cad26-9725-498f-a37d-7684c8623f60', function(invoice) {
+			processOut.findInvoice('41612271-346f-409f-9f6d-a301f419326e', function(invoice) {
 				var gateways = invoice.gateways();
 				var wrapper = document.getElementById('gateways-wrapper');
 				for (i = 0; i < gateways.length; i++) {

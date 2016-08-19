@@ -108,12 +108,21 @@ module ProcessOut.Gateways {
                         return;
                     }
 
-                    if (/^https?:\/\/checkout\.processout\.((com)|(ninja)|(dev))\//.test(resp.url)) {
+                    var url = resp.customer_action.url;
+
+                    // Redirect URL is empty
+                    if (url == undefined || url == "") {
                         success(t.name);
                         return;
                     }
 
-                    window.location.href = resp.url;
+                    // Redirect URL is ProcessOut
+                    if (/^https?:\/\/checkout\.processout\.((com)|(ninja)|(dev))\//.test(url)) {
+                        success(t.name);
+                        return;
+                    }
+
+                    window.location.href = url;
                 }, function (request, err) {
                     submitButton.removeAttribute("disabled");
                     error(<Error>{
