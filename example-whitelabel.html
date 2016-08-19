@@ -12,7 +12,7 @@
 	<script src="scripts/processout.js"></script>
 	<script>
 		(function() {
-			var processOut = new ProcessOut.ProcessOut('008a8331-db1b-4cf4-b905-e21fd4aa78e9');
+			var processOut = new ProcessOut.ProcessOut('18f0e0c7-19d7-49c3-ad58-494a449b813b');
 			console.log(processOut);
 
 			function success(gatewayName) {
@@ -21,10 +21,10 @@
 
 			function error(err) {
 				console.log(err);
-				alert('Oops.. an error occurred during the customer checkout.');
+				alert('Oops.. an error occurred during the customer checkout: '+err.message);
 			}
 
-			processOut.findInvoice('3622e38e-0173-46a9-a13c-2f45e476cee5', function(invoice) {
+			processOut.findInvoice('fe8cad26-9725-498f-a37d-7684c8623f60', function(invoice) {
 				var gateways = invoice.gateways();
 				var wrapper = document.getElementById('gateways-wrapper');
 				for (i = 0; i < gateways.length; i++) {

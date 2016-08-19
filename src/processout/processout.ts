@@ -111,16 +111,11 @@ module ProcessOut {
             if (method != "get")
                 data = JSON.stringify(data);
             else {
-                var formData = new FormData();
+                path += "?";
                 for (var key in data) {
-                    formData.append(key, data[key]);
+                    path += `${key}=${encodeURIComponent(data[key])}&`;
                 }
-
-                data = formData;
             }
-
-            if (method == "get")
-                path += `?${formData}`;
 
             var request = new XMLHttpRequest();
             request.open(method, this.endpoint("api", path), true);
@@ -129,7 +124,7 @@ module ProcessOut {
             request.setRequestHeader("Authorization", "Basic " + btoa(this.projectID+":"));
 
             request.onload = function() {
-                if (request.status >= 200 && request.status < 500) {
+                if (request.status >= 200 && request.status < 300) {
                     success(JSON.parse(request.responseText), request.status, request);
                     return;
                 }
