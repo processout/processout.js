@@ -32,16 +32,6 @@ module ProcessOut.Gateways {
         }
 
         /**
-         * Get the gateway's HTML
-         * @return {string}
-         */
-        html(): string {
-            return `<div class="${this.instance.classNames('gateway-form-wrapper', 'gateway-stripe')}">
-                        ${this.htmlCreditCard()}
-                    </div>`;
-        }
-
-        /**
          * Stripe uses the same code for one-off, recurring and authorizations
          * @param {HTMLElement} el
          * @param {callback?} success
@@ -85,7 +75,7 @@ module ProcessOut.Gateways {
                     }
 
                     // Stripe token correctly generated, let's charge it
-                    var data   = t.getCustomerObject();
+                    var data   = <any>{};
                     data.token = response.id;
                     t.instance.apiRequest("post", t.getEndpoint(true), data,
                         function(resp) {

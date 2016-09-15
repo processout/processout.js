@@ -28,12 +28,9 @@ module ProcessOut.Gateways {
                 return new CheckoutcomGateway(instance, data, resourceURL, flow);
             case "adyen":
                 return new AdyenGateway(instance, data, resourceURL, flow);
-            case "checkoutcom":
-                return new GocardlessGateway(instance, data, resourceURL, flow);
             }
 
-            // Defaulting to link gateway
-            return new LinkGateway(instance, data, resourceURL, flow);
+            throw new Error("The gateway "+data.name+" is not supported by ProcessOut.js");
         }
 
     }

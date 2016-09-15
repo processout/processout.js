@@ -32,16 +32,6 @@ module ProcessOut.Gateways {
         }
 
         /**
-         * Get the gateway's HTML
-         * @return {string}
-         */
-        html(): string {
-            return `<div class="${this.instance.classNames('gateway-form-wrapper', 'gateway-adyen')}">
-                        ${this.htmlCreditCardWithName()}
-                    </div>`;
-        }
-
-        /**
          * Stripe uses the same code for one-off, recurring and authorizations
          * @param {HTMLElement} el
          * @param {callback?} success
@@ -85,7 +75,7 @@ module ProcessOut.Gateways {
                 }
             }
 
-            var data  = t.getCustomerObject();
+            var data  = <any>{};
             data.token = Adyen.encrypt({
                 number:         (<HTMLInputElement> numberf).value,
                 cvc:            (<HTMLInputElement> cvcf).value,

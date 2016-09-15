@@ -36,16 +36,6 @@ module ProcessOut.Gateways {
         }
 
         /**
-         * Get the gateway's HTML
-         * @return {string}
-         */
-        html(): string {
-            return `<div class="${this.instance.classNames('gateway-form-wrapper', 'gateway-checkoutcom')}">
-                        ${this.htmlCreditCard()}
-                    </div>`;
-        }
-
-        /**
          * Checkout.com uses the same code for one-off, recurring and
          * authorizations
          * @param {HTMLElement} el
@@ -98,8 +88,8 @@ module ProcessOut.Gateways {
                         return;
 
                     // Checkout.com token correctly generated, let's charge it
-                    var data   = t.getCustomerObject();
-                    data.token = v.id;
+                    var data   = <any>{};
+                    data.token = v.id; 
                     t.instance.apiRequest("post", t.getEndpoint(true), data,
                         function(resp) {
                             submitButton.removeAttribute("disabled");

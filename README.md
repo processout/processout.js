@@ -114,37 +114,6 @@ function(modal) {
 });
 ```
 
-### White-label integration
-
-ProcessOut.js also provides you with a way to completely blend your ProcessOut integration in your website, without any ProcessOut branding.
-
-```js
-// Callback executed when the payment has synchronously succeeded.
-// If the payment gateway requires a redirection (such as with PayPal),
-// the customer will instead be redirected to the payment page of this
-// gateway, and this event won't be executed
-function success(gatewayName) {
-	alert('Payment success for gateway: '+gatewayName);
-}
-
-// Callback executed when an error occurred
-function error() {
-	alert('Oops.. an error occurred during the customer checkout.');
-}
-
-// We want to first find the invoice we're dealing with
-// Other available methods working the same way:
-// - findRecurringInvoice('uid', function(recurringInvoice) {});
-// - findAuthorization('uid', function(authorization) {});
-processOut.findInvoice('uid', function(invoice) {
-	var gateways = invoice.gateway();
-	for (i = 0; i < gateways.length; i++) {
-		var form = gateways[i].appendTo($('#gateways-wrapper'));
-		gateways[i].hook(form, success, error);
-	}
-});
-```
-
 -------------------------
 
 Full API documentation
