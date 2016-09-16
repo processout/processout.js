@@ -23,10 +23,10 @@ module ProcessOut.Gateways {
         protected instance: ProcessOut;
 
         /**
-         * Token needed by the gateway to perform the tokenization. May be null
+         * Token needed by the gateway to perform the tokenization
          * @type {string}
          */
-        protected token?: string;
+        protected token: string;
 
         /**
          * Constructor, copies data to object

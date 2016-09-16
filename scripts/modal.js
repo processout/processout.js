@@ -6,7 +6,7 @@ var __extends = (this && this.__extends) || function (d, b) {
 var ProcessOut;
 (function (ProcessOut_1) {
     var ProcessOut = (function () {
-        function ProcessOut(projectID) {
+        function ProcessOut(projectID, resourceID) {
             this.timeout = 10000;
             this.debug = false;
             var scripts = document.getElementsByTagName("script");
@@ -24,13 +24,28 @@ var ProcessOut;
                 console.log("No project ID was specified, skipping setup.");
                 return;
             }
+            this.resourceID = resourceID;
+            if (this.resourceID.substring(0, 3) != "iv_" &&
+                this.resourceID.substring(0, 4) != "sub_" &&
+                this.resourceID.substring(0, 9) != "auth_req_") {
+                throw new ProcessOut_1.Exception("resource.invalid-type");
+            }
         }
+        ProcessOut.prototype.getResourceID = function () {
+            return this.resourceID;
+        };
+        ProcessOut.prototype.isDebug = function () {
+            return this.debug;
+        };
         ProcessOut.prototype.setGateways = function (gateways) {
             for (var _i = 0, gateways_1 = gateways; _i < gateways_1.length; _i++) {
                 var gc = gateways_1[_i];
                 var g = ProcessOut_1.Gateways.Handler.buildGateway(this, gc);
                 this.gateways.push(g);
             }
+        };
+        ProcessOut.prototype.tokenize = function (card, success, error) {
+            this.gateways[0].tokenize(card, success, error);
         };
         ProcessOut.prototype.endpoint = function (subdomain, path) {
             return "https://" + subdomain + ".processout.com" + path;
@@ -212,7 +227,8 @@ var ProcessOut;
             "request.gateway.not-available": "The requested gateway is currently unavailable.",
             "request.gateway.not-supported": "The gateway is not supported by ProcessOut.js",
             "processout-js.not-hosted": "ProcessOut.js was not loaded from ProcessOut CDN. Please do not host ProcessOut.js yourself but rather use ProcessOut CDN: https://cdn.processout.com/processout-min.js",
-            "processout-js.modal.unavailable": "The ProcessOut.js modal is unavailable."
+            "processout-js.modal.unavailable": "The ProcessOut.js modal is unavailable.",
+            "resource.invalid-type": "The provided resource was invalid. It must be an invoice, a subscription or an authorization request."
         }
     };
     var Translator = (function () {
@@ -286,6 +302,15 @@ var ProcessOut;
             this.cvc = cvc;
             this.expiry = expiry;
         }
+        Card.prototype.getNumber = function () {
+            return this.number;
+        };
+        Card.prototype.getExpiry = function () {
+            return this.expiry;
+        };
+        Card.prototype.getCVC = function () {
+            return this.cvc;
+        };
         Card.formatNumber = function (number) {
             var v = number.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
             var matches = v.match(/\d{4,16}/g);
@@ -348,11 +373,13 @@ var ProcessOut;
             Handler.buildGateway = function (p, gatewayConfiguration) {
                 switch (gatewayConfiguration.gateway.name) {
                     case "stripe":
-                        return new Gateways.StripeGateway(gatewayConfiguration, p.debug);
+                        return new Gateways.StripeGateway(gatewayConfiguration, p);
                     case "checkoutcom":
-                        return new Gateways.CheckoutcomGateway(gatewayConfiguration, p.debug);
+                        return new Gateways.CheckoutcomGateway(gatewayConfiguration, p);
                     case "adyen":
-                        return new Gateways.AdyenGateway(gatewayConfiguration, p.debug);
+                        return new Gateways.AdyenGateway(gatewayConfiguration, p);
+                    case "braintree":
+                        return new BraintreeGateway(gatewayConfiguration, p);
                 }
                 throw new ProcessOut.Exception("request.gateway.not-supported");
             };
@@ -366,21 +393,41 @@ var ProcessOut;
     var Gateways;
     (function (Gateways) {
         var Gateway = (function () {
-            function Gateway(gatewayConfiguration, debug) {
-                this.configurationID = gatewayConfiguration.id;
-                this.publicKeys = gatewayConfiguration.public_keys;
-                this.debug = debug;
+            function Gateway(gatewayConfiguration, instance) {
+                this.configuration = gatewayConfiguration;
+                this.instance = instance;
+                this.fetchCustomerAction();
             }
             Gateway.prototype.getPublicKey = function (key) {
-                for (var _i = 0, _a = this.publicKeys; _i < _a.length; _i++) {
-                    var v = _a[_i];
-                    if (v.key == key) {
-                        return v.value;
-                    }
-                }
+                if (this.configuration.public_keys[key])
+                    return this.configuration.public_keys[key];
                 return "";
             };
             Gateway.prototype.setup = function () {
+            };
+            Gateway.prototype.fetchCustomerAction = function () {
+                var r = this.instance.getResourceID();
+                var resourceName = "invoices";
+                if (r.substring(0, 4) == "sub_") {
+                    resourceName = "subscriptions";
+                }
+                if (r.substring(0, 9) == "auth_req_") {
+                    resourceName = "authorization-requests";
+                }
+                var url = "https://api.processout.ninja/" + resourceName + "/" + r + "/gateway-configurations/" + this.configuration.id + "/customer-action";
+                var t = this;
+                this.instance.apiRequest("GET", url, null, function (data, code, req) {
+                    if (code < 200 || code > 299) {
+                        return;
+                    }
+                    t.token = data.value;
+                }, function (code, req) { });
+            };
+            Gateway.prototype.createProcessOutToken = function (token) {
+                var req = {
+                    "token": token
+                };
+                return "gway_req_" + btoa(JSON.stringify(req));
             };
             return Gateway;
         }());
@@ -393,8 +440,8 @@ var ProcessOut;
     (function (Gateways) {
         var StripeGateway = (function (_super) {
             __extends(StripeGateway, _super);
-            function StripeGateway(gatewayConfiguration, debug) {
-                _super.call(this, gatewayConfiguration, debug);
+            function StripeGateway(gatewayConfiguration, instance) {
+                _super.call(this, gatewayConfiguration, instance);
             }
             StripeGateway.prototype.setup = function () {
                 var f = document.createElement("script");
@@ -402,7 +449,35 @@ var ProcessOut;
                 f.setAttribute("src", "https://js.stripe.com/v2/");
                 document.body.appendChild(f);
             };
+            StripeGateway.convertError = function (code) {
+                var map = {
+                    "invalid_number": "card.invalid-number",
+                    "invalid_expiry_month": "card.invalid-date",
+                    "invalid_expiry_year": "card.invalid-date",
+                    "invalid_cvc": "card.invalid-cvc",
+                    "incorrect_number": "card.invalid-number",
+                    "expired_Card": "card.expired",
+                    "incorrect_cvc": "card.invalid-cvc",
+                    "incorrect_zip": "card.invalid-zip",
+                    "card_declined": "card.declined"
+                };
+                if (map[code])
+                    return map[code];
+                return "default";
+            };
             StripeGateway.prototype.tokenize = function (card, success, error) {
+                Stripe.setPublishableKey(this.getPublicKey("public_key"));
+                Stripe.card.createToken({
+                    number: card.getNumber(),
+                    exp: card.getExpiry().string(),
+                    cvc: card.getCVC()
+                }, function (status, response) {
+                    if (response.error) {
+                        error(new ProcessOut.Exception(Stripe.convertError(response.error.code)));
+                        return;
+                    }
+                    success(response.id);
+                });
             };
             return StripeGateway;
         }(Gateways.Gateway));
@@ -415,13 +490,13 @@ var ProcessOut;
     (function (Gateways) {
         var CheckoutcomGateway = (function (_super) {
             __extends(CheckoutcomGateway, _super);
-            function CheckoutcomGateway(gatewayConfiguration, debug) {
-                _super.call(this, gatewayConfiguration, debug);
+            function CheckoutcomGateway(gatewayConfiguration, instance) {
+                _super.call(this, gatewayConfiguration, instance);
             }
             CheckoutcomGateway.prototype.setup = function () {
                 var f = document.createElement("script");
                 f.setAttribute("type", "text/javascript");
-                if (this.debug)
+                if (this.instance.isDebug())
                     f.setAttribute("src", "https://cdn.checkout.com/sandbox/js/checkoutkit.js");
                 else
                     f.setAttribute("src", "https://cdn.checkout.com/js/checkoutkit.js");
@@ -429,6 +504,28 @@ var ProcessOut;
                 document.body.appendChild(f);
             };
             CheckoutcomGateway.prototype.tokenize = function (card, success, error) {
+                CKOAPI.configure({
+                    publicKey: this.getPublicKey("public_key"),
+                    apiError: function (event) {
+                        if (event.data.errorCode == "70000") {
+                            error(new ProcessOut.Exception("default"));
+                            return;
+                        }
+                        error(new ProcessOut.Exception("card.declined"));
+                    }
+                });
+                CKOAPI.createCardToken({
+                    "number": card.getNumber(),
+                    "cvv": card.getCVC(),
+                    "expiryMonth": card.getExpiry().getMonth(),
+                    "expiryYear": card.getExpiry().getYear()
+                }, function (v) {
+                    if (!v.id) {
+                        error(new ProcessOut.Exception("card.declined"));
+                        return;
+                    }
+                    success(v.id);
+                });
             };
             return CheckoutcomGateway;
         }(Gateways.Gateway));
@@ -441,8 +538,8 @@ var ProcessOut;
     (function (Gateways) {
         var AdyenGateway = (function (_super) {
             __extends(AdyenGateway, _super);
-            function AdyenGateway(gatewayConfiguration, debug) {
-                _super.call(this, gatewayConfiguration, debug);
+            function AdyenGateway(gatewayConfiguration, instance) {
+                _super.call(this, gatewayConfiguration, instance);
             }
             AdyenGateway.prototype.setup = function () {
                 var f = document.createElement("script");
@@ -451,6 +548,17 @@ var ProcessOut;
                 document.body.appendChild(f);
             };
             AdyenGateway.prototype.tokenize = function (card, success, error) {
+                var cseInstance = adyen.encrypt.createEncryption(this.getPublicKey("hosted_client_encryption_token"), {
+                    enableValidations: false
+                });
+                success(cseInstance.encrypt({
+                    number: card.getNumber(),
+                    cvc: card.getCVC(),
+                    holderName: name,
+                    expiryMonth: card.getExpiry().getMonth().toString(),
+                    expiryYear: card.getExpiry().getYear().toString(),
+                    generationtime: new Date(Date.now()).toISOString()
+                }));
             };
             return AdyenGateway;
         }(Gateways.Gateway));
