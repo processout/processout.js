@@ -462,6 +462,53 @@ var ProcessOut;
 })(ProcessOut || (ProcessOut = {}));
 var ProcessOut;
 (function (ProcessOut) {
+    var Gateways;
+    (function (Gateways) {
+        var BraintreeGateway = (function (_super) {
+            __extends(BraintreeGateway, _super);
+            function BraintreeGateway(gatewayConfiguration, instance) {
+                _super.call(this, gatewayConfiguration, instance);
+            }
+            BraintreeGateway.prototype.setup = function () {
+                var f = document.createElement("script");
+                f.setAttribute("type", "text/javascript");
+                f.setAttribute("src", "https://cdn.processout.com/scripts/adyen.encrypt.nodom.min.js");
+                document.body.appendChild(f);
+            };
+            BraintreeGateway.prototype.tokenize = function (card, success, error) {
+                braintree.client.create({
+                    authorization: this.token
+                }, function (err, client) {
+                    if (err) {
+                        error(new ProcessOut.Exception("request.gateway.not-available"));
+                        return;
+                    }
+                    client.request({
+                        endpoint: 'payment_methods/credit_cards',
+                        method: 'post',
+                        data: {
+                            creditCard: {
+                                number: card.getNumber(),
+                                expirationDate: card.getExpiry().string(),
+                                cvv: card.getCVC()
+                            }
+                        }
+                    }, function (err, response) {
+                        if (err) {
+                            error(new ProcessOut.Exception("card.declined"));
+                            return;
+                        }
+                        success(response.creditCards[0].nonce);
+                    });
+                });
+            };
+            return BraintreeGateway;
+        }(Gateways.Gateway));
+        Gateways.BraintreeGateway = BraintreeGateway;
+    })(Gateways = ProcessOut.Gateways || (ProcessOut.Gateways = {}));
+})(ProcessOut || (ProcessOut = {}));
+var ProcessOut;
+(function (ProcessOut) {
     var Expiry = (function () {
         function Expiry(month, year) {
             this.month = month;
@@ -564,51 +611,4 @@ var ProcessOut;
         return Card;
     }());
     ProcessOut.Card = Card;
-})(ProcessOut || (ProcessOut = {}));
-var ProcessOut;
-(function (ProcessOut) {
-    var Gateways;
-    (function (Gateways) {
-        var BraintreeGateway = (function (_super) {
-            __extends(BraintreeGateway, _super);
-            function BraintreeGateway(gatewayConfiguration, instance) {
-                _super.call(this, gatewayConfiguration, instance);
-            }
-            BraintreeGateway.prototype.setup = function () {
-                var f = document.createElement("script");
-                f.setAttribute("type", "text/javascript");
-                f.setAttribute("src", "https://cdn.processout.com/scripts/adyen.encrypt.nodom.min.js");
-                document.body.appendChild(f);
-            };
-            BraintreeGateway.prototype.tokenize = function (card, success, error) {
-                braintree.client.create({
-                    authorization: this.token
-                }, function (err, client) {
-                    if (err) {
-                        error(new ProcessOut.Exception("request.gateway.not-available"));
-                        return;
-                    }
-                    client.request({
-                        endpoint: 'payment_methods/credit_cards',
-                        method: 'post',
-                        data: {
-                            creditCard: {
-                                number: card.getNumber(),
-                                expirationDate: card.getExpiry().string(),
-                                cvv: card.getCVC()
-                            }
-                        }
-                    }, function (err, response) {
-                        if (err) {
-                            error(new ProcessOut.Exception("card.declined"));
-                            return;
-                        }
-                        success(response.creditCards[0].nonce);
-                    });
-                });
-            };
-            return BraintreeGateway;
-        }(Gateways.Gateway));
-        Gateways.BraintreeGateway = BraintreeGateway;
-    })(Gateways = ProcessOut.Gateways || (ProcessOut.Gateways = {}));
 })(ProcessOut || (ProcessOut = {}));

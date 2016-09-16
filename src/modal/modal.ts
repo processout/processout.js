@@ -2,7 +2,7 @@
 
 (function() {
     // The project ID is not required for a simple modal use
-    var processOut = new ProcessOut.ProcessOut("");
+    var processOut = new ProcessOut.ProcessOut("", "");
 
     // Loop through each modal button
     var buttons = document.querySelectorAll(".processout-modal-button");
