@@ -33,7 +33,7 @@ module ProcessOut.Gateways {
         setup(): void {
             var f = document.createElement("script");
             f.setAttribute("type", "text/javascript");
-            f.setAttribute("src", "https://cdn.processout.com/scripts/adyen.encrypt.nodom.min.js");
+            f.setAttribute("src", "https://js.braintreegateway.com/web/3.2.0/js/client.min.js");
 
             document.body.appendChild(f);
         }

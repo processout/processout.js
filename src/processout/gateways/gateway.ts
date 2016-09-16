@@ -39,6 +39,7 @@ module ProcessOut.Gateways {
             this.configuration = gatewayConfiguration;
             this.instance      = instance;
 
+            this.setup();
             this.fetchCustomerAction();
         }
 
@@ -52,14 +53,6 @@ module ProcessOut.Gateways {
                 return this.configuration.public_keys[key];
 
             return "";
-        }
-
-        /**
-         * Setup the current gateway (such as loading the required js library)
-         * @return {void}
-         */
-        protected setup(): void {
-            //
         }
 
         /**
@@ -93,6 +86,12 @@ module ProcessOut.Gateways {
                     t.token = data.value;
                 }, function(code: number, req: XMLHttpRequest): void {});
         }
+
+        /**
+         * Setup the current gateway (such as loading the required js library)
+         * @return {void}
+         */
+        protected abstract setup(): void;
 
         /**
          * Tokenize takes the credit card object and creates a ProcessOut
