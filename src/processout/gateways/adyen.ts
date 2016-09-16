@@ -8,15 +8,24 @@ declare var adyen: any;
 module ProcessOut.Gateways {
 
     /**
+     * adyen is the library we load from their js
+     */
+    declare var adyen: any;
+
+    /**
      * ProcessOut Gateway class
      */
     export class AdyenGateway extends Gateway {
 
         /**
          * Constructor, copies data to object
+         * @param {GatewayConfiguration} gatewayConfiguration
+         * @param {ProcessOut} instance
          */
-        constructor(instance: ProcessOut, data, actionURL: string, flow: Flow) {
-            super(instance, data, actionURL, flow);
+        constructor(gatewayConfiguration: GatewayConfiguration,
+            instance: ProcessOut) {
+
+            super(gatewayConfiguration, instance);
         }
 
         /**
@@ -32,144 +41,31 @@ module ProcessOut.Gateways {
         }
 
         /**
-         * Get the gateway's HTML
-         * @return {string}
-         */
-        html(): string {
-            return `<div class="${this.instance.classNames('gateway-form-wrapper', 'gateway-adyen')}">
-                        ${this.htmlCreditCardWithName()}
-                    </div>`;
-        }
-
-        /**
-         * Stripe uses the same code for one-off, recurring and authorizations
-         * @param {HTMLElement} el
-         * @param {callback?} success
-         * @param {callback?} error
+         * Tokenize takes the credit card object and creates a ProcessOut
+         * token that can be sent to your server and used to charge your
+         * customer
+         * @param  {ProcessOut.Card} card
+         * @param  {callback} success
+         * @param  {callback} error
          * @return {void}
          */
-        protected handleForm(el: HTMLElement, success: (gateway: string) => void,
-            error: (err: Error) => void): void {
+        public tokenize(card: ProcessOut.Card,
+            success: (token: string) => void,
+            error:   (err: ProcessOut.Exception) => void): void {
 
-            var Adyen = adyen.encrypt.createEncryption(
-                this.getPublicKey("merchant_account"), {});
-
-            var submitButton = el.querySelector(`input[type="submit"]`);
-            // We disable submit button to prevent from multiple submition
-            submitButton.setAttribute("disabled", "1");
-
-            var namef = el.getElementsByClassName(this.instance.classNames(
-                "credit-card-name-input"))[0];
-            var numberf = el.getElementsByClassName(this.instance.classNames(
-                "credit-card-number-input"))[0];
-            var cvcf = el.getElementsByClassName(this.instance.classNames(
-                "credit-card-cvc-input"))[0];
-            var expmonthf = el.getElementsByClassName(this.instance.classNames(
-                "credit-card-expiry-month-input"))[0];
-            var expyearf = el.getElementsByClassName(this.instance.classNames(
-                "credit-card-expiry-year-input"))[0];
-
-            var validate = Adyen.validate({
-                "number": (<HTMLInputElement> numberf).value,
-                "cvc":    (<HTMLInputElement> cvcf).value,
-                "month":  Number((<HTMLInputElement> expmonthf).value),
-                "year":   Number((<HTMLInputElement> expyearf).value)
-            });
-            for(var k in validate) {
-                if (! validate[k]) {
-                    error(<Error>{
-                        code:    ErrorCode.GatewayInvalidInput,
-                        message: "The provided credit card is invalid."
-                    });
-                    return;
-                }
-            }
-
-            var data  = t.getCustomerObject();
-            data.token = Adyen.encrypt({
-                number:         (<HTMLInputElement> numberf).value,
-                cvc:            (<HTMLInputElement> cvcf).value,
-                holderName:     (<HTMLInputElement> namef).value,
-                expiryMonth:    Number((<HTMLInputElement> expmonthf).value),
-                expiryYear:     Number((<HTMLInputElement> expyearf).value),
-                generationtime: Math.floor(Date.now() / 1000) // Timestamp
-            });
-
-            var t = this;
-            this.instance.apiRequest("post", this.getEndpoint(true), data,
-                function(resp) {
-                    submitButton.removeAttribute("disabled");
-
-                    if (!resp.success) {
-                        error(<Error>{
-                            code:    ErrorCode.GatewayError,
-                            message: resp.message
-                        });
-                        return;
-                    }
-
-                    var url = resp.customer_action.url;
-
-                    // Redirect URL is empty
-                    if (url == undefined || url == "") {
-                        success(t.name);
-                        return;
-                    }
-
-                    // Redirect URL is ProcessOut
-                    if (/^https?:\/\/checkout\.processout\.((com)|(ninja)|(dev))\//.test(url)) {
-                        success(t.name);
-                        return;
-                    }
-
-                    window.location.href = url;
-                }, function (request, err) {
-                    submitButton.removeAttribute("disabled");
-                    error(<Error>{
-                        code:    ErrorCode.ProcessOutUnavailable,
-                        message: "An error occured trying to communicate with ProcessOut"
-                    });
+            var cseInstance = adyen.encrypt.createEncryption(
+                this.getPublicKey("hosted_client_encryption_token"), {
+                    enableValidations: false
                 });
-        }
 
-        /**
-         * Handle the gateway's form submission for one-off payments
-         * @param {HTMLElement} el
-         * @param {callback?} success
-         * @param {callback?} error
-         * @return {void}
-         */
-        protected handleOneOff(el: HTMLElement, success: (gateway: string) => void,
-            error: (err: Error) => void): void {
-
-            return this.handleForm(el, success, error);
-        }
-
-        /**
-         * Handle the gateway's form submission for recurring invoice payments
-         * @param {HTMLElement} el
-         * @param {callback?} success
-         * @param {callback?} error
-         * @return {void}
-         */
-        protected handleRecurring(el: HTMLElement, success: (gateway: string) => void,
-            error: (err: Error) => void): void {
-
-            return this.handleForm(el, success, error);
-        }
-
-        /**
-         * Handle the gateway's form submission for one-click authorizations
-         * flow
-         * @param {HTMLElement} el
-         * @param {callback?} success
-         * @param {callback?} error
-         * @return {void}
-         */
-        protected handleOneClickAuthorization(el: HTMLElement,
-            success: (gateway: string) => void, error: (err: Error) => void): void {
-
-            return this.handleForm(el, success, error);
+            success(this.createProcessOutToken(cseInstance.encrypt({
+                number:         card.getNumber(),
+                cvc:            card.getCVC(),
+                holderName:     name,
+                expiryMonth:    card.getExpiry().getMonth().toString(),
+                expiryYear:     card.getExpiry().getYear().toString(),
+                generationtime: new Date(Date.now()).toISOString()
+            })));
         }
 
     }

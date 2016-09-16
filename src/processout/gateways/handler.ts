@@ -13,27 +13,24 @@ module ProcessOut.Gateways {
         /**
          * Build a gateway object depending on the gateway name in the data
          * @param {ProcessOut} instance
-         * @param {Object} data
-         * @param {string} resourceURL
-         * @param {Flow} flow
+         * @param {GatewayConfiguration} gatewayConfiguration
          * @return {Gateway}
          */
-        public static buildGateway(instance: ProcessOut, data,
-            resourceURL: string, flow: Flow): Gateway {
+        public static buildGateway(p: ProcessOut,
+            gatewayConfiguration: GatewayConfiguration): Gateway {
 
-            switch (data.name) {
+            switch (gatewayConfiguration.gateway.name) {
             case "stripe":
-                return new StripeGateway(instance, data, resourceURL, flow);
+                return new StripeGateway(gatewayConfiguration, p);
             case "checkoutcom":
-                return new CheckoutcomGateway(instance, data, resourceURL, flow);
+                return new CheckoutcomGateway(gatewayConfiguration, p);
             case "adyen":
-                return new AdyenGateway(instance, data, resourceURL, flow);
-            case "checkoutcom":
-                return new GocardlessGateway(instance, data, resourceURL, flow);
+                return new AdyenGateway(gatewayConfiguration, p);
+            case "braintree":
+                return new BraintreeGateway(gatewayConfiguration, p);
             }
 
-            // Defaulting to link gateway
-            return new LinkGateway(instance, data, resourceURL, flow);
+            throw new Exception("request.gateway.not-supported");
         }
 
     }

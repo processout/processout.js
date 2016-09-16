@@ -11,7 +11,7 @@ module ProcessOut {
     export enum Flow {
         None                  = 1,
         OneOff,
-        Recurring,
-        OneClickAuthorization
+        Subscription,
+        Tokenization
     }
 }

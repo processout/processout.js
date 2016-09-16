@@ -11,339 +11,121 @@ module ProcessOut.Gateways {
     export abstract class Gateway {
 
         /**
-         * ProcessOut instance
+         * configuration of the gateway
+         * @type {GatewayConfiguration}
+         */
+        protected configuration: GatewayConfiguration;
+
+        /**
+         * ProcessOut instance of the current context
          * @type {ProcessOut}
          */
         protected instance: ProcessOut;
 
         /**
-         * ProcessOut API URL of the resource that interacts with the gateway
+         * Token needed by the gateway to perform the tokenization
          * @type {string}
          */
-        protected resourceURL: string;
-
-        /**
-         * Requested payment/authorization flow
-         * @type {Flow}
-         */
-        protected flow: Flow;
-
-        /**
-         * Code name of the gateway
-         * @type {string}
-         */
-        protected name: string;
-
-        /**
-         * Displayable name of the gateway
-         * @type {string}
-         */
-        protected displayName: string;
-
-        /**
-         * Map containing the public keys of the gateway
-         * @type {Object[]}
-         */
-        protected publicKeys: {key: string, value: string}[];
-
-        /**
-         * Slice containing the available methods of the gateway
-         * @type {string[]}
-         */
-        protected supportedMethod: string[];
+        protected token: string;
 
         /**
          * Constructor, copies data to object
+         * @param {GatewayConfiguration} gatewayConfiguration
          * @param {ProcessOut} instance
-         * @param {Object} data
-         * @param {string} resourceURL
-         * @param {Flow} flow
          */
-        constructor(instance: ProcessOut, data, resourceURL: string, flow: Flow) {
-            this.instance = instance;
+        constructor(gatewayConfiguration: GatewayConfiguration,
+            instance: ProcessOut) {
 
-            this.resourceURL = resourceURL;
-            this.flow        = flow;
+            this.configuration = gatewayConfiguration;
+            this.instance      = instance;
 
-            this.name            = data.name;
-            this.displayName     = data.display_name;
-            this.publicKeys      = data.public_keys;
-            this.supportedMethod = data.supported_methods;
+            this.setup();
+            this.fetchCustomerAction();
         }
 
         /**
-         * Get the requested public key in the publicKey object array
+         * Return the given public key, or an empty string if not found
          * @param {string} key
          * @return {string}
          */
-        getPublicKey(key: string): string {
-            for (var v of this.publicKeys) {
-                if (v.key == key) {
-                    return v.value;
-                }
-            }
+        protected getPublicKey(key: string): string {
+            if (this.configuration.public_keys[key])
+                return this.configuration.public_keys[key];
 
             return "";
         }
 
         /**
-         * Format the customer object to an object understandable by the
-         * ProcessOut API
-         * @return {Object}
-         */
-        protected getCustomerObject(): any {
-            if (!this.instance.customer) {
-                return {};
-            }
-
-            return {
-                email:        this.instance.customer.Email,
-                first_name:   this.instance.customer.FirstName,
-                last_name:    this.instance.customer.LastName,
-                address1:     this.instance.customer.Address1,
-                address2:     this.instance.customer.Address2,
-                city:         this.instance.customer.City,
-                state:        this.instance.customer.State,
-                zip:          this.instance.customer.ZIP,
-                country_code: this.instance.customer.CountryCode
-            };
-        }
-
-        /**
-         * Get the endpoint for the current flow
-         * @return {string}
-         */
-        protected getEndpoint(async: boolean): string {
-            switch (this.flow) {
-            case Flow.OneOff:
-                if (!async)
-                    return this.resourceURL+`/gateways/${this.name}`;
-                else
-                    return this.resourceURL+`/gateways/${this.name}/charges`;
-
-            case Flow.Recurring:
-            case Flow.OneClickAuthorization:
-                if (!async)
-                    return this.resourceURL+`/gateways/${this.name}`;
-                else
-                    return this.resourceURL+`/gateways/${this.name}/tokens`;
-
-            default:
-                throw new Error("Could not find flow.");
-            }
-        }
-
-        /**
-         * Return the default template for redirections
-         * @return {string}
-         */
-        protected htmlLink(): string {
-            if ("link" in this.instance.customTemplates)
-                return this.instance.customTemplates["link"];
-
-            return `<form action="" method="POST" class="${this.instance.classNames('link-form')}">
-                        <div class="${this.instance.classNames('link-submit-upper-wrapper')}">
-                            <div class="${this.instance.classNames('link-submit-lower-wrapper')}">
-                                <input type="submit" class="${this.instance.classNames('link-submit')}" value="Pay now!">
-                            </div>
-                        </div>
-                    </form>`;
-        }
-
-        protected _htmlCreditCard(): string {
-            return `    <div class="${this.instance.classNames('credit-card-number-upper-wrapper')}">
-                            <div class="${this.instance.classNames('credit-card-number-lower-wrapper')}">
-                                <label class="${this.instance.classNames('credit-card-number-label')}">Card number</label>
-                                <input type="text" size="20" placeholder="8888 8888 8888 8888" autocomplete="cc-number" class="${this.instance.classNames('credit-card-number-input')}" />
-                            </div>
-                        </div>
-                        <div class="${this.instance.classNames('credit-card-expiry-month-upper-wrapper')}">
-                            <div class="${this.instance.classNames('credit-card-expiry-month-lower-wrapper')}">
-                                <label class="${this.instance.classNames('credit-card-expiry-month-label')}">Expiry month</label>
-                                <input type="text" placeholder="MM" autocomplete="cc-exp-month" class="${this.instance.classNames('credit-card-expiry-month-input')}" />
-                            </div>
-                        </div>
-                        <div class="${this.instance.classNames('credit-card-expiry-year-upper-wrapper')}">
-                            <div class="${this.instance.classNames('credit-card-expiry-year-lower-wrapper')}">
-                                <label class="${this.instance.classNames('credit-card-expiry-year-label')}">Expiry year</label>
-                                <input type="text" placeholder="YYYY" autocomplete="cc-exp-year" class="${this.instance.classNames('credit-card-expiry-year-input')}" />
-                            </div>
-                        </div>
-                        <div class="${this.instance.classNames('credit-card-cvc-upper-wrapper')}">
-                            <div class="${this.instance.classNames('credit-card-cvc-lower-wrapper')}">
-                                <label class="${this.instance.classNames('credit-card-cvc-label')}">CVC</label>
-                                <input type="text" size="4" placeholder="123" autocomplete="off" class="${this.instance.classNames('credit-card-cvc-input')}" />
-                            </div>
-                        </div>
-
-                        <div class="${this.instance.classNames('credit-card-submit-upper-wrapper')}">
-                            <div class="${this.instance.classNames('credit-card-submit-lower-wrapper')}">
-                                <input type="submit" class="${this.instance.classNames('credit-card-submit')}" value="Pay now!">
-                            </div>
-                        </div>`;
-        }
-
-        /**
-         * Return the default template for credit cards
-         * @return {string}
-         */
-        protected htmlCreditCard(): string {
-            if ("credit-card" in this.instance.customTemplates)
-                return this.instance.customTemplates["credit-card"];
-
-            return `<form action="#" method="POST" class="${this.instance.classNames('credit-card-form')}">
-                        ${this._htmlCreditCard()}
-                    </form>`;
-        }
-
-        /**
-         * Return the default template for credit cards, and asks for the card
-         * holder name as well
-         * @return {string}
-         */
-        protected htmlCreditCardWithName(): string {
-            if ("credit-card-with-name" in this.instance.customTemplates)
-                return this.instance.customTemplates["credit-card-with-name"];
-
-            return `<form action="#" method="POST" class="${this.instance.classNames('credit-card-form', 'credit-card-form-name')}">
-                        <div class="${this.instance.classNames('credit-card-name-upper-wrapper')}">
-                            <div class="${this.instance.classNames('credit-card-name-lower-wrapper')}">
-                                <label class="${this.instance.classNames('credit-card-name-label')}">Card holder name</label>
-                                <input type="text" size="20" placeholder="John Smith" class="${this.instance.classNames('credit-card-name-input')}" />
-                            </div>
-                        </div>
-                        ${this._htmlCreditCard()}
-                    </form>`;
-        }
-
-        /**
-         * Return the default template for SEPA payments (EU bank transfers)
-         * @return {string}
-         */
-        protected htmlSEPA(): string {
-            if ("sepa" in this.instance.customTemplates)
-                return this.instance.customTemplates["sepa"];
-
-            return `SEPA payments are not supported yet.`;
-        }
-
-        /**
-         * Append the gateway html to the given html element, and return the
-         * inner created form
-         * @param {HTMLElement} root
-         * @return {HTMLElement}
-         */
-        appendTo(root: any): HTMLElement {
-            if (root.jquery)
-                root = root[0];
-
-            var div = document.createElement("div");
-            div.innerHTML = this.html();
-
-            root.appendChild(div);
-
-            var form = (<HTMLElement>div.firstChild).querySelector("form");
-
-            if (form == null)
-                console.log("Warning: there doesn't seem to be any form in your gateway template. Please make sure to use one, otherwise you will not be able to use hooks and automated gateway handling.");
-
-            return <HTMLElement>form;
-        }
-
-        /**
-         * Hook the given element to be automatically handled when the form
-         * is submitted
-         * @param {HTMLElement} el
-         * @param {callback?} success
-         * @param {callback?} error
+         * Fetches the customer action of the gateway, if any. It is possible
+         * that the API route does not respond with a 200 status code, but
+         * this error is silently ignored as it does not mean the gateway
+         * can't be used: it simply means there might not be any customer
+         * action available - or to be done - for this specific gateway
          * @return {void}
          */
-        hook(el: any, success: (gateway: string) => void,
-            error: (err: Error) => void): void {
+        protected fetchCustomerAction(): void {
+            var r = this.instance.getResourceID();
 
-            if (el == null) {
-                console.log("Warning: element passed to hook is null. ProcessOut will not hook the payment form.");
-                return;
+            var resourceName = "invoices";
+            if (r.substring(0, 4) == "sub_") {
+                resourceName = "subscriptions";
+            }
+            if (r.substring(0, 9) == "auth_req_") {
+                resourceName = "authorization-requests";
             }
 
-            if (el.jquery)
-                el = el[0];
-
+            var url = `https://api.processout.ninja/${resourceName}/${r}/gateway-configurations/${this.configuration.id}/customer-action`;
             var t = this;
+            this.instance.apiRequest("GET", url, null,
+                function(data: any, code: number, req: XMLHttpRequest): void {
+                    if (code < 200 || code > 299) {
+                        // if the customer action is undefined, we'll land here
+                        return;
+                    }
 
-            el.onsubmit = function() {
-                t.handle(el, success, error);
-                return false;
-            };
+                    t.token = data.value;
+                }, function(code: number, req: XMLHttpRequest): void {});
         }
 
         /**
          * Setup the current gateway (such as loading the required js library)
          * @return {void}
          */
-        setup(): void {
-            //
-        }
+        protected abstract setup(): void;
 
         /**
-         * Handle the gateway's form submission
-         * @param {HTMLElement} el
-         * @param {callback?} success
-         * @param {callback?} error
+         * Tokenize takes the credit card object and creates a ProcessOut
+         * token that can be sent to your server and used to charge your
+         * customer
+         * @param  {ProcessOut.Card} card
+         * @param  {callback} success
+         * @param  {callback} error
          * @return {void}
          */
-        handle(el: HTMLElement, success: (gateway: string) => void,
-            error: (err: Error) => void): void {
-
-            switch (this.flow) {
-            case Flow.OneOff:
-                return this.handleOneOff(el, success, error);
-            case Flow.Recurring:
-                return this.handleRecurring(el, success, error);
-            case Flow.OneClickAuthorization:
-                return this.handleOneClickAuthorization(el, success, error);
-
-            default:
-                throw new Error("The flow may be not handled.");
-            }
-        }
+        public abstract tokenize(card: ProcessOut.Card,
+            success: (token: string) => void,
+            error:   (err: ProcessOut.Exception) => void): void;
 
         /**
-         * Handle the gateway's form submission for one-off payments
-         * @param {HTMLElement} el
-         * @param {callback?} success
-         * @param {callback?} error
-         * @return {void}
-         */
-        protected abstract handleOneOff(el: HTMLElement, success: (gateway: string) => void,
-            error: (err: Error) => void): void;
-
-        /**
-         * Handle the gateway's form submission for recurring invoice payments
-         * @param {HTMLElement} el
-         * @param {callback?} success
-         * @param {callback?} error
-         * @return {void}
-         */
-        protected abstract handleRecurring(el: HTMLElement, success: (gateway: string) => void,
-            error: (err: Error) => void): void;
-
-        /**
-         * Handle the gateway's form submission for one-click authorizations
-         * flow
-         * @param {HTMLElement} el
-         * @param {callback?} success
-         * @param {callback?} error
-         * @return {void}
-         */
-        protected abstract handleOneClickAuthorization(el: HTMLElement,
-            success: (gateway: string) => void, error: (err: Error) => void): void;
-
-        /**
-         * Get the gateway's HTML
+         * Create a ProcessOut gateway request token from a given token
+         * @param {string} token
          * @return {string}
          */
-        abstract html(): string;
+        protected createProcessOutToken(token: string): string {
+            // req is an abstracted gateway request ProcessOut uses
+            // to abstract gateway requests and provide the same usage
+            // accross all those gateways
+            var req = {
+                "gateway_configuration_id": this.configuration.id,
+                "url":                      "",
+                "method":                   "POST",
+                "headers":                  {
+                    "content-type": "applicatio/json"
+                },
+                "body": JSON.stringify({"token": token})
+            };
+            return `gway_req_${btoa(JSON.stringify(req))}`;
+        }
 
     }
 

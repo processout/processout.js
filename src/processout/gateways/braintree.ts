@@ -1,21 +1,19 @@
 /// <reference path="../../references.ts" />
 
-declare var CKOAPI: any;
-
 /**
  * ProcessOut Gateways module/namespace
  */
 module ProcessOut.Gateways {
 
     /**
-     * CKOAPI is the library we load from their js
+     * braintree is the library we load from their js
      */
-    declare var CKOAPI: any;
+    declare var braintree: any;
 
     /**
      * ProcessOut Gateway class
      */
-    export class CheckoutcomGateway extends Gateway {
+    export class BraintreeGateway extends Gateway {
 
         /**
          * Constructor, copies data to object
@@ -35,11 +33,7 @@ module ProcessOut.Gateways {
         setup(): void {
             var f = document.createElement("script");
             f.setAttribute("type", "text/javascript");
-            if (this.instance.isDebug())
-                f.setAttribute("src", "https://cdn.checkout.com/sandbox/js/checkoutkit.js");
-            else
-                f.setAttribute("src", "https://cdn.checkout.com/js/checkoutkit.js");
-            f.setAttribute("data-namespace", "CKOAPI");
+            f.setAttribute("src", "https://js.braintreegateway.com/web/3.2.0/js/client.min.js");
 
             document.body.appendChild(f);
         }
@@ -57,31 +51,34 @@ module ProcessOut.Gateways {
             success: (token: string) => void,
             error:   (err: ProcessOut.Exception) => void): void {
 
-            CKOAPI.configure({
-                publicKey: this.getPublicKey("public_key"),
-                apiError: function (event: any): void {
-                    if (event.data.errorCode == "70000") {
-                        error(new Exception("default"));
-                        return;
-                    }
-
-                    error(new Exception("card.declined"));
-                }
-            });
-
             var t = this;
-            CKOAPI.createCardToken({
-                "number":      card.getNumber(),
-                "cvv":         card.getCVC(),
-                "expiryMonth": card.getExpiry().getMonth(),
-                "expiryYear":  card.getExpiry().getYear(),
-            }, function(v: any) {
-                if (!v.id) {
-                    error(new Exception("card.declined"));
+            braintree.client.create({
+                authorization: this.token
+            }, function(err: any, client: any) {
+                if (err) {
+                    error(new Exception("request.gateway.not-available"));
                     return;
                 }
 
-                success(t.createProcessOutToken(v.id));
+                client.request({
+                    endpoint: 'payment_methods/credit_cards',
+                    method:   'post',
+                    data: {
+                        creditCard: {
+                            number:         card.getNumber(),
+                            expirationDate: card.getExpiry().string(),
+                            cvv:            card.getCVC()
+                        }
+                    }
+                }, function (err, response) {
+                    if (err) {
+                        error(new Exception("card.declined"));
+                        return
+                    }
+
+                    success(t.createProcessOutToken(
+                        response.creditCards[0].nonce));
+                });
             });
         }
 
