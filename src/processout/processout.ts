@@ -11,6 +11,12 @@ module ProcessOut {
     export class ProcessOut {
 
         /**
+         * Namespace used by ProcessOut when communicating between iframes
+         * @type {string}
+         */
+        public static namespace: string = "processout";
+
+        /**
          * Current resource ID. Can be invoice, subscription or authorization
          * request
          * @type {string}

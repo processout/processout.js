@@ -94,6 +94,7 @@ var ProcessOut;
             };
             document.body.appendChild(iframe);
         };
+        ProcessOut.namespace = "processout";
         return ProcessOut;
     }());
     ProcessOut_1.ProcessOut = ProcessOut;
@@ -102,7 +103,6 @@ var ProcessOut;
 (function (ProcessOut) {
     var Modal = (function () {
         function Modal(instance, iframe, uniqId) {
-            this.namespace = 'processout';
             this.deleted = false;
             this.instance = instance;
             this.iframe = iframe;
@@ -113,14 +113,14 @@ var ProcessOut;
             var iframe = modal.iframe;
             var iframeW = iframe.contentWindow;
             var frameid = modal.uniqId;
-            iframeW.postMessage(this.namespace + " " + frameid + " check", "*");
+            iframeW.postMessage(ProcessOut.ProcessOut.namespace + " " + frameid + " check", "*");
             var redirectTimeout = setTimeout(function () {
                 if (typeof (error) === typeof (Function))
                     error(new ProcessOut.Exception("processout-js.modal.unavailable"));
             }, this.instance.timeout);
             function receiveMessage(event) {
                 var eventSplit = event.data.split(" ");
-                if (eventSplit[0] != modal.namespace)
+                if (eventSplit[0] != ProcessOut.ProcessOut.namespace)
                     return;
                 if (eventSplit[1] != frameid)
                     return;
@@ -134,7 +134,7 @@ var ProcessOut;
                         };
                         window.dispatchEvent(new Event('resize'));
                         iframe.style.display = "block";
-                        iframeW.postMessage(modal.namespace + " " + frameid + " launch", "*");
+                        iframeW.postMessage(ProcessOut.ProcessOut.namespace + " " + frameid + " launch", "*");
                         if (typeof (onShow) === typeof (Function))
                             onShow(this);
                         break;
@@ -281,7 +281,7 @@ var ProcessOut;
         Expiry.prototype.string = function () {
             return this.month + "/" + this.year;
         };
-        Expiry.formatExpiry = function (exp) {
+        Expiry.format = function (exp) {
             if (exp.length == 2)
                 return exp + " / ";
             if (exp.length == 4)
@@ -391,14 +391,13 @@ var ProcessOut;
             function Gateway(gatewayConfiguration, instance) {
                 this.configuration = gatewayConfiguration;
                 this.instance = instance;
+                this.setup();
                 this.fetchCustomerAction();
             }
             Gateway.prototype.getPublicKey = function (key) {
                 if (this.configuration.public_keys[key])
                     return this.configuration.public_keys[key];
                 return "";
-            };
-            Gateway.prototype.setup = function () {
             };
             Gateway.prototype.fetchCustomerAction = function () {
                 var r = this.instance.getResourceID();
@@ -572,7 +571,7 @@ var ProcessOut;
             BraintreeGateway.prototype.setup = function () {
                 var f = document.createElement("script");
                 f.setAttribute("type", "text/javascript");
-                f.setAttribute("src", "https://cdn.processout.com/scripts/adyen.encrypt.nodom.min.js");
+                f.setAttribute("src", "https://js.braintreegateway.com/web/3.2.0/js/client.min.js");
                 document.body.appendChild(f);
             };
             BraintreeGateway.prototype.tokenize = function (card, success, error) {

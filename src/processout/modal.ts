@@ -29,12 +29,6 @@ module ProcessOut {
         uniqId: string;
 
         /**
-         * Namespace used when sending messages to iframe
-         * @type {String}
-         */
-        namespace = 'processout';
-
-        /**
          * Specifies if the modal was deleted
          * @type {Boolean}
          */
@@ -65,7 +59,7 @@ module ProcessOut {
             var iframe  = modal.iframe;
             var iframeW = iframe.contentWindow;
             var frameid = modal.uniqId;
-            iframeW.postMessage(`${this.namespace} ${frameid} check`, "*");
+            iframeW.postMessage(`${ProcessOut.namespace} ${frameid} check`, "*");
             var redirectTimeout =
                 setTimeout(function(){
                     if (typeof(error) === typeof(Function))
@@ -74,7 +68,7 @@ module ProcessOut {
 
             function receiveMessage(event) {
                 var eventSplit = event.data.split(" ");
-                if (eventSplit[0] != modal.namespace)
+                if (eventSplit[0] != ProcessOut.namespace)
                     return;
 
                 if (eventSplit[1] != frameid)
@@ -94,7 +88,7 @@ module ProcessOut {
                         window.dispatchEvent(new Event('resize'));
                         // Show the iframe
                         iframe.style.display = "block";
-                        iframeW.postMessage(`${modal.namespace} ${frameid} launch`, "*");
+                        iframeW.postMessage(`${ProcessOut.namespace} ${frameid} launch`, "*");
                         if (typeof(onShow) === typeof(Function))
                             onShow(this);
                         break;
