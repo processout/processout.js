@@ -45,7 +45,7 @@ module ProcessOut {
             return this.month + "/" + this.year;
         }
 
-        public static formatExpiry(exp: string): string {
+        public static format(exp: string): string {
             if (exp.length == 2)
                 return exp + " / ";
 
