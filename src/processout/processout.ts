@@ -71,7 +71,8 @@ module ProcessOut {
             this.resourceID = resourceID;
             if (this.resourceID.substring(0, 3) != "iv_" &&
                 this.resourceID.substring(0, 4) != "sub_" &&
-                this.resourceID.substring(0, 9) != "auth_req_") {
+                this.resourceID.substring(0, 9) != "auth_req_" &&
+                this.resourceID != "") {
 
                 throw new Exception("resource.invalid-type");
             }
