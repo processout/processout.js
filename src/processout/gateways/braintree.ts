@@ -56,6 +56,7 @@ module ProcessOut.Gateways {
                 authorization: this.token
             }, function(err: any, client: any) {
                 if (err) {
+                    console.log(err);
                     error(new Exception("request.gateway.not-available"));
                     return;
                 }

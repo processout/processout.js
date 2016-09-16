@@ -4,169 +4,6 @@ var __extends = (this && this.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var ProcessOut;
-(function (ProcessOut_1) {
-    var ProcessOut = (function () {
-        function ProcessOut(resourceID) {
-            this.timeout = 10000;
-            this.debug = false;
-            this.apiVersion = "1.3.0.0";
-            var scripts = document.getElementsByTagName("script");
-            var ok = false;
-            for (var i = 0; i < scripts.length; i++) {
-                if (/^https?:\/\/cdn\.processout\.((com)|(ninja)|(dev))\//.test(scripts[i].getAttribute("src"))) {
-                    ok = true;
-                }
-            }
-            if (!ok) {
-                throw new ProcessOut_1.Exception("processout-js.not-hosted");
-            }
-            this.resourceID = resourceID;
-            if (this.resourceID.substring(0, 3) != "iv_" &&
-                this.resourceID.substring(0, 4) != "sub_" &&
-                this.resourceID.substring(0, 9) != "auth_req_") {
-                throw new ProcessOut_1.Exception("resource.invalid-type");
-            }
-        }
-        ProcessOut.prototype.getResourceID = function () {
-            return this.resourceID;
-        };
-        ProcessOut.prototype.isDebug = function () {
-            return this.debug;
-        };
-        ProcessOut.prototype.setGateways = function (gateways) {
-            for (var _i = 0, gateways_1 = gateways; _i < gateways_1.length; _i++) {
-                var gc = gateways_1[_i];
-                var g = ProcessOut_1.Gateways.Handler.buildGateway(this, gc);
-                this.gateways.push(g);
-            }
-        };
-        ProcessOut.prototype.tokenize = function (card, success, error) {
-            this.gateways[0].tokenize(card, success, error);
-        };
-        ProcessOut.prototype.endpoint = function (subdomain, path) {
-            return "https://" + subdomain + ".processout.com" + path;
-        };
-        ProcessOut.prototype.apiRequest = function (method, path, data, success, error) {
-            if (method != "get")
-                data = JSON.stringify(data);
-            else {
-                path += "?";
-                for (var key in data) {
-                    path += key + "=" + encodeURIComponent(data[key]) + "&";
-                }
-            }
-            var request = new XMLHttpRequest();
-            request.open(method, this.endpoint("api", path), true);
-            request.setRequestHeader("Content-Type", "application/json");
-            request.setRequestHeader("API-Version", this.apiVersion);
-            request.onload = function () {
-                if (request.status >= 200 && request.status < 300) {
-                    success(JSON.parse(request.responseText), request.status, request);
-                    return;
-                }
-                error(request.status, request);
-            };
-            request.onerror = function () {
-                error(request.status, request);
-            };
-            request.send(data);
-        };
-        ProcessOut.prototype.newModal = function (url, success, error) {
-            var uniqId = Math.random().toString(36).substr(2, 9);
-            var iframe = document.createElement('iframe');
-            iframe.className = "processout-iframe";
-            iframe.setAttribute("id", "processout-iframe-" + uniqId);
-            iframe.setAttribute("src", url);
-            iframe.setAttribute("style", "position: fixed; top: 0; left: 0; background: none;"
-                + "-webkit-transform:translateZ(1px);\n                    -moz-transform:translateZ(1px);\n                    -o-transform:translateZ(1px);\n                    transform:translateZ(1px);");
-            iframe.setAttribute("frameborder", "0");
-            iframe.setAttribute("allowtransparency", "1");
-            iframe.style.display = "none";
-            var t = this;
-            var iframeError = setTimeout(function () {
-                if (typeof (error) === typeof (Function))
-                    error(new ProcessOut_1.Exception("processout-js.modal.unavailable"));
-            }, this.timeout);
-            iframe.onload = function () {
-                clearTimeout(iframeError);
-                if (typeof (success) === typeof (Function))
-                    success(new ProcessOut_1.Modal(t, iframe, uniqId));
-            };
-            document.body.appendChild(iframe);
-        };
-        ProcessOut.namespace = "processout";
-        return ProcessOut;
-    }());
-    ProcessOut_1.ProcessOut = ProcessOut;
-})(ProcessOut || (ProcessOut = {}));
-var ProcessOut;
-(function (ProcessOut) {
-    var Modal = (function () {
-        function Modal(instance, iframe, uniqId) {
-            this.deleted = false;
-            this.instance = instance;
-            this.iframe = iframe;
-            this.uniqId = uniqId;
-        }
-        Modal.prototype.show = function (onShow, onHide, error) {
-            var modal = this;
-            var iframe = modal.iframe;
-            var iframeW = iframe.contentWindow;
-            var frameid = modal.uniqId;
-            iframeW.postMessage(ProcessOut.ProcessOut.namespace + " " + frameid + " check", "*");
-            var redirectTimeout = setTimeout(function () {
-                if (typeof (error) === typeof (Function))
-                    error(new ProcessOut.Exception("processout-js.modal.unavailable"));
-            }, this.instance.timeout);
-            function receiveMessage(event) {
-                var eventSplit = event.data.split(" ");
-                if (eventSplit[0] != ProcessOut.ProcessOut.namespace)
-                    return;
-                if (eventSplit[1] != frameid)
-                    return;
-                switch (eventSplit[2]) {
-                    case "openModal":
-                        clearTimeout(redirectTimeout);
-                        document.body.style.overflow = "hidden";
-                        window.onresize = function () {
-                            iframe.width = window.outerWidth + "px";
-                            iframe.height = window.outerHeight + "px";
-                        };
-                        window.dispatchEvent(new Event('resize'));
-                        iframe.style.display = "block";
-                        iframeW.postMessage(ProcessOut.ProcessOut.namespace + " " + frameid + " launch", "*");
-                        if (typeof (onShow) === typeof (Function))
-                            onShow(this);
-                        break;
-                    case "closeModal":
-                        modal.hide();
-                        if (typeof (onHide) === typeof (Function))
-                            onHide(this);
-                        break;
-                    case "url":
-                        window.location.href = eventSplit[3];
-                        break;
-                    default:
-                        console.log("Could not read event action from modal.", event.data);
-                        break;
-                }
-            }
-            window.addEventListener("message", receiveMessage, false);
-        };
-        Modal.prototype.hide = function () {
-            this.iframe.style.display = "none";
-            document.body.style.overflow = "";
-            this.iframe.remove();
-            this.deleted = true;
-        };
-        Modal.prototype.isDeleted = function () {
-            return this.deleted;
-        };
-        return Modal;
-    }());
-    ProcessOut.Modal = Modal;
-})(ProcessOut || (ProcessOut = {}));
-var ProcessOut;
 (function (ProcessOut) {
     (function (Flow) {
         Flow[Flow["None"] = 1] = "None";
@@ -175,74 +12,6 @@ var ProcessOut;
         Flow[Flow["Tokenization"] = 4] = "Tokenization";
     })(ProcessOut.Flow || (ProcessOut.Flow = {}));
     var Flow = ProcessOut.Flow;
-})(ProcessOut || (ProcessOut = {}));
-var ProcessOut;
-(function (ProcessOut) {
-    var Exception = (function (_super) {
-        __extends(Exception, _super);
-        function Exception() {
-            _super.apply(this, arguments);
-        }
-        Exception.prototype.construct = function (code, message) {
-            this.code = code;
-            if (message)
-                this.message = message;
-            else
-                this.message = ProcessOut.Translator.translate(this.code);
-            this.name = this.code;
-            this.stack = (new Error()).stack;
-        };
-        return Exception;
-    }(Error));
-    ProcessOut.Exception = Exception;
-})(ProcessOut || (ProcessOut = {}));
-var ProcessOut;
-(function (ProcessOut) {
-    var messages = {
-        "en": {
-            "default": "An error occured.",
-            "card.declined": "The credit card has been declined.",
-            "card.expired": "The given card has exprired.",
-            "card.invalid": "The given card is invalid.",
-            "card.invalid-number": "The card number is invalid.",
-            "card.invalid-date": "The card expiry date is invalid.",
-            "card.invalid-month": "The card expiry month is invalid.",
-            "card.invalid-year": "The card expiry year is invalid.",
-            "card.invalid-cvc": "The card CVC is invalid.",
-            "card.invalid-zip": "The card's ZIP code is valid.",
-            "customer.canceled": "The customer canceled the payemnt.",
-            "payment.declined": "The payment has been declined.",
-            "request.validation.error": "The provided information is invalid or missing.",
-            "request.validation.invalid-country": "The provided country is invalid.",
-            "request.validation.missing-name": "A name must be provided.",
-            "request.validation.invalid-name": "The provided name is invalid.",
-            "request.validation.missing-email": "An email must be provided.",
-            "request.validation.invalid-email": "The provided email is invalid.",
-            "request.validation.invalid-address": "The provided address is invalid.",
-            "request.gateway.not-available": "The requested gateway is currently unavailable.",
-            "request.gateway.not-supported": "The gateway is not supported by ProcessOut.js",
-            "processout-js.not-hosted": "ProcessOut.js was not loaded from ProcessOut CDN. Please do not host ProcessOut.js yourself but rather use ProcessOut CDN: https://cdn.processout.com/processout-min.js",
-            "processout-js.modal.unavailable": "The ProcessOut.js modal is unavailable.",
-            "resource.invalid-type": "The provided resource was invalid. It must be an invoice, a subscription or an authorization request."
-        }
-    };
-    var Translator = (function () {
-        function Translator() {
-        }
-        Translator.translate = function (code) {
-            if (!messages[Translator.locale][code])
-                return messages[Translator.locale]["default"];
-            return messages[Translator.locale][code];
-        };
-        Translator.setLocale = function (locale) {
-            if (!messages[locale])
-                return;
-            Translator.locale = locale;
-        };
-        Translator.locale = "en";
-        return Translator;
-    }());
-    ProcessOut.Translator = Translator;
 })(ProcessOut || (ProcessOut = {}));
 var ProcessOut;
 (function (ProcessOut) {
@@ -360,6 +129,240 @@ var ProcessOut;
 })(ProcessOut || (ProcessOut = {}));
 var ProcessOut;
 (function (ProcessOut) {
+    var messages = {
+        "en": {
+            "default": "An error occured.",
+            "card.declined": "The credit card has been declined.",
+            "card.expired": "The given card has exprired.",
+            "card.invalid": "The given card is invalid.",
+            "card.invalid-number": "The card number is invalid.",
+            "card.invalid-date": "The card expiry date is invalid.",
+            "card.invalid-month": "The card expiry month is invalid.",
+            "card.invalid-year": "The card expiry year is invalid.",
+            "card.invalid-cvc": "The card CVC is invalid.",
+            "card.invalid-zip": "The card's ZIP code is valid.",
+            "customer.canceled": "The customer canceled the payemnt.",
+            "payment.declined": "The payment has been declined.",
+            "request.validation.error": "The provided information is invalid or missing.",
+            "request.validation.invalid-country": "The provided country is invalid.",
+            "request.validation.missing-name": "A name must be provided.",
+            "request.validation.invalid-name": "The provided name is invalid.",
+            "request.validation.missing-email": "An email must be provided.",
+            "request.validation.invalid-email": "The provided email is invalid.",
+            "request.validation.invalid-address": "The provided address is invalid.",
+            "request.gateway.not-available": "The requested gateway is currently unavailable.",
+            "request.gateway.not-supported": "The gateway is not supported by ProcessOut.js",
+            "processout-js.not-hosted": "ProcessOut.js was not loaded from ProcessOut CDN. Please do not host ProcessOut.js yourself but rather use ProcessOut CDN: https://cdn.processout.com/processout-min.js",
+            "processout-js.modal.unavailable": "The ProcessOut.js modal is unavailable.",
+            "resource.invalid-type": "The provided resource was invalid. It must be an invoice, a subscription or an authorization request."
+        }
+    };
+    var Translator = (function () {
+        function Translator() {
+        }
+        Translator.translate = function (code) {
+            if (!messages[Translator.locale][code])
+                return messages[Translator.locale]["default"];
+            return messages[Translator.locale][code];
+        };
+        Translator.setLocale = function (locale) {
+            if (!messages[locale])
+                return;
+            Translator.locale = locale;
+        };
+        Translator.locale = "en";
+        return Translator;
+    }());
+    ProcessOut.Translator = Translator;
+})(ProcessOut || (ProcessOut = {}));
+var ProcessOut;
+(function (ProcessOut) {
+    var Exception = (function (_super) {
+        __extends(Exception, _super);
+        function Exception(code, message) {
+            if (!message)
+                message = ProcessOut.Translator.translate(code);
+            _super.call(this, message);
+            this.code = code;
+            this.message = message;
+            this.name = "ProcessOutException";
+            this.stack = (new Error()).stack;
+        }
+        return Exception;
+    }(Error));
+    ProcessOut.Exception = Exception;
+})(ProcessOut || (ProcessOut = {}));
+var ProcessOut;
+(function (ProcessOut_1) {
+    var ProcessOut = (function () {
+        function ProcessOut(resourceID, debug) {
+            this.timeout = 10000;
+            this.debug = true;
+            this.apiVersion = "1.3.0.0";
+            this.gateways = new Array();
+            if (debug != null)
+                this.debug = debug;
+            var scripts = document.getElementsByTagName("script");
+            var ok = false;
+            for (var i = 0; i < scripts.length; i++) {
+                if (/^https?:\/\/.*\.processout\.((com)|(ninja)|(dev))\//.test(scripts[i].getAttribute("src"))) {
+                    ok = true;
+                }
+            }
+            if (!ok && !this.debug) {
+                throw new ProcessOut_1.Exception("processout-js.not-hosted");
+            }
+            this.resourceID = resourceID;
+            if (this.resourceID.substring(0, 3) != "iv_" &&
+                this.resourceID.substring(0, 4) != "sub_" &&
+                this.resourceID.substring(0, 9) != "auth_req_" &&
+                this.resourceID != "") {
+                throw new ProcessOut_1.Exception("resource.invalid-type");
+            }
+        }
+        ProcessOut.prototype.getResourceID = function () {
+            return this.resourceID;
+        };
+        ProcessOut.prototype.isDebug = function () {
+            return this.debug;
+        };
+        ProcessOut.prototype.setGateways = function (gateways) {
+            for (var _i = 0, gateways_1 = gateways; _i < gateways_1.length; _i++) {
+                var gc = gateways_1[_i];
+                var g = ProcessOut_1.Gateways.Handler.buildGateway(this, gc);
+                this.gateways.push(g);
+            }
+        };
+        ProcessOut.prototype.tokenize = function (card, success, error) {
+            this.gateways[0].tokenize(card, success, error);
+        };
+        ProcessOut.prototype.endpoint = function (subdomain, path) {
+            return "https://" + subdomain + ".processout.com" + path;
+        };
+        ProcessOut.prototype.apiRequest = function (method, path, data, success, error) {
+            if (method != "get")
+                data = JSON.stringify(data);
+            else {
+                path += "?";
+                for (var key in data) {
+                    path += key + "=" + encodeURIComponent(data[key]) + "&";
+                }
+            }
+            if (path.substring(0, 4) != "http")
+                path = this.endpoint("api", path);
+            var request = new XMLHttpRequest();
+            request.open(method, path, true);
+            request.setRequestHeader("Content-Type", "application/json");
+            request.setRequestHeader("API-Version", this.apiVersion);
+            request.onload = function () {
+                if (request.status >= 200 && request.status < 300) {
+                    success(JSON.parse(request.responseText), request.status, request);
+                    return;
+                }
+                error(request.status, request);
+            };
+            request.onerror = function () {
+                error(request.status, request);
+            };
+            request.send(data);
+        };
+        ProcessOut.prototype.newModal = function (url, success, error) {
+            var uniqId = Math.random().toString(36).substr(2, 9);
+            var iframe = document.createElement('iframe');
+            iframe.className = "processout-iframe";
+            iframe.setAttribute("id", "processout-iframe-" + uniqId);
+            iframe.setAttribute("src", url);
+            iframe.setAttribute("style", "position: fixed; top: 0; left: 0; background: none;"
+                + "-webkit-transform:translateZ(1px);\n                    -moz-transform:translateZ(1px);\n                    -o-transform:translateZ(1px);\n                    transform:translateZ(1px);");
+            iframe.setAttribute("frameborder", "0");
+            iframe.setAttribute("allowtransparency", "1");
+            iframe.style.display = "none";
+            var t = this;
+            var iframeError = setTimeout(function () {
+                if (typeof (error) === typeof (Function))
+                    error(new ProcessOut_1.Exception("processout-js.modal.unavailable"));
+            }, this.timeout);
+            iframe.onload = function () {
+                clearTimeout(iframeError);
+                if (typeof (success) === typeof (Function))
+                    success(new ProcessOut_1.Modal(t, iframe, uniqId));
+            };
+            document.body.appendChild(iframe);
+        };
+        ProcessOut.namespace = "processout";
+        return ProcessOut;
+    }());
+    ProcessOut_1.ProcessOut = ProcessOut;
+})(ProcessOut || (ProcessOut = {}));
+var ProcessOut;
+(function (ProcessOut) {
+    var Modal = (function () {
+        function Modal(instance, iframe, uniqId) {
+            this.deleted = false;
+            this.instance = instance;
+            this.iframe = iframe;
+            this.uniqId = uniqId;
+        }
+        Modal.prototype.show = function (onShow, onHide, error) {
+            var modal = this;
+            var iframe = modal.iframe;
+            var iframeW = iframe.contentWindow;
+            var frameid = modal.uniqId;
+            iframeW.postMessage(ProcessOut.ProcessOut.namespace + " " + frameid + " check", "*");
+            var redirectTimeout = setTimeout(function () {
+                if (typeof (error) === typeof (Function))
+                    error(new ProcessOut.Exception("processout-js.modal.unavailable"));
+            }, this.instance.timeout);
+            function receiveMessage(event) {
+                var eventSplit = event.data.split(" ");
+                if (eventSplit[0] != ProcessOut.ProcessOut.namespace)
+                    return;
+                if (eventSplit[1] != frameid)
+                    return;
+                switch (eventSplit[2]) {
+                    case "openModal":
+                        clearTimeout(redirectTimeout);
+                        document.body.style.overflow = "hidden";
+                        window.onresize = function () {
+                            iframe.width = window.outerWidth + "px";
+                            iframe.height = window.outerHeight + "px";
+                        };
+                        window.dispatchEvent(new Event('resize'));
+                        iframe.style.display = "block";
+                        iframeW.postMessage(ProcessOut.ProcessOut.namespace + " " + frameid + " launch", "*");
+                        if (typeof (onShow) === typeof (Function))
+                            onShow(this);
+                        break;
+                    case "closeModal":
+                        modal.hide();
+                        if (typeof (onHide) === typeof (Function))
+                            onHide(this);
+                        break;
+                    case "url":
+                        window.location.href = eventSplit[3];
+                        break;
+                    default:
+                        console.log("Could not read event action from modal.", event.data);
+                        break;
+                }
+            }
+            window.addEventListener("message", receiveMessage, false);
+        };
+        Modal.prototype.hide = function () {
+            this.iframe.style.display = "none";
+            document.body.style.overflow = "";
+            this.iframe.remove();
+            this.deleted = true;
+        };
+        Modal.prototype.isDeleted = function () {
+            return this.deleted;
+        };
+        return Modal;
+    }());
+    ProcessOut.Modal = Modal;
+})(ProcessOut || (ProcessOut = {}));
+var ProcessOut;
+(function (ProcessOut) {
     var Gateways;
     (function (Gateways) {
         var Handler = (function () {
@@ -419,7 +422,13 @@ var ProcessOut;
             };
             Gateway.prototype.createProcessOutToken = function (token) {
                 var req = {
-                    "token": token
+                    "gateway_configuration_id": this.configuration.id,
+                    "url": "",
+                    "method": "POST",
+                    "headers": {
+                        "content-type": "applicatio/json"
+                    },
+                    "body": JSON.stringify({ "token": token })
                 };
                 return "gway_req_" + btoa(JSON.stringify(req));
             };
@@ -460,6 +469,7 @@ var ProcessOut;
                 return "default";
             };
             StripeGateway.prototype.tokenize = function (card, success, error) {
+                var t = this;
                 Stripe.setPublishableKey(this.getPublicKey("public_key"));
                 Stripe.card.createToken({
                     number: card.getNumber(),
@@ -467,10 +477,10 @@ var ProcessOut;
                     cvc: card.getCVC()
                 }, function (status, response) {
                     if (response.error) {
-                        error(new ProcessOut.Exception(Stripe.convertError(response.error.code)));
+                        error(new ProcessOut.Exception(StripeGateway.convertError(response.error.code)));
                         return;
                     }
-                    success(response.id);
+                    success(t.createProcessOutToken(response.id));
                 });
             };
             return StripeGateway;
@@ -508,6 +518,7 @@ var ProcessOut;
                         error(new ProcessOut.Exception("card.declined"));
                     }
                 });
+                var t = this;
                 CKOAPI.createCardToken({
                     "number": card.getNumber(),
                     "cvv": card.getCVC(),
@@ -518,7 +529,7 @@ var ProcessOut;
                         error(new ProcessOut.Exception("card.declined"));
                         return;
                     }
-                    success(v.id);
+                    success(t.createProcessOutToken(v.id));
                 });
             };
             return CheckoutcomGateway;
@@ -545,14 +556,14 @@ var ProcessOut;
                 var cseInstance = adyen.encrypt.createEncryption(this.getPublicKey("hosted_client_encryption_token"), {
                     enableValidations: false
                 });
-                success(cseInstance.encrypt({
+                success(this.createProcessOutToken(cseInstance.encrypt({
                     number: card.getNumber(),
                     cvc: card.getCVC(),
                     holderName: name,
                     expiryMonth: card.getExpiry().getMonth().toString(),
                     expiryYear: card.getExpiry().getYear().toString(),
                     generationtime: new Date(Date.now()).toISOString()
-                }));
+                })));
             };
             return AdyenGateway;
         }(Gateways.Gateway));
@@ -575,10 +586,12 @@ var ProcessOut;
                 document.body.appendChild(f);
             };
             BraintreeGateway.prototype.tokenize = function (card, success, error) {
+                var t = this;
                 braintree.client.create({
                     authorization: this.token
                 }, function (err, client) {
                     if (err) {
+                        console.log(err);
                         error(new ProcessOut.Exception("request.gateway.not-available"));
                         return;
                     }
@@ -597,7 +610,7 @@ var ProcessOut;
                             error(new ProcessOut.Exception("card.declined"));
                             return;
                         }
-                        success(response.creditCards[0].nonce);
+                        success(t.createProcessOutToken(response.creditCards[0].nonce));
                     });
                 });
             };

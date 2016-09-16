@@ -83,7 +83,7 @@ module ProcessOut.Gateways {
                         return;
                     }
 
-                    t.token = data.value;
+                    t.token = data.customer_action.value;
                 }, function(code: number, req: XMLHttpRequest): void {});
         }
 
