@@ -14,26 +14,39 @@ module ProcessOut {
          * Project ID
          * @type {string}
          */
-        projectID: string;
+        protected projectID: string;
+
+        /**
+         * Current resource ID. Can be invoice, subscription or authorization
+         * request
+         * @type {string}
+         */
+        protected resourceID: string;
 
         /**
          * Timeout before considering the modal could not be loaded, in ms
          * @type {Number}
          */
-        timeout = 10000;
+        public timeout = 10000;
 
         /**
         * Debug mode (will for instance load the sandboxed libraries of the
         * gateways instead of the live ones)
         * @type {string}
         */
-        debug = false;
+        public debug = false;
+
+        /**
+        * Configured, available gateways
+        * @type {Gateways.Gateway[]}
+        */
+        gateways: Gateways.Gateway[];
 
         /**
          * ProcessOut constructor
          * @param  {string} projectID ProcessOut project ID
          */
-        constructor(projectID: string) {
+        constructor(projectID: string, resourceID: string) {
             // We want to make sure ProcessOut.js is loaded from ProcessOut CDN.
             var scripts = document.getElementsByTagName("script");
             var ok = false;
@@ -46,7 +59,7 @@ module ProcessOut {
             }
 
             if (!ok) {
-                throw new Error("ProcessOut.js was not loaded from ProcessOut CDN. Please do not host ProcessOut.js yourself but rather use ProcessOut CDN: https://cdn.processout.com/processout-min.js")
+                throw new Exception("processout-js.not-hosted");
             }
 
             this.projectID = projectID;
@@ -55,7 +68,61 @@ module ProcessOut {
                 console.log("No project ID was specified, skipping setup.");
                 return;
             }
-            this.setup();
+
+            this.resourceID = resourceID;
+            if (this.resourceID.substring(0, 3) != "iv_" &&
+                this.resourceID.substring(0, 4) != "sub_" &&
+                this.resourceID.substring(0, 9) != "auth_req_") {
+
+                throw new Exception("resource.invalid-type");
+            }
+        }
+
+        /**
+         * Return the ID of the resource in the current context
+         * @return {string}
+         */
+        public getResourceID(): string {
+            return this.resourceID;
+        }
+
+        /**
+         * Returns true if in debug mode, false otherwise
+         * @return {boolean}
+         */
+        public isDebug(): boolean {
+            return this.debug;
+        }
+
+        /**
+         * Set gateways adds and configure the gateways supplied in the
+         * parameters
+         * @param  {GatewayConfiguration[]} gateways
+         * @return {void}
+         */
+        public setGateways(gateways: GatewayConfiguration[]): void {
+            for (var gc of gateways) {
+                var g = Gateways.Handler.buildGateway(this, gc);
+                this.gateways.push(g);
+            }
+        }
+
+        /**
+         * Tokenize takes the credit card object and creates a ProcessOut
+         * token that can be sent to your server and used to charge your
+         * customer
+         * @param  {ProcessOut.Card} card
+         * @param  {callback} success
+         * @param  {callback} error
+         * @return {void}
+         */
+        public tokenize(card: Card,
+            success: (token: string) => void,
+            error:   (err: Exception) => void): void {
+
+            //TODO: Loop through every gateways to try and tokenize if not
+            //tokenization didn't work
+            this.gateways[0].tokenize(card, success, error);
         }
 
         /**
@@ -112,28 +179,6 @@ module ProcessOut {
         }
 
         /**
-         * Setup the gateways enabled on the current project
-         * @return {void}
-         */
-        setup(): void {
-            this.apiRequest("get", `/gateways`, {},
-            function(data, code, jqxhr) {
-                if (!data.success) {
-                    throw new Error(data.message);
-                }
-
-                for (var gateway of data.gateways) {
-                    var g = Gateways.Handler.buildGateway(
-                        this, gateway, "", Flow.None);
-                    console.log(g);
-                    g.setup();
-                }
-            }, function() {
-                throw new Error("Could not load project's gateways. Are you sure your project ID is valid?");
-            });
-        }
-
-        /**
          * Create a new modal
          * @param  {string}   url
          * @param  {callback} success
@@ -141,7 +186,7 @@ module ProcessOut {
          * @return {void}
          */
         newModal(url: string, success: (modal: Modal) => void,
-            error: (err: Error) => void): void {
+            error: (err: Exception) => void): void {
 
             var uniqId = Math.random().toString(36).substr(2, 9);
             var iframe = document.createElement('iframe');
@@ -164,10 +209,7 @@ module ProcessOut {
             var t = this;
             var iframeError = setTimeout(function() {
                 if (typeof(error) === typeof(Function))
-                    error(<Error>{
-                        code:    ErrorCode.ProcessOutUnavailable,
-                        message: "Could not properly load the modal."
-                    });
+                    error(new Exception("processout-js.modal.unavailable"));
             }, this.timeout);
             iframe.onload = function() {
                 clearTimeout(iframeError);

@@ -59,7 +59,7 @@ module ProcessOut {
          * @return {void}
          */
         show(onShow?: (modal: Modal) => void, onHide?: (modal: Modal) => void,
-            error?: (err: Error) => void) {
+            error?: (err: Exception) => void) {
 
             var modal   = this;
             var iframe  = modal.iframe;
@@ -69,10 +69,7 @@ module ProcessOut {
             var redirectTimeout =
                 setTimeout(function(){
                     if (typeof(error) === typeof(Function))
-                        error(<Error> {
-                            message: "The modal does not seem to be available.",
-                            code:    "modal.unavailable"
-                        });
+                        error(new Exception("processout-js.modal.unavailable"));
                 }, this.instance.timeout);
 
             function receiveMessage(event) {

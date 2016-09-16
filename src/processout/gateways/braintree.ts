@@ -1,21 +1,19 @@
 /// <reference path="../../references.ts" />
 
-declare var adyen: any;
-
 /**
  * ProcessOut Gateways module/namespace
  */
 module ProcessOut.Gateways {
 
     /**
-     * adyen is the library we load from their js
+     * braintree is the library we load from their js
      */
-    declare var adyen: any;
+    declare var braintree: any;
 
     /**
      * ProcessOut Gateway class
      */
-    export class AdyenGateway extends Gateway {
+    export class BraintreeGateway extends Gateway {
 
         /**
          * Constructor, copies data to object
@@ -53,19 +51,33 @@ module ProcessOut.Gateways {
             success: (token: string) => void,
             error:   (err: ProcessOut.Exception) => void): void {
 
-            var cseInstance = adyen.encrypt.createEncryption(
-                this.getPublicKey("hosted_client_encryption_token"), {
-                    enableValidations: false
-                });
+            braintree.client.create({
+                authorization: this.token
+            }, function(err: any, client: any) {
+                if (err) {
+                    error(new Exception("request.gateway.not-available"));
+                    return;
+                }
 
-            success(cseInstance.encrypt({
-                number:         card.getNumber(),
-                cvc:            card.getCVC(),
-                holderName:     name,
-                expiryMonth:    card.getExpiry().getMonth().toString(),
-                expiryYear:     card.getExpiry().getYear().toString(),
-                generationtime: new Date(Date.now()).toISOString()
-            }));
+                client.request({
+                    endpoint: 'payment_methods/credit_cards',
+                    method:   'post',
+                    data: {
+                        creditCard: {
+                            number:         card.getNumber(),
+                            expirationDate: card.getExpiry().string(),
+                            cvv:            card.getCVC()
+                        }
+                    }
+                }, function (err, response) {
+                    if (err) {
+                        error(new Exception("card.declined"));
+                        return
+                    }
+
+                    success(response.creditCards[0].nonce);
+                });
+            });
         }
 
     }
