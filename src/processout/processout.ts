@@ -11,12 +11,6 @@ module ProcessOut {
     export class ProcessOut {
 
         /**
-         * Project ID
-         * @type {string}
-         */
-        protected projectID: string;
-
-        /**
          * Current resource ID. Can be invoice, subscription or authorization
          * request
          * @type {string}
@@ -37,6 +31,12 @@ module ProcessOut {
         public debug = false;
 
         /**
+        * Version of the API used by ProcessOut.js
+        * @type {string}
+        */
+        public apiVersion = "1.3.0.0";
+
+        /**
         * Configured, available gateways
         * @type {Gateways.Gateway[]}
         */
@@ -44,9 +44,9 @@ module ProcessOut {
 
         /**
          * ProcessOut constructor
-         * @param  {string} projectID ProcessOut project ID
+         * @param  {string} resourceID
          */
-        constructor(projectID: string, resourceID: string) {
+        constructor(resourceID: string) {
             // We want to make sure ProcessOut.js is loaded from ProcessOut CDN.
             var scripts = document.getElementsByTagName("script");
             var ok = false;
@@ -60,13 +60,6 @@ module ProcessOut {
 
             if (!ok) {
                 throw new Exception("processout-js.not-hosted");
-            }
-
-            this.projectID = projectID;
-
-            if (this.projectID == "") {
-                console.log("No project ID was specified, skipping setup.");
-                return;
             }
 
             this.resourceID = resourceID;
@@ -160,8 +153,7 @@ module ProcessOut {
             var request = new XMLHttpRequest();
             request.open(method, this.endpoint("api", path), true);
             request.setRequestHeader("Content-Type", "application/json");
-            request.setRequestHeader("API-Version", "1.1.0.0");
-            request.setRequestHeader("Authorization", "Basic " + btoa(this.projectID+":"));
+            request.setRequestHeader("API-Version", this.apiVersion);
 
             request.onload = function() {
                 if (request.status >= 200 && request.status < 300) {

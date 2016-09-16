@@ -6,9 +6,10 @@ var __extends = (this && this.__extends) || function (d, b) {
 var ProcessOut;
 (function (ProcessOut_1) {
     var ProcessOut = (function () {
-        function ProcessOut(projectID, resourceID) {
+        function ProcessOut(resourceID) {
             this.timeout = 10000;
             this.debug = false;
+            this.apiVersion = "1.3.0.0";
             var scripts = document.getElementsByTagName("script");
             var ok = false;
             for (var i = 0; i < scripts.length; i++) {
@@ -18,11 +19,6 @@ var ProcessOut;
             }
             if (!ok) {
                 throw new ProcessOut_1.Exception("processout-js.not-hosted");
-            }
-            this.projectID = projectID;
-            if (this.projectID == "") {
-                console.log("No project ID was specified, skipping setup.");
-                return;
             }
             this.resourceID = resourceID;
             if (this.resourceID.substring(0, 3) != "iv_" &&
@@ -62,8 +58,7 @@ var ProcessOut;
             var request = new XMLHttpRequest();
             request.open(method, this.endpoint("api", path), true);
             request.setRequestHeader("Content-Type", "application/json");
-            request.setRequestHeader("API-Version", "1.1.0.0");
-            request.setRequestHeader("Authorization", "Basic " + btoa(this.projectID + ":"));
+            request.setRequestHeader("API-Version", this.apiVersion);
             request.onload = function () {
                 if (request.status >= 200 && request.status < 300) {
                     success(JSON.parse(request.responseText), request.status, request);
@@ -613,7 +608,7 @@ var ProcessOut;
     })(Gateways = ProcessOut.Gateways || (ProcessOut.Gateways = {}));
 })(ProcessOut || (ProcessOut = {}));
 (function () {
-    var processOut = new ProcessOut.ProcessOut("", "");
+    var processOut = new ProcessOut.ProcessOut("");
     var buttons = document.querySelectorAll(".processout-modal-button");
     for (var i = 0; i < buttons.length; i++) {
         var handleButton = function () {

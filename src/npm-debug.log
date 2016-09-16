@@ -1,0 +1,138 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/usr/local/Cellar/node/5.1.1/bin/node',
+1 verbose cli   '/usr/local/bin/npm',
+1 verbose cli   'install',
+1 verbose cli   '-g',
+1 verbose cli   'tern/condense' ]
+2 info using npm@3.3.12
+3 info using node@v5.1.1
+4 silly loadCurrentTree Starting
+5 silly install loadCurrentTree
+6 silly install readGlobalPackageData
+7 silly fetchPackageMetaData tern/condense
+8 silly fetchOtherPackageData tern/condense
+9 silly cache add args [ 'tern/condense', null ]
+10 verbose cache add spec tern/condense
+11 silly cache add parsed spec Result {
+11 silly cache add   raw: 'tern/condense',
+11 silly cache add   scope: null,
+11 silly cache add   name: null,
+11 silly cache add   rawSpec: 'tern/condense',
+11 silly cache add   spec: 'github:tern/condense',
+11 silly cache add   type: 'hosted',
+11 silly cache add   hosted:
+11 silly cache add    { type: 'github',
+11 silly cache add      ssh: 'git@github.com:tern/condense.git',
+11 silly cache add      sshUrl: 'git+ssh://git@github.com/tern/condense.git',
+11 silly cache add      httpsUrl: 'git+https://github.com/tern/condense.git',
+11 silly cache add      gitUrl: 'git://github.com/tern/condense.git',
+11 silly cache add      shortcut: 'github:tern/condense',
+11 silly cache add      directUrl: 'https://raw.githubusercontent.com/tern/condense/master/package.json' } }
+12 verbose addRemoteGit caching tern/condense
+13 verbose addRemoteGit tern/condense is a repository hosted by github
+14 silly tryGitProto attempting to clone git://github.com/tern/condense.git
+15 silly tryClone cloning tern/condense via git://github.com/tern/condense.git
+16 verbose tryClone git-github-com-tern-condense-git-eb0df8d3650cd0031a01638f39fd78dd not in flight; caching
+17 verbose makeDirectory /Volumes/MacintoshHDD/Manu/.npm/_git-remotes creation not in flight; initializing
+18 silly makeDirectory /Volumes/MacintoshHDD/Manu/.npm/_git-remotes uid: 501 gid: 20
+19 info git [ 'clone',
+19 info git   '--template=/Volumes/MacintoshHDD/Manu/.npm/_git-remotes/_templates',
+19 info git   '--mirror',
+19 info git   'git://github.com/tern/condense.git',
+19 info git   '/Volumes/MacintoshHDD/Manu/.npm/_git-remotes/git-github-com-tern-condense-git-eb0df8d3650cd0031a01638f39fd78dd' ]
+20 verbose git clone --template=/Volumes/MacintoshHDD/Manu/.npm/_git-remotes/_templates --mirror git://github.com/tern/condense.git /Volumes/MacintoshHDD/Manu/.npm/_git-remotes/git-github-com-tern-condense-git-eb0df8d3650cd0031a01638f39fd78dd: Cloning into bare repository '/Volumes/MacintoshHDD/Manu/.npm/_git-remotes/git-github-com-tern-condense-git-eb0df8d3650cd0031a01638f39fd78dd'...
+20 verbose git clone --template=/Volumes/MacintoshHDD/Manu/.npm/_git-remotes/_templates --mirror git://github.com/tern/condense.git /Volumes/MacintoshHDD/Manu/.npm/_git-remotes/git-github-com-tern-condense-git-eb0df8d3650cd0031a01638f39fd78dd: fatal: remote error:
+20 verbose git clone --template=/Volumes/MacintoshHDD/Manu/.npm/_git-remotes/_templates --mirror git://github.com/tern/condense.git /Volumes/MacintoshHDD/Manu/.npm/_git-remotes/git-github-com-tern-condense-git-eb0df8d3650cd0031a01638f39fd78dd:   Repository not found.
+21 silly tryHTTPS attempting to clone git+https://github.com/tern/condense.git
+22 silly tryClone cloning tern/condense via git+https://github.com/tern/condense.git
+23 verbose tryClone git-https-github-com-tern-condense-git-2193296a14d81ca8e47b54723f15da81 not in flight; caching
+24 info git [ 'clone',
+24 info git   '--template=/Volumes/MacintoshHDD/Manu/.npm/_git-remotes/_templates',
+24 info git   '--mirror',
+24 info git   'https://github.com/tern/condense.git',
+24 info git   '/Volumes/MacintoshHDD/Manu/.npm/_git-remotes/git-https-github-com-tern-condense-git-2193296a14d81ca8e47b54723f15da81' ]
+25 verbose git clone --template=/Volumes/MacintoshHDD/Manu/.npm/_git-remotes/_templates --mirror https://github.com/tern/condense.git /Volumes/MacintoshHDD/Manu/.npm/_git-remotes/git-https-github-com-tern-condense-git-2193296a14d81ca8e47b54723f15da81: Cloning into bare repository '/Volumes/MacintoshHDD/Manu/.npm/_git-remotes/git-https-github-com-tern-condense-git-2193296a14d81ca8e47b54723f15da81'...
+25 verbose git clone --template=/Volumes/MacintoshHDD/Manu/.npm/_git-remotes/_templates --mirror https://github.com/tern/condense.git /Volumes/MacintoshHDD/Manu/.npm/_git-remotes/git-https-github-com-tern-condense-git-2193296a14d81ca8e47b54723f15da81: ERROR: Repository not found.
+25 verbose git clone --template=/Volumes/MacintoshHDD/Manu/.npm/_git-remotes/_templates --mirror https://github.com/tern/condense.git /Volumes/MacintoshHDD/Manu/.npm/_git-remotes/git-https-github-com-tern-condense-git-2193296a14d81ca8e47b54723f15da81: fatal: Could not read from remote repository.
+25 verbose git clone --template=/Volumes/MacintoshHDD/Manu/.npm/_git-remotes/_templates --mirror https://github.com/tern/condense.git /Volumes/MacintoshHDD/Manu/.npm/_git-remotes/git-https-github-com-tern-condense-git-2193296a14d81ca8e47b54723f15da81:
+25 verbose git clone --template=/Volumes/MacintoshHDD/Manu/.npm/_git-remotes/_templates --mirror https://github.com/tern/condense.git /Volumes/MacintoshHDD/Manu/.npm/_git-remotes/git-https-github-com-tern-condense-git-2193296a14d81ca8e47b54723f15da81: Please make sure you have the correct access rights
+25 verbose git clone --template=/Volumes/MacintoshHDD/Manu/.npm/_git-remotes/_templates --mirror https://github.com/tern/condense.git /Volumes/MacintoshHDD/Manu/.npm/_git-remotes/git-https-github-com-tern-condense-git-2193296a14d81ca8e47b54723f15da81: and the repository exists.
+26 silly trySSH attempting to clone git@github.com:tern/condense.git
+27 silly tryClone cloning tern/condense via git@github.com:tern/condense.git
+28 verbose tryClone git-github-com-tern-condense-git-c36ef073a773490a6d307730ffc1c1f3 not in flight; caching
+29 info git [ 'clone',
+29 info git   '--template=/Volumes/MacintoshHDD/Manu/.npm/_git-remotes/_templates',
+29 info git   '--mirror',
+29 info git   'git@github.com:tern/condense.git',
+29 info git   '/Volumes/MacintoshHDD/Manu/.npm/_git-remotes/git-github-com-tern-condense-git-c36ef073a773490a6d307730ffc1c1f3' ]
+30 error git clone --template=/Volumes/MacintoshHDD/Manu/.npm/_git-remotes/_templates --mirror git@github.com:tern/condense.git /Volumes/MacintoshHDD/Manu/.npm/_git-remotes/git-github-com-tern-condense-git-c36ef073a773490a6d307730ffc1c1f3: Cloning into bare repository '/Volumes/MacintoshHDD/Manu/.npm/_git-remotes/git-github-com-tern-condense-git-c36ef073a773490a6d307730ffc1c1f3'...
+30 error git clone --template=/Volumes/MacintoshHDD/Manu/.npm/_git-remotes/_templates --mirror git@github.com:tern/condense.git /Volumes/MacintoshHDD/Manu/.npm/_git-remotes/git-github-com-tern-condense-git-c36ef073a773490a6d307730ffc1c1f3: ERROR: Repository not found.
+30 error git clone --template=/Volumes/MacintoshHDD/Manu/.npm/_git-remotes/_templates --mirror git@github.com:tern/condense.git /Volumes/MacintoshHDD/Manu/.npm/_git-remotes/git-github-com-tern-condense-git-c36ef073a773490a6d307730ffc1c1f3: fatal: Could not read from remote repository.
+30 error git clone --template=/Volumes/MacintoshHDD/Manu/.npm/_git-remotes/_templates --mirror git@github.com:tern/condense.git /Volumes/MacintoshHDD/Manu/.npm/_git-remotes/git-github-com-tern-condense-git-c36ef073a773490a6d307730ffc1c1f3:
+30 error git clone --template=/Volumes/MacintoshHDD/Manu/.npm/_git-remotes/_templates --mirror git@github.com:tern/condense.git /Volumes/MacintoshHDD/Manu/.npm/_git-remotes/git-github-com-tern-condense-git-c36ef073a773490a6d307730ffc1c1f3: Please make sure you have the correct access rights
+30 error git clone --template=/Volumes/MacintoshHDD/Manu/.npm/_git-remotes/_templates --mirror git@github.com:tern/condense.git /Volumes/MacintoshHDD/Manu/.npm/_git-remotes/git-github-com-tern-condense-git-c36ef073a773490a6d307730ffc1c1f3: and the repository exists.
+31 silly fetchPackageMetaData Error: Command failed: git clone --template=/Volumes/MacintoshHDD/Manu/.npm/_git-remotes/_templates --mirror git@github.com:tern/condense.git /Volumes/MacintoshHDD/Manu/.npm/_git-remotes/git-github-com-tern-condense-git-c36ef073a773490a6d307730ffc1c1f3
+31 silly fetchPackageMetaData Cloning into bare repository '/Volumes/MacintoshHDD/Manu/.npm/_git-remotes/git-github-com-tern-condense-git-c36ef073a773490a6d307730ffc1c1f3'...
+31 silly fetchPackageMetaData ERROR: Repository not found.
+31 silly fetchPackageMetaData fatal: Could not read from remote repository.
+31 silly fetchPackageMetaData
+31 silly fetchPackageMetaData Please make sure you have the correct access rights
+31 silly fetchPackageMetaData and the repository exists.
+31 silly fetchPackageMetaData
+31 silly fetchPackageMetaData     at ChildProcess.exithandler (child_process.js:213:12)
+31 silly fetchPackageMetaData     at emitTwo (events.js:87:13)
+31 silly fetchPackageMetaData     at ChildProcess.emit (events.js:172:7)
+31 silly fetchPackageMetaData     at maybeClose (internal/child_process.js:818:16)
+31 silly fetchPackageMetaData     at Socket.<anonymous> (internal/child_process.js:319:11)
+31 silly fetchPackageMetaData     at emitOne (events.js:77:13)
+31 silly fetchPackageMetaData     at Socket.emit (events.js:169:7)
+31 silly fetchPackageMetaData     at Pipe._onclose (net.js:469:12)
+31 silly fetchPackageMetaData  error for tern/condense { [Error: Command failed: git clone --template=/Volumes/MacintoshHDD/Manu/.npm/_git-remotes/_templates --mirror git@github.com:tern/condense.git /Volumes/MacintoshHDD/Manu/.npm/_git-remotes/git-github-com-tern-condense-git-c36ef073a773490a6d307730ffc1c1f3
+31 silly fetchPackageMetaData Cloning into bare repository '/Volumes/MacintoshHDD/Manu/.npm/_git-remotes/git-github-com-tern-condense-git-c36ef073a773490a6d307730ffc1c1f3'...
+31 silly fetchPackageMetaData ERROR: Repository not found.
+31 silly fetchPackageMetaData fatal: Could not read from remote repository.
+31 silly fetchPackageMetaData
+31 silly fetchPackageMetaData Please make sure you have the correct access rights
+31 silly fetchPackageMetaData and the repository exists.
+31 silly fetchPackageMetaData ]
+31 silly fetchPackageMetaData   killed: false,
+31 silly fetchPackageMetaData   code: 128,
+31 silly fetchPackageMetaData   signal: null,
+31 silly fetchPackageMetaData   cmd: 'git clone --template=/Volumes/MacintoshHDD/Manu/.npm/_git-remotes/_templates --mirror git@github.com:tern/condense.git /Volumes/MacintoshHDD/Manu/.npm/_git-remotes/git-github-com-tern-condense-git-c36ef073a773490a6d307730ffc1c1f3' }
+32 silly rollbackFailedOptional Starting
+33 silly rollbackFailedOptional Finishing
+34 silly runTopLevelLifecycles Starting
+35 silly runTopLevelLifecycles Finishing
+36 silly install printInstalled
+37 verbose stack Error: Command failed: git clone --template=/Volumes/MacintoshHDD/Manu/.npm/_git-remotes/_templates --mirror git@github.com:tern/condense.git /Volumes/MacintoshHDD/Manu/.npm/_git-remotes/git-github-com-tern-condense-git-c36ef073a773490a6d307730ffc1c1f3
+37 verbose stack Cloning into bare repository '/Volumes/MacintoshHDD/Manu/.npm/_git-remotes/git-github-com-tern-condense-git-c36ef073a773490a6d307730ffc1c1f3'...
+37 verbose stack ERROR: Repository not found.
+37 verbose stack fatal: Could not read from remote repository.
+37 verbose stack
+37 verbose stack Please make sure you have the correct access rights
+37 verbose stack and the repository exists.
+37 verbose stack
+37 verbose stack     at ChildProcess.exithandler (child_process.js:213:12)
+37 verbose stack     at emitTwo (events.js:87:13)
+37 verbose stack     at ChildProcess.emit (events.js:172:7)
+37 verbose stack     at maybeClose (internal/child_process.js:818:16)
+37 verbose stack     at Socket.<anonymous> (internal/child_process.js:319:11)
+37 verbose stack     at emitOne (events.js:77:13)
+37 verbose stack     at Socket.emit (events.js:169:7)
+37 verbose stack     at Pipe._onclose (net.js:469:12)
+38 verbose cwd /Volumes/MacintoshHDD/Manu/htdocs/ProcessOut/cdn/source/scripts/processout-js/src
+39 error Darwin 15.6.0
+40 error argv "/usr/local/Cellar/node/5.1.1/bin/node" "/usr/local/bin/npm" "install" "-g" "tern/condense"
+41 error node v5.1.1
+42 error npm  v3.3.12
+43 error code 128
+44 error Command failed: git clone --template=/Volumes/MacintoshHDD/Manu/.npm/_git-remotes/_templates --mirror git@github.com:tern/condense.git /Volumes/MacintoshHDD/Manu/.npm/_git-remotes/git-github-com-tern-condense-git-c36ef073a773490a6d307730ffc1c1f3
+44 error Cloning into bare repository '/Volumes/MacintoshHDD/Manu/.npm/_git-remotes/git-github-com-tern-condense-git-c36ef073a773490a6d307730ffc1c1f3'...
+44 error ERROR: Repository not found.
+44 error fatal: Could not read from remote repository.
+44 error
+44 error Please make sure you have the correct access rights
+44 error and the repository exists.
+45 error If you need help, you may report this error at:
+45 error     <https://github.com/npm/npm/issues>
+46 verbose exit [ 1, true ]
