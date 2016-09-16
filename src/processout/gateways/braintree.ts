@@ -51,6 +51,7 @@ module ProcessOut.Gateways {
             success: (token: string) => void,
             error:   (err: ProcessOut.Exception) => void): void {
 
+            var t = this;
             braintree.client.create({
                 authorization: this.token
             }, function(err: any, client: any) {
@@ -75,7 +76,8 @@ module ProcessOut.Gateways {
                         return
                     }
 
-                    success(response.creditCards[0].nonce);
+                    success(t.createProcessOutToken(
+                        response.creditCards[0].nonce));
                 });
             });
         }

@@ -112,8 +112,17 @@ module ProcessOut.Gateways {
          * @return {string}
          */
         protected createProcessOutToken(token: string): string {
+            // req is an abstracted gateway request ProcessOut uses
+            // to abstract gateway requests and provide the same usage
+            // accross all those gateways
             var req = {
-                "token": token
+                "gateway_configuration_id": this.configuration.id,
+                "url":                      "",
+                "method":                   "POST",
+                "headers":                  {
+                    "content-type": "applicatio/json"
+                },
+                "body": JSON.stringify({"token": token})
             };
             return `gway_req_${btoa(JSON.stringify(req))}`;
         }

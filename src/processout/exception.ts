@@ -13,13 +13,16 @@ module ProcessOut {
         public message: string;
         public stack:   string;
 
-        construct(code: string, message?: string) {
-            this.code = code;
-            if (message)
-                this.message = message;
-            else
-                this.message = Translator.translate(this.code);
-            this.name  = this.code;
+        constructor(code: string, message?: string) {
+            if (! message)
+                message = Translator.translate(code);
+
+            super(message);
+
+            this.code    = code;
+            this.message = message;
+
+            this.name  = "ProcessOutException";
             this.stack = (<any> new Error()).stack;
         }
     }

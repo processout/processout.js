@@ -34,7 +34,7 @@ module ProcessOut {
         * gateways instead of the live ones)
         * @type {string}
         */
-        public debug = false;
+        public debug = true;
 
         /**
         * Version of the API used by ProcessOut.js
@@ -46,25 +46,28 @@ module ProcessOut {
         * Configured, available gateways
         * @type {Gateways.Gateway[]}
         */
-        gateways: Gateways.Gateway[];
+        gateways: Gateways.Gateway[] = new Array<Gateways.Gateway>();
 
         /**
          * ProcessOut constructor
          * @param  {string} resourceID
          */
-        constructor(resourceID: string) {
+        constructor(resourceID: string, debug?: boolean) {
+            if (debug != null)
+                this.debug = debug;
+
             // We want to make sure ProcessOut.js is loaded from ProcessOut CDN.
             var scripts = document.getElementsByTagName("script");
             var ok = false;
             for (var i = 0; i < scripts.length; i++) {
-                if (/^https?:\/\/cdn\.processout\.((com)|(ninja)|(dev))\//.test(
+                if (/^https?:\/\/.*\.processout\.((com)|(ninja)|(dev))\//.test(
                     scripts[i].getAttribute("src"))) {
 
                     ok = true;
                 }
             }
 
-            if (!ok) {
+            if (!ok && !this.debug) {
                 throw new Exception("processout-js.not-hosted");
             }
 
@@ -157,8 +160,11 @@ module ProcessOut {
                 }
             }
 
+            if (path.substring(0, 4) != "http")
+                path = this.endpoint("api", path);
+
             var request = new XMLHttpRequest();
-            request.open(method, this.endpoint("api", path), true);
+            request.open(method, path, true);
             request.setRequestHeader("Content-Type", "application/json");
             request.setRequestHeader("API-Version", this.apiVersion);
 

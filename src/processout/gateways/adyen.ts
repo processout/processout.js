@@ -58,14 +58,14 @@ module ProcessOut.Gateways {
                     enableValidations: false
                 });
 
-            success(cseInstance.encrypt({
+            success(this.createProcessOutToken(cseInstance.encrypt({
                 number:         card.getNumber(),
                 cvc:            card.getCVC(),
                 holderName:     name,
                 expiryMonth:    card.getExpiry().getMonth().toString(),
                 expiryYear:     card.getExpiry().getYear().toString(),
                 generationtime: new Date(Date.now()).toISOString()
-            }));
+            })));
         }
 
     }

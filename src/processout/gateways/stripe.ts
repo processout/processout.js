@@ -78,6 +78,7 @@ module ProcessOut.Gateways {
             success: (token: string) => void,
             error:   (err: ProcessOut.Exception) => void): void {
 
+            var t = this;
             Stripe.setPublishableKey(this.getPublicKey("public_key"));
             Stripe.card.createToken({
                 number: card.getNumber(),
@@ -85,12 +86,12 @@ module ProcessOut.Gateways {
                 cvc:    card.getCVC()
             }, function(status: any, response: any) {
                 if (response.error) {
-                    error(new Exception(Stripe.convertError(
+                    error(new Exception(StripeGateway.convertError(
                         response.error.code)));
                     return;
                 }
 
-                success(response.id);
+                success(t.createProcessOutToken(response.id));
             });
         }
 

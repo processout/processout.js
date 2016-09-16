@@ -69,6 +69,7 @@ module ProcessOut.Gateways {
                 }
             });
 
+            var t = this;
             CKOAPI.createCardToken({
                 "number":      card.getNumber(),
                 "cvv":         card.getCVC(),
@@ -80,7 +81,7 @@ module ProcessOut.Gateways {
                     return;
                 }
 
-                success(v.id);
+                success(t.createProcessOutToken(v.id));
             });
         }
 
