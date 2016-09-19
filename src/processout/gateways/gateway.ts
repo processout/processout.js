@@ -74,7 +74,7 @@ module ProcessOut.Gateways {
                 resourceName = "authorization-requests";
             }
 
-            var url = `https://api.processout.ninja/${resourceName}/${r}/gateway-configurations/${this.configuration.id}/customer-action`;
+            var url = `${resourceName}/${r}/gateway-configurations/${this.configuration.id}/customer-action`;
             var t = this;
             this.instance.apiRequest("GET", url, null,
                 function(data: any, code: number, req: XMLHttpRequest): void {
