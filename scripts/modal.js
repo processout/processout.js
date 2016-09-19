@@ -417,7 +417,7 @@ var ProcessOut;
                     if (code < 200 || code > 299) {
                         return;
                     }
-                    t.token = data.value;
+                    t.token = data.customer_action.value;
                 }, function (code, req) { });
             };
             Gateway.prototype.createProcessOutToken = function (token) {
