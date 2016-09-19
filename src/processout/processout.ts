@@ -123,6 +123,9 @@ module ProcessOut {
             success: (token: string) => void,
             error:   (err: Exception) => void): void {
 
+            if (this.gateways.length == 0) {
+                throw new Exception("request.gateway.not-available", "No gateway is available to tokenize a credit card.");
+            }
             //TODO: Loop through every gateways to try and tokenize if not
             //tokenization didn't work
             this.gateways[0].tokenize(card, success, error);
