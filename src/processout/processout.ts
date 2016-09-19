@@ -129,7 +129,7 @@ module ProcessOut {
             if (this.gateways.length == 0) {
                 throw new Exception("request.gateway.not-available", "No gateway is available to tokenize a credit card.");
             }
-            //TODO: Loop through every gateways to try and tokenize if not
+            //TODO: Loop through every gateways to try and tokenize if the
             //tokenization didn't work
             this.gateways[0].tokenize(card, success, error);
         }
@@ -166,7 +166,7 @@ module ProcessOut {
                 }
             }
 
-            if (path.substring(0, 4) != "http")
+            if (path.substring(0, 4) != "http" && path[0] != "/")
                 path = this.endpoint("api", path);
 
             var request = new XMLHttpRequest();
