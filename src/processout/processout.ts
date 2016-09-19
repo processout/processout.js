@@ -105,6 +105,9 @@ module ProcessOut {
          */
         public setGateways(gateways: GatewayConfiguration[]): void {
             for (var gc of gateways) {
+                if (gc.id == "")
+                    throw new Exception("processout-js.invalid-config",
+                        "The gateway configuration must contain an ID.");
                 var g = Gateways.Handler.buildGateway(this, gc);
                 this.gateways.push(g);
             }
