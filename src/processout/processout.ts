@@ -154,8 +154,8 @@ module ProcessOut {
          * @return {void}
          */
         apiRequest(method: string, path: string, data,
-            success: (data: any, code: number, req: XMLHttpRequest) => void,
-            error: (code: number, req: XMLHttpRequest) => void): void {
+            success: (data: any, code: number, req: XMLHttpRequest, e: Event) => void,
+            error:   (code: number, req: XMLHttpRequest, e: Event) => void): void {
 
             if (method != "get")
                 data = JSON.stringify(data);
@@ -174,16 +174,14 @@ module ProcessOut {
             request.setRequestHeader("Content-Type", "application/json");
             request.setRequestHeader("API-Version", this.apiVersion);
 
-            request.onload = function() {
-                if (request.status >= 200 && request.status < 300) {
-                    success(JSON.parse(request.responseText), request.status, request);
-                    return;
-                }
-
-                error(request.status, request);
+            request.onload = function(e: any) {
+                if (e.readyState == 4)
+                    success(JSON.parse(request.responseText), request.status, request, e);
+                return;
             };
-            request.onerror = function() {
-                error(request.status, request);
+            request.onerror = function(e: Event) {
+                console.log(e);
+                error(request.status, request, e);
             };
 
             request.send(data);

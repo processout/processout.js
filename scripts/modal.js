@@ -154,6 +154,7 @@ var ProcessOut;
             "request.gateway.not-supported": "The gateway is not supported by ProcessOut.js",
             "processout-js.not-hosted": "ProcessOut.js was not loaded from ProcessOut CDN. Please do not host ProcessOut.js yourself but rather use ProcessOut CDN: https://cdn.processout.com/processout-min.js",
             "processout-js.modal.unavailable": "The ProcessOut.js modal is unavailable.",
+            "processout-js.invalid-config": "The provided gateway configuration is invalid.",
             "resource.invalid-type": "The provided resource was invalid. It must be an invoice, a subscription or an authorization request."
         }
     };
@@ -229,11 +230,16 @@ var ProcessOut;
         ProcessOut.prototype.setGateways = function (gateways) {
             for (var _i = 0, gateways_1 = gateways; _i < gateways_1.length; _i++) {
                 var gc = gateways_1[_i];
+                if (gc.id == "")
+                    throw new ProcessOut_1.Exception("processout-js.invalid-config", "The gateway configuration must contain an ID.");
                 var g = ProcessOut_1.Gateways.Handler.buildGateway(this, gc);
                 this.gateways.push(g);
             }
         };
         ProcessOut.prototype.tokenize = function (card, success, error) {
+            if (this.gateways.length == 0) {
+                throw new ProcessOut_1.Exception("request.gateway.not-available", "No gateway is available to tokenize a credit card.");
+            }
             this.gateways[0].tokenize(card, success, error);
         };
         ProcessOut.prototype.endpoint = function (subdomain, path) {
@@ -248,21 +254,20 @@ var ProcessOut;
                     path += key + "=" + encodeURIComponent(data[key]) + "&";
                 }
             }
-            if (path.substring(0, 4) != "http")
+            if (path.substring(0, 4) != "http" && path[0] != "/")
                 path = this.endpoint("api", path);
             var request = new XMLHttpRequest();
             request.open(method, path, true);
             request.setRequestHeader("Content-Type", "application/json");
             request.setRequestHeader("API-Version", this.apiVersion);
-            request.onload = function () {
-                if (request.status >= 200 && request.status < 300) {
-                    success(JSON.parse(request.responseText), request.status, request);
-                    return;
-                }
-                error(request.status, request);
+            request.onload = function (e) {
+                if (e.readyState == 4)
+                    success(JSON.parse(request.responseText), request.status, request, e);
+                return;
             };
-            request.onerror = function () {
-                error(request.status, request);
+            request.onerror = function (e) {
+                console.log(e);
+                error(request.status, request, e);
             };
             request.send(data);
         };
