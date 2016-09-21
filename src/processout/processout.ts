@@ -178,7 +178,7 @@ module ProcessOut {
             request.setRequestHeader("API-Version", this.apiVersion);
 
             request.onload = function(e: any) {
-                if (e.readyState == 4)
+                if (e.currentTarget.readyState == 4)
                     success(JSON.parse(request.responseText), request.status, request, e);
                 return;
             };
