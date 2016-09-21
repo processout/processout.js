@@ -141,7 +141,10 @@ module ProcessOut {
          * @return {string}
          */
         endpoint(subdomain: string, path: string): string {
-            return `https://${subdomain}.processout.com${path}`;
+            if (!this.debug)
+                return `https://${subdomain}.processout.com/${path}`;
+            else
+                return `https://${subdomain}.processout.ninja/${path}`;
         }
 
         /**
