@@ -138,7 +138,10 @@ var ProcessOut;
             this.gateways[0].tokenize(card, success, error);
         };
         ProcessOut.prototype.endpoint = function (subdomain, path) {
-            return "https://" + subdomain + ".processout.com" + path;
+            if (!this.debug)
+                return "https://" + subdomain + ".processout.com/" + path;
+            else
+                return "https://" + subdomain + ".processout.ninja/" + path;
         };
         ProcessOut.prototype.apiRequest = function (method, path, data, success, error) {
             if (method != "get")
@@ -156,7 +159,7 @@ var ProcessOut;
             request.setRequestHeader("Content-Type", "application/json");
             request.setRequestHeader("API-Version", this.apiVersion);
             request.onload = function (e) {
-                if (e.readyState == 4)
+                if (e.currentTarget.readyState == 4)
                     success(JSON.parse(request.responseText), request.status, request, e);
                 return;
             };
@@ -311,7 +314,7 @@ var ProcessOut;
                 if (r.substring(0, 9) == "auth_req_") {
                     resourceName = "authorization-requests";
                 }
-                var url = "https://api.processout.ninja/" + resourceName + "/" + r + "/gateway-configurations/" + this.configuration.id + "/customer-action";
+                var url = resourceName + "/" + r + "/gateway-configurations/" + this.configuration.id + "/customer-action";
                 var t = this;
                 this.instance.apiRequest("GET", url, null, function (data, code, req) {
                     if (code < 200 || code > 299) {
