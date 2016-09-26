@@ -34,7 +34,7 @@ module ProcessOut {
         * gateways instead of the live ones)
         * @type {string}
         */
-        public debug = true;
+        public debug = false;
 
         /**
         * Version of the API used by ProcessOut.js
