@@ -199,19 +199,29 @@ var ProcessOut;
         function ProcessOut(resourceID, debug) {
             this.timeout = 10000;
             this.debug = false;
+            this.host = "processout.com";
             this.apiVersion = "1.3.0.0";
             this.gateways = new Array();
             if (debug != null)
                 this.debug = debug;
             var scripts = document.getElementsByTagName("script");
-            var ok = false;
+            var jsHost = "";
             for (var i = 0; i < scripts.length; i++) {
                 if (/^https?:\/\/.*\.processout\.((com)|(ninja)|(dev))\//.test(scripts[i].getAttribute("src"))) {
-                    ok = true;
+                    jsHost = scripts[i].getAttribute("src");
                 }
             }
-            if (!ok && !this.debug) {
+            if (jsHost != "" && !this.debug) {
                 throw new ProcessOut_1.Exception("processout-js.not-hosted");
+            }
+            if (/^https?:\/\/.*\.processout\.ninja\//.test(jsHost)) {
+                this.host = "processout.ninja";
+            }
+            else if (/^https?:\/\/.*\.processout\.dev\//.test(jsHost)) {
+                this.host = "processout.dev";
+            }
+            else {
+                this.host = "processout.com";
             }
             this.resourceID = resourceID;
             if (this.resourceID.substring(0, 3) != "iv_" &&
@@ -243,10 +253,7 @@ var ProcessOut;
             this.gateways[0].tokenize(card, success, error);
         };
         ProcessOut.prototype.endpoint = function (subdomain, path) {
-            if (!this.debug)
-                return "https://" + subdomain + ".processout.com/" + path;
-            else
-                return "https://" + subdomain + ".processout.ninja/" + path;
+            return "https://" + subdomain + "." + this.host + "/" + path;
         };
         ProcessOut.prototype.apiRequest = function (method, path, data, success, error) {
             if (method != "get")
