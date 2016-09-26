@@ -31,7 +31,7 @@ module ProcessOut {
             "request.gateway.not-available": "The requested gateway is currently unavailable.",
             "request.gateway.not-supported": "The gateway is not supported by ProcessOut.js",
 
-            "processout-js.not-hosted":        "ProcessOut.js was not loaded from ProcessOut CDN. Please do not host ProcessOut.js yourself but rather use ProcessOut CDN: https://cdn.processout.com/processout-min.js",
+            "processout-js.not-hosted":        "ProcessOut.js was not loaded from ProcessOut CDN. Please do not host ProcessOut.js yourself but rather use ProcessOut CDN: https://js.processout.com/processout.js",
             "processout-js.modal.unavailable": "The ProcessOut.js modal is unavailable.",
             "processout-js.invalid-config":    "The provided gateway configuration is invalid.",
 

@@ -74,7 +74,7 @@ module ProcessOut {
                 }
             }
 
-            if (jsHost != "" && !this.debug) {
+            if (jsHost == "" && !this.debug) {
                 throw new Exception("processout-js.not-hosted");
             }
 
