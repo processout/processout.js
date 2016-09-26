@@ -35,6 +35,13 @@ module ProcessOut {
         * @type {string}
         */
         public debug = false;
+        
+        /**
+        * Host of ProcessOut. Is automatically updated to the correct one 
+        * when the library loads
+        * @type {string}
+        */
+        protected host = "processout.com";
 
         /**
         * Version of the API used by ProcessOut.js
@@ -58,17 +65,25 @@ module ProcessOut {
 
             // We want to make sure ProcessOut.js is loaded from ProcessOut CDN.
             var scripts = document.getElementsByTagName("script");
-            var ok = false;
+            var jsHost = "";
             for (var i = 0; i < scripts.length; i++) {
                 if (/^https?:\/\/.*\.processout\.((com)|(ninja)|(dev))\//.test(
                     scripts[i].getAttribute("src"))) {
 
-                    ok = true;
+                    jsHost = scripts[i].getAttribute("src");
                 }
             }
 
-            if (!ok && !this.debug) {
+            if (jsHost != "" && !this.debug) {
                 throw new Exception("processout-js.not-hosted");
+            }
+
+            if (/^https?:\/\/.*\.processout\.ninja\//.test(jsHost)) {
+                this.host = "processout.ninja";
+            } else if (/^https?:\/\/.*\.processout\.dev\//.test(jsHost)) {
+                this.host = "processout.dev";
+            } else {
+                this.host = "processout.com";
             }
 
             this.resourceID = resourceID;
@@ -141,10 +156,7 @@ module ProcessOut {
          * @return {string}
          */
         endpoint(subdomain: string, path: string): string {
-            if (!this.debug)
-                return `https://${subdomain}.processout.com/${path}`;
-            else
-                return `https://${subdomain}.processout.ninja/${path}`;
+            return `https://${subdomain}.${this.host}/${path}`;
         }
 
         /**

@@ -198,7 +198,7 @@ var ProcessOut;
     var ProcessOut = (function () {
         function ProcessOut(resourceID, debug) {
             this.timeout = 10000;
-            this.debug = true;
+            this.debug = false;
             this.apiVersion = "1.3.0.0";
             this.gateways = new Array();
             if (debug != null)
