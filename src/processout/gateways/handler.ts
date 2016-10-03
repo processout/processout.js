@@ -28,6 +28,10 @@ module ProcessOut.Gateways {
                 return new AdyenGateway(gatewayConfiguration, p);
             case "braintree":
                 return new BraintreeGateway(gatewayConfiguration, p);
+            
+            // ProcessOut test environment
+            case "test-credit-card":
+                return new TestGateway(gatewayConfiguration, p);
             }
 
             throw new Exception("request.gateway.not-supported");

@@ -1,7 +1,5 @@
 /// <reference path="../../references.ts" />
 
-/// <reference path="../../definitions/stripe.d.ts" />
-
 /**
  * ProcessOut Gateways module/namespace
  */
