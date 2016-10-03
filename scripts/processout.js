@@ -549,16 +549,16 @@ var ProcessOut;
                 }
                 switch (card.getCVC()) {
                     case "666":
-                        success("test-valid");
+                        success(this.createProcessOutToken("test-disputed"));
                         return;
                     case "500":
-                        success("test-declined");
+                        success(this.createProcessOutToken("test-declined"));
                         return;
                     case "600":
-                        success("test-authorize-only");
+                        success(this.createProcessOutToken("test-authorize-only"));
                         return;
                 }
-                success("test-valid");
+                success(this.createProcessOutToken("test-valid"));
             };
             return TestGateway;
         }(Gateways.Gateway));
