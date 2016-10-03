@@ -51,7 +51,7 @@ module ProcessOut.Gateways {
             switch (card.getCVC()) {
             case "666":
                 // Card will be disputed
-                success(this.createProcessOutToken("test-disputed"));
+                success(this.createProcessOutToken("test-dispute"));
                 return;
             case "500":
                 // Card will be declined
