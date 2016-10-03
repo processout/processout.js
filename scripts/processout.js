@@ -549,7 +549,7 @@ var ProcessOut;
                 }
                 switch (card.getCVC()) {
                     case "666":
-                        success(this.createProcessOutToken("test-dispute"));
+                        success(this.createProcessOutToken("test-will-chargeback"));
                         return;
                     case "500":
                         success(this.createProcessOutToken("test-declined"));
