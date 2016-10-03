@@ -288,6 +288,8 @@ var ProcessOut;
                         return new Gateways.AdyenGateway(gatewayConfiguration, p);
                     case "braintree":
                         return new Gateways.BraintreeGateway(gatewayConfiguration, p);
+                    case "test-credit-card":
+                        return new Gateways.TestGateway(gatewayConfiguration, p);
                 }
                 throw new ProcessOut.Exception("request.gateway.not-supported");
             };
@@ -527,6 +529,40 @@ var ProcessOut;
             return BraintreeGateway;
         }(Gateways.Gateway));
         Gateways.BraintreeGateway = BraintreeGateway;
+    })(Gateways = ProcessOut.Gateways || (ProcessOut.Gateways = {}));
+})(ProcessOut || (ProcessOut = {}));
+var ProcessOut;
+(function (ProcessOut) {
+    var Gateways;
+    (function (Gateways) {
+        var TestGateway = (function (_super) {
+            __extends(TestGateway, _super);
+            function TestGateway(gatewayConfiguration, instance) {
+                _super.call(this, gatewayConfiguration, instance);
+            }
+            TestGateway.prototype.setup = function () {
+            };
+            TestGateway.prototype.tokenize = function (card, success, error) {
+                if (card.getNumber() != "4242424242424242") {
+                    error(new ProcessOut.Exception("card.declined"));
+                    return;
+                }
+                switch (card.getCVC()) {
+                    case "666":
+                        success("test-valid");
+                        return;
+                    case "500":
+                        success("test-declined");
+                        return;
+                    case "600":
+                        success("test-authorize-only");
+                        return;
+                }
+                success("test-valid");
+            };
+            return TestGateway;
+        }(Gateways.Gateway));
+        Gateways.TestGateway = TestGateway;
     })(Gateways = ProcessOut.Gateways || (ProcessOut.Gateways = {}));
 })(ProcessOut || (ProcessOut = {}));
 var ProcessOut;
