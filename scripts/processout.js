@@ -106,7 +106,7 @@ var ProcessOut;
                     jsHost = scripts[i].getAttribute("src");
                 }
             }
-            if (jsHost == "" && !this.debug) {
+            if (jsHost == "" && !this.isDebug()) {
                 throw new ProcessOut_1.Exception("processout-js.not-hosted");
             }
             if (/^https?:\/\/.*\.processout\.ninja\//.test(jsHost)) {
