@@ -16,12 +16,7 @@ checkout flow stays as fluid as possible.
 
 #### Add the ProcessOut script tag
 ``` html
-<script src="https://cdn.processout.com/modal-min.js"></script>
-```
-
-Make sure that jQuery is also included (on top of the ProcessOut script tag)
-``` html
-<script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+<script src="https://js.processout.com/modal.js"></script>
 ```
 
 ### Usage
@@ -59,12 +54,7 @@ ProcessOut.js
 
 #### Add the ProcessOut script tag
 ``` html
-<script src="https://cdn.processout.com/processout-min.js"></script>
-```
-
-Make sure that jQuery is also included (on top of the ProcessOut script tag)
-``` html
-<script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+<script src="https://js.processout.com/processout.js"></script>
 ```
 
 ### Usage
