@@ -63,8 +63,11 @@ The modal previously seen is directly built on ProcessOut.js, which helps you di
 
 #### Creating a ProcessOut instance
 
+The resource ID may be of an invoice (`iv_*`), subscription (`sub_*`) or authorization request (`auth_req_*`).
+The resource ID may also be left empty if none is needed.
+
 ```js
-var processOut = new ProcessOut.ProcessOut('projectID');
+var processOut = new ProcessOut.ProcessOut("resource-id");
 ```
 
 #### Create a modal object and interact with it
