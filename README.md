@@ -113,4 +113,4 @@ Full API documentation
 
 ### Apiary
 
-The ProcessOut's full API documentation can be found on [Apiary](http://docs.processout.apiary.io). It contains all the needed information, including callback data, and much more.
+The ProcessOut's full API documentation can be found on [our documentation](https://docs.processout.com). It contains all the needed information, including callback data, and much more.
