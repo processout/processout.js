@@ -66,9 +66,9 @@ var ProcessOut;
                 return;
             Translator.locale = locale;
         };
-        Translator.locale = "en";
         return Translator;
     }());
+    Translator.locale = "en";
     ProcessOut.Translator = Translator;
 })(ProcessOut || (ProcessOut = {}));
 var ProcessOut;
@@ -76,13 +76,15 @@ var ProcessOut;
     var Exception = (function (_super) {
         __extends(Exception, _super);
         function Exception(code, message) {
+            var _this;
             if (!message)
                 message = ProcessOut.Translator.translate(code);
-            _super.call(this, message);
-            this.code = code;
-            this.message = message;
-            this.name = "ProcessOutException";
-            this.stack = (new Error()).stack;
+            _this = _super.call(this, message) || this;
+            _this.code = code;
+            _this.message = message;
+            _this.name = "ProcessOutException";
+            _this.stack = new Error().stack;
+            return _this;
         }
         return Exception;
     }(Error));
@@ -199,9 +201,9 @@ var ProcessOut;
             };
             document.body.appendChild(iframe);
         };
-        ProcessOut.namespace = "processout";
         return ProcessOut;
     }());
+    ProcessOut.namespace = "processout";
     ProcessOut_1.ProcessOut = ProcessOut;
 })(ProcessOut || (ProcessOut = {}));
 var ProcessOut;
@@ -356,7 +358,7 @@ var ProcessOut;
         var StripeGateway = (function (_super) {
             __extends(StripeGateway, _super);
             function StripeGateway(gatewayConfiguration, instance) {
-                _super.call(this, gatewayConfiguration, instance);
+                return _super.call(this, gatewayConfiguration, instance) || this;
             }
             StripeGateway.prototype.setup = function () {
                 var f = document.createElement("script");
@@ -407,7 +409,7 @@ var ProcessOut;
         var CheckoutcomGateway = (function (_super) {
             __extends(CheckoutcomGateway, _super);
             function CheckoutcomGateway(gatewayConfiguration, instance) {
-                _super.call(this, gatewayConfiguration, instance);
+                return _super.call(this, gatewayConfiguration, instance) || this;
             }
             CheckoutcomGateway.prototype.setup = function () {
                 var f = document.createElement("script");
@@ -456,7 +458,7 @@ var ProcessOut;
         var AdyenGateway = (function (_super) {
             __extends(AdyenGateway, _super);
             function AdyenGateway(gatewayConfiguration, instance) {
-                _super.call(this, gatewayConfiguration, instance);
+                return _super.call(this, gatewayConfiguration, instance) || this;
             }
             AdyenGateway.prototype.setup = function () {
                 var f = document.createElement("script");
@@ -489,7 +491,7 @@ var ProcessOut;
         var BraintreeGateway = (function (_super) {
             __extends(BraintreeGateway, _super);
             function BraintreeGateway(gatewayConfiguration, instance) {
-                _super.call(this, gatewayConfiguration, instance);
+                return _super.call(this, gatewayConfiguration, instance) || this;
             }
             BraintreeGateway.prototype.setup = function () {
                 var f = document.createElement("script");
@@ -538,7 +540,7 @@ var ProcessOut;
         var TestGateway = (function (_super) {
             __extends(TestGateway, _super);
             function TestGateway(gatewayConfiguration, instance) {
-                _super.call(this, gatewayConfiguration, instance);
+                return _super.call(this, gatewayConfiguration, instance) || this;
             }
             TestGateway.prototype.setup = function () {
             };
