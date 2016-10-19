@@ -145,27 +145,6 @@ module ProcessOut {
         }
 
         /**
-         * formatNumber formats a card number
-         * @param {string} number
-         * @return {string}
-         */
-        public static formatNumber(number: string): string {
-            var v       = number.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
-            var matches = v.match(/\d{4,16}/g);
-            var match   = matches && matches[0] || "";
-            var parts   = [];
-
-            for (var i = 0; i < match.length; i += 4) {
-                parts.push(match.substring(i, i + 4));
-            }
-
-            if (!parts.length)
-                return number;
-
-            return parts.join(" ");
-        }
-
-        /**
          * luhn does a basic luhn check on the card number
          * @param {number} cardNo
          * @return {boolean}
@@ -224,6 +203,41 @@ module ProcessOut {
                 return "card.invalid-cvc";
 
             return null;
+        }
+
+        /**
+         * formatNumber formats a card number
+         * @param {string} number
+         * @return {string}
+         */
+        public static formatNumber(number: string): string {
+            var v       = number.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
+            var matches = v.match(/\d{4,16}/g);
+            var match   = matches && matches[0] || "";
+            var parts   = [];
+
+            for (var i = 0; i < match.length; i += 4) {
+                parts.push(match.substring(i, i + 4));
+            }
+
+            if (!parts.length)
+                return number;
+
+            return parts.join(" ");
+        }
+        
+        public static autoFormatFields(number: HTMLInputElement,
+            expiry: HTMLInputElement, cvc: HTMLInputElement): void {
+            
+            number.addEventListener("input", function(e) {
+                this.value = Card.formatNumber(this.value);
+            });
+            expiry.addEventListener("input", function(e) {
+                this.value = Expiry.format(this.value);
+
+                if (this.value.length >= 7)
+                    cvc.focus();
+            });
         }
     }
 }
