@@ -24,6 +24,140 @@ var ProcessOut;
 })(ProcessOut || (ProcessOut = {}));
 var ProcessOut;
 (function (ProcessOut) {
+    var GatewayRequest = (function () {
+        function GatewayRequest() {
+        }
+        GatewayRequest.prototype.token = function () {
+            return "gway_req_" + btoa(JSON.stringify({
+                "gateway_configuration_id": this.gatewayConfigurationID,
+                "url": this.url,
+                "method": this.method,
+                "headers": this.headers,
+                "body": this.body,
+                "prepare": this.prepare
+            }));
+        };
+        return GatewayRequest;
+    }());
+    ProcessOut.GatewayRequest = GatewayRequest;
+})(ProcessOut || (ProcessOut = {}));
+var ProcessOut;
+(function (ProcessOut) {
+    var Expiry = (function () {
+        function Expiry(month, year) {
+            this.month = month;
+            this.year = year;
+            if (this.year < 2000) {
+                this.year += 2000;
+            }
+        }
+        Expiry.parse = function (exp) {
+            var exps = exp.split(" / ");
+            if (exps.length <= 1) {
+                exps = exp.split("/");
+                if (exps.length <= 1)
+                    return null;
+            }
+            return new Expiry(Number(exps[0]), Number(exps[1]));
+        };
+        Expiry.prototype.getMonth = function () {
+            return this.month;
+        };
+        Expiry.prototype.getYear = function () {
+            return this.year;
+        };
+        Expiry.prototype.string = function () {
+            return this.month + " / " + this.year;
+        };
+        Expiry.format = function (exp) {
+            if (exp.length == 2)
+                return exp + " / ";
+            if (exp.length == 4)
+                return exp.slice(0, -3);
+            return exp;
+        };
+        return Expiry;
+    }());
+    ProcessOut.Expiry = Expiry;
+    var Card = (function () {
+        function Card(number, expiry, cvc) {
+            this.number = number.replace(/ /gi, "").replace(/\-/gi, "").replace(/\-/gi, "");
+            this.cvc = cvc;
+            this.expiry = expiry;
+        }
+        Card.prototype.getNumber = function () {
+            return this.number;
+        };
+        Card.prototype.getExpiry = function () {
+            return this.expiry;
+        };
+        Card.prototype.getCVC = function () {
+            return this.cvc;
+        };
+        Card.luhn = function (cardNo) {
+            var s = 0;
+            var doubleDigit = false;
+            for (var i = cardNo.length - 1; i >= 0; i--) {
+                var digit = +cardNo[i];
+                if (doubleDigit) {
+                    digit *= 2;
+                    if (digit > 9)
+                        digit -= 9;
+                }
+                s += digit;
+                doubleDigit = !doubleDigit;
+            }
+            return s % 10 == 0;
+        };
+        Card.prototype.setExpiry = function (exp) {
+            this.expiry = exp;
+        };
+        Card.prototype.validate = function () {
+            if (this.number.length != 16)
+                return "card.invalid-number";
+            if (!Card.luhn(Number(this.number)))
+                return "card.invalid-number";
+            if (this.expiry == null)
+                return "card.invalid-date";
+            if (this.expiry.getMonth() > 12 || this.expiry.getMonth() < 0)
+                return "card.invalid-month";
+            var date = new Date();
+            if (this.expiry.getYear() < date.getFullYear())
+                return "card.invalid-year";
+            if (this.expiry.getMonth() < date.getMonth() && this.expiry.getYear() == date.getFullYear())
+                return "card.invalid-date";
+            if (this.cvc.length > 4)
+                return "card.invalid-cvc";
+            return null;
+        };
+        Card.formatNumber = function (number) {
+            var v = number.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
+            var matches = v.match(/\d{4,16}/g);
+            var match = matches && matches[0] || "";
+            var parts = [];
+            for (var i = 0; i < match.length; i += 4) {
+                parts.push(match.substring(i, i + 4));
+            }
+            if (!parts.length)
+                return number;
+            return parts.join(" ");
+        };
+        Card.autoFormatFields = function (number, expiry, cvc) {
+            number.addEventListener("input", function (e) {
+                this.value = Card.formatNumber(this.value);
+            });
+            expiry.addEventListener("input", function (e) {
+                this.value = Expiry.format(this.value);
+                if (this.value.length >= 7)
+                    cvc.focus();
+            });
+        };
+        return Card;
+    }());
+    ProcessOut.Card = Card;
+})(ProcessOut || (ProcessOut = {}));
+var ProcessOut;
+(function (ProcessOut) {
     var messages = {
         "en": {
             "default": "An error occured.",
@@ -36,7 +170,8 @@ var ProcessOut;
             "card.invalid-year": "The card expiry year is invalid.",
             "card.invalid-cvc": "The card CVC is invalid.",
             "card.invalid-zip": "The card's ZIP code is valid.",
-            "customer.canceled": "The customer canceled the payemnt.",
+            "customer.canceled": "The customer canceled the payment.",
+            "customer.popup-blocked": "Please allow pop-ups to continue with your payment flow.",
             "payment.declined": "The payment has been declined.",
             "request.validation.error": "The provided information is invalid or missing.",
             "request.validation.invalid-country": "The provided country is invalid.",
@@ -50,6 +185,8 @@ var ProcessOut;
             "processout-js.not-hosted": "ProcessOut.js was not loaded from ProcessOut CDN. Please do not host ProcessOut.js yourself but rather use ProcessOut CDN: https://js.processout.com/processout.js",
             "processout-js.modal.unavailable": "The ProcessOut.js modal is unavailable.",
             "processout-js.invalid-config": "The provided gateway configuration is invalid.",
+            "processout-js.no-customer-action": "No customer action is required for the given gateway configuration and resource.",
+            "processout-js.customer-action-not-supported": "The requested customer action is not supported by ProcessOut.js.",
             "resource.invalid-type": "The provided resource was invalid. It must be an invoice, a subscription or an authorization request."
         }
     };
@@ -148,6 +285,10 @@ var ProcessOut;
                 throw new ProcessOut_1.Exception("request.gateway.not-available", "No gateway is available to tokenize a credit card.");
             }
             this.gateways[0].tokenize(card, success, error);
+        };
+        ProcessOut.prototype.handleAction = function (url, success, error) {
+            var handler = new ProcessOut_1.ActionHandler(this, this.getResourceID());
+            return handler.handle(url, success, error);
         };
         ProcessOut.prototype.endpoint = function (subdomain, path) {
             return "https://" + subdomain + "." + this.host + "/" + path;
@@ -250,9 +391,6 @@ var ProcessOut;
                         if (typeof (onHide) === typeof (Function))
                             onHide(this);
                         break;
-                    case "url":
-                        window.location.href = eventSplit[3];
-                        break;
                     default:
                         console.log("Could not read event action from modal.", event.data);
                         break;
@@ -318,33 +456,32 @@ var ProcessOut;
             };
             Gateway.prototype.fetchCustomerAction = function () {
                 var r = this.instance.getResourceID();
-                var resourceName = "invoices";
-                if (r.substring(0, 4) == "sub_") {
-                    resourceName = "subscriptions";
-                }
-                if (r.substring(0, 9) == "auth_req_") {
-                    resourceName = "authorization-requests";
-                }
-                var url = resourceName + "/" + r + "/gateway-configurations/" + this.configuration.id + "/customer-action";
                 var t = this;
-                this.instance.apiRequest("GET", url, null, function (data, code, req) {
-                    if (code < 200 || code > 299) {
+                var actionHandler = function (data, code, req) {
+                    if (code < 200 || code > 299 || !data.customer_action) {
                         return;
                     }
                     t.token = data.customer_action.value;
-                }, function (code, req) { });
+                };
+                if (r.substring(0, 4) == "sub_") {
+                    this.instance.apiRequest("GET", "subscriptions/" + r + "/customer-actions/" + this.configuration.id, null, actionHandler, function (code, req) { });
+                }
+                else if (r.substring(0, 9) == "auth_req_") {
+                    this.instance.apiRequest("GET", "authorization-requests/" + r + "/customer-actions/" + this.configuration.id, null, actionHandler, function (code, req) { });
+                }
+                else {
+                    this.instance.apiRequest("GET", "invoices/" + r + "/customer-actions/" + this.configuration.id, null, actionHandler, function (code, req) { });
+                }
             };
             Gateway.prototype.createProcessOutToken = function (token) {
-                var req = {
-                    "gateway_configuration_id": this.configuration.id,
-                    "url": "",
-                    "method": "POST",
-                    "headers": {
-                        "content-type": "applicatio/json"
-                    },
-                    "body": JSON.stringify({ "token": token })
+                var req = new ProcessOut.GatewayRequest();
+                req.method = "POST";
+                req.gatewayConfigurationID = this.configuration.id;
+                req.headers = {
+                    "content-type": "application/json"
                 };
-                return "gway_req_" + btoa(JSON.stringify(req));
+                req.body = JSON.stringify({ "token": token });
+                return req.token();
             };
             return Gateway;
         }());
@@ -569,106 +706,80 @@ var ProcessOut;
 })(ProcessOut || (ProcessOut = {}));
 var ProcessOut;
 (function (ProcessOut) {
-    var Expiry = (function () {
-        function Expiry(month, year) {
-            this.month = month;
-            this.year = year;
-            if (this.year < 2000) {
-                this.year += 2000;
-            }
+    var ActionHandler = (function () {
+        function ActionHandler(instance, resourceID) {
+            this.canceled = false;
+            this.instance = instance;
+            this.resourceID = resourceID;
         }
-        Expiry.parse = function (exp) {
-            var exps = exp.split(" / ");
-            if (exps.length <= 1) {
-                exps = exp.split("/");
-                if (exps.length <= 1)
-                    return null;
+        ActionHandler.prototype.handleRedirection = function (url, success, error) {
+            var t = this;
+            var newWindow = window.open(url, '_blank');
+            if (!newWindow) {
+                error(new ProcessOut.Exception("customer.popup-blocked"));
+                window.focus();
+                return;
             }
-            return new Expiry(Number(exps[0]), Number(exps[1]));
-        };
-        Expiry.prototype.getMonth = function () {
-            return this.month;
-        };
-        Expiry.prototype.getYear = function () {
-            return this.year;
-        };
-        Expiry.prototype.string = function () {
-            return this.month + "/" + this.year;
-        };
-        Expiry.format = function (exp) {
-            if (exp.length == 2)
-                return exp + " / ";
-            if (exp.length == 4)
-                return exp.slice(0, -3);
-            return exp;
-        };
-        return Expiry;
-    }());
-    ProcessOut.Expiry = Expiry;
-    var Card = (function () {
-        function Card(number, expiry, cvc) {
-            this.number = number.replace(/ /gi, "").replace(/\-/gi, "").replace(/\-/gi, "");
-            this.cvc = cvc;
-            this.expiry = expiry;
-        }
-        Card.prototype.getNumber = function () {
-            return this.number;
-        };
-        Card.prototype.getExpiry = function () {
-            return this.expiry;
-        };
-        Card.prototype.getCVC = function () {
-            return this.cvc;
-        };
-        Card.formatNumber = function (number) {
-            var v = number.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
-            var matches = v.match(/\d{4,16}/g);
-            var match = matches && matches[0] || "";
-            var parts = [];
-            for (var i = 0; i < match.length; i += 4) {
-                parts.push(match.substring(i, i + 4));
-            }
-            if (!parts.length)
-                return number;
-            return parts.join(" ");
-        };
-        Card.luhn = function (cardNo) {
-            var s = 0;
-            var doubleDigit = false;
-            for (var i = cardNo.length - 1; i >= 0; i--) {
-                var digit = +cardNo[i];
-                if (doubleDigit) {
-                    digit *= 2;
-                    if (digit > 9)
-                        digit -= 9;
+            var timer = setInterval(function () {
+                if (t.isCanceled()) {
+                    clearInterval(timer);
+                    newWindow.close();
+                    error(new ProcessOut.Exception("customer.canceled"));
+                    window.focus();
+                    return;
                 }
-                s += digit;
-                doubleDigit = !doubleDigit;
-            }
-            return s % 10 == 0;
+                if (!newWindow || newWindow.closed) {
+                    clearInterval(timer);
+                    error(new ProcessOut.Exception("customer.canceled"));
+                    window.focus();
+                    return;
+                }
+            });
+            window.addEventListener("message", function (event) {
+                if (!event.data)
+                    return;
+                var eventSplit = event.data.split(" ");
+                if (eventSplit[0] != ProcessOut.ProcessOut.namespace)
+                    return;
+                switch (eventSplit[1]) {
+                    case "success":
+                        clearInterval(timer);
+                        newWindow.close();
+                        success(eventSplit[2]);
+                        window.focus();
+                        break;
+                    case "canceled":
+                        clearInterval(timer);
+                        newWindow.close();
+                        error(new ProcessOut.Exception("customer.canceled"));
+                        window.focus();
+                        break;
+                    case "none":
+                        clearInterval(timer);
+                        newWindow.close();
+                        error(new ProcessOut.Exception("processout-js.no-customer-action"));
+                        window.focus();
+                        break;
+                    default:
+                        clearInterval(timer);
+                        newWindow.close();
+                        error(new ProcessOut.Exception("default"));
+                        window.focus();
+                        break;
+                }
+            });
         };
-        Card.prototype.setExpiry = function (exp) {
-            this.expiry = exp;
+        ActionHandler.prototype.handle = function (url, success, error) {
+            this.handleRedirection(url, success, error);
+            return this;
         };
-        Card.prototype.validate = function () {
-            if (this.number.length != 16)
-                return "card.invalid-number";
-            if (!Card.luhn(Number(this.number)))
-                return "card.invalid-number";
-            if (this.expiry == null)
-                return "card.invalid-date";
-            if (this.expiry.getMonth() > 12 || this.expiry.getMonth() < 0)
-                return "card.invalid-month";
-            var date = new Date();
-            if (this.expiry.getYear() < date.getFullYear())
-                return "card.invalid-year";
-            if (this.expiry.getMonth() < date.getMonth() && this.expiry.getYear() == date.getFullYear())
-                return "card.invalid-date";
-            if (this.cvc.length > 4)
-                return "card.invalid-cvc";
-            return null;
+        ActionHandler.prototype.cancel = function () {
+            this.canceled = true;
         };
-        return Card;
+        ActionHandler.prototype.isCanceled = function () {
+            return this.canceled;
+        };
+        return ActionHandler;
     }());
-    ProcessOut.Card = Card;
+    ProcessOut.ActionHandler = ActionHandler;
 })(ProcessOut || (ProcessOut = {}));

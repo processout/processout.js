@@ -99,10 +99,6 @@ module ProcessOut {
                             onHide(this);
                         break;
 
-                    case "url":
-                        window.location.href = eventSplit[3];
-                        break;
-
                     default:
                         console.log("Could not read event action from modal.",
                             event.data);

@@ -66,25 +66,37 @@ module ProcessOut.Gateways {
         protected fetchCustomerAction(): void {
             var r = this.instance.getResourceID();
 
-            var resourceName = "invoices";
-            if (r.substring(0, 4) == "sub_") {
-                resourceName = "subscriptions";
-            }
-            if (r.substring(0, 9) == "auth_req_") {
-                resourceName = "authorization-requests";
-            }
-
-            var url = `${resourceName}/${r}/gateway-configurations/${this.configuration.id}/customer-action`;
             var t = this;
-            this.instance.apiRequest("GET", url, null,
-                function(data: any, code: number, req: XMLHttpRequest): void {
-                    if (code < 200 || code > 299) {
-                        // if the customer action is undefined, we'll land here
-                        return;
-                    }
+            var actionHandler = function(data: any, code: number, 
+                req: XMLHttpRequest) {
 
-                    t.token = data.customer_action.value;
-                }, function(code: number, req: XMLHttpRequest): void {});
+                if (code < 200 || code > 299 || !data.customer_action) {
+                    // if the customer action is undefined, we'll land here
+                    return;
+                }
+
+                t.token = data.customer_action.value;
+            };
+
+            if (r.substring(0, 4) == "sub_") {
+                // Subscription case
+                this.instance.apiRequest("GET", 
+                    `subscriptions/${r}/customer-actions/${this.configuration.id}`, 
+                    null, actionHandler,
+                    function(code: number, req: XMLHttpRequest): void {});
+            } else if (r.substring(0, 9) == "auth_req_") {
+                // Authorization request case
+                this.instance.apiRequest("GET", 
+                    `authorization-requests/${r}/customer-actions/${this.configuration.id}`, 
+                    null, actionHandler,
+                    function(code: number, req: XMLHttpRequest): void {});
+            } else {
+                // Fallback to invoice case
+                this.instance.apiRequest("GET", 
+                    `invoices/${r}/customer-actions/${this.configuration.id}`, 
+                    null, actionHandler, 
+                    function(code: number, req: XMLHttpRequest): void {});
+            }
         }
 
         /**
@@ -112,19 +124,14 @@ module ProcessOut.Gateways {
          * @return {string}
          */
         protected createProcessOutToken(token: string): string {
-            // req is an abstracted gateway request ProcessOut uses
-            // to abstract gateway requests and provide the same usage
-            // accross all those gateways
-            var req = {
-                "gateway_configuration_id": this.configuration.id,
-                "url":                      "",
-                "method":                   "POST",
-                "headers":                  {
-                    "content-type": "applicatio/json"
-                },
-                "body": JSON.stringify({"token": token})
+            var req                    = new GatewayRequest();
+            req.method                 = "POST";
+            req.gatewayConfigurationID = this.configuration.id;
+            req.headers                = {
+                "content-type": "application/json"
             };
-            return `gway_req_${btoa(JSON.stringify(req))}`;
+            req.body                   = JSON.stringify({"token": token});
+            return req.token();
         }
 
     }

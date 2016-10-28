@@ -150,6 +150,22 @@ module ProcessOut {
         }
 
         /**
+         * HandleAction handles the action needed to be performed by the
+         * customer for the given gateway configuration
+         * @param  {callback} success
+         * @param  {callback} error
+         * @return {ActionHandler}
+         */
+        public handleAction(
+            url:     string,
+            success: (token: string)    => void,
+            error:   (err:   Exception) => void): ActionHandler {
+            
+            var handler = new ActionHandler(this, this.getResourceID());
+            return handler.handle(url, success, error);
+        }
+
+        /**
          * Get the ProcessOut endpoint of the given subdomain
          * @param  {string} subdomain
          * @param  {string} path
@@ -191,7 +207,8 @@ module ProcessOut {
 
             request.onload = function(e: any) {
                 if (e.currentTarget.readyState == 4)
-                    success(JSON.parse(request.responseText), request.status, request, e);
+                    success(JSON.parse(request.responseText), request.status, 
+                    request, e);
                 return;
             };
             request.onerror = function(e: Event) {
@@ -209,8 +226,9 @@ module ProcessOut {
          * @param  {callback} error
          * @return {void}
          */
-        newModal(url: string, success: (modal: Modal) => void,
-            error: (err: Exception) => void): void {
+        newModal(url: string, 
+            success: (modal: Modal)     => void,
+            error:   (err:   Exception) => void): void {
 
             var uniqId = Math.random().toString(36).substr(2, 9);
             var iframe = document.createElement('iframe');
