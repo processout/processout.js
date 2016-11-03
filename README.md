@@ -22,28 +22,28 @@ checkout flow stays as fluid as possible.
 ### Usage
 
 The href attribute of your elements is used to generate the modal, which makes
-it very easy to support invoices, tailored invoices, recurring invoices
-and authorization modals.
+it very easy to support invoices, products, subscriptions and authorization 
+modals.
 
 Add the `processout-modal-button` to automatically bind the click event to
 the ProcessOut modal.
 
 ``` html
 <a class="processout-modal-button"
-	href="https://checkout.processout.com/c5e71254-866e-45ed-9b85-8f8aa7b6044d">
-		Pay now a simple invoice!
+	href="https://checkout.processout.com/iv_uhXDDFzm5UfoPX60UFbV0djLwzOpr4F2">
+		Pay a simple invoice!
 </a>
 <a class="processout-modal-button"
-	href="https://checkout.processout.com/t-c5e71254-866e-45ed-9b85-8f8aa7b6044d">
-		Pay now a tailored invoice!
+	href="https://checkout.processout.com/prod_uhXDDFzm5UfoPX60UFbV0djLwzOpr4F2">
+		Pay a product!
 </a>
 <a class="processout-modal-button"
-	href="https://checkout.processout.com/recurring-invoice/c5e71254-866e-45ed-9b85-8f8aa7b6044d">
-		Pay now a recurring invoice!
+	href="https://checkout.processout.com/sub_uhXDDFzm5UfoPX60UFbV0djLwzOpr4F2">
+		Activate a subscription!
 </a>
 <a class="processout-modal-button"
-	href="https://checkout.processout.com/authorization/c5e71254-866e-45ed-9b85-8f8aa7b6044d/customers/c5e71254-866e-45ed-9b85-8f8aa7b6044d">
-		Authorize now!
+	href="https://checkout.processout.com/auth_req_uhXDDFzm5UfoPX60UFbV0djLwzOpr4F2">
+		Authorize future payments!
 </a>
 ```
 
@@ -67,13 +67,15 @@ The resource ID may be of an invoice (`iv_*`), subscription (`sub_*`) or authori
 The resource ID may also be left empty if none is needed.
 
 ```js
-var processOut = new ProcessOut.ProcessOut("resource-id");
+var processOut = new ProcessOut.ProcessOut("project-id", "resource-id");
 ```
 
 #### Create a modal object and interact with it
 
+The resource ID may be of an invoice (`iv_*`), subscription (`sub_*`) or authorization request (`auth_req_*`).
+
 ```js
-processOut.newModal('https://checkout.processout.com/uid',
+processOut.newModal('https://checkout.processout.com/resource-id',
 function(modal) {
 	// The modal is now ready, we may show it to the customer
 	modal.show();
