@@ -1,13 +1,17 @@
+BINS=bin/forge.min.js bin/base64.polyfill.min.js
+MODALJS=scripts/modal.js
+PROCESSOUTJS=scripts/processout.js
+
 .PHONY: build
 build:
 	tsc -p src/processout/
 	tsc -p src/modal/
-	mv scripts/modal.js scripts/modal.js_tmp
-	cat bin/forge.min.js scripts/modal.js_tmp > scripts/modal.js
-	rm scripts/modal.js_tmp
-	mv scripts/processout.js scripts/processout.js_tmp
-	cat bin/forge.min.js scripts/processout.js_tmp > scripts/processout.js
-	rm scripts/processout.js_tmp
+	mv ${MODALJS} ${MODALJS}_tmp
+	cat ${BINS} ${MODALJS}_tmp > ${MODALJS}
+	rm ${MODALJS}_tmp
+	mv ${PROCESSOUTJS} ${PROCESSOUTJS}_tmp
+	cat ${BINS} ${PROCESSOUTJS}_tmp > ${PROCESSOUTJS}
+	rm ${PROCESSOUTJS}_tmp
 
 .PHONY: test
 test: ENV=testing
