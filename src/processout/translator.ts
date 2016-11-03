@@ -7,18 +7,19 @@ module ProcessOut {
 
     const messages: {[locale: string]: {[name:string]: string}} = {
         "en": {
-            "default":             "An error occured.",
-            "card.declined":       "The credit card has been declined.",
-            "card.expired":        "The given card has exprired.",
-            "card.invalid":        "The given card is invalid.",
-            "card.invalid-number": "The card number is invalid.",
-            "card.invalid-date":   "The card expiry date is invalid.",
-            "card.invalid-month":  "The card expiry month is invalid.",
-            "card.invalid-year":   "The card expiry year is invalid.",
-            "card.invalid-cvc":    "The card CVC is invalid.",
-            "card.invalid-zip":    "The card's ZIP code is valid.",
-            "customer.canceled":   "The customer canceled the payemnt.",
-            "payment.declined":    "The payment has been declined.",
+            "default":                "An error occured.",
+            "card.declined":          "The credit card has been declined.",
+            "card.expired":           "The given card has expired.",
+            "card.invalid":           "The given card is invalid.",
+            "card.invalid-number":    "The card number is invalid.",
+            "card.invalid-date":      "The card expiry date is invalid.",
+            "card.invalid-month":     "The card expiry month is invalid.",
+            "card.invalid-year":      "The card expiry year is invalid.",
+            "card.invalid-cvc":       "The card CVC is invalid.",
+            "card.invalid-zip":       "The card's ZIP code is valid.",
+            "customer.canceled":      "The customer canceled the payment.",
+            "customer.popup-blocked": "Please allow pop-ups to continue with your payment flow.",
+            "payment.declined":       "The payment has been declined.",
 
             "request.validation.error":           "The provided information is invalid or missing.",
             "request.validation.invalid-country": "The provided country is invalid.",
@@ -34,6 +35,8 @@ module ProcessOut {
             "processout-js.not-hosted":        "ProcessOut.js was not loaded from ProcessOut CDN. Please do not host ProcessOut.js yourself but rather use ProcessOut CDN: https://js.processout.com/processout.js",
             "processout-js.modal.unavailable": "The ProcessOut.js modal is unavailable.",
             "processout-js.invalid-config":    "The provided gateway configuration is invalid.",
+            "processout-js.no-customer-action": "No customer action is required for the given gateway configuration and resource.",
+            "processout-js.customer-action-not-supported": "The requested customer action is not supported by ProcessOut.js.",
 
             "resource.invalid-type": "The provided resource was invalid. It must be an invoice, a subscription or an authorization request."
         },
