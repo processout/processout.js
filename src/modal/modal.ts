@@ -1,8 +1,8 @@
 /// <reference path="../references.ts" />
 
 (function() {
-    // The resource ID is not required for a simple modal use
-    var processOut = new ProcessOut.ProcessOut("");
+    // The projectID and resource ID are not required for a simple modal use
+    var processOut = new ProcessOut.ProcessOut("", "");
 
     // Loop through each modal button
     var buttons = document.querySelectorAll(".processout-modal-button");

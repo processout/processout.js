@@ -1,5 +1,7 @@
 /// <reference path="../references.ts" />
 
+declare var forge: any;
+
 /**
  * ProcessOut module/namespace
  */
@@ -17,6 +19,18 @@ module ProcessOut {
         public static namespace: string = "processout";
 
         /**
+         * Project ID
+         * @type {string}
+         */
+        protected projectID: string;
+
+        /**
+         * Project public key used to tokenize the credit cards
+         * @type {string}
+         */
+        protected publicKey: string;
+
+        /**
          * Current resource ID. Can be invoice, subscription or authorization
          * request
          * @type {string}
@@ -30,11 +44,11 @@ module ProcessOut {
         public timeout = 10000;
 
         /**
-        * Debug mode (will for instance load the sandboxed libraries of the
-        * gateways instead of the live ones)
-        * @type {string}
+        * Sandbox mode. Is set to true if a project ID prefixed with `test-`
+        * is used
+        * @type {boolean}
         */
-        public debug = false;
+        public sandbox = false;
         
         /**
         * Host of ProcessOut. Is automatically updated to the correct one 
@@ -50,19 +64,11 @@ module ProcessOut {
         public apiVersion = "1.3.0.0";
 
         /**
-        * Configured, available gateways
-        * @type {Gateways.Gateway[]}
-        */
-        gateways: Gateways.Gateway[] = new Array<Gateways.Gateway>();
-
-        /**
          * ProcessOut constructor
+         * @param  {string} projectID
          * @param  {string} resourceID
          */
-        constructor(resourceID: string, debug?: boolean) {
-            if (debug != null)
-                this.debug = debug;
-
+        constructor(projectID: string, resourceID: string) {
             // We want to make sure ProcessOut.js is loaded from ProcessOut CDN.
             var scripts = document.getElementsByTagName("script");
             var jsHost = "";
@@ -74,7 +80,7 @@ module ProcessOut {
                 }
             }
 
-            if (jsHost == "" && !this.isDebug()) {
+            if (jsHost == "") {
                 throw new Exception("processout-js.not-hosted");
             }
 
@@ -85,6 +91,12 @@ module ProcessOut {
             } else {
                 this.host = "processout.com";
             }
+
+            this.projectID = projectID;
+            if (this.projectID.substring(0, 5) == "test-")
+                this.sandbox = true;
+
+            this.fetchPublicKey();
 
             this.resourceID = resourceID;
             if (this.resourceID.substring(0, 3) != "iv_" &&
@@ -105,27 +117,32 @@ module ProcessOut {
         }
 
         /**
-         * Returns true if in debug mode, false otherwise
-         * @return {boolean}
-         */
-        public isDebug(): boolean {
-            return this.debug;
-        }
-
-        /**
-         * Set gateways adds and configure the gateways supplied in the
-         * parameters
-         * @param  {GatewayConfiguration[]} gateways
+         * fetchPublicKey fetches the project public key used to later encrypt
+         * the credit card fields
          * @return {void}
          */
-        public setGateways(gateways: GatewayConfiguration[]): void {
-            for (var gc of gateways) {
-                if (gc.id == "")
-                    throw new Exception("processout-js.invalid-config",
-                        "The gateway configuration must contain an ID.");
-                var g = Gateways.Handler.buildGateway(this, gc);
-                this.gateways.push(g);
+        protected fetchPublicKey(): void {
+            if (!this.projectID)
+                return;
+
+            var t = this;
+            var err = function() {
+                throw new Exception("default", `Could not fetch the project public key. Are you sure ${this.projectID} is the correct project ID?`);
             }
+
+            this.apiRequest("get", this.endpoint("checkout", "vault"), {}, 
+                function(data: any, code: number, req: XMLHttpRequest, 
+                    e: Event): void {
+                    
+                    if (!data.success || !data.public_key) {
+                        err();
+                        return;
+                    }
+
+                    t.publicKey = data.public_key;
+                }, function(code: number, req: XMLHttpRequest, e: Event): void {
+                    err();
+                });
         }
 
         /**
@@ -141,12 +158,56 @@ module ProcessOut {
             success: (token: string) => void,
             error:   (err: Exception) => void): void {
 
-            if (this.gateways.length == 0) {
-                throw new Exception("request.gateway.not-available", "No gateway is available to tokenize a credit card.");
+            // Let's first validate the card
+            var err = card.validate();
+            if (err) {
+                error(new Exception(err));
+                return;
             }
-            //TODO: Loop through every gateways to try and tokenize if the
-            //tokenization didn't work
-            this.gateways[0].tokenize(card, success, error);
+
+            var metadata = {};
+            if (this.sandbox) {
+                // We just want to store in the metadata the test card type,
+                // if any
+                switch (card.getCVC()) {
+                case "666":
+                    metadata["test_card"] = "test-will-chargeback";
+                    break;
+                case "500":
+                    metadata["test_card"] = "test-will-decline";
+                    break;
+                case "600":
+                    metadata["test_card"] = "test-will-only-authorize";
+                    break;
+
+                default:
+                    metadata["test_card"] = "test-valid"
+                }
+            }
+
+            var c = forge.pki.publicKeyFromPem(this.publicKey);
+            var e = function(str: string): string {
+                return forge.util.encode64(c.encrypt(str, "RSA-OAEP", {
+                    md: forge.md.sha256.create()
+                }));
+            }
+            this.apiRequest("post", "cards", {
+                "number":    e(card.getNumber()),
+                "exp_month": e(card.getExpiry().getMonth().toString()),
+                "exp_year":  e(card.getExpiry().getYear().toString()),
+                "cvc2":      e(card.getCVC()),
+                "name":      e(card.getName()),
+                "metadata":  metadata
+            }, function(data: any, code: number, req: XMLHttpRequest, e: Event): void {
+                if (!data.success) {
+                    error(new Exception("card.invalid"));
+                    return
+                }
+
+                success(data.card.id);
+            }, function(code: number, req: XMLHttpRequest, e: Event): void {
+                error(new Exception("card.invalid"));
+            });
         }
 
         /**
@@ -204,6 +265,8 @@ module ProcessOut {
             request.open(method, path, true);
             request.setRequestHeader("Content-Type", "application/json");
             request.setRequestHeader("API-Version", this.apiVersion);
+            if (this.projectID)
+                request.setRequestHeader("Authorization", `Basic ${btoa(this.projectID+":")}`);
 
             request.onload = function(e: any) {
                 if (e.currentTarget.readyState == 4)

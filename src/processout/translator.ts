@@ -9,7 +9,7 @@ module ProcessOut {
         "en": {
             "default":                "An error occured.",
             "card.declined":          "The credit card has been declined.",
-            "card.expired":           "The given card has exprired.",
+            "card.expired":           "The given card has expired.",
             "card.invalid":           "The given card is invalid.",
             "card.invalid-number":    "The card number is invalid.",
             "card.invalid-date":      "The card expiry date is invalid.",

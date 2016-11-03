@@ -57,7 +57,7 @@ module ProcessOut {
                 window.focus();
                 return
             }
-            
+
             // We now want to monitor the payment page
             var timer = setInterval(function() {
                 if (t.isCanceled()) {

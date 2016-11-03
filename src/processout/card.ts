@@ -103,13 +103,21 @@ module ProcessOut {
 
         /**
          * Expiry is the expiry date of the card stored in an Expiry object
+         * @type {string}
          */
         protected expiry: Expiry;
 
         /**
          * CVC is the CVC of the card
+         * @type {string}
          */
         protected cvc: string;
+
+        /**
+         * name is the card holder name
+         * @type {string}
+         */
+        protected name: string = "";
 
         /**
          * Constructor of the card class
@@ -145,6 +153,25 @@ module ProcessOut {
         }
 
         /**
+         * getName returns the card holder name
+         * @return {string}
+         */
+        public getName(): string {
+            return this.name;
+        }
+
+        /**
+         * setName sets the card holder name and returns the Card object
+         * @param {string} name
+         * @return {Card}
+         */
+        public setName(name: string): Card {
+            this.name = name;
+
+            return this;
+        }
+
+        /**
          * luhn does a basic luhn check on the card number
          * @param {number} cardNo
          * @return {boolean}
@@ -164,15 +191,6 @@ module ProcessOut {
             }
 
             return s % 10 == 0;
-        }
-
-        /**
-         * setExpiry sets the expiry date of the card
-         * @param {Expiry} exp
-         * @return {void}
-         */
-        public setExpiry(exp: Expiry): void {
-            this.expiry = exp;
         }
 
         /**
@@ -226,6 +244,14 @@ module ProcessOut {
             return parts.join(" ");
         }
         
+        /**
+         * autoFormatFields formats the given number, expiry and cvc fields
+         * and updates the focus depending on the state of these fields
+         * @param {HTMLInputElement} number
+         * @param {HTMLInputElement} expiry
+         * @param {HTMLInputElement} cvc
+         * @return {void}
+         */
         public static autoFormatFields(number: HTMLInputElement,
             expiry: HTMLInputElement, cvc: HTMLInputElement): void {
             
@@ -238,6 +264,26 @@ module ProcessOut {
                 if (this.value.length >= 7)
                     cvc.focus();
             });
+        }
+
+        public static getIIN(number: string): string {
+            return number.substring(0, 6);
+        }
+
+        public static getPossibleTypes(number: string): string[] {
+            var types = [];
+            var iin = parseInt(Card.getIIN(number));
+            if (isNaN(iin))
+                return types;
+
+            if (number.length <= 15 && ((iin >= 300000 && iin <= 305999) ||
+                (iin >= 309500 && iin <= 309599) ||
+                (iin >= 360000 && iin <= 369999) ||
+                (iin >= 380000 && iin <= 399999))) {
+
+            }
+            
+            return types;
         }
     }
 }
