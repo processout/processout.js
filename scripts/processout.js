@@ -275,14 +275,15 @@ var ProcessOut;
                 this.host = "processout.com";
             }
             this.projectID = projectID;
-            if (this.projectID.substring(0, 5) == "test-")
+            if (this.projectID && this.projectID.substring(0, 5) == "test-")
                 this.sandbox = true;
             this.fetchPublicKey();
             this.resourceID = resourceID;
-            if (this.resourceID.substring(0, 3) != "iv_" &&
+            if (this.resourceID &&
+                this.resourceID != "" &&
+                this.resourceID.substring(0, 3) != "iv_" &&
                 this.resourceID.substring(0, 4) != "sub_" &&
-                this.resourceID.substring(0, 9) != "auth_req_" &&
-                this.resourceID != "") {
+                this.resourceID.substring(0, 9) != "auth_req_") {
                 throw new ProcessOut_1.Exception("resource.invalid-type");
             }
         }
@@ -307,6 +308,8 @@ var ProcessOut;
             });
         };
         ProcessOut.prototype.tokenize = function (card, success, error) {
+            if (!this.projectID)
+                throw new ProcessOut_1.Exception("default", "No project ID was set when instanciating ProcessOut.js. To tokenize a card, a project ID must be set.");
             var err = card.validate();
             if (err) {
                 error(new ProcessOut_1.Exception(err));
