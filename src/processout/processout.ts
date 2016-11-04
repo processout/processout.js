@@ -2,6 +2,12 @@
 
 declare var forge: any;
 
+// declare the IE specific XDomainRequest object
+declare var XDomainRequest: any;
+interface Window {
+    XDomainRequest?: any;
+}
+
 /**
  * ProcessOut module/namespace
  */
@@ -127,10 +133,10 @@ module ProcessOut {
 
             var t = this;
             var err = function() {
-                throw new Exception("default", `Could not fetch the project public key. Are you sure ${this.projectID} is the correct project ID?`);
+                throw new Exception("default", `Could not fetch the project public key. Are you sure ${t.projectID} is the correct project ID?`);
             }
 
-            this.apiRequest("get", this.endpoint("checkout", "vault"), {}, 
+            this.apiRequest("post", this.endpoint("checkout", "vault"), {}, 
                 function(data: any, code: number, req: XMLHttpRequest, 
                     e: Event): void {
                     
@@ -247,39 +253,68 @@ module ProcessOut {
          */
         apiRequest(method: string, path: string, data,
             success: (data: any, code: number, req: XMLHttpRequest, e: Event) => void,
-            error:   (code: number, req: XMLHttpRequest, e: Event) => void): void {
+            error:   (code: number, req: XMLHttpRequest, e: Event) => void,
+            legacy?: boolean): void {
 
-            if (method != "get")
-                data = JSON.stringify(data);
-            else {
-                path += "?";
-                for (var key in data) {
-                    path += `${key}=${encodeURIComponent(data[key])}&`;
-                }
+            // Force legacy if we have to
+            if (window.XDomainRequest) {
+                legacy = true;
             }
 
             if (path.substring(0, 4) != "http" && path[0] != "/")
                 path = this.endpoint("api", path);
 
-            var request = new XMLHttpRequest();
-            request.open(method, path, true);
-            request.setRequestHeader("Content-Type", "application/json");
-            request.setRequestHeader("API-Version", this.apiVersion);
+            var headers = {
+                "Content-Type": "application/json",
+                "API-Version":  this.apiVersion
+            };
             if (this.projectID)
-                request.setRequestHeader("Authorization", `Basic ${btoa(this.projectID+":")}`);
+                headers["Authorization"] = `Basic ${btoa(this.projectID+":")}`;
+
+            if (method != "get") {
+                if (legacy)
+                    path += `?legacyrequest=true`;
+            } else {
+                path += "?";
+                if (legacy) {
+                    data["legacyrequest"] = "true";
+                    data.concat(headers);
+                }
+                for (var key in data) {
+                    path += `${key}=${encodeURIComponent(data[key])}&`;
+                }
+            }
+
+            var request = new XMLHttpRequest();
+            // Handle legacy scenario
+            if (legacy) {
+                request = new XDomainRequest();
+
+                // We also need to hack our request headers
+                for (var k in headers)
+                    data[`X-${k}`] = headers[k];
+
+                request.open(method, path, true);
+            } else {
+                request.open(method, path, true);
+
+                for (var k in headers)
+                    request.setRequestHeader(k, headers[k]);
+            }
 
             request.onload = function(e: any) {
-                if (e.currentTarget.readyState == 4)
+                if (legacy)
+                    success(JSON.parse(request.responseText), 200, request, e);
+                else if (e.currentTarget.readyState == 4)
                     success(JSON.parse(request.responseText), request.status, 
                     request, e);
                 return;
             };
             request.onerror = function(e: Event) {
-                console.log(e);
                 error(request.status, request, e);
             };
 
-            request.send(data);
+            request.send(JSON.stringify(data));
         }
 
         /**

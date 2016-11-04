@@ -373,9 +373,9 @@ var ProcessOut;
                 return;
             var t = this;
             var err = function () {
-                throw new ProcessOut_1.Exception("default", "Could not fetch the project public key. Are you sure " + this.projectID + " is the correct project ID?");
+                throw new ProcessOut_1.Exception("default", "Could not fetch the project public key. Are you sure " + t.projectID + " is the correct project ID?");
             };
-            this.apiRequest("get", this.endpoint("checkout", "vault"), {}, function (data, code, req, e) {
+            this.apiRequest("post", this.endpoint("checkout", "vault"), {}, function (data, code, req, e) {
                 if (!data.success || !data.public_key) {
                     err();
                     return;
@@ -437,33 +437,55 @@ var ProcessOut;
         ProcessOut.prototype.endpoint = function (subdomain, path) {
             return "https://" + subdomain + "." + this.host + "/" + path;
         };
-        ProcessOut.prototype.apiRequest = function (method, path, data, success, error) {
-            if (method != "get")
-                data = JSON.stringify(data);
+        ProcessOut.prototype.apiRequest = function (method, path, data, success, error, legacy) {
+            if (window.XDomainRequest) {
+                legacy = true;
+            }
+            if (path.substring(0, 4) != "http" && path[0] != "/")
+                path = this.endpoint("api", path);
+            var headers = {
+                "Content-Type": "application/json",
+                "API-Version": this.apiVersion
+            };
+            if (this.projectID)
+                headers["Authorization"] = "Basic " + btoa(this.projectID + ":");
+            if (method != "get") {
+                if (legacy)
+                    path += "?legacyrequest=true";
+            }
             else {
                 path += "?";
+                if (legacy) {
+                    data["legacyrequest"] = "true";
+                    data.concat(headers);
+                }
                 for (var key in data) {
                     path += key + "=" + encodeURIComponent(data[key]) + "&";
                 }
             }
-            if (path.substring(0, 4) != "http" && path[0] != "/")
-                path = this.endpoint("api", path);
             var request = new XMLHttpRequest();
-            request.open(method, path, true);
-            request.setRequestHeader("Content-Type", "application/json");
-            request.setRequestHeader("API-Version", this.apiVersion);
-            if (this.projectID)
-                request.setRequestHeader("Authorization", "Basic " + btoa(this.projectID + ":"));
+            if (legacy) {
+                request = new XDomainRequest();
+                for (var k in headers)
+                    data["X-" + k] = headers[k];
+                request.open(method, path, true);
+            }
+            else {
+                request.open(method, path, true);
+                for (var k in headers)
+                    request.setRequestHeader(k, headers[k]);
+            }
             request.onload = function (e) {
-                if (e.currentTarget.readyState == 4)
+                if (legacy)
+                    success(JSON.parse(request.responseText), 200, request, e);
+                else if (e.currentTarget.readyState == 4)
                     success(JSON.parse(request.responseText), request.status, request, e);
                 return;
             };
             request.onerror = function (e) {
-                console.log(e);
                 error(request.status, request, e);
             };
-            request.send(data);
+            request.send(JSON.stringify(data));
         };
         ProcessOut.prototype.newModal = function (url, success, error) {
             var uniqId = Math.random().toString(36).substr(2, 9);
