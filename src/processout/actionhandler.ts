@@ -80,20 +80,17 @@ module ProcessOut {
             // To monitor the status, we will use event listeners for messages
             // sent between the checkout and processout.js
             window.addEventListener("message", function(event) {
-                if (!event.data)
+                var data = Message.parseEvent(event);
+                if (data.namespace != Message.checkoutNamespace)
                     return;
 
-                var eventSplit = event.data.split(" ");
-                if (eventSplit[0] != ProcessOut.namespace)
-                    return;
-
-                switch (eventSplit[1]) {
+                switch (data.action) {
                 case "success":
                     clearInterval(timer);
                     newWindow.close();
 
                     // The checkout page sent us the token we want
-                    success(eventSplit[2]);
+                    success(data.data);
                     window.focus();
                     break;
 

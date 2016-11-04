@@ -19,12 +19,6 @@ module ProcessOut {
     export class ProcessOut {
 
         /**
-         * Namespace used by ProcessOut when communicating between iframes
-         * @type {string}
-         */
-        public static namespace: string = "processout";
-
-        /**
          * Project ID
          * @type {string}
          */
@@ -124,6 +118,14 @@ module ProcessOut {
         }
 
         /**
+         * Return the ID of the project in the current context
+         * @return {string}
+         */
+        public getProjectID(): string {
+            return this.projectID;
+        }
+
+        /**
          * fetchPublicKey fetches the project public key used to later encrypt
          * the credit card fields
          * @return {void}
@@ -150,6 +152,18 @@ module ProcessOut {
                 }, function(code: number, req: XMLHttpRequest, e: Event): void {
                     err();
                 });
+        }
+
+        /**
+         * Encrypt encrypts the given string
+         * @param {string} str
+         * @return {string}
+         */
+        public encrypt(str: string): string {
+            return forge.util.encode64(forge.pki.publicKeyFromPem(this.publicKey)
+                .encrypt(str, "RSA-OAEP", {
+                    md: forge.md.sha256.create()
+                }));
         }
 
         /**
@@ -195,18 +209,12 @@ module ProcessOut {
                 }
             }
 
-            var c = forge.pki.publicKeyFromPem(this.publicKey);
-            var e = function(str: string): string {
-                return forge.util.encode64(c.encrypt(str, "RSA-OAEP", {
-                    md: forge.md.sha256.create()
-                }));
-            }
             this.apiRequest("post", "cards", {
-                "number":    e(card.getNumber()),
-                "exp_month": e(card.getExpiry().getMonth().toString()),
-                "exp_year":  e(card.getExpiry().getYear().toString()),
-                "cvc2":      e(card.getCVC()),
-                "name":      e(card.getName()),
+                "number":    this.encrypt(card.getNumber()),
+                "exp_month": this.encrypt(card.getExpiry().getMonth().toString()),
+                "exp_year":  this.encrypt(card.getExpiry().getYear().toString()),
+                "cvc2":      this.encrypt(card.getCVC()),
+                "name":      this.encrypt(card.getName()),
                 "metadata":  metadata
             }, function(data: any, code: number, req: XMLHttpRequest, e: Event): void {
                 if (!data.success) {
@@ -218,6 +226,49 @@ module ProcessOut {
             }, function(code: number, req: XMLHttpRequest, e: Event): void {
                 error(new Exception("card.invalid"));
             });
+        }
+
+        /**
+         * Create a new modal
+         * @param  {string}   url
+         * @param  {callback} success
+         * @param  {callback} error
+         * @return {void}
+         */
+        public newModal(url: string, 
+            success: (modal: Modal)     => void,
+            error:   (err:   Exception) => void): void {
+
+            var uniqId = Math.random().toString(36).substr(2, 9);
+            var iframe = document.createElement('iframe');
+            iframe.className = "processout-iframe";
+            iframe.setAttribute("id", "processout-iframe-" + uniqId);
+            iframe.setAttribute("src", url);
+            iframe.setAttribute("style", "position: fixed; top: 0; left: 0; background: none;"
+                    // We need to use translateZ instead of z-index, otherwise
+                    // z-index might not work on some mobiles
+                    +`-webkit-transform:translateZ(1px);
+                    -moz-transform:translateZ(1px);
+                    -o-transform:translateZ(1px);
+                    transform:translateZ(1px);`);
+            iframe.setAttribute("frameborder", "0");
+            iframe.setAttribute("allowtransparency", "1");
+
+            // Hide and add our iframe to the DOM
+            iframe.style.display = "none";
+
+            var t = this;
+            var iframeError = setTimeout(function() {
+                if (typeof(error) === typeof(Function))
+                    error(new Exception("processout-js.modal.unavailable"));
+            }, this.timeout);
+            iframe.onload = function() {
+                clearTimeout(iframeError);
+                if (typeof(success) === typeof(Function))
+                    success(new Modal(t, iframe, uniqId));
+            };
+
+            document.body.appendChild(iframe);
         }
 
         /**
@@ -242,7 +293,7 @@ module ProcessOut {
          * @param  {string} path
          * @return {string}
          */
-        endpoint(subdomain: string, path: string): string {
+        public endpoint(subdomain: string, path: string): string {
             return `https://${subdomain}.${this.host}/${path}`;
         }
 
@@ -255,7 +306,7 @@ module ProcessOut {
          * @param  {callback} error
          * @return {void}
          */
-        apiRequest(method: string, path: string, data,
+        public apiRequest(method: string, path: string, data,
             success: (data: any, code: number, req: XMLHttpRequest, e: Event) => void,
             error:   (code: number, req: XMLHttpRequest, e: Event) => void,
             legacy?: boolean): void {
@@ -319,49 +370,6 @@ module ProcessOut {
             };
 
             request.send(JSON.stringify(data));
-        }
-
-        /**
-         * Create a new modal
-         * @param  {string}   url
-         * @param  {callback} success
-         * @param  {callback} error
-         * @return {void}
-         */
-        newModal(url: string, 
-            success: (modal: Modal)     => void,
-            error:   (err:   Exception) => void): void {
-
-            var uniqId = Math.random().toString(36).substr(2, 9);
-            var iframe = document.createElement('iframe');
-            iframe.className = "processout-iframe";
-            iframe.setAttribute("id", "processout-iframe-" + uniqId);
-            iframe.setAttribute("src", url);
-            iframe.setAttribute("style", "position: fixed; top: 0; left: 0; background: none;"
-                    // We need to use translateZ instead of z-index, otherwise
-                    // z-index might not work on some mobiles
-                    +`-webkit-transform:translateZ(1px);
-                    -moz-transform:translateZ(1px);
-                    -o-transform:translateZ(1px);
-                    transform:translateZ(1px);`);
-            iframe.setAttribute("frameborder", "0");
-            iframe.setAttribute("allowtransparency", "1");
-
-            // Hide and add our iframe to the DOM
-            iframe.style.display = "none";
-
-            var t = this;
-            var iframeError = setTimeout(function() {
-                if (typeof(error) === typeof(Function))
-                    error(new Exception("processout-js.modal.unavailable"));
-            }, this.timeout);
-            iframe.onload = function() {
-                clearTimeout(iframeError);
-                if (typeof(success) === typeof(Function))
-                    success(new Modal(t, iframe, uniqId));
-            };
-
-            document.body.appendChild(iframe);
         }
 
     }

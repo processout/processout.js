@@ -59,22 +59,25 @@ module ProcessOut {
             var iframe  = modal.iframe;
             var iframeW = iframe.contentWindow;
             var frameid = modal.uniqId;
-            iframeW.postMessage(`${ProcessOut.namespace} ${frameid} check`, "*");
+            iframeW.postMessage(JSON.stringify({
+                namespace: Message.modalNamespace,
+                frameID:   frameid,
+                action:    "check"
+            }), "*");
             var redirectTimeout =
                 setTimeout(function(){
                     if (typeof(error) === typeof(Function))
                         error(new Exception("processout-js.modal.unavailable"));
                 }, this.instance.timeout);
 
-            function receiveMessage(event) {
-                var eventSplit = event.data.split(" ");
-                if (eventSplit[0] != ProcessOut.namespace)
+            window.addEventListener("message", function (event) {
+                var data = Message.parseEvent(event);
+                if (data.frameID != frameid)
+                    return;
+                if (data.namespace != Message.modalNamespace)
                     return;
 
-                if (eventSplit[1] != frameid)
-                    return;
-
-                switch (eventSplit[2]) {
+                switch (data.action) {
                     case "openModal":
                         // Clear the timeout
                         clearTimeout(redirectTimeout);
@@ -88,15 +91,19 @@ module ProcessOut {
                         window.dispatchEvent(new Event('resize'));
                         // Show the iframe
                         iframe.style.display = "block";
-                        iframeW.postMessage(`${ProcessOut.namespace} ${frameid} launch`, "*");
+                        iframeW.postMessage(JSON.stringify({
+                            namespace: Message.modalNamespace,
+                            frameID:   frameid,
+                            action:    "launch"    
+                        }), "*");
                         if (typeof(onShow) === typeof(Function))
-                            onShow(this);
+                            onShow(modal);
                         break;
 
                     case "closeModal":
                         modal.hide();
                         if (typeof(onHide) === typeof(Function))
-                            onHide(this);
+                            onHide(modal);
                         break;
 
                     default:
@@ -104,8 +111,7 @@ module ProcessOut {
                             event.data);
                         break;
                 }
-            }
-            window.addEventListener("message", receiveMessage, false);
+            }, false);
         }
 
         /**
@@ -119,7 +125,6 @@ module ProcessOut {
             document.body.style.overflow = "";
 
             this.iframe.remove();
-
             this.deleted = true;
         }
 

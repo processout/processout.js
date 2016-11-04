@@ -32,11 +32,14 @@ module ProcessOut {
             "request.gateway.not-available": "The requested gateway is currently unavailable.",
             "request.gateway.not-supported": "The gateway is not supported by ProcessOut.js",
 
-            "processout-js.not-hosted":        "ProcessOut.js was not loaded from ProcessOut CDN. Please do not host ProcessOut.js yourself but rather use ProcessOut CDN: https://js.processout.com/processout.js",
-            "processout-js.modal.unavailable": "The ProcessOut.js modal is unavailable.",
-            "processout-js.invalid-config":    "The provided gateway configuration is invalid.",
-            "processout-js.no-customer-action": "No customer action is required for the given gateway configuration and resource.",
+            "processout-js.not-hosted":                    "ProcessOut.js was not loaded from ProcessOut CDN. Please do not host ProcessOut.js yourself but rather use ProcessOut CDN: https://js.processout.com/processout.js",
+            "processout-js.modal.unavailable":             "The ProcessOut.js modal is unavailable.",
+            "processout-js.field.unavailable":             "The ProcessOut.js credit card field is unavailable.",
+            "processout-js.invalid-config":                "The provided gateway configuration is invalid.",
+            "processout-js.no-customer-action":            "No customer action is required for the given gateway configuration and resource.",
             "processout-js.customer-action-not-supported": "The requested customer action is not supported by ProcessOut.js.",
+            "processout-js.invalid-field":                 "The given HTML element may not be used by ProcessOut.js: it is an input. Please only use divs when creating a ProcessOut.js credit card field.",
+            "processout-js.invalid-field-type":            "The given field type was incorrect. It must either be number, expiry, expiryMonth, expiryYear or CVC.",
 
             "resource.invalid-type": "The provided resource was invalid. It must be an invoice, a subscription or an authorization request."
         },
