@@ -74,7 +74,7 @@ module ProcessOut {
          * @param  {string} projectID
          * @param  {string} resourceID
          */
-        constructor(projectID: string, resourceID: string) {
+        constructor(projectID?: string, resourceID?: string) {
             // We want to make sure ProcessOut.js is loaded from ProcessOut CDN.
             var scripts = document.getElementsByTagName("script");
             var jsHost = "";
@@ -99,16 +99,17 @@ module ProcessOut {
             }
 
             this.projectID = projectID;
-            if (this.projectID.substring(0, 5) == "test-")
+            if (this.projectID && this.projectID.substring(0, 5) == "test-")
                 this.sandbox = true;
 
             this.fetchPublicKey();
 
             this.resourceID = resourceID;
-            if (this.resourceID.substring(0, 3) != "iv_" &&
+            if (this.resourceID &&
+                this.resourceID != "" &&
+                this.resourceID.substring(0, 3) != "iv_" &&
                 this.resourceID.substring(0, 4) != "sub_" &&
-                this.resourceID.substring(0, 9) != "auth_req_" &&
-                this.resourceID != "") {
+                this.resourceID.substring(0, 9) != "auth_req_") {
 
                 throw new Exception("resource.invalid-type");
             }
@@ -163,6 +164,9 @@ module ProcessOut {
         public tokenize(card: Card,
             success: (token: string) => void,
             error:   (err: Exception) => void): void {
+
+            if (!this.projectID)
+                throw new Exception("default", "No project ID was set when instanciating ProcessOut.js. To tokenize a card, a project ID must be set.");
 
             // Let's first validate the card
             var err = card.validate();
