@@ -35,6 +35,12 @@ module ProcessOut {
         deleted = false;
 
         /**
+         * Timeout before considering the modal could not be loaded, in ms
+         * @type {Number}
+         */
+        public timeout = 10000;
+
+        /**
          * Modal constructor
          * @param  {HTMLIFrameElement} iframe
          * @param  {string}     uniqId
@@ -68,7 +74,7 @@ module ProcessOut {
                 setTimeout(function(){
                     if (typeof(error) === typeof(Function))
                         error(new Exception("processout-js.modal.unavailable"));
-                }, this.instance.timeout);
+                }, this.timeout);
 
             window.addEventListener("message", function (event) {
                 var data = Message.parseEvent(event);

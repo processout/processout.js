@@ -167,127 +167,6 @@ module ProcessOut {
         }
 
         /**
-         * Tokenize takes the credit card object and creates a ProcessOut
-         * token that can be sent to your server and used to charge your
-         * customer
-         * @param  {ProcessOut.Card} card
-         * @param  {callback} success
-         * @param  {callback} error
-         * @return {void}
-         */
-        public tokenize(card: Card,
-            success: (token: string) => void,
-            error:   (err: Exception) => void): void {
-
-            if (!this.projectID)
-                throw new Exception("default", "No project ID was set when instanciating ProcessOut.js. To tokenize a card, a project ID must be set.");
-
-            // Let's first validate the card
-            var err = card.validate();
-            if (err) {
-                error(new Exception(err));
-                return;
-            }
-
-            var metadata = {};
-            if (this.sandbox) {
-                // We just want to store in the metadata the test card type,
-                // if any
-                switch (card.getCVC()) {
-                case "666":
-                    metadata["test_card"] = "test-will-chargeback";
-                    break;
-                case "500":
-                    metadata["test_card"] = "test-will-decline";
-                    break;
-                case "600":
-                    metadata["test_card"] = "test-will-only-authorize";
-                    break;
-
-                default:
-                    metadata["test_card"] = "test-valid"
-                }
-            }
-
-            this.apiRequest("post", "cards", {
-                "number":    this.encrypt(card.getNumber()),
-                "exp_month": this.encrypt(card.getExpiry().getMonth().toString()),
-                "exp_year":  this.encrypt(card.getExpiry().getYear().toString()),
-                "cvc2":      this.encrypt(card.getCVC()),
-                "name":      this.encrypt(card.getName()),
-                "metadata":  metadata
-            }, function(data: any, code: number, req: XMLHttpRequest, e: Event): void {
-                if (!data.success) {
-                    error(new Exception("card.invalid"));
-                    return
-                }
-
-                success(data.card.id);
-            }, function(code: number, req: XMLHttpRequest, e: Event): void {
-                error(new Exception("card.invalid"));
-            });
-        }
-
-        /**
-         * Create a new modal
-         * @param  {string}   url
-         * @param  {callback} success
-         * @param  {callback} error
-         * @return {void}
-         */
-        public newModal(url: string, 
-            success: (modal: Modal)     => void,
-            error:   (err:   Exception) => void): void {
-
-            var uniqId = Math.random().toString(36).substr(2, 9);
-            var iframe = document.createElement('iframe');
-            iframe.className = "processout-iframe";
-            iframe.setAttribute("id", "processout-iframe-" + uniqId);
-            iframe.setAttribute("src", url);
-            iframe.setAttribute("style", "position: fixed; top: 0; left: 0; background: none;"
-                    // We need to use translateZ instead of z-index, otherwise
-                    // z-index might not work on some mobiles
-                    +`-webkit-transform:translateZ(1px);
-                    -moz-transform:translateZ(1px);
-                    -o-transform:translateZ(1px);
-                    transform:translateZ(1px);`);
-            iframe.setAttribute("frameborder", "0");
-            iframe.setAttribute("allowtransparency", "1");
-
-            // Hide and add our iframe to the DOM
-            iframe.style.display = "none";
-
-            var t = this;
-            var iframeError = setTimeout(function() {
-                if (typeof(error) === typeof(Function))
-                    error(new Exception("processout-js.modal.unavailable"));
-            }, this.timeout);
-            iframe.onload = function() {
-                clearTimeout(iframeError);
-                if (typeof(success) === typeof(Function))
-                    success(new Modal(t, iframe, uniqId));
-            };
-
-            document.body.appendChild(iframe);
-        }
-
-        /**
-         * HandleAction handles the action needed to be performed by the
-         * customer for the given gateway configuration
-         * @param  {callback} success
-         * @param  {callback} error
-         * @return {ActionHandler}
-         */
-        public handleAction(
-            url:     string,
-            success: (token: string)    => void,
-            error:   (err:   Exception) => void): ActionHandler {
-            
-            var handler = new ActionHandler(this, this.getResourceID());
-            return handler.handle(url, success, error);
-        }
-
-        /**
          * Get the ProcessOut endpoint of the given subdomain
          * @param  {string} subdomain
          * @param  {string} path
@@ -372,6 +251,189 @@ module ProcessOut {
             request.send(JSON.stringify(data));
         }
 
-    }
+        /**
+         * SetupForm setups a new form and embed the credit cards fields
+         * to it, and returns the created card form
+         * @param {HTMLElement} form
+         * @param {callback} success
+         * @param {callback} error
+         * @return {CardForm}
+         */
+        public setupForm(form: HTMLElement, 
+            success: (form: CardForm) => void, 
+            error:   (err: Exception) => void): CardForm {
 
+            return new CardForm(this, form, success, error);
+        }
+
+        /**
+         * Tokenize takes the credit card object and creates a ProcessOut
+         * token that can be sent to your server and used to charge your
+         * customer
+         * A CardForm may also be provided instead of a card if the fields
+         * are hosted by ProcessOut
+         * @param  {Card | CardForm} card
+         * @param  {callback} success
+         * @param  {callback} error
+         * @return {void}
+         */
+        public tokenize(val: Card | CardForm, cardHolder: CardHolder,
+            success: (token: string)  => void,
+            error:   (err: Exception) => void): void {
+
+            if (val instanceof Card)
+                return this.tokenizeCard(<Card>val, cardHolder, success, error);
+
+            return this.tokenizeForm(<CardForm>val, cardHolder, success, error);
+        }
+
+        /**
+         * TokenizeCard takes the credit card object and creates a ProcessOut
+         * token that can be sent to your server and used to charge your
+         * customer
+         * @param  {Card | CardForm} card
+         * @param  {callback} success
+         * @param  {callback} error
+         * @return {void}
+         */
+        public tokenizeCard(card: Card, cardHolder: CardHolder,
+            success: (token: string) => void,
+            error:   (err: Exception) => void): void {
+
+            // Let's first validate the card
+            var err = card.validate();
+            if (err) {
+                error(err);
+                return;
+            }
+
+            this.tokenizeEncrypted(this.encrypt(card.getNumber()), 
+                this.encrypt(card.getExpiry().getMonth().toString()),
+                this.encrypt(card.getExpiry().getYear().toString()),
+                this.encrypt(card.getCVC()),
+                cardHolder, {}, success, error);
+        }
+
+        /**
+         * TokenizeForm takes the card form and tokenizes the card
+         * @param  {CardForm} form
+         * @param  {callback} success
+         * @param  {callback} error
+         * @return {void}
+         */
+        public tokenizeForm(form: CardForm, cardHolder: CardHolder,
+            success: (token: string)  => void,
+            error:   (err: Exception) => void): void {
+            
+            var t = this;
+            form.validate(function() {
+                form.fetchValues(function(number: string, cvc: string, 
+                    expMonth: string, expYear: string, metadata: any) {
+
+                    t.tokenizeEncrypted(number, expMonth, expYear, cvc, 
+                        cardHolder, metadata, success, error);
+                }, function(err: Exception) {
+                    error(err);
+                });
+            }, error);
+        }
+
+        /**
+         * TokenizeEncrypted tokenizes the given encrypted card data
+         * @param {string} number
+         * @param {string} expMonth
+         * @param {string} expYear
+         * @param {string} cvc
+         * @param {CardHolder} cardHolder
+         * @param {any} metadata
+         * @param {callback} success
+         * @param {callback} error
+         */
+        protected tokenizeEncrypted(number: string, expMonth: string, 
+            expYear: string, cvc: string, cardHolder: CardHolder, metadata: any,
+            success: (token: string) => void,
+            error:   (err: Exception) => void): void {
+
+            if (!this.projectID)
+                throw new Exception("default", "No project ID was set when instanciating ProcessOut.js. To tokenize a card, a project ID must be set.");
+
+            this.apiRequest("post", "cards", {
+                "number":    number,
+                "exp_month": expMonth,
+                "exp_year":  expYear,
+                "cvc2":      cvc,
+                "name":      name
+            }, function(data: any, code: number, 
+                req: XMLHttpRequest, e: Event): void {
+
+                if (!data.success) {
+                    error(new Exception("card.invalid"));
+                    return
+                }
+
+                success(data.card.id);
+            }, function(code: number, req: XMLHttpRequest, e: Event): void {
+                error(new Exception("card.invalid"));
+            });
+        }
+
+        /**
+         * Create a new modal
+         * @param  {string}   url
+         * @param  {callback} success
+         * @param  {callback} error
+         * @return {void}
+         */
+        public newModal(url: string, 
+            success: (modal: Modal)     => void,
+            error:   (err:   Exception) => void): void {
+
+            var uniqId = Math.random().toString(36).substr(2, 9);
+            var iframe = document.createElement('iframe');
+            iframe.className = "processout-iframe";
+            iframe.setAttribute("id", "processout-iframe-" + uniqId);
+            iframe.setAttribute("src", url);
+            iframe.setAttribute("style", "position: fixed; top: 0; left: 0; background: none;"
+                    // We need to use translateZ instead of z-index, otherwise
+                    // z-index might not work on some mobiles
+                    +`-webkit-transform:translateZ(1px);
+                    -moz-transform:translateZ(1px);
+                    -o-transform:translateZ(1px);
+                    transform:translateZ(1px);`);
+            iframe.setAttribute("frameborder", "0");
+            iframe.setAttribute("allowtransparency", "1");
+
+            // Hide and add our iframe to the DOM
+            iframe.style.display = "none";
+
+            var t = this;
+            var iframeError = setTimeout(function() {
+                if (typeof(error) === typeof(Function))
+                    error(new Exception("processout-js.modal.unavailable"));
+            }, this.timeout);
+            iframe.onload = function() {
+                clearTimeout(iframeError);
+                if (typeof(success) === typeof(Function))
+                    success(new Modal(t, iframe, uniqId));
+            };
+
+            document.body.appendChild(iframe);
+        }
+
+        /**
+         * HandleAction handles the action needed to be performed by the
+         * customer for the given gateway configuration
+         * @param  {callback} success
+         * @param  {callback} error
+         * @return {ActionHandler}
+         */
+        public handleAction(
+            url:     string,
+            success: (token: string)    => void,
+            error:   (err:   Exception) => void): ActionHandler {
+            
+            var handler = new ActionHandler(this, this.getResourceID());
+            return handler.handle(url, success, error);
+        }
+    }
 }

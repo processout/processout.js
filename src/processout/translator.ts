@@ -39,6 +39,7 @@ module ProcessOut {
             "processout-js.no-customer-action":            "No customer action is required for the given gateway configuration and resource.",
             "processout-js.customer-action-not-supported": "The requested customer action is not supported by ProcessOut.js.",
             "processout-js.invalid-field":                 "The given HTML element may not be used by ProcessOut.js: it is an input. Please only use divs when creating a ProcessOut.js credit card field.",
+            "processout-js.undefined-field":               "The given HTML element was undefined.",
             "processout-js.invalid-field-type":            "The given field type was incorrect. It must either be number, expiry, expiryMonth, expiryYear or CVC.",
 
             "resource.invalid-type": "The provided resource was invalid. It must be an invoice, a subscription or an authorization request."

@@ -53,17 +53,19 @@ var ProcessOut;
                     return;
                 }
             });
+            ActionHandler.listenerCount++;
+            var cur = ActionHandler.listenerCount;
             window.addEventListener("message", function (event) {
-                if (!event.data)
+                var data = ProcessOut.Message.parseEvent(event);
+                if (data.namespace != ProcessOut.Message.checkoutNamespace)
                     return;
-                var eventSplit = event.data.split(" ");
-                if (eventSplit[0] != ProcessOut.ProcessOut.namespace)
+                if (ActionHandler.listenerCount != cur)
                     return;
-                switch (eventSplit[1]) {
+                switch (data.action) {
                     case "success":
                         clearInterval(timer);
                         newWindow.close();
-                        success(eventSplit[2]);
+                        success(data.data);
                         window.focus();
                         break;
                     case "canceled":
@@ -99,6 +101,7 @@ var ProcessOut;
         };
         return ActionHandler;
     }());
+    ActionHandler.listenerCount = 0;
     ProcessOut.ActionHandler = ActionHandler;
 })(ProcessOut || (ProcessOut = {}));
 var ProcessOut;
@@ -122,13 +125,16 @@ var ProcessOut;
 })(ProcessOut || (ProcessOut = {}));
 var ProcessOut;
 (function (ProcessOut) {
+    var CardHolder = (function () {
+        function CardHolder() {
+        }
+        return CardHolder;
+    }());
+    ProcessOut.CardHolder = CardHolder;
     var Expiry = (function () {
         function Expiry(month, year) {
             this.month = month;
-            this.year = year;
-            if (this.year < 2000) {
-                this.year += 2000;
-            }
+            this.year = Expiry.parseYear(year);
         }
         Expiry.parse = function (exp) {
             var exps = exp.split(" / ");
@@ -139,6 +145,13 @@ var ProcessOut;
             }
             return new Expiry(Number(exps[0]), Number(exps[1]));
         };
+        Expiry.parseYear = function (yearsn) {
+            var year = Number(yearsn);
+            if (year < 2000) {
+                year += 2000;
+            }
+            return year;
+        };
         Expiry.prototype.getMonth = function () {
             return this.month;
         };
@@ -148,6 +161,18 @@ var ProcessOut;
         Expiry.prototype.string = function () {
             return this.month + " / " + this.year;
         };
+        Expiry.prototype.validate = function () {
+            var err = Expiry.validateMonth(this.getMonth());
+            if (err)
+                return err;
+            err = Expiry.validateYear(this.getYear());
+            if (err)
+                return err;
+            var date = new Date();
+            if (this.getMonth() < date.getMonth() && this.getYear() == date.getFullYear())
+                return new ProcessOut.Exception("card.invalid-date");
+            return null;
+        };
         Expiry.format = function (exp) {
             if (exp.length == 2)
                 return exp + " / ";
@@ -155,13 +180,25 @@ var ProcessOut;
                 return exp.slice(0, -3);
             return exp;
         };
+        Expiry.validateMonth = function (month) {
+            if (month < 1 || month > 12)
+                return new ProcessOut.Exception("card.invalid-month");
+            return null;
+        };
+        Expiry.validateYear = function (year) {
+            if (year < 100)
+                year += 2000;
+            var date = new Date();
+            if (year < date.getFullYear())
+                return new ProcessOut.Exception("card.invalid-year");
+            return null;
+        };
         return Expiry;
     }());
     ProcessOut.Expiry = Expiry;
     var Card = (function () {
         function Card(number, expiry, cvc) {
-            this.name = "";
-            this.number = number.replace(/ /gi, "").replace(/\-/gi, "").replace(/\-/gi, "");
+            this.number = Card.parseNumber(number);
             this.cvc = cvc;
             this.expiry = expiry;
         }
@@ -173,13 +210,6 @@ var ProcessOut;
         };
         Card.prototype.getCVC = function () {
             return this.cvc;
-        };
-        Card.prototype.getName = function () {
-            return this.name;
-        };
-        Card.prototype.setName = function (name) {
-            this.name = name;
-            return this;
         };
         Card.luhn = function (cardNo) {
             var s = 0;
@@ -197,22 +227,21 @@ var ProcessOut;
             return s % 10 == 0;
         };
         Card.prototype.validate = function () {
-            if (this.number.length != 16)
-                return "card.invalid-number";
-            if (!Card.luhn(Number(this.number)))
-                return "card.invalid-number";
+            var err = Card.validateNumber(this.number);
+            if (err)
+                return err;
             if (this.expiry == null)
-                return "card.invalid-date";
-            if (this.expiry.getMonth() > 12 || this.expiry.getMonth() < 0)
-                return "card.invalid-month";
-            var date = new Date();
-            if (this.expiry.getYear() < date.getFullYear())
-                return "card.invalid-year";
-            if (this.expiry.getMonth() < date.getMonth() && this.expiry.getYear() == date.getFullYear())
-                return "card.invalid-date";
-            if (this.cvc.length > 4)
-                return "card.invalid-cvc";
-            return null;
+                return new ProcessOut.Exception("card.invalid-date");
+            err = this.expiry.validate();
+            if (err)
+                return err;
+            return Card.validateCVC(this.cvc);
+        };
+        Card.prototype.getIIN = function () {
+            return Card.getIIN(this.number);
+        };
+        Card.prototype.getLast4Digits = function () {
+            return Card.getLast4Digits(this.number);
         };
         Card.formatNumber = function (number) {
             var v = number.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
@@ -226,6 +255,35 @@ var ProcessOut;
                 return number;
             return parts.join(" ");
         };
+        Card.parseNumber = function (number) {
+            return number.replace(/ /gi, "").replace(/\-/gi, "").replace(/\-/gi, "");
+        };
+        Card.validateNumber = function (number) {
+            if (number.length < 14)
+                return new ProcessOut.Exception("card.invalid-number");
+            if (!Card.luhn(Number(number)))
+                return new ProcessOut.Exception("card.invalid-number");
+            return null;
+        };
+        Card.validateCVC = function (cvc) {
+            if (!cvc)
+                return null;
+            if (cvc.length < 3)
+                return new ProcessOut.Exception("card.invalid-cvc");
+            return null;
+        };
+        Card.getIIN = function (number) {
+            var l = number.length;
+            if (l > 6)
+                l = 6;
+            return number.substring(0, l);
+        };
+        Card.getLast4Digits = function (number) {
+            var l = number.length;
+            if (l > 4)
+                l = 4;
+            return number.substr(number.length - l);
+        };
         Card.autoFormatFields = function (number, expiry, cvc) {
             number.addEventListener("input", function (e) {
                 this.value = Card.formatNumber(this.value);
@@ -236,24 +294,291 @@ var ProcessOut;
                     cvc.focus();
             });
         };
-        Card.getIIN = function (number) {
-            return number.substring(0, 6);
-        };
-        Card.getPossibleTypes = function (number) {
-            var types = [];
-            var iin = parseInt(Card.getIIN(number));
-            if (isNaN(iin))
-                return types;
-            if (number.length <= 15 && ((iin >= 300000 && iin <= 305999) ||
-                (iin >= 309500 && iin <= 309599) ||
-                (iin >= 360000 && iin <= 369999) ||
-                (iin >= 380000 && iin <= 399999))) {
-            }
-            return types;
-        };
         return Card;
     }());
     ProcessOut.Card = Card;
+})(ProcessOut || (ProcessOut = {}));
+var ProcessOut;
+(function (ProcessOut) {
+    var CardFieldValue = (function () {
+        function CardFieldValue() {
+        }
+        return CardFieldValue;
+    }());
+    ProcessOut.CardFieldValue = CardFieldValue;
+    var CardFieldSettings = (function () {
+        function CardFieldSettings() {
+        }
+        return CardFieldSettings;
+    }());
+    ProcessOut.CardFieldSettings = CardFieldSettings;
+    var CardField = (function () {
+        function CardField(instance, type, container, success, error) {
+            if (!container) {
+                throw new ProcessOut.Exception("processout-js.undefined-field");
+            }
+            if (container instanceof HTMLInputElement) {
+                throw new ProcessOut.Exception("processout-js.invalid-field");
+            }
+            if (type != CardField.number &&
+                type != CardField.expiry &&
+                type != CardField.expiryMonth &&
+                type != CardField.expiryYear &&
+                type != CardField.cvc)
+                throw new ProcessOut.Exception("processout-js.invalid-field-type");
+            this.instance = instance;
+            this.type = type;
+            this.el = container;
+            this.spawn(success, error);
+        }
+        CardField.prototype.spawn = function (success, error) {
+            this.iframe = document.createElement('iframe');
+            this.iframe.className = "processout-field-cc-iframe";
+            this.iframe.setAttribute("src", this.instance.endpoint("checkout", "vault/field"));
+            this.iframe.setAttribute("style", "background: none; height: 100%; width: 100%;");
+            this.iframe.setAttribute("frameborder", "0");
+            this.iframe.setAttribute("allowtransparency", "1");
+            this.iframe.style.display = "none";
+            var errored = false;
+            var t = this;
+            var iframeError = setTimeout(function () {
+                errored = true;
+                if (typeof (error) === typeof (Function))
+                    error(new ProcessOut.Exception("processout-js.field.unavailable"));
+            }, CardField.timeout);
+            this.iframe.onload = function () {
+                if (errored)
+                    return;
+                window.addEventListener("message", function (event) {
+                    if (event.source != t.iframe.contentWindow)
+                        return;
+                    if (errored)
+                        return;
+                    var data = ProcessOut.Message.parseEvent(event);
+                    if (data.namespace != ProcessOut.Message.fieldNamespace)
+                        return;
+                    if (data.action == "alive") {
+                        var settings = new CardFieldSettings();
+                        settings.type = t.type;
+                        settings.placeholder = t.el.getAttribute("data-processout-placeholder");
+                        settings.style = t.el.getAttribute("data-processout-style");
+                        t.iframe.contentWindow.postMessage(JSON.stringify({
+                            "namespace": ProcessOut.Message.fieldNamespace,
+                            "projectID": t.instance.getProjectID(),
+                            "action": "setup",
+                            "data": settings
+                        }), "*");
+                    }
+                    if (data.action == "ready") {
+                        t.iframe.style.display = "block";
+                        clearTimeout(iframeError);
+                        success();
+                    }
+                });
+            };
+            this.el.appendChild(this.iframe);
+        };
+        CardField.prototype.validate = function (success, error) {
+            var id = Math.random().toString();
+            this.iframe.contentWindow.postMessage(JSON.stringify({
+                "messageID": id,
+                "namespace": ProcessOut.Message.fieldNamespace,
+                "projectID": this.instance.getProjectID(),
+                "action": "validate"
+            }), "*");
+            var fetchingTimeout = setTimeout(function () {
+                error(new ProcessOut.Exception("processout-js.field.unavailable"));
+            }, CardField.timeout);
+            var t = this;
+            window.addEventListener("message", function (event) {
+                if (event.source != t.iframe.contentWindow)
+                    return;
+                var data = ProcessOut.Message.parseEvent(event);
+                if (data.namespace != ProcessOut.Message.fieldNamespace)
+                    return;
+                if (data.messageID != id)
+                    return;
+                if (data.action != "validate")
+                    return;
+                clearTimeout(fetchingTimeout);
+                if (data.data) {
+                    error(new ProcessOut.Exception(data.data));
+                    return;
+                }
+                success();
+            });
+        };
+        CardField.prototype.value = function (callback, error) {
+            var id = Math.random().toString();
+            this.iframe.contentWindow.postMessage(JSON.stringify({
+                "messageID": id,
+                "namespace": ProcessOut.Message.fieldNamespace,
+                "projectID": this.instance.getProjectID(),
+                "action": "value"
+            }), "*");
+            var fetchingTimeout = setTimeout(function () {
+                error(new ProcessOut.Exception("processout-js.field.unavailable"));
+            }, CardField.timeout);
+            var t = this;
+            window.addEventListener("message", function (event) {
+                if (event.source != t.iframe.contentWindow)
+                    return;
+                var data = ProcessOut.Message.parseEvent(event);
+                if (data.namespace != ProcessOut.Message.fieldNamespace)
+                    return;
+                if (data.messageID != id)
+                    return;
+                if (data.action != "value")
+                    return;
+                clearTimeout(fetchingTimeout);
+                callback(data.data);
+            });
+        };
+        return CardField;
+    }());
+    CardField.number = "number";
+    CardField.expiry = "expiry";
+    CardField.expiryMonth = "expiry-month";
+    CardField.expiryYear = "expiry-year";
+    CardField.cvc = "cvc";
+    CardField.timeout = 5000;
+    ProcessOut.CardField = CardField;
+})(ProcessOut || (ProcessOut = {}));
+var ProcessOut;
+(function (ProcessOut) {
+    var CardForm = (function () {
+        function CardForm(instance, form, success, error) {
+            this.instance = instance;
+            var numberReady = false;
+            var cvcReady = false;
+            var expMonthReady = false;
+            var expYearReady = false;
+            var t = this;
+            var ev = function () {
+                if (numberReady && cvcReady && expMonthReady && expYearReady) {
+                    success(t);
+                    return;
+                }
+            };
+            this.number = new ProcessOut.CardField(this.instance, ProcessOut.CardField.number, form.querySelector("[data-processout-input=cc-number]"), function () {
+                numberReady = true;
+                ev();
+            }, error);
+            var cvcEl = form.querySelector("[data-processout-input=cc-cvc]");
+            if (cvcEl) {
+                this.cvc = new ProcessOut.CardField(this.instance, ProcessOut.CardField.cvc, cvcEl, function () {
+                    cvcReady = true;
+                    ev();
+                }, error);
+            }
+            else {
+                cvcReady = true;
+            }
+            var expEl = form.querySelector("[data-processout-input=cc-exp]");
+            if (expEl) {
+                this.exp = new ProcessOut.CardField(this.instance, ProcessOut.CardField.expiry, expEl, function () {
+                    expMonthReady = true;
+                    expYearReady = true;
+                    ev();
+                }, error);
+            }
+            else {
+                this.expMonth = new ProcessOut.CardField(this.instance, ProcessOut.CardField.expiryMonth, form.querySelector("[data-processout-input=cc-exp-month]"), function () {
+                    expMonthReady = true;
+                    ev();
+                }, error);
+                this.expYear = new ProcessOut.CardField(this.instance, ProcessOut.CardField.expiryYear, form.querySelector("[data-processout-input=cc-exp-year]"), function () {
+                    expYearReady = true;
+                    ev();
+                }, error);
+            }
+        }
+        CardForm.prototype.validate = function (success, error) {
+            var number = false;
+            var cvc = false;
+            var expMonth = false;
+            var expYear = false;
+            var t = this;
+            var ev = function () {
+                if (number && cvc && expMonth && expYear) {
+                    success();
+                }
+            };
+            this.number.validate(function () {
+                number = true;
+                ev();
+            }, error);
+            if (this.cvc)
+                this.cvc.validate(function () {
+                    cvc = true;
+                    ev();
+                }, error);
+            else
+                cvc = true;
+            if (this.exp) {
+                this.exp.validate(function () {
+                    expMonth = true;
+                    expYear = true;
+                    ev();
+                }, error);
+            }
+            else {
+                this.expMonth.validate(function () {
+                    expMonth = true;
+                    ev();
+                }, error);
+                this.expYear.validate(function () {
+                    expYear = true;
+                    ev();
+                }, error);
+            }
+        };
+        CardForm.prototype.fetchValues = function (success, error) {
+            var number = null;
+            var cvc = null;
+            var expMonth = null;
+            var expYear = null;
+            var ev = function () {
+                if (number != null && cvc != null &&
+                    expMonth != null && expYear != null) {
+                    success(number, cvc, expMonth, expYear, {});
+                    return;
+                }
+            };
+            this.number.value(function (val) {
+                number = val.number;
+                ev();
+            }, error);
+            if (this.cvc) {
+                this.cvc.value(function (val) {
+                    cvc = val.cvc;
+                    ev();
+                }, error);
+            }
+            else {
+                cvc = "";
+            }
+            if (this.exp) {
+                this.exp.value(function (val) {
+                    expMonth = val.expiryMonth;
+                    expYear = val.expiryYear;
+                    ev();
+                }, error);
+            }
+            else {
+                this.expMonth.value(function (val) {
+                    expMonth = val.expiryMonth;
+                    ev();
+                }, error);
+                this.expYear.value(function (val) {
+                    expYear = val.expiryYear;
+                    ev();
+                }, error);
+            }
+        };
+        return CardForm;
+    }());
+    ProcessOut.CardForm = CardForm;
 })(ProcessOut || (ProcessOut = {}));
 var ProcessOut;
 (function (ProcessOut) {
@@ -283,9 +608,13 @@ var ProcessOut;
             "request.gateway.not-supported": "The gateway is not supported by ProcessOut.js",
             "processout-js.not-hosted": "ProcessOut.js was not loaded from ProcessOut CDN. Please do not host ProcessOut.js yourself but rather use ProcessOut CDN: https://js.processout.com/processout.js",
             "processout-js.modal.unavailable": "The ProcessOut.js modal is unavailable.",
+            "processout-js.field.unavailable": "The ProcessOut.js credit card field is unavailable.",
             "processout-js.invalid-config": "The provided gateway configuration is invalid.",
             "processout-js.no-customer-action": "No customer action is required for the given gateway configuration and resource.",
             "processout-js.customer-action-not-supported": "The requested customer action is not supported by ProcessOut.js.",
+            "processout-js.invalid-field": "The given HTML element may not be used by ProcessOut.js: it is an input. Please only use divs when creating a ProcessOut.js credit card field.",
+            "processout-js.undefined-field": "The given HTML element was undefined.",
+            "processout-js.invalid-field-type": "The given field type was incorrect. It must either be number, expiry, expiryMonth, expiryYear or CVC.",
             "resource.invalid-type": "The provided resource was invalid. It must be an invoice, a subscription or an authorization request."
         }
     };
@@ -369,6 +698,9 @@ var ProcessOut;
         ProcessOut.prototype.getResourceID = function () {
             return this.resourceID;
         };
+        ProcessOut.prototype.getProjectID = function () {
+            return this.projectID;
+        };
         ProcessOut.prototype.fetchPublicKey = function () {
             if (!this.projectID)
                 return;
@@ -386,56 +718,11 @@ var ProcessOut;
                 err();
             });
         };
-        ProcessOut.prototype.tokenize = function (card, success, error) {
-            if (!this.projectID)
-                throw new ProcessOut_1.Exception("default", "No project ID was set when instanciating ProcessOut.js. To tokenize a card, a project ID must be set.");
-            var err = card.validate();
-            if (err) {
-                error(new ProcessOut_1.Exception(err));
-                return;
-            }
-            var metadata = {};
-            if (this.sandbox) {
-                switch (card.getCVC()) {
-                    case "666":
-                        metadata["test_card"] = "test-will-chargeback";
-                        break;
-                    case "500":
-                        metadata["test_card"] = "test-will-decline";
-                        break;
-                    case "600":
-                        metadata["test_card"] = "test-will-only-authorize";
-                        break;
-                    default:
-                        metadata["test_card"] = "test-valid";
-                }
-            }
-            var c = forge.pki.publicKeyFromPem(this.publicKey);
-            var e = function (str) {
-                return forge.util.encode64(c.encrypt(str, "RSA-OAEP", {
-                    md: forge.md.sha256.create()
-                }));
-            };
-            this.apiRequest("post", "cards", {
-                "number": e(card.getNumber()),
-                "exp_month": e(card.getExpiry().getMonth().toString()),
-                "exp_year": e(card.getExpiry().getYear().toString()),
-                "cvc2": e(card.getCVC()),
-                "name": e(card.getName()),
-                "metadata": metadata
-            }, function (data, code, req, e) {
-                if (!data.success) {
-                    error(new ProcessOut_1.Exception("card.invalid"));
-                    return;
-                }
-                success(data.card.id);
-            }, function (code, req, e) {
-                error(new ProcessOut_1.Exception("card.invalid"));
-            });
-        };
-        ProcessOut.prototype.handleAction = function (url, success, error) {
-            var handler = new ProcessOut_1.ActionHandler(this, this.getResourceID());
-            return handler.handle(url, success, error);
+        ProcessOut.prototype.encrypt = function (str) {
+            return forge.util.encode64(forge.pki.publicKeyFromPem(this.publicKey)
+                .encrypt(str, "RSA-OAEP", {
+                md: forge.md.sha256.create()
+            }));
         };
         ProcessOut.prototype.endpoint = function (subdomain, path) {
             return "https://" + subdomain + "." + this.host + "/" + path;
@@ -490,6 +777,51 @@ var ProcessOut;
             };
             request.send(JSON.stringify(data));
         };
+        ProcessOut.prototype.setupForm = function (form, success, error) {
+            return new ProcessOut_1.CardForm(this, form, success, error);
+        };
+        ProcessOut.prototype.tokenize = function (val, cardHolder, success, error) {
+            if (val instanceof ProcessOut_1.Card)
+                return this.tokenizeCard(val, cardHolder, success, error);
+            return this.tokenizeForm(val, cardHolder, success, error);
+        };
+        ProcessOut.prototype.tokenizeCard = function (card, cardHolder, success, error) {
+            var err = card.validate();
+            if (err) {
+                error(err);
+                return;
+            }
+            this.tokenizeEncrypted(this.encrypt(card.getNumber()), this.encrypt(card.getExpiry().getMonth().toString()), this.encrypt(card.getExpiry().getYear().toString()), this.encrypt(card.getCVC()), cardHolder, {}, success, error);
+        };
+        ProcessOut.prototype.tokenizeForm = function (form, cardHolder, success, error) {
+            var t = this;
+            form.validate(function () {
+                form.fetchValues(function (number, cvc, expMonth, expYear, metadata) {
+                    t.tokenizeEncrypted(number, expMonth, expYear, cvc, cardHolder, metadata, success, error);
+                }, function (err) {
+                    error(err);
+                });
+            }, error);
+        };
+        ProcessOut.prototype.tokenizeEncrypted = function (number, expMonth, expYear, cvc, cardHolder, metadata, success, error) {
+            if (!this.projectID)
+                throw new ProcessOut_1.Exception("default", "No project ID was set when instanciating ProcessOut.js. To tokenize a card, a project ID must be set.");
+            this.apiRequest("post", "cards", {
+                "number": number,
+                "exp_month": expMonth,
+                "exp_year": expYear,
+                "cvc2": cvc,
+                "name": name
+            }, function (data, code, req, e) {
+                if (!data.success) {
+                    error(new ProcessOut_1.Exception("card.invalid"));
+                    return;
+                }
+                success(data.card.id);
+            }, function (code, req, e) {
+                error(new ProcessOut_1.Exception("card.invalid"));
+            });
+        };
         ProcessOut.prototype.newModal = function (url, success, error) {
             var uniqId = Math.random().toString(36).substr(2, 9);
             var iframe = document.createElement('iframe');
@@ -513,9 +845,12 @@ var ProcessOut;
             };
             document.body.appendChild(iframe);
         };
+        ProcessOut.prototype.handleAction = function (url, success, error) {
+            var handler = new ProcessOut_1.ActionHandler(this, this.getResourceID());
+            return handler.handle(url, success, error);
+        };
         return ProcessOut;
     }());
-    ProcessOut.namespace = "processout";
     ProcessOut_1.ProcessOut = ProcessOut;
 })(ProcessOut || (ProcessOut = {}));
 var ProcessOut;
@@ -523,6 +858,7 @@ var ProcessOut;
     var Modal = (function () {
         function Modal(instance, iframe, uniqId) {
             this.deleted = false;
+            this.timeout = 10000;
             this.instance = instance;
             this.iframe = iframe;
             this.uniqId = uniqId;
@@ -532,18 +868,22 @@ var ProcessOut;
             var iframe = modal.iframe;
             var iframeW = iframe.contentWindow;
             var frameid = modal.uniqId;
-            iframeW.postMessage(ProcessOut.ProcessOut.namespace + " " + frameid + " check", "*");
+            iframeW.postMessage(JSON.stringify({
+                namespace: ProcessOut.Message.modalNamespace,
+                frameID: frameid,
+                action: "check"
+            }), "*");
             var redirectTimeout = setTimeout(function () {
                 if (typeof (error) === typeof (Function))
                     error(new ProcessOut.Exception("processout-js.modal.unavailable"));
-            }, this.instance.timeout);
-            function receiveMessage(event) {
-                var eventSplit = event.data.split(" ");
-                if (eventSplit[0] != ProcessOut.ProcessOut.namespace)
+            }, this.timeout);
+            window.addEventListener("message", function (event) {
+                var data = ProcessOut.Message.parseEvent(event);
+                if (data.frameID != frameid)
                     return;
-                if (eventSplit[1] != frameid)
+                if (data.namespace != ProcessOut.Message.modalNamespace)
                     return;
-                switch (eventSplit[2]) {
+                switch (data.action) {
                     case "openModal":
                         clearTimeout(redirectTimeout);
                         document.body.style.overflow = "hidden";
@@ -553,21 +893,24 @@ var ProcessOut;
                         };
                         window.dispatchEvent(new Event('resize'));
                         iframe.style.display = "block";
-                        iframeW.postMessage(ProcessOut.ProcessOut.namespace + " " + frameid + " launch", "*");
+                        iframeW.postMessage(JSON.stringify({
+                            namespace: ProcessOut.Message.modalNamespace,
+                            frameID: frameid,
+                            action: "launch"
+                        }), "*");
                         if (typeof (onShow) === typeof (Function))
-                            onShow(this);
+                            onShow(modal);
                         break;
                     case "closeModal":
                         modal.hide();
                         if (typeof (onHide) === typeof (Function))
-                            onHide(this);
+                            onHide(modal);
                         break;
                     default:
                         console.log("Could not read event action from modal.", event.data);
                         break;
                 }
-            }
-            window.addEventListener("message", receiveMessage, false);
+            }, false);
         };
         Modal.prototype.hide = function () {
             this.iframe.style.display = "none";
@@ -581,6 +924,27 @@ var ProcessOut;
         return Modal;
     }());
     ProcessOut.Modal = Modal;
+})(ProcessOut || (ProcessOut = {}));
+var ProcessOut;
+(function (ProcessOut) {
+    var Message = (function () {
+        function Message() {
+        }
+        Message.parseEvent = function (e) {
+            try {
+                var d = JSON.parse(e.data);
+                return d;
+            }
+            catch (e) {
+                return new Message();
+            }
+        };
+        return Message;
+    }());
+    Message.modalNamespace = "processout.modal";
+    Message.checkoutNamespace = "processout.checkout";
+    Message.fieldNamespace = "processout.field";
+    ProcessOut.Message = Message;
 })(ProcessOut || (ProcessOut = {}));
 (function () {
     var processOut = new ProcessOut.ProcessOut("", "");

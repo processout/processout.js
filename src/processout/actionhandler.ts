@@ -36,6 +36,12 @@ module ProcessOut {
         protected canceled = false;
 
         /**
+         * listenerCount is the number of listener that were set
+         * @type {number}
+         */
+        protected static listenerCount = 0;
+
+        /**
          * ActionHandler constructor
          * @param {ProcessOut} instance
          * @param {string} resourceID
@@ -77,11 +83,18 @@ module ProcessOut {
                 }
             });
 
+            ActionHandler.listenerCount++;
+            var cur = ActionHandler.listenerCount;
+
             // To monitor the status, we will use event listeners for messages
             // sent between the checkout and processout.js
             window.addEventListener("message", function(event) {
                 var data = Message.parseEvent(event);
                 if (data.namespace != Message.checkoutNamespace)
+                    return;
+
+                // Not the latest listener anymore
+                if (ActionHandler.listenerCount != cur)
                     return;
 
                 switch (data.action) {
