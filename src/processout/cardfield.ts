@@ -58,7 +58,7 @@ module ProcessOut {
          * Timeout is the number of ms to wait before timing out a field
          * @type {string}
          */
-        protected static timeout = 5000;
+        protected static timeout = 10000;
 
         /** 
          * instance is the current ProcessOut instance

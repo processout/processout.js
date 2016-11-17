@@ -441,7 +441,7 @@ var ProcessOut;
     CardField.expiryMonth = "expiry-month";
     CardField.expiryYear = "expiry-year";
     CardField.cvc = "cvc";
-    CardField.timeout = 5000;
+    CardField.timeout = 10000;
     ProcessOut.CardField = CardField;
 })(ProcessOut || (ProcessOut = {}));
 var ProcessOut;
