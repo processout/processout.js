@@ -85,7 +85,7 @@ module ProcessOut {
                 exps = exp.split("/");
 
                 if (exps.length <= 1)
-                    return null;
+                    return new Expiry(0, 0);
             }
 
             return new Expiry(Number(exps[0]), Number(exps[1]));
