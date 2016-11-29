@@ -341,6 +341,8 @@ module ProcessOut {
          * @return {Exception}
          */
         public static validateNumber(number: string): Exception {
+            number = Card.parseNumber(number); // Remove potential spaces
+
             if (number.length < 14)
                 return new Exception("card.invalid-number");
 
@@ -371,6 +373,8 @@ module ProcessOut {
          * @return {string}
          */
         public static getIIN(number: string): string {
+            number = Card.parseNumber(number); // Remove potential spaces
+
             var l = number.length;
             if (l > 6)
                 l = 6;
@@ -383,6 +387,8 @@ module ProcessOut {
          * @return {string}
          */
         public static getLast4Digits(number: string): string {
+            number = Card.parseNumber(number); // Remove potential spaces
+
             var l = number.length;
             if (l > 4)
                  l = 4;
@@ -410,6 +416,71 @@ module ProcessOut {
                 if (this.value.length >= 7)
                     cvc.focus();
             });
+        }
+
+        /**
+         * getPossibleSchemes returns an array of possible schemes for the
+         * card iin (or start of its IIN).
+         * @param {string}
+         * @return {Array<string>}
+         */
+        public static getPossibleSchemes(iin: string): Array<string> {
+            iin = Card.parseNumber(iin); // Remove potential spaces
+
+            // Schemes is our list of possible schemes with their iin matching
+            // ranges
+            var schemes = {
+                "visa":                 ["4"],
+                "mastercard":           ["2221-2720", "51-55"],
+                "american-express":     ["34", "37"],
+                "union-pay":            ["62"],
+                "diners-club":          ["300-305", "309", "36", "38-39"],
+                "discover":             ["6011", "622126-622925", "644-649", "65"],
+                "interpayment":         ["636"],
+                "instapayment":         ["637-639"],
+                "jcb":                  ["3528-3589"],
+                "maestro":              ["50", "56-69"],
+                "dankort":              ["5019", "4175", "4571"],
+                "nspk mir":             ["2200-2204"],
+                "uatp":                 ["1"],
+                "verve":                ["506099-506198", "650002-650027"],
+                "cardguard ead bg ils": ["5392"]
+            };
+
+            var matches = new Array<string>();
+            for (let scheme in schemes) {
+                var options = schemes[scheme];
+                for (let optionKey in options) {
+                    var option = options[optionKey];
+                    var splitted = option.split("-");
+                    if (splitted.length > 1) {
+                        // This is a range
+                        var start = parseInt(splitted[0]);
+                        var end = parseInt(splitted[1]);
+                        var matched = false;
+                        for (let i = start; i++; i <= end) {
+                            if (iin == i.toString().substring(0, iin.length)) {
+                                matched = true;
+                                break;
+                            }
+                        }
+                        
+                        if (matched) {
+                            matches.push(scheme);
+                            break;
+                        }
+                        continue;
+                    }
+
+                    // Not a range
+                    if (iin == option.substring(0, iin.length)) {
+                        matches.push(scheme);
+                        break;
+                    }
+                }
+            }
+
+            return matches;
         }
     }
 }

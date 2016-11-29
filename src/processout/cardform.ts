@@ -55,7 +55,7 @@ module ProcessOut {
          * @param {callback} error
          */
         public constructor(instance: ProcessOut, form: HTMLElement,
-            success: (form: CardForm) => void, 
+            success: (form: CardForm) => void,
             error:   (err: Exception) => void) {
 
             this.instance = instance;

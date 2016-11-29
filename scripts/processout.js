@@ -352,14 +352,14 @@ var ProcessOut;
                 callback(data.data);
             });
         };
+        CardField.number = "number";
+        CardField.expiry = "expiry";
+        CardField.expiryMonth = "expiry-month";
+        CardField.expiryYear = "expiry-year";
+        CardField.cvc = "cvc";
+        CardField.timeout = 10000;
         return CardField;
     }());
-    CardField.number = "number";
-    CardField.expiry = "expiry";
-    CardField.expiryMonth = "expiry-month";
-    CardField.expiryYear = "expiry-year";
-    CardField.cvc = "cvc";
-    CardField.timeout = 10000;
     ProcessOut.CardField = CardField;
 })(ProcessOut || (ProcessOut = {}));
 var ProcessOut;
@@ -549,9 +549,9 @@ var ProcessOut;
                 return;
             Translator.locale = locale;
         };
+        Translator.locale = "en";
         return Translator;
     }());
-    Translator.locale = "en";
     ProcessOut.Translator = Translator;
 })(ProcessOut || (ProcessOut = {}));
 var ProcessOut;
@@ -559,15 +559,13 @@ var ProcessOut;
     var Exception = (function (_super) {
         __extends(Exception, _super);
         function Exception(code, message) {
-            var _this;
             if (!message)
                 message = ProcessOut.Translator.translate(code);
-            _this = _super.call(this, message) || this;
-            _this.code = code;
-            _this.message = message;
-            _this.name = "ProcessOutException";
-            _this.stack = new Error().stack;
-            return _this;
+            _super.call(this, message);
+            this.code = code;
+            this.message = message;
+            this.name = "ProcessOutException";
+            this.stack = (new Error()).stack;
         }
         return Exception;
     }(Error));
@@ -675,7 +673,7 @@ var ProcessOut;
             if (legacy) {
                 request = new XDomainRequest();
                 for (var k in headers)
-                    data["X-" + k] = headers[k];
+                    data[("X-" + k)] = headers[k];
                 request.open(method, path, true);
             }
             else {
@@ -857,11 +855,11 @@ var ProcessOut;
                 return new Message();
             }
         };
+        Message.modalNamespace = "processout.modal";
+        Message.checkoutNamespace = "processout.checkout";
+        Message.fieldNamespace = "processout.field";
         return Message;
     }());
-    Message.modalNamespace = "processout.modal";
-    Message.checkoutNamespace = "processout.checkout";
-    Message.fieldNamespace = "processout.field";
     ProcessOut.Message = Message;
 })(ProcessOut || (ProcessOut = {}));
 var ProcessOut;
@@ -941,8 +939,8 @@ var ProcessOut;
         ActionHandler.prototype.isCanceled = function () {
             return this.canceled;
         };
+        ActionHandler.listenerCount = 0;
         return ActionHandler;
     }());
-    ActionHandler.listenerCount = 0;
     ProcessOut.ActionHandler = ActionHandler;
 })(ProcessOut || (ProcessOut = {}));
