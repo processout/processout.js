@@ -215,8 +215,8 @@ module ProcessOut {
             };
 
             switch (data.action) {
-            case "updateEvent":
-                this.eventCallback("onupdate", d);
+            case "inputEvent":
+                this.eventCallback("oninput", d);
             case "focusEvent":
                 this.eventCallback("onfocus", d);
             case "blurEvent": // inverse of focus
