@@ -205,6 +205,9 @@ module ProcessOut {
          * @return {void}
          */
         protected handlEvent(data: Message): void {
+            if (!this.eventCallback)
+                return;
+
             var d = {
                 type:    this.type,
                 element: this.el,
