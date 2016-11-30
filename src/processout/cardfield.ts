@@ -89,6 +89,42 @@ module ProcessOut {
          * @var {Callback}
          */
         protected eventCallback?: (name: string, data: any) => void;
+
+        /**
+         * Placeholder of the input
+         * @var {string}
+         */
+        protected placeholder: string;
+
+        /**
+         * Default css style of the input
+         * @var {string}
+         */
+        protected defaultStyle: string;
+
+        /**
+         * Hover css style of the input
+         * @var {string}
+         */
+        protected hoverStyle: string;
+
+        /**
+         * Focus css style of the input
+         * @var {string}
+         */
+        protected focusStyle: string;
+
+        /**
+         * Whether or not the field is currently hovered over on
+         * @var {boolean}
+         */
+        protected hovered: boolean;
+
+        /**
+         * Whether or not the field is currently focused on
+         * @var {boolean}
+         */
+        protected focused: boolean;
         
         /**
          * CardField constructor
@@ -120,6 +156,11 @@ module ProcessOut {
             this.type          = type;
             this.el            = container;
             this.eventCallback = eventCallback;
+
+            this.placeholder  = this.el.getAttribute("data-processout-placeholder");
+            this.defaultStyle = this.el.getAttribute("data-processout-style");
+            this.hoverStyle   = this.el.getAttribute("data-processout-style-hover");
+            this.focusStyle   = this.el.getAttribute("data-processout-style-focus");
 
             this.spawn(success, error);
         }
@@ -174,8 +215,8 @@ module ProcessOut {
                     if (data.action == "alive") {
                         var settings = new CardFieldSettings();
                         settings.type        = t.type;
-                        settings.placeholder = t.el.getAttribute("data-processout-placeholder");
-                        settings.style       = t.el.getAttribute("data-processout-style");
+                        settings.placeholder = t.placeholder;
+                        settings.style       = t.defaultStyle;
 
                         // The field's iframe is available, let's set it up
                         t.iframe.contentWindow.postMessage(JSON.stringify({
@@ -209,6 +250,7 @@ module ProcessOut {
                 return;
 
             var d = {
+                field:   this,
                 type:    this.type,
                 element: this.el,
                 data:    data.data
@@ -217,11 +259,86 @@ module ProcessOut {
             switch (data.action) {
             case "inputEvent":
                 this.eventCallback("oninput", d);
+                break;
+            case "mouseEnterEvent":
+                this.hovered = true;
+                if (!this.focused)
+                    this.setStyle(this.hoverStyle);
+                this.eventCallback("onmouseenter", d);
+                break;
+            case "mouseLeaveEvent":
+                this.hovered = false;
+                if (!this.focused) 
+                    this.setStyle(this.defaultStyle);
+                this.eventCallback("onmouseleave", d);
+                break;
             case "focusEvent":
+                this.focused = true;
+                this.setStyle(this.focusStyle);
                 this.eventCallback("onfocus", d);
+                break;
             case "blurEvent": // inverse of focus
+                this.focused = false;
+                if (!this.hovered)
+                    this.setStyle(this.defaultStyle);
                 this.eventCallback("onblur", d);
+                break;
             }
+        }
+
+        /**
+         * Set the default css style for the input
+         * @param {string} style
+         * @return {void}
+         */
+        public setDefaultStyle(style: string): void {
+            this.defaultStyle = style;
+        }
+
+        /**
+         * Set the hover css style for the input
+         * @param {string} style
+         * @return {void}
+         */
+        public setHoverStyle(style: string): void {
+            this.hoverStyle = style;
+        }
+
+        /**
+         * Set the focus css style for the input
+         * @param {string} style
+         * @return {void}
+         */
+        public setFocusStyle(style: string): void {
+            this.focusStyle = style;
+        }
+
+        /**
+         * Set the new style to be displayed by the input
+         * @param {string} style
+         * @return {void}
+         */
+        public setStyle(style: string): void {
+            this.iframe.contentWindow.postMessage(JSON.stringify({
+                "namespace": Message.fieldNamespace,
+                "projectID": this.instance.getProjectID(),
+                "action":    "setStyle",
+                "data":      style
+            }), "*");
+        }
+
+        /**
+         * Set the new placeholder to be displayed by the input
+         * @param {string} style
+         * @return {void}
+         */
+        public setPlaceholder(placeholder: string): void {
+            this.iframe.contentWindow.postMessage(JSON.stringify({
+                "namespace": Message.fieldNamespace,
+                "projectID": this.instance.getProjectID(),
+                "action":    "setPlaceholder",
+                "data":      placeholder
+            }), "*");
         }
 
         /** 

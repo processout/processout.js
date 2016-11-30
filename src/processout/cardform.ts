@@ -115,6 +115,48 @@ module ProcessOut {
         }
 
         /**
+         * getNumberField returns the field handling the card number
+         * @return {CardField}
+         */
+        public getNumberField(): CardField {
+            return this.number;
+        }
+
+        /**
+         * getCVCField returns the field handling the card CVC code
+         * @return {CardField}
+         */
+        public getCVCField(): CardField {
+            return this.cvc;
+        }
+
+        /** 
+         * getExpiryField returns the field handling the card expiration date
+         * @return {CardField}
+         */
+        public getExpiryField(): CardField {
+            return this.exp;
+        }
+
+        /**
+         * getExpiryMonthField returns the field handling the card expiration 
+         * month
+         * @return {CardField}
+         */
+        public getExpiryMonthField(): CardField {
+            return this.expMonth;
+        }
+
+        /**
+         * getExpiryYearField returns the field handling the card expiration
+         * year
+         * @return {CardField}
+         */
+        public getExpiryYearField(): CardField {
+            return this.expYear;
+        }
+
+        /**
          * Validate validates the card form and calls error if any validation
          * error were found
          * @param {callback} success
