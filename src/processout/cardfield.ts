@@ -88,7 +88,7 @@ module ProcessOut {
          * Callback executed when an event is triggered on an input
          * @var {Callback}
          */
-        protected eventCallback: (name: string, data: any) => void;
+        protected eventCallback?: (name: string, data: any) => void;
         
         /**
          * CardField constructor
@@ -97,10 +97,10 @@ module ProcessOut {
          * @param {HTMLElement} el
          */
         public constructor(instance: ProcessOut, type: string, 
-            container:     HTMLElement, 
-            success:       ()  => void, 
-            error:         (err:  Exception) => void,
-            eventCallback: (name: string, data: any) => void) {
+            container:      HTMLElement, 
+            success:        ()  => void, 
+            error:          (err:  Exception) => void,
+            eventCallback?: (name: string, data: any) => void) {
 
             if (!container) {
                 throw new Exception("processout-js.undefined-field");

@@ -56,9 +56,9 @@ module ProcessOut {
          * @param {callback} event
          */
         public constructor(instance: ProcessOut, form: HTMLElement,
-            success:       (form: CardForm)  => void,
-            error:         (err:  Exception) => void,
-            eventCallback: (name: string, data: any) => void) {
+            success:        (form: CardForm)  => void,
+            error:          (err:  Exception) => void,
+            eventCallback?: (name: string, data: any) => void) {
 
             this.instance = instance;
 
