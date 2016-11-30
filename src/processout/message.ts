@@ -9,9 +9,9 @@ module ProcessOut {
      * Message class used to communicate between iframes
      */
     export class Message {
-        public static modalNamespace = "processout.modal";
+        public static modalNamespace    = "processout.modal";
         public static checkoutNamespace = "processout.checkout";
-        public static fieldNamespace = "processout.field";
+        public static fieldNamespace    = "processout.field";
 
         public messageID: string;
         public frameID:   string;

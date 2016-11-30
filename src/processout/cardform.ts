@@ -44,7 +44,7 @@ module ProcessOut {
          * @var {CardField}
          */
         protected expYear: CardField;
-        
+
         /**
          * CardForm constructor. Expects the card fields for the number, cvc
          * and expiration fields. Both a general expiration field or separate
@@ -53,10 +53,12 @@ module ProcessOut {
          * @param {CardField} number
          * @param {callback} success
          * @param {callback} error
+         * @param {callback} event
          */
         public constructor(instance: ProcessOut, form: HTMLElement,
-            success: (form: CardForm) => void,
-            error:   (err: Exception) => void) {
+            success:       (form: CardForm)  => void,
+            error:         (err:  Exception) => void,
+            eventCallback: (name: string, data: any) => void) {
 
             this.instance = instance;
 
@@ -80,14 +82,14 @@ module ProcessOut {
                 <HTMLInputElement>form.querySelector("[data-processout-input=cc-number]"), 
                 function() {
                     numberReady = true; ev();
-                }, error);
+                }, error, eventCallback);
             var cvcEl = form.querySelector("[data-processout-input=cc-cvc]");
             if (cvcEl) {
                 this.cvc = new CardField(this.instance, CardField.cvc,
                 <HTMLInputElement>cvcEl,
                 function() {
                     cvcReady = true; ev();
-                }, error);
+                }, error, eventCallback);
             } else {
                 cvcReady = true;
             }
@@ -97,18 +99,18 @@ module ProcessOut {
                     <HTMLInputElement>expEl,
                 function() {
                     expMonthReady = true; expYearReady = true; ev();
-                }, error);
+                }, error, eventCallback);
             } else {
                 this.expMonth = new CardField(this.instance, CardField.expiryMonth,
                     <HTMLInputElement>form.querySelector("[data-processout-input=cc-exp-month]"),
                 function() {
                     expMonthReady = true; ev();
-                }, error);
+                }, error, eventCallback);
                 this.expYear = new CardField(this.instance, CardField.expiryYear,
                     <HTMLInputElement>form.querySelector("[data-processout-input=cc-exp-year]"),
                 function() {
                     expYearReady = true; ev();
-                }, error);
+                }, error, eventCallback);
             }
         }
 

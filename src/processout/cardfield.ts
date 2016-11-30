@@ -83,6 +83,12 @@ module ProcessOut {
          * @type {string}
          */
         protected iframe: HTMLIFrameElement;
+
+        /** 
+         * Callback executed when an event is triggered on an input
+         * @var {Callback}
+         */
+        protected eventCallback: (name: string, data: any) => void;
         
         /**
          * CardField constructor
@@ -91,8 +97,10 @@ module ProcessOut {
          * @param {HTMLElement} el
          */
         public constructor(instance: ProcessOut, type: string, 
-            container: HTMLElement, success: () => void, 
-            error: (err: Exception) => void) {
+            container:     HTMLElement, 
+            success:       ()  => void, 
+            error:         (err:  Exception) => void,
+            eventCallback: (name: string, data: any) => void) {
 
             if (!container) {
                 throw new Exception("processout-js.undefined-field");
@@ -108,9 +116,10 @@ module ProcessOut {
                 type != CardField.cvc)
                 throw new Exception("processout-js.invalid-field-type");
 
-            this.instance = instance;
-            this.type     = type;
-            this.el       = container;
+            this.instance      = instance;
+            this.type          = type;
+            this.el            = container;
+            this.eventCallback = eventCallback;
 
             this.spawn(success, error);
         }
@@ -155,6 +164,9 @@ module ProcessOut {
                     if (data.namespace != Message.fieldNamespace)
                         return;
 
+                    // We want to bind our event handler as well
+                    t.handlEvent(data);
+
                     // We will first wait for an alive signal from the iframe.
                     // Once we've received it, we will send a setup action,
                     // and the iframe should reply with a ready state
@@ -184,6 +196,29 @@ module ProcessOut {
             };
 
             this.el.appendChild(this.iframe);
+        }
+
+        /**
+         * handlEvent handles the events coming from the inputs, posted
+         * in the message bus
+         * @param {Message} data
+         * @return {void}
+         */
+        protected handlEvent(data: Message): void {
+            var d = {
+                type:    this.type,
+                element: this.el,
+                data:    data.data
+            };
+
+            switch (data.action) {
+            case "updateEvent":
+                this.eventCallback("onupdate", d);
+            case "focusEvent":
+                this.eventCallback("onfocus", d);
+            case "blurEvent": // inverse of focus
+                this.eventCallback("onblur", d);
+            }
         }
 
         /** 
