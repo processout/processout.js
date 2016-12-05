@@ -312,7 +312,7 @@ module ProcessOut {
          */
         public static formatNumber(number: string): string {
             var v       = number.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
-            var matches = v.match(/\d{4,16}/g);
+            var matches = v.match(/\d{4,19}/g);
             var match   = matches && matches[0] || "";
             var parts   = [];
 
@@ -343,7 +343,7 @@ module ProcessOut {
         public static validateNumber(number: string): Exception {
             number = Card.parseNumber(number); // Remove potential spaces
 
-            if (number.length < 14)
+            if (number.length < 12)
                 return new Exception("card.invalid-number");
 
             if (!Card.luhn(Number(number)))
@@ -431,19 +431,17 @@ module ProcessOut {
             // ranges
             var schemes = {
                 "visa":                 ["4"],
-                "mastercard":           ["2221-2720", "51-55"],
+                "mastercard":           ["22", "23", "24", "25", "26", "27", "51", "52", "53", "54", "55"],
                 "american-express":     ["34", "37"],
                 "union-pay":            ["62"],
-                "diners-club":          ["300-305", "309", "36", "38-39"],
-                "discover":             ["6011", "622126-622925", "644-649", "65"],
+                "diners-club":          ["300", "301", "302", "303", "304", "305", "309", "36", "38", "39"],
+                "discover":             ["6011", "62", "64", "65"],
                 "interpayment":         ["636"],
-                "instapayment":         ["637-639"],
-                "jcb":                  ["3528-3589"],
-                "maestro":              ["50", "56-69"],
+                "instapayment":         ["637", "638", "639"],
+                "jcb":                  ["35"],
+                "maestro":              ["50", "56", "57", "58", "59", "6"],
                 "dankort":              ["5019", "4175", "4571"],
-                "nspk mir":             ["2200-2204"],
                 "uatp":                 ["1"],
-                "verve":                ["506099-506198", "650002-650027"],
                 "cardguard ead bg ils": ["5392"]
             };
 
@@ -452,28 +450,8 @@ module ProcessOut {
                 var options = schemes[scheme];
                 for (let optionKey in options) {
                     var option = options[optionKey];
-                    var splitted = option.split("-");
-                    if (splitted.length > 1) {
-                        // This is a range
-                        var start = parseInt(splitted[0]);
-                        var end = parseInt(splitted[1]);
-                        var matched = false;
-                        for (let i = start; i++; i <= end) {
-                            if (iin == i.toString().substring(0, iin.length)) {
-                                matched = true;
-                                break;
-                            }
-                        }
-                        
-                        if (matched) {
-                            matches.push(scheme);
-                            break;
-                        }
-                        continue;
-                    }
-
-                    // Not a range
-                    if (iin == option.substring(0, iin.length)) {
+                    var l = (iin.length > option.length) ? option.length : iin.length;
+                    if (iin.substring(0, l) == option.substring(0, l)) {
                         matches.push(scheme);
                         break;
                     }

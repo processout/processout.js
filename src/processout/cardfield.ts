@@ -246,9 +246,6 @@ module ProcessOut {
          * @return {void}
          */
         protected handlEvent(data: Message): void {
-            if (!this.eventCallback)
-                return;
-
             var d = {
                 field:   this,
                 type:    this.type,
@@ -258,30 +255,32 @@ module ProcessOut {
 
             switch (data.action) {
             case "inputEvent":
-                this.eventCallback("oninput", d);
+                if (this.eventCallback) this.eventCallback("oninput", d);
                 break;
             case "mouseEnterEvent":
                 this.hovered = true;
                 if (!this.focused)
                     this.setStyle(this.hoverStyle);
-                this.eventCallback("onmouseenter", d);
+                if (this.eventCallback) this.eventCallback("onmouseenter", d);
                 break;
             case "mouseLeaveEvent":
                 this.hovered = false;
                 if (!this.focused) 
                     this.setStyle(this.defaultStyle);
-                this.eventCallback("onmouseleave", d);
+                if (this.eventCallback) this.eventCallback("onmouseleave", d);
                 break;
             case "focusEvent":
                 this.focused = true;
                 this.setStyle(this.focusStyle);
-                this.eventCallback("onfocus", d);
+                if (this.eventCallback) this.eventCallback("onfocus", d);
                 break;
             case "blurEvent": // inverse of focus
                 this.focused = false;
                 if (!this.hovered)
                     this.setStyle(this.defaultStyle);
-                this.eventCallback("onblur", d);
+                else
+                    this.setStyle(this.hoverStyle);
+                if (this.eventCallback) this.eventCallback("onblur", d);
                 break;
             }
         }

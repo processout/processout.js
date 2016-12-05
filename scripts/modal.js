@@ -245,7 +245,7 @@ var ProcessOut;
         };
         Card.formatNumber = function (number) {
             var v = number.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
-            var matches = v.match(/\d{4,16}/g);
+            var matches = v.match(/\d{4,19}/g);
             var match = matches && matches[0] || "";
             var parts = [];
             for (var i = 0; i < match.length; i += 4) {
@@ -259,7 +259,8 @@ var ProcessOut;
             return number.replace(/ /gi, "").replace(/\-/gi, "").replace(/\-/gi, "");
         };
         Card.validateNumber = function (number) {
-            if (number.length < 14)
+            number = Card.parseNumber(number);
+            if (number.length < 12)
                 return new ProcessOut.Exception("card.invalid-number");
             if (!Card.luhn(Number(number)))
                 return new ProcessOut.Exception("card.invalid-number");
@@ -273,12 +274,14 @@ var ProcessOut;
             return null;
         };
         Card.getIIN = function (number) {
+            number = Card.parseNumber(number);
             var l = number.length;
             if (l > 6)
                 l = 6;
             return number.substring(0, l);
         };
         Card.getLast4Digits = function (number) {
+            number = Card.parseNumber(number);
             var l = number.length;
             if (l > 4)
                 l = 4;
@@ -293,6 +296,37 @@ var ProcessOut;
                 if (this.value.length >= 7)
                     cvc.focus();
             });
+        };
+        Card.getPossibleSchemes = function (iin) {
+            iin = Card.parseNumber(iin);
+            var schemes = {
+                "visa": ["4"],
+                "mastercard": ["22", "23", "24", "25", "26", "27", "51", "52", "53", "54", "55"],
+                "american-express": ["34", "37"],
+                "union-pay": ["62"],
+                "diners-club": ["300", "301", "302", "303", "304", "305", "309", "36", "38", "39"],
+                "discover": ["6011", "62", "64", "65"],
+                "interpayment": ["636"],
+                "instapayment": ["637", "638", "639"],
+                "jcb": ["35"],
+                "maestro": ["50", "56", "57", "58", "59", "6"],
+                "dankort": ["5019", "4175", "4571"],
+                "uatp": ["1"],
+                "cardguard ead bg ils": ["5392"]
+            };
+            var matches = new Array();
+            for (var scheme in schemes) {
+                var options = schemes[scheme];
+                for (var optionKey in options) {
+                    var option = options[optionKey];
+                    var l = (iin.length > option.length) ? option.length : iin.length;
+                    if (iin.substring(0, l) == option.substring(0, l)) {
+                        matches.push(scheme);
+                        break;
+                    }
+                }
+            }
+            return matches;
         };
         return Card;
     }());
@@ -313,7 +347,7 @@ var ProcessOut;
     }());
     ProcessOut.CardFieldSettings = CardFieldSettings;
     var CardField = (function () {
-        function CardField(instance, type, container, success, error) {
+        function CardField(instance, type, container, success, error, eventCallback) {
             if (!container) {
                 throw new ProcessOut.Exception("processout-js.undefined-field");
             }
@@ -329,6 +363,11 @@ var ProcessOut;
             this.instance = instance;
             this.type = type;
             this.el = container;
+            this.eventCallback = eventCallback;
+            this.placeholder = this.el.getAttribute("data-processout-placeholder");
+            this.defaultStyle = this.el.getAttribute("data-processout-style");
+            this.hoverStyle = this.el.getAttribute("data-processout-style-hover");
+            this.focusStyle = this.el.getAttribute("data-processout-style-focus");
             this.spawn(success, error);
         }
         CardField.prototype.spawn = function (success, error) {
@@ -357,11 +396,12 @@ var ProcessOut;
                     var data = ProcessOut.Message.parseEvent(event);
                     if (data.namespace != ProcessOut.Message.fieldNamespace)
                         return;
+                    t.handlEvent(data);
                     if (data.action == "alive") {
                         var settings = new CardFieldSettings();
                         settings.type = t.type;
-                        settings.placeholder = t.el.getAttribute("data-processout-placeholder");
-                        settings.style = t.el.getAttribute("data-processout-style");
+                        settings.placeholder = t.placeholder;
+                        settings.style = t.defaultStyle;
                         t.iframe.contentWindow.postMessage(JSON.stringify({
                             "namespace": ProcessOut.Message.fieldNamespace,
                             "projectID": t.instance.getProjectID(),
@@ -377,6 +417,74 @@ var ProcessOut;
                 });
             };
             this.el.appendChild(this.iframe);
+        };
+        CardField.prototype.handlEvent = function (data) {
+            var d = {
+                field: this,
+                type: this.type,
+                element: this.el,
+                data: data.data
+            };
+            switch (data.action) {
+                case "inputEvent":
+                    if (this.eventCallback)
+                        this.eventCallback("oninput", d);
+                    break;
+                case "mouseEnterEvent":
+                    this.hovered = true;
+                    if (!this.focused)
+                        this.setStyle(this.hoverStyle);
+                    if (this.eventCallback)
+                        this.eventCallback("onmouseenter", d);
+                    break;
+                case "mouseLeaveEvent":
+                    this.hovered = false;
+                    if (!this.focused)
+                        this.setStyle(this.defaultStyle);
+                    if (this.eventCallback)
+                        this.eventCallback("onmouseleave", d);
+                    break;
+                case "focusEvent":
+                    this.focused = true;
+                    this.setStyle(this.focusStyle);
+                    if (this.eventCallback)
+                        this.eventCallback("onfocus", d);
+                    break;
+                case "blurEvent":
+                    this.focused = false;
+                    if (!this.hovered)
+                        this.setStyle(this.defaultStyle);
+                    else
+                        this.setStyle(this.hoverStyle);
+                    if (this.eventCallback)
+                        this.eventCallback("onblur", d);
+                    break;
+            }
+        };
+        CardField.prototype.setDefaultStyle = function (style) {
+            this.defaultStyle = style;
+        };
+        CardField.prototype.setHoverStyle = function (style) {
+            this.hoverStyle = style;
+        };
+        CardField.prototype.setFocusStyle = function (style) {
+            this.focusStyle = style;
+        };
+        CardField.prototype.setStyle = function (style) {
+            this.iframe.contentWindow.postMessage(JSON.stringify({
+                "namespace": ProcessOut.Message.fieldNamespace,
+                "projectID": this.instance.getProjectID(),
+                "action": "setStyle",
+                "data": style
+            }), "*");
+        };
+        CardField.prototype.setPlaceholder = function (placeholder) {
+            this.iframe.contentWindow.postMessage(JSON.stringify({
+                "namespace": ProcessOut.Message.fieldNamespace,
+                "projectID": this.instance.getProjectID(),
+                "action": "setPlaceholder",
+                "data": placeholder
+            }), "*");
         };
         CardField.prototype.validate = function (success, error) {
             var id = Math.random().toString();
@@ -447,7 +555,7 @@ var ProcessOut;
 var ProcessOut;
 (function (ProcessOut) {
     var CardForm = (function () {
-        function CardForm(instance, form, success, error) {
+        function CardForm(instance, form, success, error, eventCallback) {
             this.instance = instance;
             var numberReady = false;
             var cvcReady = false;
@@ -463,13 +571,13 @@ var ProcessOut;
             this.number = new ProcessOut.CardField(this.instance, ProcessOut.CardField.number, form.querySelector("[data-processout-input=cc-number]"), function () {
                 numberReady = true;
                 ev();
-            }, error);
+            }, error, eventCallback);
             var cvcEl = form.querySelector("[data-processout-input=cc-cvc]");
             if (cvcEl) {
                 this.cvc = new ProcessOut.CardField(this.instance, ProcessOut.CardField.cvc, cvcEl, function () {
                     cvcReady = true;
                     ev();
-                }, error);
+                }, error, eventCallback);
             }
             else {
                 cvcReady = true;
@@ -480,19 +588,34 @@ var ProcessOut;
                     expMonthReady = true;
                     expYearReady = true;
                     ev();
-                }, error);
+                }, error, eventCallback);
             }
             else {
                 this.expMonth = new ProcessOut.CardField(this.instance, ProcessOut.CardField.expiryMonth, form.querySelector("[data-processout-input=cc-exp-month]"), function () {
                     expMonthReady = true;
                     ev();
-                }, error);
+                }, error, eventCallback);
                 this.expYear = new ProcessOut.CardField(this.instance, ProcessOut.CardField.expiryYear, form.querySelector("[data-processout-input=cc-exp-year]"), function () {
                     expYearReady = true;
                     ev();
-                }, error);
+                }, error, eventCallback);
             }
         }
+        CardForm.prototype.getNumberField = function () {
+            return this.number;
+        };
+        CardForm.prototype.getCVCField = function () {
+            return this.cvc;
+        };
+        CardForm.prototype.getExpiryField = function () {
+            return this.exp;
+        };
+        CardForm.prototype.getExpiryMonthField = function () {
+            return this.expMonth;
+        };
+        CardForm.prototype.getExpiryYearField = function () {
+            return this.expYear;
+        };
         CardForm.prototype.validate = function (success, error) {
             var number = false;
             var cvc = false;
@@ -775,8 +898,8 @@ var ProcessOut;
             };
             request.send(JSON.stringify(data));
         };
-        ProcessOut.prototype.setupForm = function (form, success, error) {
-            return new ProcessOut_1.CardForm(this, form, success, error);
+        ProcessOut.prototype.setupForm = function (form, success, error, eventCallback) {
+            return new ProcessOut_1.CardForm(this, form, success, error, eventCallback);
         };
         ProcessOut.prototype.tokenize = function (val, cardHolder, success, error) {
             if (val instanceof ProcessOut_1.Card)

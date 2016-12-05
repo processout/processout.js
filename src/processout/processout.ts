@@ -260,10 +260,11 @@ module ProcessOut {
          * @return {CardForm}
          */
         public setupForm(form: HTMLElement, 
-            success: (form: CardForm) => void, 
-            error:   (err: Exception) => void): CardForm {
+            success:        (form: CardForm)          => void, 
+            error:          (err: Exception)          => void,
+            eventCallback?: (name: string, data: any) => void): CardForm {
 
-            return new CardForm(this, form, success, error);
+            return new CardForm(this, form, success, error, eventCallback);
         }
 
         /**

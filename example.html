@@ -10,7 +10,10 @@
 	<form action="" method="POST" id="card-form">
 		<div style="border: 1px solid black; height: 1.5em;" 
 			data-processout-input="cc-number" 
-			data-processout-placeholder="4242 4242 4242 4242"></div>
+			data-processout-placeholder="4242 4242 4242 4242"
+			data-processout-style="color: red;"
+			data-processout-style-hover="color: blue;"
+			data-processout-style-focus="color: green;"></div>
 		<div style="border: 1px solid black; height: 1.5em;" 
 			data-processout-input="cc-exp" 
 			data-processout-placeholder="mm / yy"></div>
@@ -41,6 +44,8 @@
 				});
 			}, function(err) {
 				alert(err);
+			}, function(e, data) {
+				console.log(e, data);
 			});
 		});
 	</script>
