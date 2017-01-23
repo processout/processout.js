@@ -207,11 +207,13 @@ var ProcessOut;
         };
         Card.autoFormatFields = function (number, expiry, cvc) {
             number.addEventListener("input", function (e) {
-                this.value = Card.formatNumber(this.value);
+                var field = this;
+                field.value = Card.formatNumber(field.value);
             });
             expiry.addEventListener("input", function (e) {
-                this.value = Expiry.format(this.value);
-                if (this.value.length >= 7)
+                var field = this;
+                field.value = Expiry.format(field.value);
+                if (field.value.length >= 7)
                     cvc.focus();
             });
         };
@@ -267,10 +269,10 @@ var ProcessOut;
     var CardField = (function () {
         function CardField(instance, type, container, success, error, eventCallback) {
             if (!container) {
-                throw new ProcessOut.Exception("processout-js.undefined-field");
+                throw new ProcessOut.Exception("processout-js.undefined-field", "The card field for the " + type + " does not exist in the given container.");
             }
             if (container instanceof HTMLInputElement) {
-                throw new ProcessOut.Exception("processout-js.invalid-field");
+                throw new ProcessOut.Exception("processout-js.invalid-field", "The card field for the " + type + " must be an input field.");
             }
             if (type != CardField.number &&
                 type != CardField.expiry &&
@@ -473,8 +475,10 @@ var ProcessOut;
 var ProcessOut;
 (function (ProcessOut) {
     var CardForm = (function () {
-        function CardForm(instance, form, success, error, eventCallback) {
+        function CardForm(instance) {
             this.instance = instance;
+        }
+        CardForm.prototype.setup = function (form, success, error, eventCallback) {
             var numberReady = false;
             var cvcReady = false;
             var expMonthReady = false;
@@ -518,7 +522,16 @@ var ProcessOut;
                     ev();
                 }, error, eventCallback);
             }
-        }
+            return this;
+        };
+        CardForm.prototype.setupCVC = function (form, success, error, eventCallback) {
+            this.refreshCVC = true;
+            var t = this;
+            this.cvc = new ProcessOut.CardField(this.instance, ProcessOut.CardField.cvc, form.querySelector("[data-processout-input=cc-cvc]"), function () {
+                success(t);
+            }, error, eventCallback);
+            return this;
+        };
         CardForm.prototype.getNumberField = function () {
             return this.number;
         };
@@ -535,6 +548,12 @@ var ProcessOut;
             return this.expYear;
         };
         CardForm.prototype.validate = function (success, error) {
+            if (this.refreshCVC) {
+                this.cvc.validate(function () {
+                    success();
+                }, error);
+                return;
+            }
             var number = false;
             var cvc = false;
             var expMonth = false;
@@ -628,6 +647,8 @@ var ProcessOut;
             "default": "An error occured.",
             "card.declined": "The credit card has been declined.",
             "card.expired": "The given card has expired.",
+            "card.duplicate": "The payment could not be completed. Please try again later.",
+            "card.network-failed": "The payment could not be completed. Please try again later.",
             "card.invalid": "The given card is invalid.",
             "card.invalid-number": "The card number is invalid.",
             "card.invalid-date": "The card expiry date is invalid.",
@@ -635,8 +656,11 @@ var ProcessOut;
             "card.invalid-year": "The card expiry year is invalid.",
             "card.invalid-cvc": "The card CVC is invalid.",
             "card.invalid-zip": "The card's ZIP code is valid.",
+            "card.failed-cvc-and-avs": "The CVC and AVS code were invalid.",
             "card.bad-track-data": "The card could not be verified. Maybe your CVC is invalid?",
             "card.not-registered": "The card is not registered.",
+            "card.issuer-not-found": "The card issuer could not be found. Please try another card.",
+            "card.possible-fraud": "The payment could not be completed. Please contact your bank for further help.",
             "card.contact-bank": "The payment could not be completed. Please contact your bank for further help.",
             "card.not-authorized": "The payment could not be authorized using the provided card.",
             "card.do-not-honor": "The payment could not be completed. Please contact your bank for further help.",
@@ -827,7 +851,7 @@ var ProcessOut;
             request.send(JSON.stringify(data));
         };
         ProcessOut.prototype.setupForm = function (form, success, error, eventCallback) {
-            return new ProcessOut_1.CardForm(this, form, success, error, eventCallback);
+            return new ProcessOut_1.CardForm(this).setup(form, success, error, eventCallback);
         };
         ProcessOut.prototype.tokenize = function (val, cardHolder, success, error) {
             if (val instanceof ProcessOut_1.Card)
@@ -861,6 +885,47 @@ var ProcessOut;
                 "exp_year": expYear,
                 "cvc2": cvc,
                 "name": name
+            }, function (data, code, req, e) {
+                if (!data.success) {
+                    error(new ProcessOut_1.Exception("card.invalid"));
+                    return;
+                }
+                success(data.card.id);
+            }, function (code, req, e) {
+                error(new ProcessOut_1.Exception("card.invalid"));
+            });
+        };
+        ProcessOut.prototype.setupFormCVC = function (form, success, error, eventCallback) {
+            return new ProcessOut_1.CardForm(this).setupCVC(form, success, error, eventCallback);
+        };
+        ProcessOut.prototype.refreshCVC = function (cardUID, val, success, error) {
+            if (val instanceof ProcessOut_1.CardForm)
+                return this.refreshCVCForm(cardUID, val, success, error);
+            return this.refreshCVCString(cardUID, val, success, error);
+        };
+        ProcessOut.prototype.refreshCVCForm = function (cardUID, form, success, error) {
+            var t = this;
+            form.validate(function () {
+                form.getCVCField().value(function (val) {
+                    t.refreshCVCEncrypted(cardUID, val.cvc, success, error);
+                }, function (err) {
+                    error(err);
+                });
+            }, error);
+        };
+        ProcessOut.prototype.refreshCVCString = function (cardUID, cvc, success, error) {
+            var err = ProcessOut_1.Card.validateCVC(cvc);
+            if (err) {
+                error(err);
+                return;
+            }
+            this.refreshCVCEncrypted(cardUID, this.encrypt(cvc), success, error);
+        };
+        ProcessOut.prototype.refreshCVCEncrypted = function (cardUID, cvc, success, error) {
+            if (!this.projectID)
+                throw new ProcessOut_1.Exception("default", "No project ID was set when instanciating ProcessOut.js. To refresh a card CVC, a project ID must be set.");
+            this.apiRequest("put", "cards/" + cardUID, {
+                "cvc": cvc
             }, function (data, code, req, e) {
                 if (!data.success) {
                     error(new ProcessOut_1.Exception("card.invalid"));
