@@ -139,10 +139,10 @@ module ProcessOut {
             eventCallback?: (name: string, data: any) => void) {
 
             if (!container) {
-                throw new Exception("processout-js.undefined-field");
+                throw new Exception("processout-js.undefined-field", `The card field for the ${type} does not exist in the given container.`);
             }
             if (container instanceof HTMLInputElement) {
-                throw new Exception("processout-js.invalid-field");
+                throw new Exception("processout-js.invalid-field", `The card field for the ${type} must be an input field.`);
             }
 
             if (type != CardField.number &&
@@ -412,7 +412,7 @@ module ProcessOut {
                 setTimeout(function(){
                     error(new Exception("processout-js.field.unavailable"));
                 }, CardField.timeout);
-            
+
             var t = this;
             window.addEventListener("message", function (event) {
                 if (event.source != t.iframe.contentWindow)

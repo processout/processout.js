@@ -408,12 +408,14 @@ module ProcessOut {
             expiry: HTMLInputElement, cvc: HTMLInputElement): void {
             
             number.addEventListener("input", function(e) {
-                this.value = Card.formatNumber(this.value);
+                var field = <HTMLInputElement>this;
+                field.value = Card.formatNumber(field.value);
             });
             expiry.addEventListener("input", function(e) {
-                this.value = Expiry.format(this.value);
+                var field = <HTMLInputElement>this;
+                field.value = Expiry.format(field.value);
 
-                if (this.value.length >= 7)
+                if (field.value.length >= 7)
                     cvc.focus();
             });
         }

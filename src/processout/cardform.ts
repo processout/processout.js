@@ -16,6 +16,12 @@ module ProcessOut {
         protected instance: ProcessOut;
 
         /**
+         * Whether or not the form is only used to refresh a card CVC
+         * @var {boolean}
+         */
+        protected refreshCVC: boolean;
+
+        /**
          * Number card field
          * @var {CardField}
          */
@@ -46,21 +52,27 @@ module ProcessOut {
         protected expYear: CardField;
 
         /**
-         * CardForm constructor. Expects the card fields for the number, cvc
-         * and expiration fields. Both a general expiration field or separate
-         * fields for month and year can be provided
+         * CardForm constructor.
          * @param {ProcessOut} instance
-         * @param {CardField} number
+         */
+        public constructor(instance: ProcessOut) {
+            this.instance = instance;
+        }
+
+        /**
+         * Setup prepares the generic card form. Expects the card fields 
+         * for the number, cvc and expiration fields. Both a general expiration 
+         * field or separate fields for month and year can be provided
+         * @param {HTMLElement} form
          * @param {callback} success
          * @param {callback} error
          * @param {callback} event
+         * @return {CardForm}
          */
-        public constructor(instance: ProcessOut, form: HTMLElement,
+        public setup(form: HTMLElement,
             success:        (form: CardForm)  => void,
             error:          (err:  Exception) => void,
-            eventCallback?: (name: string, data: any) => void) {
-
-            this.instance = instance;
+            eventCallback?: (name: string, data: any) => void): CardForm {
 
             var numberReady   = false;
             var cvcReady      = false;
@@ -112,6 +124,35 @@ module ProcessOut {
                     expYearReady = true; ev();
                 }, error, eventCallback);
             }
+
+            return this;
+        }
+
+        /**
+         * Setup prepares the generic card form. Expects the card fields 
+         * for the number, cvc and expiration fields. Both a general expiration 
+         * field or separate fields for month and year can be provided
+         * @param {HTMLElement} form
+         * @param {callback} success
+         * @param {callback} error
+         * @param {callback} event
+         * @return {CardForm}
+         */
+        public setupCVC(form: HTMLElement,
+            success:        (form: CardForm)  => void,
+            error:          (err:  Exception) => void,
+            eventCallback?: (name: string, data: any) => void): CardForm {
+
+            this.refreshCVC = true;
+
+            var t = this;
+            this.cvc = new CardField(this.instance, CardField.cvc,
+                <HTMLInputElement>form.querySelector("[data-processout-input=cc-cvc]"), 
+                function() {
+                    success(t);
+                }, error, eventCallback);
+
+            return this;
         }
 
         /**
@@ -165,6 +206,15 @@ module ProcessOut {
          */
         public validate(success: ()               => void,
                         error:   (err: Exception) => void): void {
+
+            if (this.refreshCVC) {
+                // We only want to check the CVC field
+                this.cvc.validate(function() {
+                    success();
+                }, error);
+
+                return;
+            }
 
             // Let's setup the value booleans
             var number   = false;

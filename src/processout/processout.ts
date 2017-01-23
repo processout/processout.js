@@ -264,7 +264,7 @@ module ProcessOut {
             error:          (err: Exception)          => void,
             eventCallback?: (name: string, data: any) => void): CardForm {
 
-            return new CardForm(this, form, success, error, eventCallback);
+            return new CardForm(this).setup(form, success, error, eventCallback);
         }
 
         /**
@@ -364,6 +364,122 @@ module ProcessOut {
                 "exp_year":  expYear,
                 "cvc2":      cvc,
                 "name":      name
+            }, function(data: any, code: number, 
+                req: XMLHttpRequest, e: Event): void {
+
+                if (!data.success) {
+                    error(new Exception("card.invalid"));
+                    return
+                }
+
+                success(data.card.id);
+            }, function(code: number, req: XMLHttpRequest, e: Event): void {
+                error(new Exception("card.invalid"));
+            });
+        }
+
+        /**
+         * setupFormCVC setups a new form and embed the CVC field
+         * to it, and returns the created card form
+         * @param {HTMLElement} form
+         * @param {callback} success
+         * @param {callback} error
+         * @param {callback?} eventCallback
+         * @return {CardForm}
+         */
+        public setupFormCVC(form: HTMLElement, 
+            success:        (form: CardForm)          => void, 
+            error:          (err: Exception)          => void,
+            eventCallback?: (name: string, data: any) => void): CardForm {
+
+            return new CardForm(this).setupCVC(form, success, error, 
+                eventCallback);
+        }
+
+        /**
+         * RefreshCVC updates the given card CVC code so that it can be used
+         * to process the next payment.
+         * A CardForm may also be provided instead of a string if the CVC
+         * field is hosted by ProcessOut
+         * @param  {string} cardUID
+         * @param  {string | CardForm} card
+         * @param  {callback} success
+         * @param  {callback} error
+         * @return {void}
+         */
+        public refreshCVC(cardUID: string, val: string | CardForm,
+            success: (token: string)  => void,
+            error:   (err: Exception) => void): void {
+
+            if (val instanceof CardForm)
+                return this.refreshCVCForm(cardUID, <CardForm>val, 
+                    success, error);
+
+            return this.refreshCVCString(cardUID, <string>val, success, error);
+        }
+
+        /**
+         * refreshCVCForm refreshes the card CVC using the given form to 
+         * fetch the CVC value
+         * @param  {string}   cardUID
+         * @param  {CardForm} form
+         * @param  {callback} success
+         * @param  {callback} error
+         * @return {void}
+         */
+        public refreshCVCForm(cardUID: string, form: CardForm,
+            success: (token: string)  => void,
+            error:   (err: Exception) => void): void {
+
+            var t = this;
+            form.validate(function() {
+                form.getCVCField().value(function(val: CardFieldValue): void {
+                    t.refreshCVCEncrypted(cardUID, val.cvc, success, error);
+                }, function(err: Exception) {
+                    error(err)
+                });
+            }, error);
+        }
+
+        /**
+         * refreshCVCString refreshes the given card CVC
+         * @param  {string}   cardUID
+         * @param  {string}   cvc
+         * @param  {callback} success
+         * @param  {callback} error
+         * @return {void}
+         */
+        public refreshCVCString(cardUID: string, cvc: string,
+            success: (token: string) => void,
+            error:   (err: Exception) => void): void {
+
+            // Let's first validate the CVC
+            var err = Card.validateCVC(cvc);
+            if (err) {
+                error(err);
+                return;
+            }
+
+            this.refreshCVCEncrypted(cardUID, this.encrypt(cvc), success, error);
+        }
+
+        /**
+         * refreshCVCEncrypted refreshes the card CVC using the given encrypted
+         * CVC code
+         * @param {string} cardUID
+         * @param {string} cvc
+         * @param {callback} success
+         * @param {callback} error
+         */
+        protected refreshCVCEncrypted(cardUID: string, cvc: string,
+            success: (token: string) => void,
+            error:   (err: Exception) => void): void {
+
+            if (!this.projectID)
+                throw new Exception("default", "No project ID was set when instanciating ProcessOut.js. To refresh a card CVC, a project ID must be set.");
+
+            this.apiRequest("put", `cards/${cardUID}`, {
+                "cvc": cvc
             }, function(data: any, code: number, 
                 req: XMLHttpRequest, e: Event): void {
 
