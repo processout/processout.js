@@ -58,6 +58,7 @@ module ProcessOut {
 
             var t         = this;
             var newWindow = window.open(url, '_blank');
+            var flowDone  = false;
             if (!newWindow) {
                 error(new Exception("customer.popup-blocked"));
                 window.focus();
@@ -66,6 +67,7 @@ module ProcessOut {
 
             // We now want to monitor the payment page
             var timer = setInterval(function() {
+                if (flowDone) return;
                 if (t.isCanceled()) {
                     clearInterval(timer);
                     newWindow.close();
@@ -99,6 +101,7 @@ module ProcessOut {
 
                 switch (data.action) {
                 case "success":
+                    flowDone = true;
                     clearInterval(timer);
                     newWindow.close();
 
@@ -108,6 +111,7 @@ module ProcessOut {
                     break;
 
                 case "canceled":
+                    flowDone = true;
                     clearInterval(timer);
                     newWindow.close();
 
@@ -117,6 +121,7 @@ module ProcessOut {
 
                 case "none":
                     // There's nothing to be done on the page
+                    flowDone = true;
                     clearInterval(timer);
                     newWindow.close();
 
@@ -127,6 +132,7 @@ module ProcessOut {
                 default:
                     // By default we shouldn't have received something with
                     // a correct namespace by unknown action
+                    flowDone = true;
                     clearInterval(timer);
                     newWindow.close();
 
