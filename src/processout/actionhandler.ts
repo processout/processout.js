@@ -58,7 +58,6 @@ module ProcessOut {
 
             var t         = this;
             var newWindow = window.open(url, '_blank');
-            var flowDone  = false;
             if (!newWindow) {
                 error(new Exception("customer.popup-blocked"));
                 window.focus();
@@ -67,9 +66,10 @@ module ProcessOut {
 
             // We now want to monitor the payment page
             var timer = setInterval(function() {
-                if (flowDone) return;
+                if (!timer) return;
+
                 if (t.isCanceled()) {
-                    clearInterval(timer);
+                    clearInterval(timer); timer = null;
                     newWindow.close();
                     error(new Exception("customer.canceled"));
                     window.focus();
@@ -78,7 +78,7 @@ module ProcessOut {
 
                 if (!newWindow || newWindow.closed) {
                     // The payment window was closed
-                    clearInterval(timer);
+                    clearInterval(timer); timer = null;
                     error(new Exception("customer.canceled"));
                     window.focus();
                     return;
@@ -96,13 +96,15 @@ module ProcessOut {
                     return;
 
                 // Not the latest listener anymore
-                if (ActionHandler.listenerCount != cur)
+                if (ActionHandler.listenerCount != cur) {
+                    // Reset the timer if it hasn't been done already
+                    if (timer) { clearInterval(timer); timer = null; }
                     return;
+                }
 
                 switch (data.action) {
                 case "success":
-                    flowDone = true;
-                    clearInterval(timer);
+                    if (timer) { clearInterval(timer); timer = null; }
                     newWindow.close();
 
                     // The checkout page sent us the token we want
@@ -111,8 +113,7 @@ module ProcessOut {
                     break;
 
                 case "canceled":
-                    flowDone = true;
-                    clearInterval(timer);
+                    if (timer) { clearInterval(timer); timer = null; }
                     newWindow.close();
 
                     error(new Exception("customer.canceled"));
@@ -121,8 +122,7 @@ module ProcessOut {
 
                 case "none":
                     // There's nothing to be done on the page
-                    flowDone = true;
-                    clearInterval(timer);
+                    if (timer) { clearInterval(timer); timer = null; }
                     newWindow.close();
 
                     error(new Exception("processout-js.no-customer-action"));
@@ -132,8 +132,7 @@ module ProcessOut {
                 default:
                     // By default we shouldn't have received something with
                     // a correct namespace by unknown action
-                    flowDone = true;
-                    clearInterval(timer);
+                    if (timer) { clearInterval(timer); timer = null; }
                     newWindow.close();
 
                     error(new Exception("default"));

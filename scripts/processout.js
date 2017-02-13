@@ -672,6 +672,7 @@ var ProcessOut;
             "customer.canceled": "The customer canceled the payment.",
             "customer.popup-blocked": "Please allow pop-ups to continue with your payment flow.",
             "payment.declined": "The payment has been declined.",
+            "payment.pending": "The payment is currently pending, please wait a few minutes for it to fully go through.",
             "request.validation.error": "The provided information is invalid or missing.",
             "request.validation.invalid-country": "The provided country is invalid.",
             "request.validation.missing-name": "A name must be provided.",
@@ -1077,8 +1078,11 @@ var ProcessOut;
                 return;
             }
             var timer = setInterval(function () {
+                if (!timer)
+                    return;
                 if (t.isCanceled()) {
                     clearInterval(timer);
+                    timer = null;
                     newWindow.close();
                     error(new ProcessOut.Exception("customer.canceled"));
                     window.focus();
@@ -1086,6 +1090,7 @@ var ProcessOut;
                 }
                 if (!newWindow || newWindow.closed) {
                     clearInterval(timer);
+                    timer = null;
                     error(new ProcessOut.Exception("customer.canceled"));
                     window.focus();
                     return;
@@ -1097,29 +1102,46 @@ var ProcessOut;
                 var data = ProcessOut.Message.parseEvent(event);
                 if (data.namespace != ProcessOut.Message.checkoutNamespace)
                     return;
-                if (ActionHandler.listenerCount != cur)
+                if (ActionHandler.listenerCount != cur) {
+                    if (timer) {
+                        clearInterval(timer);
+                        timer = null;
+                    }
                     return;
+                }
                 switch (data.action) {
                     case "success":
-                        clearInterval(timer);
+                        if (timer) {
+                            clearInterval(timer);
+                            timer = null;
+                        }
                         newWindow.close();
                         success(data.data);
                         window.focus();
                         break;
                     case "canceled":
-                        clearInterval(timer);
+                        if (timer) {
+                            clearInterval(timer);
+                            timer = null;
+                        }
                         newWindow.close();
                         error(new ProcessOut.Exception("customer.canceled"));
                         window.focus();
                         break;
                     case "none":
-                        clearInterval(timer);
+                        if (timer) {
+                            clearInterval(timer);
+                            timer = null;
+                        }
                         newWindow.close();
                         error(new ProcessOut.Exception("processout-js.no-customer-action"));
                         window.focus();
                         break;
                     default:
-                        clearInterval(timer);
+                        if (timer) {
+                            clearInterval(timer);
+                            timer = null;
+                        }
                         newWindow.close();
                         error(new ProcessOut.Exception("default"));
                         window.focus();

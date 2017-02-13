@@ -35,6 +35,7 @@ module ProcessOut {
             "customer.canceled":       "The customer canceled the payment.",
             "customer.popup-blocked":  "Please allow pop-ups to continue with your payment flow.",
             "payment.declined":        "The payment has been declined.",
+            "payment.pending":         "The payment is currently pending, please wait a few minutes for it to fully go through.",
 
             "request.validation.error":           "The provided information is invalid or missing.",
             "request.validation.invalid-country": "The provided country is invalid.",
