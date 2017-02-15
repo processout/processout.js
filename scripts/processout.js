@@ -291,9 +291,10 @@ var ProcessOut;
             this.spawn(success, error);
         }
         CardField.prototype.spawn = function (success, error) {
+            this.uid = "#" + Math.random().toString(36).substring(7);
             this.iframe = document.createElement('iframe');
             this.iframe.className = "processout-field-cc-iframe";
-            this.iframe.setAttribute("src", this.instance.endpoint("checkout", "vault/field"));
+            this.iframe.setAttribute("src", this.instance.endpoint("checkout", "vault/field" + this.uid));
             this.iframe.setAttribute("style", "background: none; height: 100%; width: 100%;");
             this.iframe.setAttribute("frameborder", "0");
             this.iframe.setAttribute("allowtransparency", "1");
@@ -305,37 +306,33 @@ var ProcessOut;
                 if (typeof (error) === typeof (Function))
                     error(new ProcessOut.Exception("processout-js.field.unavailable"));
             }, CardField.timeout);
-            this.iframe.onload = function () {
+            window.addEventListener("message", function (event) {
                 if (errored)
                     return;
-                window.addEventListener("message", function (event) {
-                    if (event.source != t.iframe.contentWindow)
-                        return;
-                    if (errored)
-                        return;
-                    var data = ProcessOut.Message.parseEvent(event);
-                    if (data.namespace != ProcessOut.Message.fieldNamespace)
-                        return;
-                    t.handlEvent(data);
-                    if (data.action == "alive") {
-                        var settings = new CardFieldSettings();
-                        settings.type = t.type;
-                        settings.placeholder = t.placeholder;
-                        settings.style = t.defaultStyle;
-                        t.iframe.contentWindow.postMessage(JSON.stringify({
-                            "namespace": ProcessOut.Message.fieldNamespace,
-                            "projectID": t.instance.getProjectID(),
-                            "action": "setup",
-                            "data": settings
-                        }), "*");
-                    }
-                    if (data.action == "ready") {
-                        t.iframe.style.display = "block";
-                        clearTimeout(iframeError);
-                        success();
-                    }
-                });
-            };
+                var data = ProcessOut.Message.parseEvent(event);
+                if (data.frameID != t.uid)
+                    return;
+                if (data.namespace != ProcessOut.Message.fieldNamespace)
+                    return;
+                t.handlEvent(data);
+                if (data.action == "alive") {
+                    var settings = new CardFieldSettings();
+                    settings.type = t.type;
+                    settings.placeholder = t.placeholder;
+                    settings.style = t.defaultStyle;
+                    t.iframe.contentWindow.postMessage(JSON.stringify({
+                        "namespace": ProcessOut.Message.fieldNamespace,
+                        "projectID": t.instance.getProjectID(),
+                        "action": "setup",
+                        "data": settings
+                    }), "*");
+                }
+                if (data.action == "ready") {
+                    t.iframe.style.display = "block";
+                    clearTimeout(iframeError);
+                    success();
+                }
+            });
             this.el.appendChild(this.iframe);
         };
         CardField.prototype.handlEvent = function (data) {
@@ -419,9 +416,9 @@ var ProcessOut;
             }, CardField.timeout);
             var t = this;
             window.addEventListener("message", function (event) {
-                if (event.source != t.iframe.contentWindow)
-                    return;
                 var data = ProcessOut.Message.parseEvent(event);
+                if (data.frameID != t.uid)
+                    return;
                 if (data.namespace != ProcessOut.Message.fieldNamespace)
                     return;
                 if (data.messageID != id)
@@ -449,9 +446,9 @@ var ProcessOut;
             }, CardField.timeout);
             var t = this;
             window.addEventListener("message", function (event) {
-                if (event.source != t.iframe.contentWindow)
-                    return;
                 var data = ProcessOut.Message.parseEvent(event);
+                if (data.frameID != t.uid)
+                    return;
                 if (data.namespace != ProcessOut.Message.fieldNamespace)
                     return;
                 if (data.messageID != id)

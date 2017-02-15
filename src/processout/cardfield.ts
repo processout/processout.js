@@ -26,63 +26,69 @@ module ProcessOut {
     export class CardField {
         /** 
          * Number is the credit card field type number
-         * @type {string}
+         * @var {string}
          */
         public static number = "number";
 
         /** 
          * Expiry is the credit card field type expiration date
-         * @type {string}
+         * @var {string}
          */
         public static expiry = "expiry";
 
         /** 
          * ExpiryMonth is the credit card field type expiration month
-         * @type {string}
+         * @var {string}
          */
         public static expiryMonth = "expiry-month";
 
         /** 
          * ExpiryYear is the credit card field type expiration year
-         * @type {string}
+         * @var {string}
          */
         public static expiryYear = "expiry-year";
 
         /** 
          * CVC is the credit card field type cvc
-         * @type {string}
+         * @var {string}
          */
         public static cvc = "cvc";
 
         /** 
          * Timeout is the number of ms to wait before timing out a field
-         * @type {string}
+         * @var {string}
          */
         protected static timeout = 10000;
 
         /** 
          * instance is the current ProcessOut instance
-         * @type {ProcessOut}
+         * @var {ProcessOut}
          */
         protected instance: ProcessOut;
 
         /** 
          * Type is the type of the field
-         * @type {string}
+         * @var {string}
          */
         protected type: string;
 
         /** 
          * El is the parent of the iframe used to embed the field
-         * @type {string}
+         * @var {string}
          */
         protected el: HTMLElement;
 
         /** 
          * Iframe is the iframe embedding the field
-         * @type {string}
+         * @var {string}
          */
         protected iframe: HTMLIFrameElement;
+
+        /**
+         * uid is the uid of the iframe
+         * @var {string}
+         */
+        protected uid: string
 
         /** 
          * Callback executed when an event is triggered on an input
@@ -173,9 +179,11 @@ module ProcessOut {
          */
         protected spawn(success: ()                 => void, 
                         error:   (err:   Exception) => void): void {
+            
+            this.uid = `#${Math.random().toString(36).substring(7)}`;
             this.iframe = document.createElement('iframe');
             this.iframe.className = "processout-field-cc-iframe";
-            this.iframe.setAttribute("src", this.instance.endpoint("checkout", "vault/field"));
+            this.iframe.setAttribute("src", this.instance.endpoint("checkout", `vault/field${this.uid}`));
             this.iframe.setAttribute("style", "background: none; height: 100%; width: 100%;");
             this.iframe.setAttribute("frameborder", "0");
             this.iframe.setAttribute("allowtransparency", "1");
@@ -189,52 +197,47 @@ module ProcessOut {
                 if (typeof(error) === typeof(Function))
                     error(new Exception("processout-js.field.unavailable"));
             }, CardField.timeout);
-            this.iframe.onload = function() {
+
+            // Hook the ok message
+            window.addEventListener("message", function (event) {
                 if (errored)
                     return;
 
-                // Hook the ok message
-                window.addEventListener("message", function (event) {
-                    if (event.source != t.iframe.contentWindow)
-                        return;
+                var data = Message.parseEvent(event);
+                if (data.frameID != t.uid)
+                    return;
+                if (data.namespace != Message.fieldNamespace)
+                    return;
 
-                    if (errored)
-                        return;
+                // We want to bind our event handler as well
+                t.handlEvent(data);
 
-                    var data = Message.parseEvent(event);
-                    if (data.namespace != Message.fieldNamespace)
-                        return;
+                // We will first wait for an alive signal from the iframe.
+                // Once we've received it, we will send a setup action,
+                // and the iframe should reply with a ready state
 
-                    // We want to bind our event handler as well
-                    t.handlEvent(data);
+                if (data.action == "alive") {
+                    var settings = new CardFieldSettings();
+                    settings.type        = t.type;
+                    settings.placeholder = t.placeholder;
+                    settings.style       = t.defaultStyle;
 
-                    // We will first wait for an alive signal from the iframe.
-                    // Once we've received it, we will send a setup action,
-                    // and the iframe should reply with a ready state
+                    // The field's iframe is available, let's set it up
+                    t.iframe.contentWindow.postMessage(JSON.stringify({
+                        "namespace": Message.fieldNamespace,
+                        "projectID": t.instance.getProjectID(),
+                        "action":    "setup",
+                        "data":      settings
+                    }), "*");
+                } 
 
-                    if (data.action == "alive") {
-                        var settings = new CardFieldSettings();
-                        settings.type        = t.type;
-                        settings.placeholder = t.placeholder;
-                        settings.style       = t.defaultStyle;
-
-                        // The field's iframe is available, let's set it up
-                        t.iframe.contentWindow.postMessage(JSON.stringify({
-                            "namespace": Message.fieldNamespace,
-                            "projectID": t.instance.getProjectID(),
-                            "action":    "setup",
-                            "data":      settings
-                        }), "*");
-                    } 
-
-                    if (data.action == "ready") {
-                        // It's now ready
-                        t.iframe.style.display = "block";
-                        clearTimeout(iframeError);
-                        success();
-                    }                    
-                });
-            };
+                if (data.action == "ready") {
+                    // It's now ready
+                    t.iframe.style.display = "block";
+                    clearTimeout(iframeError);
+                    success();
+                }                    
+            });
 
             this.el.appendChild(this.iframe);
         }
@@ -366,10 +369,9 @@ module ProcessOut {
             
             var t = this;
             window.addEventListener("message", function (event) {
-                if (event.source != t.iframe.contentWindow)
-                    return;
-
                 var data = Message.parseEvent(event);
+                if (data.frameID != t.uid)
+                    return;
                 if (data.namespace != Message.fieldNamespace)
                     return;
                 if (data.messageID != id)
@@ -415,10 +417,9 @@ module ProcessOut {
 
             var t = this;
             window.addEventListener("message", function (event) {
-                if (event.source != t.iframe.contentWindow)
-                    return;
-
                 var data = Message.parseEvent(event);
+                if (data.frameID != t.uid)
+                    return;
                 if (data.namespace != Message.fieldNamespace)
                     return;
                 if (data.messageID != id)
