@@ -775,8 +775,10 @@ var ProcessOut;
         ProcessOut.prototype.fetchPublicKey = function () {
             if (!this.projectID)
                 return;
+            this.publicKey = "";
             var t = this;
             var err = function () {
+                t.publicKey = null;
                 throw new ProcessOut_1.Exception("default", "Could not fetch the project public key. Are you sure " + t.projectID + " is the correct project ID?");
             };
             this.apiRequest("post", this.endpoint("checkout", "vault"), {}, function (data, code, req, e) {
@@ -849,9 +851,13 @@ var ProcessOut;
             request.send(JSON.stringify(data));
         };
         ProcessOut.prototype.setupForm = function (form, success, error, eventCallback) {
+            if (!this.projectID)
+                throw new ProcessOut_1.Exception("default", "You must instanciate ProcessOut.js with a valid project ID in order to use ProcessOut's hosted forms.");
             return new ProcessOut_1.CardForm(this).setup(form, success, error, eventCallback);
         };
         ProcessOut.prototype.tokenize = function (val, cardHolder, success, error) {
+            if (this.publicKey === null)
+                throw new ProcessOut_1.Exception("default", "The project public key could not be fetched. Most of the time, this happens because of an invalid project ID specified when instanciating ProcessOut.js.");
             if (val instanceof ProcessOut_1.Card)
                 return this.tokenizeCard(val, cardHolder, success, error);
             return this.tokenizeForm(val, cardHolder, success, error);

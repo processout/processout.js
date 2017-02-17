@@ -28,7 +28,7 @@ module ProcessOut {
          * Project public key used to tokenize the credit cards
          * @type {string}
          */
-        protected publicKey: string;
+        protected publicKey?: string;
 
         /**
          * Current resource ID. Can be invoice, subscription or authorization
@@ -134,8 +134,11 @@ module ProcessOut {
             if (!this.projectID)
                 return;
 
+            this.publicKey = "";
+
             var t = this;
             var err = function() {
+                t.publicKey = null;
                 throw new Exception("default", `Could not fetch the project public key. Are you sure ${t.projectID} is the correct project ID?`);
             }
 
@@ -264,6 +267,9 @@ module ProcessOut {
             error:          (err: Exception)          => void,
             eventCallback?: (name: string, data: any) => void): CardForm {
 
+            if (!this.projectID)
+                throw new Exception("default", "You must instanciate ProcessOut.js with a valid project ID in order to use ProcessOut's hosted forms.")
+
             return new CardForm(this).setup(form, success, error, eventCallback);
         }
 
@@ -281,6 +287,9 @@ module ProcessOut {
         public tokenize(val: Card | CardForm, cardHolder: CardHolder,
             success: (token: string)  => void,
             error:   (err: Exception) => void): void {
+
+            if (this.publicKey === null)
+                throw new Exception("default", "The project public key could not be fetched. Most of the time, this happens because of an invalid project ID specified when instanciating ProcessOut.js.");
 
             if (val instanceof Card)
                 return this.tokenizeCard(<Card>val, cardHolder, success, error);
