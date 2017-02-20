@@ -372,7 +372,7 @@ module ProcessOut {
                 "exp_month": expMonth,
                 "exp_year":  expYear,
                 "cvc2":      cvc,
-                "name":      name
+                "name":      cardHolder.name
             }, function(data: any, code: number, 
                 req: XMLHttpRequest, e: Event): void {
 
