@@ -991,7 +991,7 @@ var ProcessOut;
                 "exp_month": expMonth,
                 "exp_year": expYear,
                 "cvc2": cvc,
-                "name": name
+                "name": this.encrypt(cardHolder.name)
             }, function (data, code, req, e) {
                 if (!data.success) {
                     error(new ProcessOut_1.Exception("card.invalid"));
