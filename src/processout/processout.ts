@@ -367,12 +367,16 @@ module ProcessOut {
             if (!this.projectID)
                 throw new Exception("default", "No project ID was set when instanciating ProcessOut.js. To tokenize a card, a project ID must be set.");
 
+            var cardHolderName;
+            if (cardHolder && cardHolder.name)
+                cardHolderName = this.encrypt(cardHolder.name);
+
             this.apiRequest("post", "cards", {
                 "number":    number,
                 "exp_month": expMonth,
                 "exp_year":  expYear,
                 "cvc2":      cvc,
-                "name":      this.encrypt(cardHolder.name)
+                "name":      cardHolderName
             }, function(data: any, code: number, 
                 req: XMLHttpRequest, e: Event): void {
 
@@ -519,13 +523,7 @@ module ProcessOut {
             iframe.className = "processout-iframe";
             iframe.setAttribute("id", "processout-iframe-" + uniqId);
             iframe.setAttribute("src", url);
-            iframe.setAttribute("style", "position: fixed; top: 0; left: 0; background: none;"
-                    // We need to use translateZ instead of z-index, otherwise
-                    // z-index might not work on some mobiles
-                    +`-webkit-transform:translateZ(1px);
-                    -moz-transform:translateZ(1px);
-                    -o-transform:translateZ(1px);
-                    transform:translateZ(1px);`);
+            iframe.setAttribute("style", "position: fixed; top: 0; left: 0; background: none;z-index:9999999;");
             iframe.setAttribute("frameborder", "0");
             iframe.setAttribute("allowtransparency", "1");
 

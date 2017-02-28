@@ -986,12 +986,15 @@ var ProcessOut;
         ProcessOut.prototype.tokenizeEncrypted = function (number, expMonth, expYear, cvc, cardHolder, metadata, success, error) {
             if (!this.projectID)
                 throw new ProcessOut_1.Exception("default", "No project ID was set when instanciating ProcessOut.js. To tokenize a card, a project ID must be set.");
+            var cardHolderName;
+            if (cardHolder && cardHolder.name)
+                cardHolderName = this.encrypt(cardHolder.name);
             this.apiRequest("post", "cards", {
                 "number": number,
                 "exp_month": expMonth,
                 "exp_year": expYear,
                 "cvc2": cvc,
-                "name": this.encrypt(cardHolder.name)
+                "name": cardHolderName
             }, function (data, code, req, e) {
                 if (!data.success) {
                     error(new ProcessOut_1.Exception("card.invalid"));
@@ -1049,8 +1052,7 @@ var ProcessOut;
             iframe.className = "processout-iframe";
             iframe.setAttribute("id", "processout-iframe-" + uniqId);
             iframe.setAttribute("src", url);
-            iframe.setAttribute("style", "position: fixed; top: 0; left: 0; background: none;"
-                + "-webkit-transform:translateZ(1px);\n                    -moz-transform:translateZ(1px);\n                    -o-transform:translateZ(1px);\n                    transform:translateZ(1px);");
+            iframe.setAttribute("style", "position: fixed; top: 0; left: 0; background: none;z-index:9999999;");
             iframe.setAttribute("frameborder", "0");
             iframe.setAttribute("allowtransparency", "1");
             iframe.style.display = "none";
