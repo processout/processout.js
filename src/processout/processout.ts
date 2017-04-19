@@ -496,9 +496,8 @@ module ProcessOut {
                 return;
             }
 
-            this.assertPKFetched(function() {
-                this.refreshCVCEncrypted(cardUID, this.encrypt(cvc), success, error);
-            }.bind(this), error);
+            this.assertPKFetched(this.refreshCVCEncrypted.bind(
+                this, cardUID, this.encrypt(cvc), success, error), error);
         }
 
         /**
