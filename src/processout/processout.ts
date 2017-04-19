@@ -134,27 +134,50 @@ module ProcessOut {
             if (!this.projectID)
                 return;
 
-            this.publicKey = "";
+            this.publicKey = null;
 
-            var t = this;
             var err = function() {
-                t.publicKey = null;
-                throw new Exception("default", `Could not fetch the project public key. Are you sure ${t.projectID} is the correct project ID?`);
-            }
+                this.publicKey = "";
+                throw new Exception("default", `Could not fetch the project public key. Are you sure ${this.projectID} is the correct project ID?`);
+            }.bind(this);
 
             this.apiRequest("post", this.endpoint("checkout", "vault"), {}, 
                 function(data: any, code: number, req: XMLHttpRequest, 
                     e: Event): void {
-                    
+
                     if (!data.success || !data.public_key) {
                         err();
                         return;
                     }
 
-                    t.publicKey = data.public_key;
-                }, function(code: number, req: XMLHttpRequest, e: Event): void {
+                    this.publicKey = data.public_key;
+                }.bind(this), function(code: number, req: XMLHttpRequest, e: Event): void {
                     err();
                 });
+        }
+
+        /**
+         * Queue up the function an execute it once the public key has been 
+         * fetched. assertPKFetched is a non-blocking call (it waits to
+         * run the function, but doesn't make the call itself wait)
+         * @param {function} func
+         * @param {function} err
+         * @return {void}
+         */
+        public assertPKFetched(func: () => void, error: (err: Exception) => void): void {
+            // The public key could not be fetched, an error was already
+            // thrown
+            if (this.publicKey === "") {
+                error(new Exception("default", `Could not fetch the project public key. Are you sure ${this.projectID} is the correct project ID?`));
+                return;
+            }
+            // The public key hasn't been fetched yet
+            if (this.publicKey === null) {
+                setTimeout(function() {this.assertPKFetched(func, error);}.bind(this), 100);
+                return;
+            }
+
+            func();
         }
 
         /**
@@ -288,9 +311,6 @@ module ProcessOut {
             success: (token: string)  => void,
             error:   (err: Exception) => void): void {
 
-            if (this.publicKey === null)
-                throw new Exception("default", "The project public key could not be fetched. Most of the time, this happens because of an invalid project ID specified when instanciating ProcessOut.js.");
-
             if (val instanceof Card)
                 return this.tokenizeCard(<Card>val, cardHolder, success, error);
 
@@ -310,18 +330,20 @@ module ProcessOut {
             success: (token: string) => void,
             error:   (err: Exception) => void): void {
 
-            // Let's first validate the card
-            var err = card.validate();
-            if (err) {
-                error(err);
-                return;
-            }
+            this.assertPKFetched(function() {
+                // Let's first validate the card
+                var err = card.validate();
+                if (err) {
+                    error(err);
+                    return;
+                }
 
-            this.tokenizeEncrypted(this.encrypt(card.getNumber()), 
-                this.encrypt(card.getExpiry().getMonth().toString()),
-                this.encrypt(card.getExpiry().getYear().toString()),
-                this.encrypt(card.getCVC()),
-                cardHolder, {}, success, error);
+                this.tokenizeEncrypted(this.encrypt(card.getNumber()), 
+                    this.encrypt(card.getExpiry().getMonth().toString()),
+                    this.encrypt(card.getExpiry().getYear().toString()),
+                    this.encrypt(card.getCVC()),
+                    cardHolder, {}, success, error);
+            }.bind(this), error);
         }
 
         /**
@@ -334,18 +356,19 @@ module ProcessOut {
         public tokenizeForm(form: CardForm, cardHolder: CardHolder,
             success: (token: string)  => void,
             error:   (err: Exception) => void): void {
-            
-            var t = this;
-            form.validate(function() {
-                form.fetchValues(function(number: string, cvc: string, 
-                    expMonth: string, expYear: string, metadata: any) {
 
-                    t.tokenizeEncrypted(number, expMonth, expYear, cvc, 
-                        cardHolder, metadata, success, error);
-                }, function(err: Exception) {
-                    error(err);
-                });
-            }, error);
+            this.assertPKFetched(function() {
+                form.validate(function() {
+                    form.fetchValues(function(number: string, cvc: string, 
+                        expMonth: string, expYear: string, metadata: any) {
+
+                        this.tokenizeEncrypted(number, expMonth, expYear, cvc, 
+                            cardHolder, metadata, success, error);
+                    }.bind(this), function(err: Exception) {
+                        error(err);
+                    });
+                }.bind(this), error);
+            }.bind(this), error);
         }
 
         /**
@@ -364,31 +387,30 @@ module ProcessOut {
             success: (token: string) => void,
             error:   (err: Exception) => void): void {
 
-            if (!this.projectID)
-                throw new Exception("default", "No project ID was set when instanciating ProcessOut.js. To tokenize a card, a project ID must be set.");
+            this.assertPKFetched(function() {
+                var cardHolderName;
+                if (cardHolder && cardHolder.name)
+                    cardHolderName = this.encrypt(cardHolder.name);
 
-            var cardHolderName;
-            if (cardHolder && cardHolder.name)
-                cardHolderName = this.encrypt(cardHolder.name);
+                this.apiRequest("post", "cards", {
+                    "number":    number,
+                    "exp_month": expMonth,
+                    "exp_year":  expYear,
+                    "cvc2":      cvc,
+                    "name":      cardHolderName
+                }, function(data: any, code: number, 
+                    req: XMLHttpRequest, e: Event): void {
 
-            this.apiRequest("post", "cards", {
-                "number":    number,
-                "exp_month": expMonth,
-                "exp_year":  expYear,
-                "cvc2":      cvc,
-                "name":      cardHolderName
-            }, function(data: any, code: number, 
-                req: XMLHttpRequest, e: Event): void {
+                    if (!data.success) {
+                        error(new Exception("card.invalid"));
+                        return
+                    }
 
-                if (!data.success) {
-                    error(new Exception("card.invalid"));
-                    return
-                }
-
-                success(data.card.id);
-            }, function(code: number, req: XMLHttpRequest, e: Event): void {
-                error(new Exception("card.invalid"));
-            });
+                    success(data.card.id);
+                }, function(code: number, req: XMLHttpRequest, e: Event): void {
+                    error(new Exception("processout-js.network-issue"));
+                });
+            }.bind(this), error);
         }
 
         /**
@@ -444,14 +466,15 @@ module ProcessOut {
             success: (token: string)  => void,
             error:   (err: Exception) => void): void {
 
-            var t = this;
-            form.validate(function() {
-                form.getCVCField().value(function(val: CardFieldValue): void {
-                    t.refreshCVCEncrypted(cardUID, val.cvc, success, error);
-                }, function(err: Exception) {
-                    error(err)
-                });
-            }, error);
+            this.assertPKFetched(function() {
+                form.validate(function() {
+                    form.getCVCField().value(function(val: CardFieldValue): void {
+                        this.refreshCVCEncrypted(cardUID, val.cvc, success, error);
+                    }.bind(this), function(err: Exception) {
+                        error(err)
+                    });
+                }.bind(this), error);
+            }.bind(this), error);
         }
 
         /**
@@ -473,7 +496,9 @@ module ProcessOut {
                 return;
             }
 
-            this.refreshCVCEncrypted(cardUID, this.encrypt(cvc), success, error);
+            this.assertPKFetched(function() {
+                this.refreshCVCEncrypted(cardUID, this.encrypt(cvc), success, error);
+            }.bind(this), error);
         }
 
         /**
@@ -488,23 +513,22 @@ module ProcessOut {
             success: (token: string) => void,
             error:   (err: Exception) => void): void {
 
-            if (!this.projectID)
-                throw new Exception("default", "No project ID was set when instanciating ProcessOut.js. To refresh a card CVC, a project ID must be set.");
+            this.assertPKFetched(function() {
+                this.apiRequest("put", `cards/${cardUID}`, {
+                    "cvc": cvc
+                }, function(data: any, code: number, 
+                    req: XMLHttpRequest, e: Event): void {
 
-            this.apiRequest("put", `cards/${cardUID}`, {
-                "cvc": cvc
-            }, function(data: any, code: number, 
-                req: XMLHttpRequest, e: Event): void {
+                    if (!data.success) {
+                        error(new Exception("card.invalid"));
+                        return
+                    }
 
-                if (!data.success) {
-                    error(new Exception("card.invalid"));
-                    return
-                }
-
-                success(data.card.id);
-            }, function(code: number, req: XMLHttpRequest, e: Event): void {
-                error(new Exception("card.invalid"));
-            });
+                    success(data.card.id);
+                }, function(code: number, req: XMLHttpRequest, e: Event): void {
+                    error(new Exception("processout-js.network-issue"));
+                });
+            }.bind(this), error);
         }
 
         /**
@@ -530,7 +554,6 @@ module ProcessOut {
             // Hide and add our iframe to the DOM
             iframe.style.display = "none";
 
-            var t = this;
             var iframeError = setTimeout(function() {
                 if (typeof(error) === typeof(Function))
                     error(new Exception("processout-js.modal.unavailable"));
@@ -538,8 +561,8 @@ module ProcessOut {
             iframe.onload = function() {
                 clearTimeout(iframeError);
                 if (typeof(success) === typeof(Function))
-                    success(new Modal(t, iframe, uniqId));
-            };
+                    success(new Modal(this, iframe, uniqId));
+            }.bind(this);
 
             document.body.appendChild(iframe);
         }
