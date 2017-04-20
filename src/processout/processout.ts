@@ -285,15 +285,14 @@ module ProcessOut {
          * @param {callback} error
          * @return {CardForm}
          */
-        public setupForm(form: HTMLElement, 
-            success:        (form: CardForm)          => void, 
-            error:          (err: Exception)          => void,
-            eventCallback?: (name: string, data: any) => void): CardForm {
+        public setupForm(form: HTMLElement, options: CardFieldOptions,
+            success:        (form: CardForm)          => void,
+            error:          (err: Exception)          => void): CardForm {
 
             if (!this.projectID)
                 throw new Exception("default", "You must instanciate ProcessOut.js with a valid project ID in order to use ProcessOut's hosted forms.")
 
-            return new CardForm(this).setup(form, success, error, eventCallback);
+            return new CardForm(this, form).setup(options, success, error);
         }
 
         /**
@@ -422,13 +421,11 @@ module ProcessOut {
          * @param {callback?} eventCallback
          * @return {CardForm}
          */
-        public setupFormCVC(form: HTMLElement, 
+        public setupFormCVC(form: HTMLElement, options: CardFieldOptions,
             success:        (form: CardForm)          => void, 
-            error:          (err: Exception)          => void,
-            eventCallback?: (name: string, data: any) => void): CardForm {
+            error:          (err: Exception)          => void): CardForm {
 
-            return new CardForm(this).setupCVC(form, success, error, 
-                eventCallback);
+            return new CardForm(this, form).setupCVC(options, success, error);
         }
 
         /**

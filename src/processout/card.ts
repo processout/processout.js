@@ -311,19 +311,30 @@ module ProcessOut {
          * @return {string}
          */
         public static formatNumber(number: string): string {
-            var v       = number.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
-            var matches = v.match(/\d{4,19}/g);
-            var match   = matches && matches[0] || "";
-            var parts   = [];
+            var format = Card.getCardFormat(Card.getIIN(number));
+            number = Card.parseNumber(number);
 
-            for (var i = 0; i < match.length; i += 4) {
-                parts.push(match.substring(i, i + 4));
+            var formatted = "";
+            var currentBlock = 0;
+            var currentBlockChar = 0;
+            for (var i = 0; i < number.length; i++) {
+                if (!isNaN(<any> number[i])) continue;
+
+                // If we're past our final block, we shouldn't accept
+                // character
+                if (currentBlock >= format.length) break;
+
+                if (currentBlockChar >= format[currentBlock]) {
+                    currentBlock++;
+                    currentBlockChar = 0;
+
+                    formatted += " ";
+                }
+
+                formatted += number[i];
             }
 
-            if (!parts.length)
-                return number;
-
-            return parts.join(" ");
+            return number;
         }
 
         /**
@@ -421,9 +432,72 @@ module ProcessOut {
         }
 
         /**
+         * getCardFormat returns the most likely card format for the given
+         * iin, in the format of a slice of numbers. The card should be 
+         * formatted by packs of numbers, represented by the slice
+         * @param {string} iin
+         * @return Array<number>
+         */
+        public static getCardFormat(iin: string): Array<number> {
+            var schemes = Card.getPossibleSchemes(iin);
+            if (schemes.length == 1 && schemes[0] == "american-express")
+                return [4, 6, 5];
+
+            return [4, 4, 4, 4, 4];
+        }
+
+        /**
+         * getPossibleCardLength returns an array of the possible card length,
+         * with the first value being the minimum length and the 2nd the max
+         * @param {string} iin
+         * @return {Array<number>}
+         */
+        public static getPossibleCardLength(iin: string): Array<number> {
+            var minLength = 19, maxLength = 12;
+            var schemes = Card.getPossibleSchemes(iin);
+            for (var i = 0; i < schemes.length; i++) {
+                switch (schemes[i]) {
+                case "visa":
+                    minLength = Math.min(minLength, 13);
+                    maxLength = Math.max(maxLength, 19);
+                    break;
+                case "mastercard":
+                case "instapayment":
+                case "jcb":
+                case "cardguard ead bg ils":
+                    minLength = Math.min(minLength, 16);
+                    maxLength = Math.max(maxLength, 16);
+                    break;
+                case "american-express":
+                case "uatp":
+                    minLength = Math.min(minLength, 15);
+                    maxLength = Math.max(maxLength, 15);
+                    break;
+                case "diners-club":
+                    minLength = Math.min(minLength, 14);
+                    maxLength = Math.max(maxLength, 16);
+                    break;
+                case "union-pay":
+                case "discover":
+                case "interpayment":
+                case "dankort":
+                    minLength = Math.min(minLength, 16);
+                    maxLength = Math.max(maxLength, 19);
+                    break;
+                case "maestro":
+                    minLength = Math.min(minLength, 12);
+                    maxLength = Math.max(maxLength, 19);
+                    break;
+                }
+            }
+
+            return [minLength, maxLength];
+        }
+
+        /**
          * getPossibleSchemes returns an array of possible schemes for the
          * card iin (or start of its IIN).
-         * @param {string}
+         * @param {string} iin
          * @return {Array<string>}
          */
         public static getPossibleSchemes(iin: string): Array<string> {

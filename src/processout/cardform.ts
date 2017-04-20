@@ -22,6 +22,12 @@ module ProcessOut {
         protected refreshCVC: boolean;
 
         /**
+         * DOM element which contains our card inputs
+         * @var {HTMLFormElement}
+         */
+        protected element: HTMLElement;
+
+        /**
          * Number card field
          * @var {CardField}
          */
@@ -55,24 +61,24 @@ module ProcessOut {
          * CardForm constructor.
          * @param {ProcessOut} instance
          */
-        public constructor(instance: ProcessOut) {
+        public constructor(instance: ProcessOut, el: HTMLElement) {
             this.instance = instance;
+            this.element = el;
         }
 
         /**
          * Setup prepares the generic card form. Expects the card fields 
          * for the number, cvc and expiration fields. Both a general expiration 
          * field or separate fields for month and year can be provided
-         * @param {HTMLElement} form
+         * @param {CardFieldOptions} options
          * @param {callback} success
          * @param {callback} error
          * @param {callback} event
          * @return {CardForm}
          */
-        public setup(form: HTMLElement,
+        public setup(options: CardFieldOptions,
             success:        (form: CardForm)  => void,
-            error:          (err:  Exception) => void,
-            eventCallback?: (name: string, data: any) => void): CardForm {
+            error:          (err:  Exception) => void): CardForm {
 
             var numberReady   = false;
             var cvcReady      = false;
@@ -89,39 +95,39 @@ module ProcessOut {
                 }
             }.bind(this);
 
-            this.number = new CardField(this.instance, CardField.number,
-                <HTMLInputElement>form.querySelector("[data-processout-input=cc-number]"), 
+            this.number = new CardField(this.instance, options.applyTo(new CardFieldOptions(CardField.number)),
+                <HTMLInputElement>this.element.querySelector("[data-processout-input=cc-number]"), 
                 function() {
                     numberReady = true; ev();
-                }, error, eventCallback);
-            var cvcEl = form.querySelector("[data-processout-input=cc-cvc]");
+                }, error);
+            var cvcEl = this.element.querySelector("[data-processout-input=cc-cvc]");
             if (cvcEl) {
-                this.cvc = new CardField(this.instance, CardField.cvc,
+                this.cvc = new CardField(this.instance, options.applyTo(new CardFieldOptions(CardField.cvc)),
                 <HTMLInputElement>cvcEl,
                 function() {
                     cvcReady = true; ev();
-                }, error, eventCallback);
+                }, error);
             } else {
                 cvcReady = true;
             }
-            var expEl = form.querySelector("[data-processout-input=cc-exp]");
+            var expEl = this.element.querySelector("[data-processout-input=cc-exp]");
             if (expEl) {
-                this.exp = new CardField(this.instance, CardField.expiry,
+                this.exp = new CardField(this.instance, options.applyTo(new CardFieldOptions(CardField.expiry)),
                     <HTMLInputElement>expEl,
                 function() {
                     expMonthReady = true; expYearReady = true; ev();
-                }, error, eventCallback);
+                }, error);
             } else {
-                this.expMonth = new CardField(this.instance, CardField.expiryMonth,
-                    <HTMLInputElement>form.querySelector("[data-processout-input=cc-exp-month]"),
+                this.expMonth = new CardField(this.instance, options.applyTo(new CardFieldOptions(CardField.expiryMonth)),
+                    <HTMLInputElement>this.element.querySelector("[data-processout-input=cc-exp-month]"),
                 function() {
                     expMonthReady = true; ev();
-                }, error, eventCallback);
-                this.expYear = new CardField(this.instance, CardField.expiryYear,
-                    <HTMLInputElement>form.querySelector("[data-processout-input=cc-exp-year]"),
+                }, error);
+                this.expYear = new CardField(this.instance, options.applyTo(new CardFieldOptions(CardField.expiryYear)),
+                    <HTMLInputElement>this.element.querySelector("[data-processout-input=cc-exp-year]"),
                 function() {
                     expYearReady = true; ev();
-                }, error, eventCallback);
+                }, error);
             }
 
             return this;
@@ -137,18 +143,18 @@ module ProcessOut {
          * @param {callback} event
          * @return {CardForm}
          */
-        public setupCVC(form: HTMLElement,
+        public setupCVC(options: CardFieldOptions,
             success:        (form: CardForm)  => void,
             error:          (err:  Exception) => void,
             eventCallback?: (name: string, data: any) => void): CardForm {
 
             this.refreshCVC = true;
 
-            this.cvc = new CardField(this.instance, CardField.cvc,
-                <HTMLInputElement>form.querySelector("[data-processout-input=cc-cvc]"), 
+            this.cvc = new CardField(this.instance, options.applyTo(new CardFieldOptions(CardField.cvc)),
+                <HTMLInputElement>this.element.querySelector("[data-processout-input=cc-cvc]"), 
                 function() {
                     success(this);
-                }.bind(this), error, eventCallback);
+                }.bind(this), error);
 
             return this;
         }
