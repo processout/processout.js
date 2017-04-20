@@ -81,14 +81,13 @@ module ProcessOut {
 
             // Our handler to check everytime we receive a ready state we got
             // all of them
-            var t = this;
             var ev = function() {
                 if (numberReady && cvcReady && expMonthReady && expYearReady) {
                     // All values are fetched
-                    success(t);
+                    success(this);
                     return;
                 }
-            }
+            }.bind(this);
 
             this.number = new CardField(this.instance, CardField.number,
                 <HTMLInputElement>form.querySelector("[data-processout-input=cc-number]"), 
@@ -145,12 +144,11 @@ module ProcessOut {
 
             this.refreshCVC = true;
 
-            var t = this;
             this.cvc = new CardField(this.instance, CardField.cvc,
                 <HTMLInputElement>form.querySelector("[data-processout-input=cc-cvc]"), 
                 function() {
-                    success(t);
-                }, error, eventCallback);
+                    success(this);
+                }.bind(this), error, eventCallback);
 
             return this;
         }
@@ -224,7 +222,6 @@ module ProcessOut {
 
             // Our handler to check everytime we receive a validation we got
             // all of them
-            var t = this;
             var ev = function() {
                 if (number && cvc && expMonth && expYear) {
                     // All values are validated

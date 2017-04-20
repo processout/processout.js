@@ -367,10 +367,9 @@ module ProcessOut {
                     error(new Exception("processout-js.field.unavailable"));
                 }, CardField.timeout);
             
-            var t = this;
             window.addEventListener("message", function (event) {
                 var data = Message.parseEvent(event);
-                if (data.frameID != t.uid)
+                if (data.frameID != this.uid)
                     return;
                 if (data.namespace != Message.fieldNamespace)
                     return;
@@ -387,7 +386,7 @@ module ProcessOut {
                 }
 
                 success();
-            });
+            }.bind(this));
         }
 
         /** 
@@ -415,10 +414,9 @@ module ProcessOut {
                     error(new Exception("processout-js.field.unavailable"));
                 }, CardField.timeout);
 
-            var t = this;
             window.addEventListener("message", function (event) {
                 var data = Message.parseEvent(event);
-                if (data.frameID != t.uid)
+                if (data.frameID != this.uid)
                     return;
                 if (data.namespace != Message.fieldNamespace)
                     return;
@@ -430,7 +428,7 @@ module ProcessOut {
                 clearTimeout(fetchingTimeout);
 
                 callback(data.data);
-            });
+            }.bind(this));
         }
     }
 }
