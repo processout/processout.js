@@ -8,28 +8,28 @@
 	<h2>ProcessOut.js example</h2>
 
 	<form action="" method="POST" id="card-form">
-		<div style="border: 1px solid black; height: 1.5em;" 
+		<div style="border: 1px solid black; height: 1.5em; margin: 1em 0;" 
 			data-processout-input="cc-number" 
 			data-processout-placeholder="4242 4242 4242 4242"
 			data-processout-style="color: red;"
 			data-processout-style-hover="color: blue;"
 			data-processout-style-focus="color: green;"></div>
-		<div style="border: 1px solid black; height: 1.5em;" 
+		<div style="border: 1px solid black; height: 1.5em; margin: 1em 0;" 
 			data-processout-input="cc-exp" 
 			data-processout-placeholder="mm / yy"></div>
-		<div style="border: 1px solid black; height: 1.5em;" 
+		<div style="border: 1px solid black; height: 1.5em; margin: 1em 0;" 
 			data-processout-input="cc-cvc" 
 			data-processout-placeholder="CVC"></div>
 
 		<input type="submit">
 	</form>
 
-	<script src="https://js.processout.com/processout.js"></script>
+	<script src="https://js.processout.ninja/processout.js"></script>
 	<script>
 		document.addEventListener("DOMContentLoaded", function() {
-			var processout = new ProcessOut.ProcessOut("proj_OvJdvN73Ds1pecfQez2J13pK1YlRqFh4");
+			var processout = new ProcessOut.ProcessOut("proj_XypcVbbihw7uzAVj18egy1nZeppStAhu");
 			var formElement = document.getElementById("card-form")
-			processout.setupForm(formElement, function(form) {
+			processout.setupForm(formElement, {}, function(form) {
 				formElement.addEventListener("submit", function(e) {
 					e.preventDefault();
 
@@ -44,8 +44,6 @@
 				});
 			}, function(err) {
 				console.log(err);
-			}, function(ev, data) {
-				console.log(ev, data);
 			});
 		});
 	</script>

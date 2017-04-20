@@ -23,11 +23,11 @@ module ProcessOut {
             this.type = type;
         }
 
-        public applyTo(o: CardFieldOptions): CardFieldOptions {
-            if (this.placeholder)   o.placeholder   = this.placeholder;
-            if (this.style)         o.style         = this.style;
+        public apply(o: CardFieldOptions): CardFieldOptions {
+            if (o.placeholder)   this.placeholder   = o.placeholder;
+            if (o.style)         this.style         = o.style;
 
-            return o;
+            return this;
         }
     }
 
@@ -129,6 +129,12 @@ module ProcessOut {
          * @var {string}
          */
         protected options: CardFieldOptions;
+
+        /**
+         * Callback triggered when the input is marked as valid
+         * @var {callback}
+         */
+        protected next?: () => void;
         
         /**
          * CardField constructor
@@ -159,9 +165,9 @@ module ProcessOut {
                 options.type != CardField.cvc)
                 throw new Exception("processout-js.invalid-field-type");
 
-            this.instance      = instance;
-            this.options      = options;
-            this.el            = container;
+            this.instance  = instance;
+            this.options   = options;
+            this.el        = container;
 
             var placeholder = this.el.getAttribute("data-processout-placeholder");
             if (placeholder)
@@ -265,7 +271,19 @@ module ProcessOut {
             case "blurEvent": // inverse of focus
                 if (this.eventCallback) this.eventCallback("onblur", d);
                 break;
+            case "next":
+                if (this.next) this.next();
+                break;
             }
+        }
+
+        /**
+         * Set the callback executed when the input gets marked as valid
+         * @param {callback} next
+         * @return {void}
+         */
+        public setNext(next: () => void): void {
+            this.next = next;
         }
 
         /**

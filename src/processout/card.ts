@@ -155,13 +155,22 @@ module ProcessOut {
          * @return {string}
          */
         public static format(exp: string): string {
-            if (exp.length == 2)
-                return exp + " / ";
+            // First validate the string
+            var allowed = "1234567890 /";
+            var str = "";
+            for (var i = 0; i < exp.length; i++) {
+                if (allowed.indexOf(exp[i]) === -1)
+                    continue;
+                str += exp[i];
+            }
 
-            if (exp.length == 4)
-                return exp.slice(0, -3);
+            if (str.length == 2)
+                return str + " / ";
 
-            return exp;
+            if (str.length == 4)
+                return str.slice(0, -3);
+
+            return str;
         }
 
         /**
@@ -318,23 +327,24 @@ module ProcessOut {
             var currentBlock = 0;
             var currentBlockChar = 0;
             for (var i = 0; i < number.length; i++) {
-                if (!isNaN(<any> number[i])) continue;
-
-                // If we're past our final block, we shouldn't accept
-                // character
-                if (currentBlock >= format.length) break;
+                if (isNaN(<any> number[i])) continue;
 
                 if (currentBlockChar >= format[currentBlock]) {
                     currentBlock++;
                     currentBlockChar = 0;
 
+                    // If we're past our final block, we shouldn't accept
+                    // more characters
+                    if (currentBlock >= format.length) break;
+
                     formatted += " ";
                 }
 
                 formatted += number[i];
+                currentBlockChar++;
             }
 
-            return number;
+            return formatted;
         }
 
         /**
@@ -408,26 +418,60 @@ module ProcessOut {
         }
 
         /**
-         * autoFormatFields formats the given number, expiry and cvc fields
-         * and updates the focus depending on the state of these fields
-         * @param {HTMLInputElement} number
-         * @param {HTMLInputElement} expiry
-         * @param {HTMLInputElement} cvc
+         * autoFormatNumber automatically formats the number field and 
+         * calls next when the input is done
+         * @param {HTMLInputElement} number 
+         * @param {callback} next 
          * @return {void}
          */
-        public static autoFormatFields(number: HTMLInputElement,
-            expiry: HTMLInputElement, cvc: HTMLInputElement): void {
-            
+        public static autoFormatNumber(number: HTMLInputElement, next?: () => void): void {
+            var lastLen = 0;
             number.addEventListener("input", function(e) {
                 var field = <HTMLInputElement>this;
+                // We want to keep the cursor position when possible
+                var cursor = field.selectionStart; var l = field.value.length;
                 field.value = Card.formatNumber(field.value);
-            });
-            expiry.addEventListener("input", function(e) {
-                var field = <HTMLInputElement>this;
-                field.value = Expiry.format(field.value);
+                if (cursor && cursor < l) {
+                    field.setSelectionRange(cursor, cursor);
+                    if (cursor > 0 && field.value[cursor - 1] == " " && l > lastLen)
+                        field.setSelectionRange(cursor+1, cursor+1);
+                }
 
-                if (field.value.length >= 7)
-                    cvc.focus();
+                var cardLength = Card.getPossibleCardLength(Card.getIIN(field.value));
+                if (next && l > lastLen && Card.parseNumber(field.value).length == cardLength[1])
+                    next();
+
+                lastLen = l;
+            });
+        }
+
+        /**
+         * autoFormatNumber automatically formats the expiry field and calls 
+         * next when the input is done
+         * @param {HTMLInputElement} exp 
+         * @param {callback} next 
+         * @return {void}
+         */
+        public static autoFormatExpiry(exp: HTMLInputElement, next?: () => void): void {
+            var lastLen = 0;
+            exp.addEventListener("input", function(e) {
+                var field = <HTMLInputElement>this;
+                // We want to keep the cursor position when possible
+                var cursor = field.selectionStart; var l = field.value.length;
+                var formatted = Expiry.format(field.value);
+                if (formatted.length > 7)
+                    return;
+                field.value = formatted;
+                if (cursor && cursor < l) {
+                    field.setSelectionRange(cursor, cursor);
+                    if (cursor > 0 && field.value[cursor - 1] == " " && l > lastLen)
+                        field.setSelectionRange(cursor+1, cursor+1);
+                }
+
+                if (next && l > lastLen && field.value.length == 7)
+                    next();
+
+                lastLen = l;
             });
         }
 
