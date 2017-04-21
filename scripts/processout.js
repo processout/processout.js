@@ -1010,7 +1010,10 @@ var ProcessOut;
         ProcessOut.prototype.setupForm = function (form, options, success, error) {
             if (!this.projectID)
                 throw new ProcessOut_1.Exception("default", "You must instanciate ProcessOut.js with a valid project ID in order to use ProcessOut's hosted forms.");
-            return new ProcessOut_1.CardForm(this, form).setup(options, success, error);
+            if (typeof options == "function")
+                return new ProcessOut_1.CardForm(this, form).setup(new ProcessOut_1.CardFieldOptions(""), options, success);
+            else
+                return new ProcessOut_1.CardForm(this, form).setup(options, success, error);
         };
         ProcessOut.prototype.tokenize = function (val, cardHolder, success, error) {
             if (val instanceof ProcessOut_1.Card)
