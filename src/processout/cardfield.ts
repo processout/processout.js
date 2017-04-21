@@ -14,10 +14,44 @@ module ProcessOut {
         public metadata:    string;
     }
 
-    export class CardFieldSettings {
+    export class CardFieldOptions {
         public type:        string;
         public placeholder: string;
-        public style:       string;
+        public style:       CardFieldStyle;
+
+        public constructor(type: string) {
+            this.type = type;
+        }
+
+        public apply(o: CardFieldOptions): CardFieldOptions {
+            if (o.placeholder)   this.placeholder   = o.placeholder;
+            if (o.style)         this.style         = o.style;
+
+            return this;
+        }
+    }
+
+    export class CardFieldStyle {
+        public color:          string;
+        public fontFamily:     string;
+        public fontSize:       string;
+        public fontSizeAdjust: string;
+        public fontStretch:    string;
+        public fontSmoothing:  string;
+        public fontStyle:      string;
+        public fontVariant:    string;
+        public fontWeight:     string;
+        public lineHeight:     string;
+        public textShadow:     string;
+        public textTransform:  string;
+        public textDecoration: string;
+        public transition:     string;
+
+        // pseudo class/elements:
+        // :hover
+        // :focus
+        // ::placeholder
+        // ::selection
     }
 
     /**
@@ -67,12 +101,6 @@ module ProcessOut {
         protected instance: ProcessOut;
 
         /** 
-         * Type is the type of the field
-         * @var {string}
-         */
-        protected type: string;
-
-        /** 
          * El is the parent of the iframe used to embed the field
          * @var {string}
          */
@@ -100,73 +128,56 @@ module ProcessOut {
          * Placeholder of the input
          * @var {string}
          */
-        protected placeholder: string;
+        protected options: CardFieldOptions;
 
         /**
-         * Default css style of the input
-         * @var {string}
+         * Callback triggered when the input is marked as valid
+         * @var {callback}
          */
-        protected defaultStyle: string;
+        protected next?: () => void;
 
         /**
-         * Hover css style of the input
-         * @var {string}
+         * Handlers used to handle events fired on the input field
+         * @var {callback[]}
          */
-        protected hoverStyle: string;
-
-        /**
-         * Focus css style of the input
-         * @var {string}
-         */
-        protected focusStyle: string;
-
-        /**
-         * Whether or not the field is currently hovered over on
-         * @var {boolean}
-         */
-        protected hovered: boolean;
-
-        /**
-         * Whether or not the field is currently focused on
-         * @var {boolean}
-         */
-        protected focused: boolean;
+        protected handlers: { [key: string]: ((e: any) => void)[] } = {} ;
         
         /**
          * CardField constructor
          * @param {ProcessOut} instance
-         * @param {string} type
+         * @param {options} CardFieldOptions
          * @param {HTMLElement} el
          */
-        public constructor(instance: ProcessOut, type: string, 
+        public constructor(instance: ProcessOut, options: CardFieldOptions, 
             container:      HTMLElement, 
             success:        ()  => void, 
-            error:          (err:  Exception) => void,
-            eventCallback?: (name: string, data: any) => void) {
+            error:          (err:  Exception) => void) {
+
+            if (!options || !options.type) {
+                throw new Exception("processout-js.invalid-field-type", "Options and a the field type must be provided to setup the field.");
+            }
 
             if (!container) {
-                throw new Exception("processout-js.undefined-field", `The card field for the ${type} does not exist in the given container.`);
+                throw new Exception("processout-js.undefined-field", `The card field for the ${options.type} does not exist in the given container.`);
             }
             if (container instanceof HTMLInputElement) {
-                throw new Exception("processout-js.invalid-field", `The card field for the ${type} must be an input field.`);
+                throw new Exception("processout-js.invalid-field", `The card field for the ${options.type} must be an input field.`);
             }
 
-            if (type != CardField.number &&
-                type != CardField.expiry &&
-                type != CardField.expiryMonth &&
-                type != CardField.expiryYear &&
-                type != CardField.cvc)
+            if (options.type != CardField.number &&
+                options.type != CardField.expiry &&
+                options.type != CardField.expiryMonth &&
+                options.type != CardField.expiryYear &&
+                options.type != CardField.cvc)
                 throw new Exception("processout-js.invalid-field-type");
 
-            this.instance      = instance;
-            this.type          = type;
-            this.el            = container;
-            this.eventCallback = eventCallback;
+            this.instance  = instance;
+            this.options   = options;
+            this.el        = container;
 
-            this.placeholder  = this.el.getAttribute("data-processout-placeholder");
-            this.defaultStyle = this.el.getAttribute("data-processout-style");
-            this.hoverStyle   = this.el.getAttribute("data-processout-style-hover");
-            this.focusStyle   = this.el.getAttribute("data-processout-style-focus");
+            var placeholder = this.el.getAttribute("data-processout-placeholder");
+            if (placeholder)
+                this.options.placeholder = placeholder;
 
             this.spawn(success, error);
         }
@@ -179,19 +190,19 @@ module ProcessOut {
          */
         protected spawn(success: ()                 => void, 
                         error:   (err:   Exception) => void): void {
-            
+
             this.uid = `#${Math.random().toString(36).substring(7)}`;
             this.iframe = document.createElement('iframe');
             this.iframe.className = "processout-field-cc-iframe";
             this.iframe.setAttribute("src", this.instance.endpoint("checkout", `vault/field${this.uid}`));
-            this.iframe.setAttribute("style", "background: none; height: 100%; width: 100%;");
+            this.iframe.setAttribute("style", "background: none; width: 100%;");
             this.iframe.setAttribute("frameborder", "0");
             this.iframe.setAttribute("allowtransparency", "1");
             // Hide the field until it's ready
             this.iframe.style.display = "none";
+            this.iframe.height = "14px"; // Default height
 
             var errored = false
-            var t       = this;
             var iframeError = setTimeout(function() {
                 errored = true;
                 if (typeof(error) === typeof(Function))
@@ -204,40 +215,35 @@ module ProcessOut {
                     return;
 
                 var data = Message.parseEvent(event);
-                if (data.frameID != t.uid)
+                if (data.frameID != this.uid)
                     return;
                 if (data.namespace != Message.fieldNamespace)
                     return;
 
                 // We want to bind our event handler as well
-                t.handlEvent(data);
+                this.handlEvent(data);
 
                 // We will first wait for an alive signal from the iframe.
                 // Once we've received it, we will send a setup action,
                 // and the iframe should reply with a ready state
 
                 if (data.action == "alive") {
-                    var settings = new CardFieldSettings();
-                    settings.type        = t.type;
-                    settings.placeholder = t.placeholder;
-                    settings.style       = t.defaultStyle;
-
                     // The field's iframe is available, let's set it up
-                    t.iframe.contentWindow.postMessage(JSON.stringify({
+                    this.iframe.contentWindow.postMessage(JSON.stringify({
                         "namespace": Message.fieldNamespace,
-                        "projectID": t.instance.getProjectID(),
+                        "projectID": this.instance.getProjectID(),
                         "action":    "setup",
-                        "data":      settings
+                        "data":      this.options
                     }), "*");
                 } 
 
                 if (data.action == "ready") {
                     // It's now ready
-                    t.iframe.style.display = "block";
+                    this.iframe.style.display = "block";
                     clearTimeout(iframeError);
                     success();
                 }                    
-            });
+            }.bind(this));
 
             this.el.appendChild(this.iframe);
         }
@@ -251,7 +257,7 @@ module ProcessOut {
         protected handlEvent(data: Message): void {
             var d = {
                 field:   this,
-                type:    this.type,
+                type:    this.options.type,
                 element: this.el,
                 data:    data.data
             };
@@ -261,58 +267,40 @@ module ProcessOut {
                 if (this.eventCallback) this.eventCallback("oninput", d);
                 break;
             case "mouseEnterEvent":
-                this.hovered = true;
-                if (!this.focused)
-                    this.setStyle(this.hoverStyle);
                 if (this.eventCallback) this.eventCallback("onmouseenter", d);
                 break;
             case "mouseLeaveEvent":
-                this.hovered = false;
-                if (!this.focused) 
-                    this.setStyle(this.defaultStyle);
                 if (this.eventCallback) this.eventCallback("onmouseleave", d);
                 break;
             case "focusEvent":
-                this.focused = true;
-                this.setStyle(this.focusStyle);
                 if (this.eventCallback) this.eventCallback("onfocus", d);
                 break;
             case "blurEvent": // inverse of focus
-                this.focused = false;
-                if (!this.hovered)
-                    this.setStyle(this.defaultStyle);
-                else
-                    this.setStyle(this.hoverStyle);
                 if (this.eventCallback) this.eventCallback("onblur", d);
+                break;
+            case "next":
+                if (this.next) this.next();
+                break;
+            case "event":
+                if (data.data.name in this.handlers) {
+                    var handlers = this.handlers[data.data.name];
+                    for (var i = 0; i < handlers.length; i++)
+                        handlers[0](data.data.data);
+                }
+                break;
+            case "resize":
+                this.iframe.height = data.data;
                 break;
             }
         }
 
         /**
-         * Set the default css style for the input
-         * @param {string} style
+         * Set the callback executed when the input gets marked as valid
+         * @param {callback} next
          * @return {void}
          */
-        public setDefaultStyle(style: string): void {
-            this.defaultStyle = style;
-        }
-
-        /**
-         * Set the hover css style for the input
-         * @param {string} style
-         * @return {void}
-         */
-        public setHoverStyle(style: string): void {
-            this.hoverStyle = style;
-        }
-
-        /**
-         * Set the focus css style for the input
-         * @param {string} style
-         * @return {void}
-         */
-        public setFocusStyle(style: string): void {
-            this.focusStyle = style;
+        public setNext(next: () => void): void {
+            this.next = next;
         }
 
         /**
@@ -320,26 +308,74 @@ module ProcessOut {
          * @param {string} style
          * @return {void}
          */
-        public setStyle(style: string): void {
+        public update(options: CardFieldOptions): void {
+            if (options.placeholder) 
+                this.options.placeholder = options.placeholder;
+            if (options.style)
+                this.options.style = (<any>Object).assign(
+                    this.options.style, options.style);
+
             this.iframe.contentWindow.postMessage(JSON.stringify({
                 "namespace": Message.fieldNamespace,
                 "projectID": this.instance.getProjectID(),
-                "action":    "setStyle",
-                "data":      style
+                "action":    "update",
+                "data":      this.options
             }), "*");
         }
 
         /**
-         * Set the new placeholder to be displayed by the input
-         * @param {string} style
+         * addEventListener adds an event listener for the given event on 
+         * the card field
+         * @param {string} e 
+         * @param {callback} h 
          * @return {void}
          */
-        public setPlaceholder(placeholder: string): void {
+        public addEventListener(e: string, h: (e: any) => void): void {
+            if (!(e in this.handlers))
+                this.handlers[e] = [];
+
+            this.handlers[e].push(h);
             this.iframe.contentWindow.postMessage(JSON.stringify({
                 "namespace": Message.fieldNamespace,
                 "projectID": this.instance.getProjectID(),
-                "action":    "setPlaceholder",
-                "data":      placeholder
+                "action":    "registerEvent",
+                "data":      e
+            }), "*");
+        }
+
+        /**
+         * on adds an event listener for the given event on the card field
+         * @param {string} e 
+         * @param {callback} h 
+         * @return {void}
+         */
+        public on(e: string, h: (e: any) => void): void {
+            return this.addEventListener(e, h);
+        }
+
+        /**
+         * blur blurs the card field
+         * @return {void}
+         */
+        public blur(): void {
+            this.iframe.contentWindow.postMessage(JSON.stringify({
+                "messageID": Math.random().toString(),
+                "namespace": Message.fieldNamespace,
+                "projectID": this.instance.getProjectID(),
+                "action":    "blur"
+            }), "*");
+        }
+
+        /**
+         * focus focuses on the card field
+         * @return {void}
+         */
+        public focus(): void {
+            this.iframe.contentWindow.postMessage(JSON.stringify({
+                "messageID": Math.random().toString(),
+                "namespace": Message.fieldNamespace,
+                "projectID": this.instance.getProjectID(),
+                "action":    "focus"
             }), "*");
         }
 

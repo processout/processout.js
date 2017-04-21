@@ -155,13 +155,22 @@ module ProcessOut {
          * @return {string}
          */
         public static format(exp: string): string {
-            if (exp.length == 2)
-                return exp + " / ";
+            // First validate the string
+            var allowed = "1234567890 /";
+            var str = "";
+            for (var i = 0; i < exp.length; i++) {
+                if (allowed.indexOf(exp[i]) === -1)
+                    continue;
+                str += exp[i];
+            }
 
-            if (exp.length == 4)
-                return exp.slice(0, -3);
+            if (str.length == 2)
+                return str + " / ";
 
-            return exp;
+            if (str.length == 4)
+                return str.slice(0, -3);
+
+            return str;
         }
 
         /**
@@ -311,19 +320,31 @@ module ProcessOut {
          * @return {string}
          */
         public static formatNumber(number: string): string {
-            var v       = number.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
-            var matches = v.match(/\d{4,19}/g);
-            var match   = matches && matches[0] || "";
-            var parts   = [];
+            var format = Card.getCardFormat(Card.getIIN(number));
+            number = Card.parseNumber(number);
 
-            for (var i = 0; i < match.length; i += 4) {
-                parts.push(match.substring(i, i + 4));
+            var formatted = "";
+            var currentBlock = 0;
+            var currentBlockChar = 0;
+            for (var i = 0; i < number.length; i++) {
+                if (isNaN(<any> number[i])) continue;
+
+                if (currentBlockChar >= format[currentBlock]) {
+                    currentBlock++;
+                    currentBlockChar = 0;
+
+                    // If we're past our final block, we shouldn't accept
+                    // more characters
+                    if (currentBlock >= format.length) break;
+
+                    formatted += " ";
+                }
+
+                formatted += number[i];
+                currentBlockChar++;
             }
 
-            if (!parts.length)
-                return number;
-
-            return parts.join(" ");
+            return formatted;
         }
 
         /**
@@ -397,33 +418,130 @@ module ProcessOut {
         }
 
         /**
-         * autoFormatFields formats the given number, expiry and cvc fields
-         * and updates the focus depending on the state of these fields
-         * @param {HTMLInputElement} number
-         * @param {HTMLInputElement} expiry
-         * @param {HTMLInputElement} cvc
+         * autoFormatNumber automatically formats the number field and 
+         * calls next when the input is done
+         * @param {HTMLInputElement} number 
+         * @param {callback} next 
          * @return {void}
          */
-        public static autoFormatFields(number: HTMLInputElement,
-            expiry: HTMLInputElement, cvc: HTMLInputElement): void {
-            
+        public static autoFormatNumber(number: HTMLInputElement, next?: () => void): void {
+            var lastLen = 0;
             number.addEventListener("input", function(e) {
                 var field = <HTMLInputElement>this;
+                // We want to keep the cursor position when possible
+                var cursor = field.selectionStart; var l = field.value.length;
                 field.value = Card.formatNumber(field.value);
-            });
-            expiry.addEventListener("input", function(e) {
-                var field = <HTMLInputElement>this;
-                field.value = Expiry.format(field.value);
+                if (cursor && cursor < l) {
+                    field.setSelectionRange(cursor, cursor);
+                    if (cursor > 0 && field.value[cursor - 1] == " " && l > lastLen)
+                        field.setSelectionRange(cursor+1, cursor+1);
+                }
 
-                if (field.value.length >= 7)
-                    cvc.focus();
+                var cardLength = Card.getPossibleCardLength(Card.getIIN(field.value));
+                if (next && l > lastLen && Card.parseNumber(field.value).length == cardLength[1])
+                    next();
+
+                lastLen = l;
             });
+        }
+
+        /**
+         * autoFormatNumber automatically formats the expiry field and calls 
+         * next when the input is done
+         * @param {HTMLInputElement} exp 
+         * @param {callback} next 
+         * @return {void}
+         */
+        public static autoFormatExpiry(exp: HTMLInputElement, next?: () => void): void {
+            var lastLen = 0;
+            exp.addEventListener("input", function(e) {
+                var field = <HTMLInputElement>this;
+                // We want to keep the cursor position when possible
+                var cursor = field.selectionStart; var l = field.value.length;
+                var formatted = Expiry.format(field.value);
+                if (formatted.length > 7)
+                    return;
+                field.value = formatted;
+                if (cursor && cursor < l) {
+                    field.setSelectionRange(cursor, cursor);
+                    if (cursor > 0 && field.value[cursor - 1] == " " && l > lastLen)
+                        field.setSelectionRange(cursor+1, cursor+1);
+                }
+
+                if (next && l > lastLen && field.value.length == 7)
+                    next();
+
+                lastLen = l;
+            });
+        }
+
+        /**
+         * getCardFormat returns the most likely card format for the given
+         * iin, in the format of a slice of numbers. The card should be 
+         * formatted by packs of numbers, represented by the slice
+         * @param {string} iin
+         * @return Array<number>
+         */
+        public static getCardFormat(iin: string): Array<number> {
+            var schemes = Card.getPossibleSchemes(iin);
+            if (schemes.length == 1 && schemes[0] == "american-express")
+                return [4, 6, 5];
+
+            return [4, 4, 4, 4, 4];
+        }
+
+        /**
+         * getPossibleCardLength returns an array of the possible card length,
+         * with the first value being the minimum length and the 2nd the max
+         * @param {string} iin
+         * @return {Array<number>}
+         */
+        public static getPossibleCardLength(iin: string): Array<number> {
+            var minLength = 19, maxLength = 12;
+            var schemes = Card.getPossibleSchemes(iin);
+            for (var i = 0; i < schemes.length; i++) {
+                switch (schemes[i]) {
+                case "visa":
+                    minLength = Math.min(minLength, 13);
+                    maxLength = Math.max(maxLength, 19);
+                    break;
+                case "mastercard":
+                case "instapayment":
+                case "jcb":
+                case "cardguard ead bg ils":
+                    minLength = Math.min(minLength, 16);
+                    maxLength = Math.max(maxLength, 16);
+                    break;
+                case "american-express":
+                case "uatp":
+                    minLength = Math.min(minLength, 15);
+                    maxLength = Math.max(maxLength, 15);
+                    break;
+                case "diners-club":
+                    minLength = Math.min(minLength, 14);
+                    maxLength = Math.max(maxLength, 16);
+                    break;
+                case "union-pay":
+                case "discover":
+                case "interpayment":
+                case "dankort":
+                    minLength = Math.min(minLength, 16);
+                    maxLength = Math.max(maxLength, 19);
+                    break;
+                case "maestro":
+                    minLength = Math.min(minLength, 12);
+                    maxLength = Math.max(maxLength, 19);
+                    break;
+                }
+            }
+
+            return [minLength, maxLength];
         }
 
         /**
          * getPossibleSchemes returns an array of possible schemes for the
          * card iin (or start of its IIN).
-         * @param {string}
+         * @param {string} iin
          * @return {Array<string>}
          */
         public static getPossibleSchemes(iin: string): Array<string> {

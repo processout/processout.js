@@ -285,15 +285,18 @@ module ProcessOut {
          * @param {callback} error
          * @return {CardForm}
          */
-        public setupForm(form: HTMLElement, 
-            success:        (form: CardForm)          => void, 
-            error:          (err: Exception)          => void,
-            eventCallback?: (name: string, data: any) => void): CardForm {
+        public setupForm(form: HTMLElement, options: CardFieldOptions | ((form: CardForm) => void),
+            success: ((form: CardForm) => void) | ((err: Exception) => void),
+            error?:   (err: Exception) => void): CardForm {
 
             if (!this.projectID)
-                throw new Exception("default", "You must instanciate ProcessOut.js with a valid project ID in order to use ProcessOut's hosted forms.")
+                throw new Exception("default", "You must instanciate ProcessOut.js with a valid project ID in order to use ProcessOut's hosted forms.");
 
-            return new CardForm(this).setup(form, success, error, eventCallback);
+            if (typeof options == "function")
+                return new CardForm(this, form).setup(
+                    new CardFieldOptions(""), <any>options, <any>success);
+            else
+                return new CardForm(this, form).setup(options, <any>success, error);
         }
 
         /**
@@ -391,13 +394,17 @@ module ProcessOut {
                 var cardHolderName;
                 if (cardHolder && cardHolder.name)
                     cardHolderName = this.encrypt(cardHolder.name);
+                var cardHolderZIP;
+                if (cardHolder && cardHolder.zip)
+                    cardHolderZIP = this.encrypt(cardHolder.zip);
 
                 this.apiRequest("post", "cards", {
                     "number":    number,
                     "exp_month": expMonth,
                     "exp_year":  expYear,
                     "cvc2":      cvc,
-                    "name":      cardHolderName
+                    "name":      cardHolderName,
+                    "zip":       cardHolderZIP
                 }, function(data: any, code: number, 
                     req: XMLHttpRequest, e: Event): void {
 
@@ -422,13 +429,11 @@ module ProcessOut {
          * @param {callback?} eventCallback
          * @return {CardForm}
          */
-        public setupFormCVC(form: HTMLElement, 
+        public setupFormCVC(form: HTMLElement, options: CardFieldOptions,
             success:        (form: CardForm)          => void, 
-            error:          (err: Exception)          => void,
-            eventCallback?: (name: string, data: any) => void): CardForm {
+            error:          (err: Exception)          => void): CardForm {
 
-            return new CardForm(this).setupCVC(form, success, error, 
-                eventCallback);
+            return new CardForm(this, form).setupCVC(options, success, error);
         }
 
         /**
