@@ -285,14 +285,18 @@ module ProcessOut {
          * @param {callback} error
          * @return {CardForm}
          */
-        public setupForm(form: HTMLElement, options: CardFieldOptions,
-            success:        (form: CardForm)          => void,
-            error:          (err: Exception)          => void): CardForm {
+        public setupForm(form: HTMLElement, options: CardFieldOptions | ((form: CardForm) => void),
+            success: ((form: CardForm) => void) | ((err: Exception) => void),
+            error?:   (err: Exception) => void): CardForm {
 
             if (!this.projectID)
-                throw new Exception("default", "You must instanciate ProcessOut.js with a valid project ID in order to use ProcessOut's hosted forms.")
+                throw new Exception("default", "You must instanciate ProcessOut.js with a valid project ID in order to use ProcessOut's hosted forms.");
 
-            return new CardForm(this, form).setup(options, success, error);
+            if (typeof options == "function")
+                return new CardForm(this, form).setup(
+                    new CardFieldOptions(""), <any>options, <any>success);
+            else
+                return new CardForm(this, form).setup(options, <any>success, error);
         }
 
         /**
