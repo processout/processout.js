@@ -171,6 +171,35 @@ module ProcessOut {
         }
 
         /**
+         * getElement returns the element used to warp the form
+         * @return {HTMLElement}
+         */
+        public getElement(): HTMLElement {
+            return this.element;
+        }
+
+        /**
+         * addEventListener bubbles the call back to the element wrapping
+         * the form
+         * @param type 
+         * @param listener 
+         * @param useCapture 
+         */
+        public addEventListener(type, listener, useCapture) {
+            return this.element.addEventListener(type, listener, useCapture);
+        }
+
+        /**
+         * on is an alias of addEventListener
+         * @param type 
+         * @param listener 
+         * @param useCapture 
+         */
+        public on(type, listener, useCapture) {
+            return this.element.addEventListener(type, listener, useCapture);
+        }
+
+        /**
          * getNumberField returns the field handling the card number
          * @return {CardField}
          */

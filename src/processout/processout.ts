@@ -390,13 +390,17 @@ module ProcessOut {
                 var cardHolderName;
                 if (cardHolder && cardHolder.name)
                     cardHolderName = this.encrypt(cardHolder.name);
+                var cardHolderZIP;
+                if (cardHolder && cardHolder.zip)
+                    cardHolderZIP = this.encrypt(cardHolder.zip);
 
                 this.apiRequest("post", "cards", {
                     "number":    number,
                     "exp_month": expMonth,
                     "exp_year":  expYear,
                     "cvc2":      cvc,
-                    "name":      cardHolderName
+                    "name":      cardHolderName,
+                    "zip":       cardHolderZIP
                 }, function(data: any, code: number, 
                     req: XMLHttpRequest, e: Event): void {
 

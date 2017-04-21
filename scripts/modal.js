@@ -478,6 +478,7 @@ var ProcessOut;
     ProcessOut.CardFieldStyle = CardFieldStyle;
     var CardField = (function () {
         function CardField(instance, options, container, success, error) {
+            this.handlers = {};
             if (!options || !options.type) {
                 throw new ProcessOut.Exception("processout-js.invalid-field-type", "Options and a the field type must be provided to setup the field.");
             }
@@ -506,10 +507,11 @@ var ProcessOut;
             this.iframe = document.createElement('iframe');
             this.iframe.className = "processout-field-cc-iframe";
             this.iframe.setAttribute("src", this.instance.endpoint("checkout", "vault/field" + this.uid));
-            this.iframe.setAttribute("style", "background: none; height: 100%; width: 100%;");
+            this.iframe.setAttribute("style", "background: none; width: 100%;");
             this.iframe.setAttribute("frameborder", "0");
             this.iframe.setAttribute("allowtransparency", "1");
             this.iframe.style.display = "none";
+            this.iframe.height = "14px";
             var errored = false;
             var iframeError = setTimeout(function () {
                 errored = true;
@@ -573,6 +575,16 @@ var ProcessOut;
                     if (this.next)
                         this.next();
                     break;
+                case "event":
+                    if (data.data.name in this.handlers) {
+                        var handlers = this.handlers[data.data.name];
+                        for (var i = 0; i < handlers.length; i++)
+                            handlers[0](data.data.data);
+                    }
+                    break;
+                case "resize":
+                    this.iframe.height = data.data;
+                    break;
             }
         };
         CardField.prototype.setNext = function (next) {
@@ -589,6 +601,20 @@ var ProcessOut;
                 "action": "update",
                 "data": this.options
             }), "*");
+        };
+        CardField.prototype.addEventListener = function (e, h) {
+            if (!(e in this.handlers))
+                this.handlers[e] = [];
+            this.handlers[e].push(h);
+            this.iframe.contentWindow.postMessage(JSON.stringify({
+                "namespace": ProcessOut.Message.fieldNamespace,
+                "projectID": this.instance.getProjectID(),
+                "action": "registerEvent",
+                "data": e
+            }), "*");
+        };
+        CardField.prototype.on = function (e, h) {
+            return this.addEventListener(e, h);
         };
         CardField.prototype.blur = function () {
             this.iframe.contentWindow.postMessage(JSON.stringify({
@@ -740,6 +766,15 @@ var ProcessOut;
                 success(this);
             }.bind(this), error);
             return this;
+        };
+        CardForm.prototype.getElement = function () {
+            return this.element;
+        };
+        CardForm.prototype.addEventListener = function (type, listener, useCapture) {
+            return this.element.addEventListener(type, listener, useCapture);
+        };
+        CardForm.prototype.on = function (type, listener, useCapture) {
+            return this.element.addEventListener(type, listener, useCapture);
         };
         CardForm.prototype.getNumberField = function () {
             return this.number;
@@ -1111,12 +1146,16 @@ var ProcessOut;
                 var cardHolderName;
                 if (cardHolder && cardHolder.name)
                     cardHolderName = this.encrypt(cardHolder.name);
+                var cardHolderZIP;
+                if (cardHolder && cardHolder.zip)
+                    cardHolderZIP = this.encrypt(cardHolder.zip);
                 this.apiRequest("post", "cards", {
                     "number": number,
                     "exp_month": expMonth,
                     "exp_year": expYear,
                     "cvc2": cvc,
-                    "name": cardHolderName
+                    "name": cardHolderName,
+                    "zip": cardHolderZIP
                 }, function (data, code, req, e) {
                     if (!data.success) {
                         error(new ProcessOut_1.Exception("card.invalid"));

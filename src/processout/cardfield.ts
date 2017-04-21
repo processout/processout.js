@@ -135,6 +135,12 @@ module ProcessOut {
          * @var {callback}
          */
         protected next?: () => void;
+
+        /**
+         * Handlers used to handle events fired on the input field
+         * @var {callback[]}
+         */
+        protected handlers: { [key: string]: ((e: any) => void)[] } = {} ;
         
         /**
          * CardField constructor
@@ -184,16 +190,17 @@ module ProcessOut {
          */
         protected spawn(success: ()                 => void, 
                         error:   (err:   Exception) => void): void {
-            
+
             this.uid = `#${Math.random().toString(36).substring(7)}`;
             this.iframe = document.createElement('iframe');
             this.iframe.className = "processout-field-cc-iframe";
             this.iframe.setAttribute("src", this.instance.endpoint("checkout", `vault/field${this.uid}`));
-            this.iframe.setAttribute("style", "background: none; height: 100%; width: 100%;");
+            this.iframe.setAttribute("style", "background: none; width: 100%;");
             this.iframe.setAttribute("frameborder", "0");
             this.iframe.setAttribute("allowtransparency", "1");
             // Hide the field until it's ready
             this.iframe.style.display = "none";
+            this.iframe.height = "14px"; // Default height
 
             var errored = false
             var iframeError = setTimeout(function() {
@@ -274,6 +281,16 @@ module ProcessOut {
             case "next":
                 if (this.next) this.next();
                 break;
+            case "event":
+                if (data.data.name in this.handlers) {
+                    var handlers = this.handlers[data.data.name];
+                    for (var i = 0; i < handlers.length; i++)
+                        handlers[0](data.data.data);
+                }
+                break;
+            case "resize":
+                this.iframe.height = data.data;
+                break;
             }
         }
 
@@ -304,6 +321,36 @@ module ProcessOut {
                 "action":    "update",
                 "data":      this.options
             }), "*");
+        }
+
+        /**
+         * addEventListener adds an event listener for the given event on 
+         * the card field
+         * @param {string} e 
+         * @param {callback} h 
+         * @return {void}
+         */
+        public addEventListener(e: string, h: (e: any) => void): void {
+            if (!(e in this.handlers))
+                this.handlers[e] = [];
+
+            this.handlers[e].push(h);
+            this.iframe.contentWindow.postMessage(JSON.stringify({
+                "namespace": Message.fieldNamespace,
+                "projectID": this.instance.getProjectID(),
+                "action":    "registerEvent",
+                "data":      e
+            }), "*");
+        }
+
+        /**
+         * on adds an event listener for the given event on the card field
+         * @param {string} e 
+         * @param {callback} h 
+         * @return {void}
+         */
+        public on(e: string, h: (e: any) => void): void {
+            return this.addEventListener(e, h);
         }
 
         /**
