@@ -309,8 +309,7 @@ module ProcessOut {
          * @return {void}
          */
         public fetchValues(success: (number: string, cvc: string, 
-                                expMonth: string, expYear: string,
-                                metadata: any) => void,
+                                expMonth: string, expYear: string) => void,
                             error: (err: Exception) => void): void {
 
             // Let's setup the values we want to fetch
@@ -326,7 +325,7 @@ module ProcessOut {
                     expMonth != null && expYear != null) {
 
                     // All values are fetched
-                    success(number, cvc, expMonth, expYear, {});
+                    success(number, cvc, expMonth, expYear);
                     return;
                 }
             }

@@ -64,6 +64,12 @@ module ProcessOut {
         public apiVersion = "1.3.0.0";
 
         /**
+         * Expose the ApplePay class in the instance
+         * @type {ApplePay}
+         */
+        public applePay: ApplePayWrapper;
+
+        /**
          * ProcessOut constructor
          * @param  {string} projectID
          * @param  {string} resourceID
@@ -107,6 +113,8 @@ module ProcessOut {
 
                 throw new Exception("resource.invalid-type");
             }
+
+            this.applePay = new ApplePayWrapper(this);
         }
 
         /**
@@ -306,18 +314,24 @@ module ProcessOut {
          * A CardForm may also be provided instead of a card if the fields
          * are hosted by ProcessOut
          * @param  {Card | CardForm} card
+         * @param  {any} data
          * @param  {callback} success
          * @param  {callback} error
          * @return {void}
          */
-        public tokenize(val: Card | CardForm, cardHolder: CardHolder,
+        public tokenize(val: Card | CardForm | ApplePay, data: any,
             success: (token: string)  => void,
             error:   (err: Exception) => void): void {
 
             if (val instanceof Card)
-                return this.tokenizeCard(<Card>val, cardHolder, success, error);
+                return this.tokenizeCard(<Card>val, data, success, error);
+            if (val instanceof CardForm)
+                return this.tokenizeForm(<CardForm>val, data, success, error);
+            if (val instanceof ApplePay)
+                return (<ApplePay>val).tokenize(data, success, error);
 
-            return this.tokenizeForm(<CardForm>val, cardHolder, success, error);
+            throw new Exception("processout-js.invalid-type",
+                "The first parameter had an unknown type/instance. The value must be an instance of either Card, CardForm or ApplePay.");
         }
 
         /**
@@ -325,11 +339,12 @@ module ProcessOut {
          * token that can be sent to your server and used to charge your
          * customer
          * @param  {Card | CardForm} card
+         * @param  {any} data
          * @param  {callback} success
          * @param  {callback} error
          * @return {void}
          */
-        public tokenizeCard(card: Card, cardHolder: CardHolder,
+        protected tokenizeCard(card: Card, data: any,
             success: (token: string) => void,
             error:   (err: Exception) => void): void {
 
@@ -345,28 +360,29 @@ module ProcessOut {
                     this.encrypt(card.getExpiry().getMonth().toString()),
                     this.encrypt(card.getExpiry().getYear().toString()),
                     this.encrypt(card.getCVC()),
-                    cardHolder, {}, success, error);
+                    data, {}, success, error);
             }.bind(this), error);
         }
 
         /**
          * TokenizeForm takes the card form and tokenizes the card
          * @param  {CardForm} form
+         * @param  {any} data
          * @param  {callback} success
          * @param  {callback} error
          * @return {void}
          */
-        public tokenizeForm(form: CardForm, cardHolder: CardHolder,
+        protected tokenizeForm(form: CardForm, data: any,
             success: (token: string)  => void,
             error:   (err: Exception) => void): void {
 
             this.assertPKFetched(function() {
                 form.validate(function() {
                     form.fetchValues(function(number: string, cvc: string, 
-                        expMonth: string, expYear: string, metadata: any) {
+                        expMonth: string, expYear: string) {
 
                         this.tokenizeEncrypted(number, expMonth, expYear, cvc, 
-                            cardHolder, metadata, success, error);
+                            data, success, error);
                     }.bind(this), function(err: Exception) {
                         error(err);
                     });
@@ -380,32 +396,29 @@ module ProcessOut {
          * @param {string} expMonth
          * @param {string} expYear
          * @param {string} cvc
-         * @param {CardHolder} cardHolder
-         * @param {any} metadata
+         * @param {any} data
          * @param {callback} success
          * @param {callback} error
          */
         protected tokenizeEncrypted(number: string, expMonth: string, 
-            expYear: string, cvc: string, cardHolder: CardHolder, metadata: any,
+            expYear: string, cvc: string, req: any,
             success: (token: string) => void,
             error:   (err: Exception) => void): void {
 
             this.assertPKFetched(function() {
-                var cardHolderName;
-                if (cardHolder && cardHolder.name)
-                    cardHolderName = this.encrypt(cardHolder.name);
-                var cardHolderZIP;
-                if (cardHolder && cardHolder.zip)
-                    cardHolderZIP = this.encrypt(cardHolder.zip);
+                if (!req)
+                    req = {};
+                if (req.name) req.name = this.encrypt(req.name);
+                if (req.zip)  req.zip  = this.encrypt(req.zip);
 
-                this.apiRequest("post", "cards", {
-                    "number":    number,
-                    "exp_month": expMonth,
-                    "exp_year":  expYear,
-                    "cvc2":      cvc,
-                    "name":      cardHolderName,
-                    "zip":       cardHolderZIP
-                }, function(data: any, code: number, 
+                // fill up the request
+                req.number = number;
+                req.exp_month = expMonth;
+                req.exp_year = expYear;
+                req.cvc2 = cvc;
+
+                // and send it
+                this.apiRequest("post", "cards", req, function(data: any, code: number, 
                     req: XMLHttpRequest, e: Event): void {
 
                     if (!data.success) {
@@ -467,7 +480,7 @@ module ProcessOut {
          * @param  {callback} error
          * @return {void}
          */
-        public refreshCVCForm(cardUID: string, form: CardForm,
+        protected refreshCVCForm(cardUID: string, form: CardForm,
             success: (token: string)  => void,
             error:   (err: Exception) => void): void {
 
@@ -490,7 +503,7 @@ module ProcessOut {
          * @param  {callback} error
          * @return {void}
          */
-        public refreshCVCString(cardUID: string, cvc: string,
+        protected refreshCVCString(cardUID: string, cvc: string,
             success: (token: string) => void,
             error:   (err: Exception) => void): void {
 
