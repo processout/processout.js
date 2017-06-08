@@ -29,6 +29,136 @@ var ProcessOut;
 })(ProcessOut || (ProcessOut = {}));
 var ProcessOut;
 (function (ProcessOut) {
+    var ApplePay = (function () {
+        function ApplePay(instance, req) {
+            this.instance = instance;
+            if (!req.merchantCapabilities || !req.merchantCapabilities.length)
+                req.merchantCapabilities = ['supports3DS'];
+            if (!req.supportedNetworks || !req.supportedNetworks.length)
+                req.supportedNetworks = ['amex', 'discover', 'masterCard', 'visa'];
+            this.request = req;
+            this.session = new ApplePaySession(1, this.request);
+            var t = this;
+            this.session.onvalidatemerchant = function (event) {
+                t.instance.apiRequest("post", t.instance.endpoint("api", "applepay/sessions"), {
+                    "session_url": event.validationURL,
+                    "domain_name": window.location.hostname
+                }, function (data, code, req, e) {
+                    if (!data.success) {
+                        t.onerror(new ProcessOut.Exception(data.error_code, data.message));
+                        t.session.abort();
+                    }
+                    else
+                        t.session.completeMerchantValidation(data.session_payload);
+                }, function (code, req, e) {
+                    t.onerror(new ProcessOut.Exception("processout-js.network-issue"));
+                    t.session.abort();
+                });
+            };
+            this.session.onpaymentauthorized = function (event) {
+                var req = t.data;
+                if (!req)
+                    req = {};
+                req.applepay_response = event.payment;
+                req.token_type = "applepay";
+                t.instance.apiRequest("post", t.instance.endpoint("api", "cards"), req, function (data, code, req, e) {
+                    if (!data.success) {
+                        t.onerror(new ProcessOut.Exception(data.error_code, data.message));
+                        t.session.abort();
+                    }
+                    else
+                        t.onsuccess(data.card);
+                }, function (code, req, e) {
+                    t.onerror(new ProcessOut.Exception("processout-js.network-issue"));
+                    t.session.abort();
+                });
+            };
+            this.session.oncancel = this.onCancelHandler.bind(this);
+            this.session.onshippingcontactselected = this.onShippingContactSelectedHandler.bind(this);
+            this.session.onshippingmethodselected = this.onShippingMethodSelectedHandler.bind(this);
+        }
+        ApplePay.prototype.setHandlers = function (onsuccess, onerror) {
+            if (!onsuccess)
+                throw new ProcessOut.Exception("applepay.no-success-handler");
+            this.onsuccess = onsuccess;
+            this.onerror = function (err) {
+                if (onerror)
+                    onerror(err);
+            };
+        };
+        ApplePay.prototype.tokenize = function (data, onsuccess, onerror) {
+            this.setHandlers(onsuccess, onerror);
+            this.session.begin();
+        };
+        ApplePay.prototype.abort = function () {
+            this.session.abort();
+        };
+        ApplePay.prototype.completePayment = function (status) {
+            this.session.completePayment(status);
+        };
+        ApplePay.prototype.completePaymentMethodSelection = function (newTotal, newLineItems) {
+            this.session.completePaymentMethodSelection(newTotal, newLineItems);
+        };
+        ApplePay.prototype.completeShippingContactSelection = function (status, newShippingMethods, newTotal, newLineItems) {
+            this.session.completeShippingContactSelection(status, newShippingMethods, newTotal, newLineItems);
+        };
+        ApplePay.prototype.completeShippingMethodSelection = function (status, newTotal, newLineItems) {
+            this.session.completeShippingMethodSelection(status, newTotal, newLineItems);
+        };
+        ApplePay.prototype.getSession = function () {
+            return this.session;
+        };
+        ApplePay.prototype.onCancelHandler = function (event) {
+            if (this.oncancel)
+                this.oncancel(event);
+        };
+        ApplePay.prototype.onPaymentMethodSelectedHandler = function (event) {
+            if (this.onpaymentmethodselected)
+                this.onpaymentmethodselected(event);
+        };
+        ApplePay.prototype.onShippingContactSelectedHandler = function (event) {
+            if (this.onshippingcontactselected)
+                this.onshippingcontactselected(event);
+        };
+        ApplePay.prototype.onShippingMethodSelectedHandler = function (event) {
+            if (this.onshippingmethodselected)
+                this.onshippingmethodselected(event);
+        };
+        return ApplePay;
+    }());
+    ProcessOut.ApplePay = ApplePay;
+})(ProcessOut || (ProcessOut = {}));
+var ProcessOut;
+(function (ProcessOut) {
+    var ApplePayWrapper = (function () {
+        function ApplePayWrapper(instance) {
+            this.instance = instance;
+        }
+        ApplePayWrapper.prototype.checkAvailability = function (callback) {
+            if (!window.ApplePaySession || !ApplePaySession.canMakePayments()) {
+                callback(new ProcessOut.Exception("applepay.not-supported"));
+                return;
+            }
+            this.instance.apiRequest("get", this.instance.endpoint("api", "applepay/available"), {
+                "domain_name": window.location.hostname
+            }, function (data, code, req, e) {
+                if (data.success)
+                    callback(null);
+                else
+                    callback(new ProcessOut.Exception("applepay.not-available", data.message));
+            }.bind(this), function (code, req, e) {
+                callback(new ProcessOut.Exception("processout-js.network-issue"));
+            });
+        };
+        ApplePayWrapper.prototype.newSession = function (req, onsuccess, onerror) {
+            return new ProcessOut.ApplePay(this.instance, req);
+        };
+        return ApplePayWrapper;
+    }());
+    ProcessOut.ApplePayWrapper = ApplePayWrapper;
+})(ProcessOut || (ProcessOut = {}));
+var ProcessOut;
+(function (ProcessOut) {
     var GatewayRequest = (function () {
         function GatewayRequest() {
         }
@@ -741,7 +871,7 @@ var ProcessOut;
             var ev = function () {
                 if (number != null && cvc != null &&
                     expMonth != null && expYear != null) {
-                    success(number, cvc, expMonth, expYear, {});
+                    success(number, cvc, expMonth, expYear);
                     return;
                 }
             };
@@ -833,7 +963,11 @@ var ProcessOut;
             "processout-js.undefined-field": "The given HTML element was undefined.",
             "processout-js.invalid-field-type": "The given field type was incorrect. It must either be number, expiry, expiryMonth, expiryYear or CVC.",
             "processout-js.network-issue": "There seems to be some connectivity issue preventing the payment from making it through. Please switch to another network or try again in a few minutes.",
-            "resource.invalid-type": "The provided resource was invalid. It must be an invoice, a subscription or an authorization request."
+            "processout-js.invalid-type": "The specified parameter had an unknown type.",
+            "resource.invalid-type": "The provided resource was invalid. It must be an invoice, a subscription or an authorization request.",
+            "applepay.not-supported": "The current browser/device does not support Apple Pay.",
+            "applepay.no-success-handler": "A success handler must be specified when setting up Apple Pay.",
+            "applepay.not-available": "Apple Pay is not available for the current browser, device or ProcessOut project."
         }
     };
     var Translator = (function () {
@@ -912,6 +1046,7 @@ var ProcessOut;
                 this.resourceID.substring(0, 9) != "auth_req_") {
                 throw new ProcessOut_1.Exception("resource.invalid-type");
             }
+            this.applePay = new ProcessOut_1.ApplePayWrapper(this);
         }
         ProcessOut.prototype.getResourceID = function () {
             return this.resourceID;
@@ -1015,48 +1150,49 @@ var ProcessOut;
             else
                 return new ProcessOut_1.CardForm(this, form).setup(options, success, error);
         };
-        ProcessOut.prototype.tokenize = function (val, cardHolder, success, error) {
+        ProcessOut.prototype.tokenize = function (val, data, success, error) {
             if (val instanceof ProcessOut_1.Card)
-                return this.tokenizeCard(val, cardHolder, success, error);
-            return this.tokenizeForm(val, cardHolder, success, error);
+                return this.tokenizeCard(val, data, success, error);
+            if (val instanceof ProcessOut_1.CardForm)
+                return this.tokenizeForm(val, data, success, error);
+            if (val instanceof ProcessOut_1.ApplePay)
+                return val.tokenize(data, success, error);
+            throw new ProcessOut_1.Exception("processout-js.invalid-type", "The first parameter had an unknown type/instance. The value must be an instance of either Card, CardForm or ApplePay.");
         };
-        ProcessOut.prototype.tokenizeCard = function (card, cardHolder, success, error) {
+        ProcessOut.prototype.tokenizeCard = function (card, data, success, error) {
             this.assertPKFetched(function () {
                 var err = card.validate();
                 if (err) {
                     error(err);
                     return;
                 }
-                this.tokenizeEncrypted(this.encrypt(card.getNumber()), this.encrypt(card.getExpiry().getMonth().toString()), this.encrypt(card.getExpiry().getYear().toString()), this.encrypt(card.getCVC()), cardHolder, {}, success, error);
+                this.tokenizeEncrypted(this.encrypt(card.getNumber()), this.encrypt(card.getExpiry().getMonth().toString()), this.encrypt(card.getExpiry().getYear().toString()), this.encrypt(card.getCVC()), data, success, error);
             }.bind(this), error);
         };
-        ProcessOut.prototype.tokenizeForm = function (form, cardHolder, success, error) {
+        ProcessOut.prototype.tokenizeForm = function (form, data, success, error) {
             this.assertPKFetched(function () {
                 form.validate(function () {
-                    form.fetchValues(function (number, cvc, expMonth, expYear, metadata) {
-                        this.tokenizeEncrypted(number, expMonth, expYear, cvc, cardHolder, metadata, success, error);
+                    form.fetchValues(function (number, cvc, expMonth, expYear) {
+                        this.tokenizeEncrypted(number, expMonth, expYear, cvc, data, success, error);
                     }.bind(this), function (err) {
                         error(err);
                     });
                 }.bind(this), error);
             }.bind(this), error);
         };
-        ProcessOut.prototype.tokenizeEncrypted = function (number, expMonth, expYear, cvc, cardHolder, metadata, success, error) {
+        ProcessOut.prototype.tokenizeEncrypted = function (number, expMonth, expYear, cvc, req, success, error) {
             this.assertPKFetched(function () {
-                var cardHolderName;
-                if (cardHolder && cardHolder.name)
-                    cardHolderName = this.encrypt(cardHolder.name);
-                var cardHolderZIP;
-                if (cardHolder && cardHolder.zip)
-                    cardHolderZIP = this.encrypt(cardHolder.zip);
-                this.apiRequest("post", "cards", {
-                    "number": number,
-                    "exp_month": expMonth,
-                    "exp_year": expYear,
-                    "cvc2": cvc,
-                    "name": cardHolderName,
-                    "zip": cardHolderZIP
-                }, function (data, code, req, e) {
+                if (!req)
+                    req = {};
+                if (req.name)
+                    req.name = this.encrypt(req.name);
+                if (req.zip)
+                    req.zip = this.encrypt(req.zip);
+                req.number = number;
+                req.exp_month = expMonth;
+                req.exp_year = expYear;
+                req.cvc2 = cvc;
+                this.apiRequest("post", "cards", req, function (data, code, req, e) {
                     if (!data.success) {
                         error(new ProcessOut_1.Exception("card.invalid"));
                         return;

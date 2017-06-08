@@ -2,6 +2,7 @@
 /// <reference path="processout/gatewayconfiguration.ts" />
 /// <reference path="processout/actionhandler.ts" />
 /// <reference path="processout/applepay.ts" />
+/// <reference path="processout/applepay-wrapper.ts" />
 /// <reference path="processout/gatewayrequest.ts" />
 /// <reference path="processout/card.ts" />
 /// <reference path="processout/cardfield.ts" />

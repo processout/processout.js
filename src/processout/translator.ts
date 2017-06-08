@@ -63,8 +63,9 @@ module ProcessOut {
 
             "resource.invalid-type": "The provided resource was invalid. It must be an invoice, a subscription or an authorization request.",
 
-            "applepay.not-supported":      "The current browser/device does not support ApplePay.",
-            "applepay.no-success-handler": "A success handler must be specified when setting up ApplePay."
+            "applepay.not-supported":      "The current browser/device does not support Apple Pay.",
+            "applepay.no-success-handler": "A success handler must be specified when setting up Apple Pay.",
+            "applepay.not-available":      "Apple Pay is not available for the current browser, device or ProcessOut project."
         },
     };
 

@@ -35,14 +35,16 @@ module ProcessOut {
                 return;
             }
 
-            this.instance.apiRequest("get", this.instance.endpoint("api", "applepay/available"), {}, 
+            this.instance.apiRequest("get", this.instance.endpoint("api", "applepay/available"), {
+                "domain_name": window.location.hostname
+            }, 
                 function(data: any, code: number, req: XMLHttpRequest, 
                     e: Event): void {
 
                     if (data.success)
                         callback(null);
                     else
-                        callback(new Exception(data.error_code, data.message));
+                        callback(new Exception("applepay.not-available", data.message));
                 }.bind(this), function(code: number, req: XMLHttpRequest, e: Event): void {
                     callback(new Exception("processout-js.network-issue"));
                 });

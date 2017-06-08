@@ -360,7 +360,7 @@ module ProcessOut {
                     this.encrypt(card.getExpiry().getMonth().toString()),
                     this.encrypt(card.getExpiry().getYear().toString()),
                     this.encrypt(card.getCVC()),
-                    data, {}, success, error);
+                    data, success, error);
             }.bind(this), error);
         }
 

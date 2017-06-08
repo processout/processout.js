@@ -98,13 +98,49 @@ module ProcessOut {
             // ApplePay class
             this.session = new ApplePaySession(1, this.request);
             // Hook the session events we need
-            this.session.onvalidatemerchant = this.onValidateMerchant;
-            this.session.onpaymentauthorized = this.onPaymentAuthorized;
+            var t = this;
+            this.session.onvalidatemerchant = function(event: any): void {
+                t.instance.apiRequest("post", t.instance.endpoint("api", "applepay/sessions"), {
+                    "session_url": event.validationURL,
+                    "domain_name": window.location.hostname
+                }, function(data: any, code: number, req: XMLHttpRequest, 
+                    e: Event): void {
+
+                    if (!data.success) {
+                        t.onerror(new Exception(data.error_code, data.message));
+                        t.session.abort();
+                    } else
+                        t.session.completeMerchantValidation(data.session_payload);
+
+                }, function(code: number, req: XMLHttpRequest, e: Event): void {
+                    t.onerror(new Exception("processout-js.network-issue"));
+                    t.session.abort();
+                });
+            };
+            this.session.onpaymentauthorized = function(event: any): void {
+                var req = t.data;
+                if (!req) req = {};
+                req.applepay_response = event.payment;
+                req.token_type = "applepay";
+                t.instance.apiRequest("post", t.instance.endpoint("api", "cards"),
+                    req, function(data: any, code: number, req: XMLHttpRequest, 
+                    e: Event): void {
+
+                        if (!data.success) {
+                            t.onerror(new Exception(data.error_code, data.message));
+                            t.session.abort();
+                        } else
+                            t.onsuccess(data.card);
+
+                }, function(code: number, req: XMLHttpRequest, e: Event): void {
+                    t.onerror(new Exception("processout-js.network-issue"));
+                    t.session.abort();
+                });
+            };
             // As well as the other ones
-            this.session.oncancel = this.onCancel;
-            this.session.onpaymentmethodselected = this.onPaymentMethodSelected;
-            this.session.onshippingcontactselected = this.onShippingContactSelected;
-            this.session.onshippingmethodselected = this.onShippingMethodSelected;
+            this.session.oncancel = this.onCancelHandler.bind(this);
+            this.session.onshippingcontactselected = this.onShippingContactSelectedHandler.bind(this);
+            this.session.onshippingmethodselected = this.onShippingMethodSelectedHandler.bind(this);
         }
 
         /**
@@ -208,62 +244,11 @@ module ProcessOut {
         }
 
         /**
-         * onValidateMerchant is the handler set on the ApplePaySession
-         * object to validate the merchant and fetch the session from ProcessOut
-         * @param {any} event
-         * @return {void}
-         */
-        protected onValidateMerchant(event: any): void {
-            this.instance.apiRequest("post", this.instance.endpoint("api", "applepay/sessions"), {
-                "session_url": event.validationURL
-            }, function(data: any, code: number, req: XMLHttpRequest, 
-                e: Event): void {
-
-                if (!data.success) {
-                    this.onerror(new Exception(data.error_code, data.message));
-                    this.session.abort();
-                } else
-                    this.session.completeMerchantValidation(data.session_payload);
-
-            }.bind(this), function(code: number, req: XMLHttpRequest, e: Event): void {
-                this.onerror(new Exception("processout-js.network-issue"));
-                this.session.abort();
-            }.bind(this));
-        }
-
-        /**
-         * onPaymentAuthorized is the handler set on the ApplePaySession
-         * object and is used to be notified when the user successfully
-         * authorizes a payment
-         * @param {any} event
-         * @return {void}
-         */
-        protected onPaymentAuthorized(event: any): void {
-            var req = this.data;
-            req.applepay_response = event.payment;
-            req.token_type = "applepay";
-            this.instance.apiRequest("post", this.instance.endpoint("api", "cards"),
-                req, function(data: any, code: number, req: XMLHttpRequest, 
-                e: Event): void {
-
-                    if (!data.success) {
-                        this.onerror(new Exception(data.error_code, data.message));
-                        this.session.abort();
-                    } else
-                        this.onsuccess(data.card);
-
-            }.bind(this), function(code: number, req: XMLHttpRequest, e: Event): void {
-                this.onerror(new Exception("processout-js.network-issue"));
-                this.session.abort();
-            }.bind(this));
-        }
-
-        /**
          * onCancel is fired when the user cancels the ApplePay session
          * @param {any} event
          * @return {void}
          */
-        protected onCancel(event: any): void {
+        protected onCancelHandler(event: any): void {
             if (this.oncancel) this.oncancel(event);
         }
 
@@ -273,7 +258,7 @@ module ProcessOut {
          * @param {any} event
          * @return {void}
          */
-        protected onPaymentMethodSelected(event: any): void {
+        protected onPaymentMethodSelectedHandler(event: any): void {
             if (this.onpaymentmethodselected) this.onpaymentmethodselected(event);
         }
 
@@ -283,7 +268,7 @@ module ProcessOut {
          * @param {any} event
          * @return {void}
          */
-        protected onShippingContactSelected(event: any): void {
+        protected onShippingContactSelectedHandler(event: any): void {
             if (this.onshippingcontactselected) this.onshippingcontactselected(event);
         }
 
@@ -293,7 +278,7 @@ module ProcessOut {
          * @param {any} event
          * @return {void}
          */
-        protected onShippingMethodSelected(event: any): void {
+        protected onShippingMethodSelectedHandler(event: any): void {
             if (this.onshippingmethodselected) this.onshippingmethodselected(event);
         }
 
