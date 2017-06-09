@@ -18,13 +18,13 @@ module ProcessOut {
         protected instance: ProcessOut;
 
         /**
-         * ApplePay payment request
+         * Apple Pay payment request
          * @type {ApplePayPaymentRequest}
          */
         protected request: ApplePayPaymentRequest;
 
         /**
-         * ApplePay session
+         * Apple Pay session
          * @type {ApplePaySession}
          */
         protected session: ApplePaySession;
@@ -38,42 +38,42 @@ module ProcessOut {
 
         /**
          * onSuccess is the handler called when a successful
-         * applePay authorization was done
+         * Apple Pay authorization was done
          * @type {(e: any) => void}
          */
         protected onsuccess: (e: any) => void;
 
         /**
          * onError is the handler called (when set) when an error occurs
-         * during the ApplePay flow
+         * during the Apple Pay flow
          * @type {(e: any) => void}
          */
         protected onerror: (err: Exception) => void;
 
         /**
          * onCancel can be set to handle the event when the user cancels the
-         * payment on the ApplePay payment sheet
+         * payment on the Apple Pay payment sheet
          * @type {(event: any) => void}
          */
         public oncancel: (event: any) => void;
 
         /**
          * onPaymentMethodSelected handles events when the user selects a new
-         * payment method on the ApplePay payment sheet
+         * payment method on the Apple Pay payment sheet
          * @type {(event: any) => void}
          */
         public onpaymentmethodselected: (event: any) => void;
 
         /**
          * onShippingContactSelected handles events when the user selects
-         * a new shipping contact on the ApplePay payment sheet
+         * a new shipping contact on the Apple Pay payment sheet
          * @type {(event: any) => void}
          */
         public onshippingcontactselected: (event: any) => void;
 
         /**
          * onShippingMethodSelected handles events when the user selects
-         * a new shipping method on the ApplePay payment sheet
+         * a new shipping method on the Apple Pay payment sheet
          * @type {(event: any) => void}
          */
         public onshippingmethodselected: (event: any) => void;
@@ -86,7 +86,7 @@ module ProcessOut {
         constructor(instance: ProcessOut, req: ApplePayPaymentRequest) {
             this.instance = instance;
 
-            // We want to set sensible defaults on the ApplePay request if
+            // We want to set sensible defaults on the Apple Pay request if
             // it wasn't previously set by the merchant
             if (!req.merchantCapabilities || !req.merchantCapabilities.length)
                 req.merchantCapabilities = ['supports3DS'];
@@ -95,7 +95,7 @@ module ProcessOut {
             this.request = req;
 
             // Let's now create the session so we can wrap it in our 
-            // ApplePay class
+            // Apple Pay class
             this.session = new ApplePaySession(1, this.request);
             // Hook the session events we need
             var t = this;
@@ -161,7 +161,7 @@ module ProcessOut {
         }
 
         /**
-         * Tokenize handles the ApplePay
+         * Tokenize handles the Apple Pay payment sheet
          * @param {any} data
          * @param {(e: any) => void} onsuccess
          * @param {(err: Exception) => void} onerror
@@ -175,7 +175,7 @@ module ProcessOut {
         }
 
         /**
-         * Abort aborts the ApplePay payment flow and hides the payment sheet
+         * Abort aborts the Apple Pay payment flow and hides the payment sheet
          * @return {void}
          */
         public abort(): void {
@@ -184,7 +184,7 @@ module ProcessOut {
 
         /**
          * completePayment finishes the payment flow and either show an
-         * ApplePay payment error, or hides the payment sheet after showing
+         * Apple Pay payment error, or hides the payment sheet after showing
          * a success message
          * @param {ApplePayStatusCode} status
          * @return {void}
@@ -244,7 +244,7 @@ module ProcessOut {
         }
 
         /**
-         * onCancel is fired when the user cancels the ApplePay session
+         * onCancel is fired when the user cancels the Apple Pay session
          * @param {any} event
          * @return {void}
          */
@@ -254,7 +254,7 @@ module ProcessOut {
 
         /**
          * onPaymentMethodSelected is fired when the user selects a new
-         * payment method on the ApplePay payment sheet
+         * payment method on the Apple Pay payment sheet
          * @param {any} event
          * @return {void}
          */
@@ -264,7 +264,7 @@ module ProcessOut {
 
         /**
          * onShippingContactSelected is fired when the user selects a new
-         * shipping contact on the ApplePay payment sheet
+         * shipping contact on the Apple Pay payment sheet
          * @param {any} event
          * @return {void}
          */
@@ -274,7 +274,7 @@ module ProcessOut {
 
         /**
          * onShippingMethodSelected is fired when the user selects a new
-         * shipping methodo on the ApplePay payment sheet
+         * shipping method on the Apple Pay payment sheet
          * @param {any} event
          * @return {void}
          */
