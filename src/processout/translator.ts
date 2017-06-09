@@ -58,9 +58,14 @@ module ProcessOut {
             "processout-js.invalid-field":                 "The given HTML element may not be used by ProcessOut.js: it is an input. Please only use divs when creating a ProcessOut.js credit card field.",
             "processout-js.undefined-field":               "The given HTML element was undefined.",
             "processout-js.invalid-field-type":            "The given field type was incorrect. It must either be number, expiry, expiryMonth, expiryYear or CVC.",
-            "processout-js.network-issue": "There seems to be some connectivity issue preventing the payment from making it through. Please switch to another network or try again in a few minutes.",
+            "processout-js.network-issue":                 "There seems to be some connectivity issue preventing the payment from making it through. Please switch to another network or try again in a few minutes.",
+            "processout-js.invalid-type":                  "The specified parameter had an unknown type.",
 
-            "resource.invalid-type": "The provided resource was invalid. It must be an invoice, a subscription or an authorization request."
+            "resource.invalid-type": "The provided resource was invalid. It must be an invoice, a subscription or an authorization request.",
+
+            "applepay.not-supported":      "The current browser/device does not support Apple Pay.",
+            "applepay.no-success-handler": "A success handler must be specified when setting up Apple Pay.",
+            "applepay.not-available":      "Apple Pay is not available for the current browser, device or ProcessOut project."
         },
     };
 
