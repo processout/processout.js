@@ -1,7 +1,5 @@
 /// <reference path="../references.ts" />
 
-declare var forge: any;
-
 // declare the IE specific XDomainRequest object
 declare var XDomainRequest: any;
 interface Window {
@@ -194,9 +192,10 @@ module ProcessOut {
          * @return {string}
          */
         public encrypt(str: string): string {
-            return forge.util.encode64(forge.pki.publicKeyFromPem(this.publicKey)
+            var w = <any>window;
+            return w.processoutforge.util.encode64(w.processoutforge.pki.publicKeyFromPem(this.publicKey)
                 .encrypt(str, "RSA-OAEP", {
-                    md: forge.md.sha256.create()
+                    md: w.processoutforge.md.sha256.create()
                 }));
         }
 
