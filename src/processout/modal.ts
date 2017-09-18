@@ -112,6 +112,15 @@ module ProcessOut {
                             onHide(modal);
                         break;
 
+                    case "error":
+                        // The checkout returned us some error. This could be
+                        // that the invoice could not be found, or that
+                        // the invoice parameters were invalid.
+                        clearTimeout(redirectTimeout);
+                        if (typeof(error) === typeof(Function))
+                            error(new Exception(data.errorCode, data.errorMessage));
+                        break;
+
                     default:
                         console.log("Could not read event action from modal.",
                             event.data);

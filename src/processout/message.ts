@@ -13,12 +13,14 @@ module ProcessOut {
         public static checkoutNamespace = "processout.checkout";
         public static fieldNamespace    = "processout.field";
 
-        public messageID: string;
-        public frameID:   string;
-        public projectID: string;
-        public namespace: string;
-        public action:    string;
-        public data:      any;
+        public messageID:    string;
+        public frameID:      string;
+        public projectID:    string;
+        public namespace:    string;
+        public action:       string;
+        public data:         any;
+        public errorCode:    string;
+        public errorMessage: string;
 
         public static parseEvent(e: MessageEvent): Message {
             try {
