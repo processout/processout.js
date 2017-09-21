@@ -35,20 +35,27 @@
                 };
 
                 loading = true;
-                modal   = processOut.newModal(button.getAttribute("href"), function(modal) {
-                    button.onclick = function() {
-                        if (modal.isDeleted())
+                modal   = processOut.newModal({
+                    url: button.getAttribute("href"),
+                    onReady: function(modal) {
+                        button.onclick = function() {
+                            if (modal.isDeleted())
+                                return false;
+    
+                            loading                    = false;
+                            document.body.style.cursor = "auto";
+                            modal.show({
+                                onError: function(modal, err) {
+                                    error(err);
+                                }
+                            });
+    
+                            button.onclick = preclick;
                             return false;
-
-                        loading                    = false;
-                        document.body.style.cursor = "auto";
-                        modal.show();
-
-                        button.onclick = preclick;
-
-                        return false;
-                    }
-                }, error);
+                        }
+                    },
+                    onError: error
+                });
             }
 
             button.onclick = preclick;

@@ -550,25 +550,23 @@ module ProcessOut {
         /**
          * Create a new modal
          * @param  {string|object}   url
-         * @param  {callback} success
-         * @param  {callback} error
+         * @param  {callback} onReady
+         * @param  {callback} onError
          * @return {void}
          */
         public newModal(options: string|any, 
-            success?: (modal: Modal)     => void,
-            error?:   (err:   Exception) => void): void {
+            onReady?: (modal: Modal)     => void,
+            onError?: (err:   Exception) => void): void {
 
             var url = '';
             if (typeof(options) == 'object') {
                 url = options.url;
-                success = options.success;
-                error = options.error;
+                onReady = options.onReady;
+                onError = options.onError;
 
                 // Let's try to build the URL ourselves
                 if (!url) {
-                    var projectID = options.projectID;
-                    if (!projectID) this.projectID;
-                    url = this.endpoint("checkout", `oneoff/${encodeURIComponent(projectID)}`+
+                    url = this.endpoint("checkout", `oneoff/${encodeURIComponent(this.getProjectID())}`+
                         `?amount=${encodeURIComponent(options.amount)}`+
                         `&currency=${encodeURIComponent(options.currency)}`+
                         `&name=${encodeURIComponent(options.name)}`);
@@ -588,13 +586,13 @@ module ProcessOut {
             iframe.style.display = "none";
 
             var iframeError = setTimeout(function() {
-                if (typeof(error) === typeof(Function))
-                    error(new Exception("processout-js.modal.unavailable"));
+                if (typeof(onError) === typeof(Function))
+                    onError(new Exception("processout-js.modal.unavailable"));
             }, this.timeout);
             iframe.onload = function() {
                 clearTimeout(iframeError);
-                if (typeof(success) === typeof(Function))
-                    success(new Modal(this, iframe, uniqId));
+                if (typeof(onReady) === typeof(Function))
+                    onReady(new Modal(this, iframe, uniqId));
             }.bind(this);
 
             document.body.appendChild(iframe);
