@@ -53,13 +53,28 @@ module ProcessOut {
 
         /**
          * Show the modal
-         * @param  {Function} onShow
+         * @param  {Function|object} options
          * @param  {Function} onHide
          * @param  {Function} error
          * @return {void}
          */
-        show(onShow?: (modal: Modal) => void, onHide?: (modal: Modal) => void,
-            error?: (err: Exception) => void) {
+        show(options?: ((modal: Modal) => void)|any, onHide?: (modal: Modal) => void,
+            onError?: (modal: Modal, err: Exception) => void) {
+
+            var onShow = options;
+            var onPayment, onPaymentError, hideAfterSuccessTimeout;
+            if (typeof(options) == 'object') {
+                onShow         = options.onShow;
+                onHide         = options.onHide;
+                onError        = options.onError;
+                onPayment      = options.onPayment;
+                onPaymentError = options.onPaymentError;
+                hideAfterSuccessTimeout = options.hideAfterSuccessTimeout;
+            }
+
+            // Default timeout to 2.5s
+            if (hideAfterSuccessTimeout == null)
+                hideAfterSuccessTimeout = 2500;
 
             var modal   = this;
             var iframe  = modal.iframe;
@@ -72,8 +87,8 @@ module ProcessOut {
             }), "*");
             var redirectTimeout =
                 setTimeout(function(){
-                    if (typeof(error) === typeof(Function))
-                        error(new Exception("processout-js.modal.unavailable"));
+                    if (typeof(onError) === typeof(Function))
+                        onError(modal, new Exception("processout-js.modal.unavailable"));
                 }, this.timeout);
 
             window.addEventListener("message", function (event) {
@@ -110,6 +125,32 @@ module ProcessOut {
                         modal.hide();
                         if (typeof(onHide) === typeof(Function))
                             onHide(modal);
+                        break;
+
+                    case "error":
+                        // The iframe returned us some error. This could be
+                        // that the invoice could not be found, or that
+                        // the invoice parameters were invalid.
+                        clearTimeout(redirectTimeout);
+                        if (typeof(onError) === typeof(Function))
+                            onError(modal, new Exception(data.errorCode, data.errorMessage));
+                        break;
+
+                    case "onPayment":
+                        if (typeof(onPayment) === typeof(Function))
+                            onPayment(modal, data.data);
+
+                        if (hideAfterSuccessTimeout > 0) {
+                            setTimeout(function() {
+                                modal.hide();
+                            }, hideAfterSuccessTimeout);
+                        }
+                        break;
+
+                    case "onPaymentError":
+                        if (typeof(onPaymentError) === typeof(Function))
+                            onPaymentError(modal, new Exception(data.errorCode, 
+                                data.errorMessage));
                         break;
 
                     default:

@@ -11,5 +11,37 @@
 	<a href="https://checkout.processout.com/plan/proj_gAO1Uu0ysZJvDuUpOGPkUBeE3pGalk3x/test" class="processout-modal-button">Pay subscription</a>
 
 	<script src="https://js.processout.com/modal.js"></script>
+	<script>
+	// Advanced use case
+	var processOut = new ProcessOut.ProcessOut("test-proj_gAO1Uu0ysZJvDuUpOGPkUBeE3pGalk3x");
+	var modal = processOut.newModal({
+		onReady: function(modal) {
+			console.log(modal);
+			modal.show({
+				onShow: function(modal) {
+					console.log("onShow");
+				},
+				onHide: function(modal) {
+					console.log("onHide");
+				},
+				onError: function(modal, err) {
+					console.log("onError"); console.log(err);
+				},
+				onPayment: function(modal, iv) {
+					console.log("onPayment"); console.log(iv);
+				},
+				onPaymentError: function(modal, err) {
+					console.log("onPaymentError"); console.log(err);
+				}
+			});
+		},
+		onError: function(err) {
+			console.log(err);
+		},
+		amount:   "5.00",
+		currency: "USD",
+		name:     "test invoice"
+	})
+	</script>
 </body>
 </html>

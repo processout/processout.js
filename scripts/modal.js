@@ -1349,24 +1349,36 @@ var ProcessOut;
                 });
             }.bind(this), error);
         };
-        ProcessOut.prototype.newModal = function (url, success, error) {
+        ProcessOut.prototype.newModal = function (options, onReady, onError) {
+            var url = '';
+            if (typeof (options) == 'object') {
+                url = options.url;
+                onReady = options.onReady;
+                onError = options.onError;
+                if (!url) {
+                    url = this.endpoint("checkout", "oneoff/" + encodeURIComponent(this.getProjectID()) +
+                        ("?amount=" + encodeURIComponent(options.amount)) +
+                        ("&currency=" + encodeURIComponent(options.currency)) +
+                        ("&name=" + encodeURIComponent(options.name)));
+                }
+            }
             var uniqId = Math.random().toString(36).substr(2, 9);
             var iframe = document.createElement('iframe');
             iframe.className = "processout-iframe";
             iframe.setAttribute("id", "processout-iframe-" + uniqId);
             iframe.setAttribute("src", url);
-            iframe.setAttribute("style", "position: fixed; top: 0; left: 0; background: none;z-index:9999999;");
+            iframe.setAttribute("style", "position: fixed; top: 0; left: 0; background: none;z-index: 9999999;");
             iframe.setAttribute("frameborder", "0");
             iframe.setAttribute("allowtransparency", "1");
             iframe.style.display = "none";
             var iframeError = setTimeout(function () {
-                if (typeof (error) === typeof (Function))
-                    error(new ProcessOut_1.Exception("processout-js.modal.unavailable"));
+                if (typeof (onError) === typeof (Function))
+                    onError(new ProcessOut_1.Exception("processout-js.modal.unavailable"));
             }, this.timeout);
             iframe.onload = function () {
                 clearTimeout(iframeError);
-                if (typeof (success) === typeof (Function))
-                    success(new ProcessOut_1.Modal(this, iframe, uniqId));
+                if (typeof (onReady) === typeof (Function))
+                    onReady(new ProcessOut_1.Modal(this, iframe, uniqId));
             }.bind(this);
             document.body.appendChild(iframe);
         };
@@ -1388,7 +1400,19 @@ var ProcessOut;
             this.iframe = iframe;
             this.uniqId = uniqId;
         }
-        Modal.prototype.show = function (onShow, onHide, error) {
+        Modal.prototype.show = function (options, onHide, onError) {
+            var onShow = options;
+            var onPayment, onPaymentError, hideAfterSuccessTimeout;
+            if (typeof (options) == 'object') {
+                onShow = options.onShow;
+                onHide = options.onHide;
+                onError = options.onError;
+                onPayment = options.onPayment;
+                onPaymentError = options.onPaymentError;
+                hideAfterSuccessTimeout = options.hideAfterSuccessTimeout;
+            }
+            if (hideAfterSuccessTimeout == null)
+                hideAfterSuccessTimeout = 2500;
             var modal = this;
             var iframe = modal.iframe;
             var iframeW = iframe.contentWindow;
@@ -1399,8 +1423,8 @@ var ProcessOut;
                 action: "check"
             }), "*");
             var redirectTimeout = setTimeout(function () {
-                if (typeof (error) === typeof (Function))
-                    error(new ProcessOut.Exception("processout-js.modal.unavailable"));
+                if (typeof (onError) === typeof (Function))
+                    onError(modal, new ProcessOut.Exception("processout-js.modal.unavailable"));
             }, this.timeout);
             window.addEventListener("message", function (event) {
                 var data = ProcessOut.Message.parseEvent(event);
@@ -1430,6 +1454,24 @@ var ProcessOut;
                         modal.hide();
                         if (typeof (onHide) === typeof (Function))
                             onHide(modal);
+                        break;
+                    case "error":
+                        clearTimeout(redirectTimeout);
+                        if (typeof (onError) === typeof (Function))
+                            onError(modal, new ProcessOut.Exception(data.errorCode, data.errorMessage));
+                        break;
+                    case "onPayment":
+                        if (typeof (onPayment) === typeof (Function))
+                            onPayment(modal, data.data);
+                        if (hideAfterSuccessTimeout > 0) {
+                            setTimeout(function () {
+                                modal.hide();
+                            }, hideAfterSuccessTimeout);
+                        }
+                        break;
+                    case "onPaymentError":
+                        if (typeof (onPaymentError) === typeof (Function))
+                            onPaymentError(modal, new ProcessOut.Exception(data.errorCode, data.errorMessage));
                         break;
                     default:
                         console.log("Could not read event action from modal.", event.data);
@@ -1497,17 +1539,25 @@ var ProcessOut;
                     window.location.href = button.getAttribute("href");
                 };
                 loading = true;
-                modal = processOut.newModal(button.getAttribute("href"), function (modal) {
-                    button.onclick = function () {
-                        if (modal.isDeleted())
+                modal = processOut.newModal({
+                    url: button.getAttribute("href"),
+                    onReady: function (modal) {
+                        button.onclick = function () {
+                            if (modal.isDeleted())
+                                return false;
+                            loading = false;
+                            document.body.style.cursor = "auto";
+                            modal.show({
+                                onError: function (modal, err) {
+                                    error(err);
+                                }
+                            });
+                            button.onclick = preclick;
                             return false;
-                        loading = false;
-                        document.body.style.cursor = "auto";
-                        modal.show();
-                        button.onclick = preclick;
-                        return false;
-                    };
-                }, error);
+                        };
+                    },
+                    onError: error
+                });
             };
             button.onclick = preclick;
         };

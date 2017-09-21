@@ -549,21 +549,36 @@ module ProcessOut {
 
         /**
          * Create a new modal
-         * @param  {string}   url
-         * @param  {callback} success
-         * @param  {callback} error
+         * @param  {string|object}   url
+         * @param  {callback} onReady
+         * @param  {callback} onError
          * @return {void}
          */
-        public newModal(url: string, 
-            success: (modal: Modal)     => void,
-            error:   (err:   Exception) => void): void {
+        public newModal(options: string|any, 
+            onReady?: (modal: Modal)     => void,
+            onError?: (err:   Exception) => void): void {
+
+            var url = '';
+            if (typeof(options) == 'object') {
+                url = options.url;
+                onReady = options.onReady;
+                onError = options.onError;
+
+                // Let's try to build the URL ourselves
+                if (!url) {
+                    url = this.endpoint("checkout", `oneoff/${encodeURIComponent(this.getProjectID())}`+
+                        `?amount=${encodeURIComponent(options.amount)}`+
+                        `&currency=${encodeURIComponent(options.currency)}`+
+                        `&name=${encodeURIComponent(options.name)}`);
+                }
+            }
 
             var uniqId = Math.random().toString(36).substr(2, 9);
             var iframe = document.createElement('iframe');
             iframe.className = "processout-iframe";
             iframe.setAttribute("id", "processout-iframe-" + uniqId);
             iframe.setAttribute("src", url);
-            iframe.setAttribute("style", "position: fixed; top: 0; left: 0; background: none;z-index:9999999;");
+            iframe.setAttribute("style", "position: fixed; top: 0; left: 0; background: none;z-index: 9999999;");
             iframe.setAttribute("frameborder", "0");
             iframe.setAttribute("allowtransparency", "1");
 
@@ -571,13 +586,13 @@ module ProcessOut {
             iframe.style.display = "none";
 
             var iframeError = setTimeout(function() {
-                if (typeof(error) === typeof(Function))
-                    error(new Exception("processout-js.modal.unavailable"));
+                if (typeof(onError) === typeof(Function))
+                    onError(new Exception("processout-js.modal.unavailable"));
             }, this.timeout);
             iframe.onload = function() {
                 clearTimeout(iframeError);
-                if (typeof(success) === typeof(Function))
-                    success(new Modal(this, iframe, uniqId));
+                if (typeof(onReady) === typeof(Function))
+                    onReady(new Modal(this, iframe, uniqId));
             }.bind(this);
 
             document.body.appendChild(iframe);
