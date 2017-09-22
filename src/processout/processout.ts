@@ -576,7 +576,7 @@ module ProcessOut {
                             if (!options.metadata.hasOwnProperty(i))
                                 continue;
 
-                            url += `metadata[${i}]=${encodeURIComponent(options.metadata[i])}`;
+                            url += `&metadata[${i}]=${encodeURIComponent(options.metadata[i])}`;
                         }
                     }
                 }
