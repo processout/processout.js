@@ -570,6 +570,15 @@ module ProcessOut {
                         `?amount=${encodeURIComponent(options.amount)}`+
                         `&currency=${encodeURIComponent(options.currency)}`+
                         `&name=${encodeURIComponent(options.name)}`);
+
+                    if (options.metadata && typeof options.metadata == 'object') {
+                        for (var i in options.metadata) {
+                            if (!options.metadata.hasOwnProperty(i))
+                                continue;
+
+                            url += `metadata[${i}]=${encodeURIComponent(options.metadata[i])}`;
+                        }
+                    }
                 }
             }
 
