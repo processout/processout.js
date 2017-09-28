@@ -242,6 +242,15 @@ module ProcessOut {
                     this.iframe.style.display = "block";
                     clearTimeout(iframeError);
                     success();
+
+                    // Finally we also want to request for a resize, as some
+                    // browser fail to compute the height of the iframe
+                    // if it isn't displayed yet
+                    this.iframe.contentWindow.postMessage(JSON.stringify({
+                        "namespace": Message.fieldNamespace,
+                        "projectID": this.instance.getProjectID(),
+                        "action":    "resize"
+                    }), "*");
                 }                    
             }.bind(this));
 
