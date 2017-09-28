@@ -669,6 +669,11 @@ var ProcessOut;
                     this.iframe.style.display = "block";
                     clearTimeout(iframeError);
                     success();
+                    this.iframe.contentWindow.postMessage(JSON.stringify({
+                        "namespace": ProcessOut.Message.fieldNamespace,
+                        "projectID": this.instance.getProjectID(),
+                        "action": "resize"
+                    }), "*");
                 }
             }.bind(this));
             this.el.appendChild(this.iframe);
