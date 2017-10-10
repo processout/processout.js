@@ -152,7 +152,7 @@ module ProcessOut {
 
             var err = function() {
                 if (retrynumber > 1) {
-                    this.fetchPublicKey(retrynumber - 1)
+                    this.fetchPublicKey(retrynumber - 1);
                 } else {
                     this.publicKey = "";
                     throw new Exception("default", `Could not fetch the project public key. Are you sure ${this.projectID} is the correct project ID?`);
