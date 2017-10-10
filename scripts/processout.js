@@ -492,6 +492,8 @@ var ProcessOut;
                 this.placeholder = o.placeholder;
             if (o.style)
                 this.style = o.style;
+            if (o.publicKey)
+                this.publicKey = o.publicKey;
             return this;
         };
         return CardFieldOptions;
@@ -522,12 +524,15 @@ var ProcessOut;
                 options.type != CardField.cvc)
                 throw new ProcessOut.Exception("processout-js.invalid-field-type");
             this.instance = instance;
-            this.options = options;
-            this.el = container;
-            var placeholder = this.el.getAttribute("data-processout-placeholder");
-            if (placeholder)
-                this.options.placeholder = placeholder;
-            this.spawn(success, error);
+            this.instance.assertPKFetched(function () {
+                options.publicKey = this.instance.getPublicKey();
+                this.options = options;
+                this.el = container;
+                var placeholder = this.el.getAttribute("data-processout-placeholder");
+                if (placeholder)
+                    this.options.placeholder = placeholder;
+                this.spawn(success, error);
+            }.bind(this), error);
         }
         CardField.prototype.spawn = function (success, error) {
             this.uid = "#" + Math.random().toString(36).substring(7);
@@ -1015,7 +1020,7 @@ var ProcessOut;
 var ProcessOut;
 (function (ProcessOut_1) {
     var ProcessOut = (function () {
-        function ProcessOut(projectID, resourceID) {
+        function ProcessOut(projectID, resourceID, publicKey) {
             this.timeout = 10000;
             this.sandbox = false;
             this.host = "processout.com";
@@ -1042,6 +1047,8 @@ var ProcessOut;
             this.projectID = projectID;
             if (this.projectID && this.projectID.substring(0, 5) == "test-")
                 this.sandbox = true;
+            if (publicKey)
+                this.publicKey = publicKey;
             this.fetchPublicKey();
             this.resourceID = resourceID;
             if (this.resourceID &&
@@ -1059,13 +1066,22 @@ var ProcessOut;
         ProcessOut.prototype.getProjectID = function () {
             return this.projectID;
         };
-        ProcessOut.prototype.fetchPublicKey = function () {
+        ProcessOut.prototype.fetchPublicKey = function (retrynumber) {
+            if (retrynumber == null || retrynumber == undefined)
+                retrynumber = 3;
             if (!this.projectID)
+                return;
+            if (this.publicKey && this.publicKey.length > 0)
                 return;
             this.publicKey = null;
             var err = function () {
-                this.publicKey = "";
-                throw new ProcessOut_1.Exception("default", "Could not fetch the project public key. Are you sure " + this.projectID + " is the correct project ID?");
+                if (retrynumber > 1) {
+                    this.fetchPublicKey(retrynumber - 1);
+                }
+                else {
+                    this.publicKey = "";
+                    throw new ProcessOut_1.Exception("default", "Could not fetch the project public key. Are you sure " + this.projectID + " is the correct project ID?");
+                }
             }.bind(this);
             this.apiRequest("post", this.endpoint("checkout", "vault"), {}, function (data, code, req, e) {
                 if (!data.success || !data.public_key) {
@@ -1079,7 +1095,7 @@ var ProcessOut;
         };
         ProcessOut.prototype.assertPKFetched = function (func, error) {
             if (this.publicKey === "") {
-                error(new ProcessOut_1.Exception("default", "Could not fetch the project public key. Are you sure " + this.projectID + " is the correct project ID?"));
+                error(new ProcessOut_1.Exception("default", "re: Could not fetch the project public key. Are you sure " + this.projectID + " is the correct project ID?"));
                 return;
             }
             if (this.publicKey === null) {
@@ -1087,6 +1103,9 @@ var ProcessOut;
                 return;
             }
             func();
+        };
+        ProcessOut.prototype.getPublicKey = function () {
+            return this.publicKey;
         };
         ProcessOut.prototype.encrypt = function (str) {
             var w = window;

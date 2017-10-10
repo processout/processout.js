@@ -71,8 +71,9 @@ module ProcessOut {
          * ProcessOut constructor
          * @param  {string} projectID
          * @param  {string} resourceID
+         * @param  {string} publicKey
          */
-        constructor(projectID?: string, resourceID?: string) {
+        constructor(projectID?: string, resourceID?: string, publicKey?: string) {
             // We want to make sure ProcessOut.js is loaded from ProcessOut CDN.
             var scripts = document.getElementsByTagName("script");
             var jsHost = "";
@@ -100,6 +101,7 @@ module ProcessOut {
             if (this.projectID && this.projectID.substring(0, 5) == "test-")
                 this.sandbox = true;
 
+            if (publicKey) this.publicKey = publicKey;
             this.fetchPublicKey();
 
             this.resourceID = resourceID;
@@ -136,15 +138,25 @@ module ProcessOut {
          * the credit card fields
          * @return {void}
          */
-        protected fetchPublicKey(): void {
+        protected fetchPublicKey(retrynumber?: number): void {
+            if (retrynumber == null || retrynumber == undefined)
+                retrynumber = 3; // Retry x times before giving up
+
             if (!this.projectID)
+                return;
+            // The public key was already fetched
+            if (this.publicKey && this.publicKey.length > 0)
                 return;
 
             this.publicKey = null;
 
             var err = function() {
-                this.publicKey = "";
-                throw new Exception("default", `Could not fetch the project public key. Are you sure ${this.projectID} is the correct project ID?`);
+                if (retrynumber > 1) {
+                    this.fetchPublicKey(retrynumber - 1);
+                } else {
+                    this.publicKey = "";
+                    throw new Exception("default", `Could not fetch the project public key. Are you sure ${this.projectID} is the correct project ID?`);
+                }
             }.bind(this);
 
             this.apiRequest("post", this.endpoint("checkout", "vault"), {}, 
@@ -174,7 +186,7 @@ module ProcessOut {
             // The public key could not be fetched, an error was already
             // thrown
             if (this.publicKey === "") {
-                error(new Exception("default", `Could not fetch the project public key. Are you sure ${this.projectID} is the correct project ID?`));
+                error(new Exception("default", `re: Could not fetch the project public key. Are you sure ${this.projectID} is the correct project ID?`));
                 return;
             }
             // The public key hasn't been fetched yet
@@ -184,6 +196,16 @@ module ProcessOut {
             }
 
             func();
+        }
+
+        /**
+         * Return the fetched public key. Returns null if the public key
+         * as not been fetched yet, and "" (empty string) if the public key
+         * could not be fetched
+         * @return {string}
+         */
+        public getPublicKey(): string {
+            return this.publicKey;
         }
 
         /**
