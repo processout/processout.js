@@ -18,6 +18,7 @@ module ProcessOut {
         public type:        string;
         public placeholder: string;
         public style:       CardFieldStyle;
+        public publicKey:   string;
 
         public constructor(type: string) {
             this.type = type;
@@ -26,6 +27,7 @@ module ProcessOut {
         public apply(o: CardFieldOptions): CardFieldOptions {
             if (o.placeholder)   this.placeholder   = o.placeholder;
             if (o.style)         this.style         = o.style;
+            if (o.publicKey)     this.publicKey     = o.publicKey;
 
             return this;
         }
@@ -172,14 +174,18 @@ module ProcessOut {
                 throw new Exception("processout-js.invalid-field-type");
 
             this.instance  = instance;
-            this.options   = options;
-            this.el        = container;
 
-            var placeholder = this.el.getAttribute("data-processout-placeholder");
-            if (placeholder)
-                this.options.placeholder = placeholder;
-
-            this.spawn(success, error);
+            this.instance.assertPKFetched(function() {
+                options.publicKey = this.instance.getPublicKey();
+                this.options   = options;
+                this.el        = container;
+    
+                var placeholder = this.el.getAttribute("data-processout-placeholder");
+                if (placeholder)
+                    this.options.placeholder = placeholder;
+    
+                this.spawn(success, error);
+            }.bind(this), error);
         }
 
         /**
