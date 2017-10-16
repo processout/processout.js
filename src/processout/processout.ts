@@ -77,18 +77,27 @@ module ProcessOut {
             // We want to make sure ProcessOut.js is loaded from ProcessOut CDN.
             var scripts = document.getElementsByTagName("script");
             var jsHost = "";
-            for (var i = 0; i < scripts.length; i++) {
-                if (/^https?:\/\/.*\.processout\.((com)|(ninja)|(dev))\//.test(
-                    scripts[i].getAttribute("src"))) {
+            // Only check the JS host if the current page isn't hosted on a 
+            // ProcessOut page
+            if (/^https?:\/\/.*\.processout\.((com)|(ninja)|(dev))\//.test(
+                window.location.href)) {
 
-                    jsHost = scripts[i].getAttribute("src");
+                jsHost = window.location.href;
+            } else {
+                // Otherwise loop through the scripts on the page and check
+                // we have at least one script coming from ProcessOut
+                for (var i = 0; i < scripts.length; i++) {
+                    if (/^https?:\/\/.*\.processout\.((com)|(ninja)|(dev))\//.test(
+                        scripts[i].getAttribute("src"))) {
+
+                        jsHost = scripts[i].getAttribute("src");
+                    }
                 }
             }
 
             if (jsHost == "") {
                 throw new Exception("processout-js.not-hosted");
             }
-
             if (/^https?:\/\/.*\.processout\.ninja\//.test(jsHost)) {
                 this.host = "processout.ninja";
             } else if (/^https?:\/\/.*\.processout\.dev\//.test(jsHost)) {

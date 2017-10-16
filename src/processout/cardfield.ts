@@ -200,7 +200,7 @@ module ProcessOut {
             this.uid = `#${Math.random().toString(36).substring(7)}`;
             this.iframe = document.createElement('iframe');
             this.iframe.className = "processout-field-cc-iframe";
-            this.iframe.setAttribute("src", this.instance.endpoint("checkout", `vault/field${this.uid}`));
+            this.iframe.setAttribute("src", this.instance.endpoint("js", `ccfield.html${this.uid}`));
             this.iframe.setAttribute("style", "background: none; width: 100%;");
             this.iframe.setAttribute("frameborder", "0");
             this.iframe.setAttribute("allowtransparency", "1");
