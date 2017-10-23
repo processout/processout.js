@@ -538,7 +538,7 @@ var ProcessOut;
             this.uid = "#" + Math.random().toString(36).substring(7);
             this.iframe = document.createElement('iframe');
             this.iframe.className = "processout-field-cc-iframe";
-            this.iframe.setAttribute("src", this.instance.endpoint("checkout", "vault/field" + this.uid));
+            this.iframe.setAttribute("src", this.instance.endpoint("js", "ccfield.html" + this.uid));
             this.iframe.setAttribute("style", "background: none; width: 100%;");
             this.iframe.setAttribute("frameborder", "0");
             this.iframe.setAttribute("allowtransparency", "1");
@@ -1027,9 +1027,14 @@ var ProcessOut;
             this.apiVersion = "1.3.0.0";
             var scripts = document.getElementsByTagName("script");
             var jsHost = "";
-            for (var i = 0; i < scripts.length; i++) {
-                if (/^https?:\/\/.*\.processout\.((com)|(ninja)|(dev))\//.test(scripts[i].getAttribute("src"))) {
-                    jsHost = scripts[i].getAttribute("src");
+            if (/^https?:\/\/.*\.processout\.((com)|(ninja)|(dev))\//.test(window.location.href)) {
+                jsHost = window.location.href;
+            }
+            else {
+                for (var i = 0; i < scripts.length; i++) {
+                    if (/^https?:\/\/.*\.processout\.((com)|(ninja)|(dev))\//.test(scripts[i].getAttribute("src"))) {
+                        jsHost = scripts[i].getAttribute("src");
+                    }
                 }
             }
             if (jsHost == "") {
