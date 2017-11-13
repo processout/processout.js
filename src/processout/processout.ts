@@ -96,7 +96,7 @@ module ProcessOut {
             }
 
             if (jsHost == "") {
-                throw new Exception("processout-js.not-hosted");
+                // throw new Exception("processout-js.not-hosted");
             }
             if (/^https?:\/\/.*\.processout\.ninja\//.test(jsHost)) {
                 this.host = "processout.ninja";
@@ -436,10 +436,11 @@ module ProcessOut {
             error:   (err: Exception) => void): void {
 
             this.assertPKFetched(function() {
-                if (!req)
-                    req = {};
-                if (req.name) req.name = this.encrypt(req.name);
-                if (req.zip)  req.zip  = this.encrypt(req.zip);
+                if (!req) req = {};
+                if (!req.contact) req.contact = {}
+                if (req.name) {
+                    req.name = this.encrypt(req.name);
+                }
 
                 // fill up the request
                 req.number = number;
