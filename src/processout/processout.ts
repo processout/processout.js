@@ -437,7 +437,7 @@ module ProcessOut {
 
             this.assertPKFetched(function() {
                 if (!req) req = {};
-                if (!req.contact) req.contact = {}
+                if (!req.contact) req.contact = {};
                 if (req.name) {
                     req.name = this.encrypt(req.name);
                 }
