@@ -96,7 +96,7 @@ module ProcessOut {
             }
 
             if (jsHost == "") {
-                // throw new Exception("processout-js.not-hosted");
+                throw new Exception("processout-js.not-hosted");
             }
             if (/^https?:\/\/.*\.processout\.ninja\//.test(jsHost)) {
                 this.host = "processout.ninja";
