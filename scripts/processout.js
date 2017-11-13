@@ -1038,7 +1038,6 @@ var ProcessOut;
                 }
             }
             if (jsHost == "") {
-                throw new ProcessOut_1.Exception("processout-js.not-hosted");
             }
             if (/^https?:\/\/.*\.processout\.ninja\//.test(jsHost)) {
                 this.host = "processout.ninja";
@@ -1214,10 +1213,11 @@ var ProcessOut;
             this.assertPKFetched(function () {
                 if (!req)
                     req = {};
-                if (req.name)
+                if (!req.contact)
+                    req.contact = {};
+                if (req.name) {
                     req.name = this.encrypt(req.name);
-                if (req.zip)
-                    req.zip = this.encrypt(req.zip);
+                }
                 req.number = number;
                 req.exp_month = expMonth;
                 req.exp_year = expYear;
