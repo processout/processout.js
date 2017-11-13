@@ -436,11 +436,9 @@ module ProcessOut {
             error:   (err: Exception) => void): void {
 
             this.assertPKFetched(function() {
-                if (!req) req = {};
-                if (!req.contact) req.contact = {};
-                if (req.name) {
-                    req.name = this.encrypt(req.name);
-                }
+                if (!req)           req = {};
+                if (!req.contact)   req.contact = {};
+                if (req.name)       req.name = this.encrypt(req.name);
 
                 // fill up the request
                 req.number = number;
