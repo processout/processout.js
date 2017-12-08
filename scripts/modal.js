@@ -262,6 +262,45 @@ var ProcessOut;
 })(ProcessOut || (ProcessOut = {}));
 var ProcessOut;
 (function (ProcessOut) {
+    var ThreeDS = (function () {
+        function ThreeDS(instance, options) {
+            this.instance = instance;
+            if (!options.invoiceID || !options.source) {
+                throw new ProcessOut.Exception("request.validation.error", "Please provide an invoiceID and source to be used to start the 3D Secure flow.");
+            }
+            this.invoiceID = options.invoiceID;
+            this.source = options.source;
+        }
+        ThreeDS.prototype.handle = function (success, error) {
+            var t = this;
+            var link = this.invoiceID + "/three-d-s/redirect/" + this.source;
+            return this.instance.handleAction(this.instance.endpoint("checkout", link), function (token) { success(); }, error);
+        };
+        return ThreeDS;
+    }());
+    ProcessOut.ThreeDS = ThreeDS;
+})(ProcessOut || (ProcessOut = {}));
+var ProcessOut;
+(function (ProcessOut) {
+    var ThreeDSOptions = (function () {
+        function ThreeDSOptions() {
+        }
+        return ThreeDSOptions;
+    }());
+    ProcessOut.ThreeDSOptions = ThreeDSOptions;
+    var ThreeDSWrapper = (function () {
+        function ThreeDSWrapper(instance) {
+            this.instance = instance;
+        }
+        ThreeDSWrapper.prototype.authenticate = function (options, success, error) {
+            return new ProcessOut.ThreeDS(this.instance, options).handle(success, error);
+        };
+        return ThreeDSWrapper;
+    }());
+    ProcessOut.ThreeDSWrapper = ThreeDSWrapper;
+})(ProcessOut || (ProcessOut = {}));
+var ProcessOut;
+(function (ProcessOut) {
     var GatewayRequest = (function () {
         function GatewayRequest() {
         }
@@ -1167,6 +1206,7 @@ var ProcessOut;
                 throw new ProcessOut_1.Exception("resource.invalid-type");
             }
             this.applePay = new ProcessOut_1.ApplePayWrapper(this);
+            this.threeDS = new ProcessOut_1.ThreeDSWrapper(this);
         }
         ProcessOut.prototype.getResourceID = function () {
             return this.resourceID;

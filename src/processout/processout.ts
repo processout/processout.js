@@ -63,9 +63,15 @@ module ProcessOut {
 
         /**
          * Expose the ApplePay class in the instance
-         * @type {ApplePay}
+         * @type {ApplePayWrapper}
          */
         public applePay: ApplePayWrapper;
+
+        /**
+         * Expose the ThreeDS class in the instance
+         * @type {ThreeDSWrapper}
+         */
+        public threeDS: ThreeDSWrapper;
 
         /**
          * ProcessOut constructor
@@ -124,6 +130,7 @@ module ProcessOut {
             }
 
             this.applePay = new ApplePayWrapper(this);
+            this.threeDS = new ThreeDSWrapper(this);
         }
 
         /**

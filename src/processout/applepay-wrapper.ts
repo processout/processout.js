@@ -50,6 +50,12 @@ module ProcessOut {
                 });
         }
 
+        /**
+         * newSession creates a new Apple Pay session
+         * @param {ApplePayPaymentRequest} req
+         * @param {callback} onsuccess 
+         * @param {callback} onerror 
+         */
         public newSession(req: ApplePayPaymentRequest,
             onsuccess: (e: any) => void, onerror?: (e: any) => void): ApplePay {
             
