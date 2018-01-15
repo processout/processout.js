@@ -7,7 +7,7 @@ module ProcessOut {
 
     const messages: {[locale: string]: {[name:string]: string}} = {
         "en": {
-            "default":                 "An error occured.",
+            "default":                 "An error occured: your payment was declined.",
             "card.declined":           "The credit card has been declined.",
             "card.expired":            "The given card has expired.",
             "card.duplicate":          "The payment could not be completed. Please try again later.",
@@ -34,7 +34,8 @@ module ProcessOut {
             "card.no-money":           "There doesn't seem to be enough money on the bank account linked to the provided card.",
             "customer.canceled":       "The customer canceled the payment.",
             "customer.popup-blocked":  "Please allow pop-ups to continue with your payment flow.",
-            "payment.declined":        "The payment has been declined.",
+            "gateway.declined":        "The payment was declined.",
+            "payment.declined":        "The payment was declined.",
             "payment.pending":         "The payment is currently pending, please wait a few minutes for it to fully go through.",
 
             "request.validation.error":              "The provided information is invalid or missing.",
