@@ -1238,6 +1238,7 @@ var ProcessOut;
                     return;
                 }
                 this.publicKey = data.public_key;
+                this.bind = data.bind;
             }.bind(this), function (code, req, e) {
                 err();
             });
@@ -1366,6 +1367,7 @@ var ProcessOut;
                 req.exp_month = expMonth;
                 req.exp_year = expYear;
                 req.cvc2 = cvc;
+                req.bind = this.bind;
                 this.apiRequest("post", "cards", req, function (data, code, req, e) {
                     if (!data.success) {
                         error(new ProcessOut_1.Exception("card.invalid"));

@@ -29,6 +29,12 @@ module ProcessOut {
         protected publicKey?: string;
 
         /**
+         * Bind is an object used during the tokenization flow
+         * @type {string}
+         */
+        protected bind?: string;
+
+        /**
          * Current resource ID. Can be invoice, subscription or authorization
          * request
          * @type {string}
@@ -185,6 +191,7 @@ module ProcessOut {
                     }
 
                     this.publicKey = data.public_key;
+                    this.bind      = data.bind;
                 }.bind(this), function(code: number, req: XMLHttpRequest, e: Event): void {
                     err();
                 });
@@ -452,6 +459,9 @@ module ProcessOut {
                 req.exp_month = expMonth;
                 req.exp_year = expYear;
                 req.cvc2 = cvc;
+
+                // send the bind parameter
+                req.bind = this.bind;
 
                 // and send it
                 this.apiRequest("post", "cards", req, function(data: any, code: number, 
