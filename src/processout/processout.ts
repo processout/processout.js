@@ -239,7 +239,7 @@ module ProcessOut {
         public encrypt(str: string): string {
             var w = <any>window;
             return w.processoutforge.util.encode64(w.processoutforge.pki.publicKeyFromPem(this.publicKey)
-                .encrypt(str, "RSA-OAEP", {
+                .encrypt(w.processoutforge.util.encodeUtf8(str), "RSA-OAEP", {
                     md: w.processoutforge.md.sha256.create()
                 }));
         }
@@ -343,6 +343,9 @@ module ProcessOut {
 
             if (!this.projectID)
                 throw new Exception("default", "You must instanciate ProcessOut.js with a valid project ID in order to use ProcessOut's hosted forms.");
+
+            if (!form)
+                throw new Exception("default", "The provided form element wasn't set. Make sure to provide setupForm with a valid form element.");
 
             if (typeof options == "function")
                 return new CardForm(this, form).setup(

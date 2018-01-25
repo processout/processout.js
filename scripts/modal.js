@@ -1260,7 +1260,7 @@ var ProcessOut;
         ProcessOut.prototype.encrypt = function (str) {
             var w = window;
             return w.processoutforge.util.encode64(w.processoutforge.pki.publicKeyFromPem(this.publicKey)
-                .encrypt(str, "RSA-OAEP", {
+                .encrypt(w.processoutforge.util.encodeUtf8(str), "RSA-OAEP", {
                 md: w.processoutforge.md.sha256.create()
             }));
         };
@@ -1320,6 +1320,8 @@ var ProcessOut;
         ProcessOut.prototype.setupForm = function (form, options, success, error) {
             if (!this.projectID)
                 throw new ProcessOut_1.Exception("default", "You must instanciate ProcessOut.js with a valid project ID in order to use ProcessOut's hosted forms.");
+            if (!form)
+                throw new ProcessOut_1.Exception("default", "The provided form element wasn't set. Make sure to provide setupForm with a valid form element.");
             if (typeof options == "function")
                 return new ProcessOut_1.CardForm(this, form).setup(new ProcessOut_1.CardFieldOptions(""), options, success);
             else
