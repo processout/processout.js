@@ -52,14 +52,6 @@ module ProcessOut {
         public returnURL?: string;
 
         /**
-         * cancelURL is the URL to which the user is redirected when
-         * he cancels the 3D-Secure authentication, if no invoice ID is
-         * specified when initiating the flow
-         * @type {string}
-         */
-        public cancelURL?: string;
-
-        /**
          * source contains the source to be used to authenticate the invoice
          * @type {string}
          */

@@ -287,7 +287,6 @@ var ProcessOut;
                     ("&currency=" + encodeURIComponent(options.currency)) +
                     ("&name=" + encodeURIComponent(options.name)) +
                     ("&return_url=" + encodeURIComponent(options.returnURL ? options.returnURL : "")) +
-                    ("&cancel_url=" + encodeURIComponent(options.cancelURL ? options.cancelURL : "")) +
                     ("&source=" + encodeURIComponent(options.source));
                 if (options.metadata && typeof options.metadata == 'object') {
                     for (var i in options.metadata) {
