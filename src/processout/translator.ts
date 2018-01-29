@@ -20,6 +20,7 @@ module ProcessOut {
             "card.invalid-cvc":        "The card CVC is invalid.",
             "card.invalid-zip":        "The card's ZIP code is valid.",
             "card.failed-cvc-and-avs": "The CVC and AVS code were invalid.",
+            "card.failed-three-d-s":   "The 3D-Secure authentication failed.",
             "card.bad-track-data":     "The card could not be verified. Maybe your CVC is invalid?",
             "card.not-registered":     "The card is not registered.",
             "card.issuer-not-found":   "The card issuer could not be found. Please try another card.",
@@ -61,6 +62,7 @@ module ProcessOut {
             "processout-js.invalid-field-type":            "The given field type was incorrect. It must either be number, expiry, expiryMonth, expiryYear or CVC.",
             "processout-js.network-issue":                 "There seems to be some connectivity issue preventing the payment from making it through. Please switch to another network or try again in a few minutes.",
             "processout-js.invalid-type":                  "The specified parameter had an unknown type.",
+            "processout-js.missing-source":                "A source must be specified.",
 
             "resource.invalid-type": "The provided resource was invalid. It must be an invoice, a subscription or an authorization request.",
 

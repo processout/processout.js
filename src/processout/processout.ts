@@ -666,7 +666,7 @@ module ProcessOut {
          */
         public handleAction(
             url:     string,
-            success: (token: string)    => void,
+            success: (data:  any)       => void,
             error:   (err:   Exception) => void): ActionHandler {
             
             var handler = new ActionHandler(this, this.getResourceID());

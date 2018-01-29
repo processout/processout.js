@@ -103,6 +103,15 @@ var ProcessOut;
                         error(new ProcessOut.Exception("processout-js.no-customer-action"));
                         window.focus();
                         break;
+                    case "error":
+                        if (timer) {
+                            clearInterval(timer);
+                            timer = null;
+                        }
+                        newWindow.close();
+                        error(new ProcessOut.Exception(data.errorCode, data.errorMessage));
+                        window.focus();
+                        break;
                     default:
                         if (timer) {
                             clearInterval(timer);
@@ -265,16 +274,36 @@ var ProcessOut;
     var ThreeDS = (function () {
         function ThreeDS(instance, options) {
             this.instance = instance;
-            if (!options.invoiceID || !options.source) {
-                throw new ProcessOut.Exception("request.validation.error", "Please provide an invoiceID and source to be used to start the 3D Secure flow.");
+            if (!options.source) {
+                throw new ProcessOut.Exception("request.validation.error", "Please provide a source to be used to start the 3D-Secure flow.");
             }
-            this.invoiceID = options.invoiceID;
-            this.source = options.source;
+            var url = null;
+            if (options.invoiceID) {
+                url = options.invoiceID + "/three-d-s/redirect/" + options.source;
+            }
+            if (!url) {
+                url = "three-d-s/" + encodeURIComponent(this.instance.getProjectID()) +
+                    ("?amount=" + encodeURIComponent(options.amount)) +
+                    ("&currency=" + encodeURIComponent(options.currency)) +
+                    ("&name=" + encodeURIComponent(options.name)) +
+                    ("&return_url=" + encodeURIComponent(options.returnURL ? options.returnURL : "")) +
+                    ("&cancel_url=" + encodeURIComponent(options.cancelURL ? options.cancelURL : "")) +
+                    ("&source=" + encodeURIComponent(options.source));
+                if (options.metadata && typeof options.metadata == 'object') {
+                    for (var i in options.metadata) {
+                        if (!options.metadata.hasOwnProperty(i))
+                            continue;
+                        url += "&metadata[" + i + "]=" + encodeURIComponent(options.metadata[i]);
+                    }
+                }
+            }
+            if (!url) {
+                throw new ProcessOut.Exception("request.validation.error", "Please provide an invoice ID or invoice parameters (amount, currency and name) to start the 3D-Secure flow.");
+            }
+            this.url = url;
         }
         ThreeDS.prototype.handle = function (success, error) {
-            var t = this;
-            var link = this.invoiceID + "/three-d-s/redirect/" + this.source;
-            return this.instance.handleAction(this.instance.endpoint("checkout", link), function (token) { success(); }, error);
+            return this.instance.handleAction(this.instance.endpoint("checkout", this.url), function (invoiceID) { success(invoiceID); }, error);
         };
         return ThreeDS;
     }());
@@ -1079,6 +1108,7 @@ var ProcessOut;
             "card.invalid-cvc": "The card CVC is invalid.",
             "card.invalid-zip": "The card's ZIP code is valid.",
             "card.failed-cvc-and-avs": "The CVC and AVS code were invalid.",
+            "card.failed-three-d-s": "The 3D-Secure authentication failed.",
             "card.bad-track-data": "The card could not be verified. Maybe your CVC is invalid?",
             "card.not-registered": "The card is not registered.",
             "card.issuer-not-found": "The card issuer could not be found. Please try another card.",
@@ -1117,6 +1147,7 @@ var ProcessOut;
             "processout-js.invalid-field-type": "The given field type was incorrect. It must either be number, expiry, expiryMonth, expiryYear or CVC.",
             "processout-js.network-issue": "There seems to be some connectivity issue preventing the payment from making it through. Please switch to another network or try again in a few minutes.",
             "processout-js.invalid-type": "The specified parameter had an unknown type.",
+            "processout-js.missing-source": "A source must be specified.",
             "resource.invalid-type": "The provided resource was invalid. It must be an invoice, a subscription or an authorization request.",
             "applepay.not-supported": "The current browser/device does not support Apple Pay.",
             "applepay.no-success-handler": "A success handler must be specified when setting up Apple Pay.",

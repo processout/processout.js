@@ -17,33 +17,53 @@ module ProcessOut {
             protected instance: ProcessOut;
 
             /**
-             * invoiceID is the ID of the invoice to be used to initiate the
-             * 3-D Secure authentication flow
+             * url contains the URL to which the user should be redirected
+             * to initiate the 3DS flow
              * @type {string}
              */
-            protected invoiceID: string;
-
-            /**
-             * source contains the source to be used for the 3DS authentication.
-             * It can be a card token, or a customer token representing a card
-             * @type {string}
-             */
-            protected source: string;
+            protected url: string;
 
             /**
              * ThreeDS constructor
              * @param {ProcessOut} instance
-             * @param {string} invoiceID
+             * @param {ThreeDSOptions} options
              */
             constructor(instance: ProcessOut, options: ThreeDSOptions) {
                 this.instance  = instance;
 
-                if (!options.invoiceID || !options.source) {
-                    throw new Exception("request.validation.error", "Please provide an invoiceID and source to be used to start the 3D Secure flow.");
+                if (!options.source) {
+                    throw new Exception("request.validation.error", "Please provide a source to be used to start the 3D-Secure flow.");
                 }
 
-                this.invoiceID = options.invoiceID;
-                this.source    = options.source;
+                var url = null;
+                if (options.invoiceID) {
+                    url = `${options.invoiceID}/three-d-s/redirect/${options.source}`;
+                }
+
+                if (!url) {
+                    url = `three-d-s/${encodeURIComponent(this.instance.getProjectID())}`+
+                        `?amount=${encodeURIComponent(options.amount)}`+
+                        `&currency=${encodeURIComponent(options.currency)}`+
+                        `&name=${encodeURIComponent(options.name)}`+
+                        `&return_url=${encodeURIComponent(options.returnURL?options.returnURL:"")}`+
+                        `&cancel_url=${encodeURIComponent(options.cancelURL?options.cancelURL:"")}`+
+                        `&source=${encodeURIComponent(options.source)}`;
+
+                    if (options.metadata && typeof options.metadata == 'object') {
+                        for (var i in options.metadata) {
+                            if (!options.metadata.hasOwnProperty(i))
+                                continue;
+
+                            url += `&metadata[${i}]=${encodeURIComponent(options.metadata[i])}`;
+                        }
+                    }
+                }
+
+                if (!url) {
+                    throw new Exception("request.validation.error", "Please provide an invoice ID or invoice parameters (amount, currency and name) to start the 3D-Secure flow.");
+                }
+
+                this.url = url;
             }
     
             /**
@@ -53,13 +73,11 @@ module ProcessOut {
              * @param {callback} error 
              * @return {ActionHandler}
              */
-            public handle(success: ()                 => void,
-                          error:   (err:   Exception) => void): ActionHandler {
+            public handle(success: (invoiceID: string)    => void,
+                          error:   (err:       Exception) => void): ActionHandler {
 
-                var t = this;
-                var link = `${this.invoiceID}/three-d-s/redirect/${this.source}`;
-                return this.instance.handleAction(this.instance.endpoint("checkout", link),
-                    function(token) { success(); }, error);
+                return this.instance.handleAction(this.instance.endpoint("checkout", this.url),
+                    function(invoiceID) { success(invoiceID); }, error);
             }
     
         }
