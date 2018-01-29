@@ -471,7 +471,7 @@ module ProcessOut {
                     req: XMLHttpRequest, e: Event): void {
 
                     if (!data.success) {
-                        error(new Exception("card.invalid"));
+                        error(new Exception(data.error_type, data.message));
                         return
                     }
 

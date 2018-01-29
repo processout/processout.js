@@ -179,6 +179,7 @@
 						document.getElementById("success").innerHTML = "Success! Your created card token is "+token;
 
 					}, function(err) {
+						console.log(err);
 						document.getElementById("errors").innerHTML = err.message;
 					});
 

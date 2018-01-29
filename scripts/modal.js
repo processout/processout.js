@@ -1402,7 +1402,7 @@ var ProcessOut;
                 req.bind = this.bind;
                 this.apiRequest("post", "cards", req, function (data, code, req, e) {
                     if (!data.success) {
-                        error(new ProcessOut_1.Exception("card.invalid"));
+                        error(new ProcessOut_1.Exception(data.error_type, data.message));
                         return;
                     }
                     success(data.card.id);
