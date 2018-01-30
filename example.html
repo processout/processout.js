@@ -148,7 +148,7 @@
 	<script src="https://js.processout.com/processout.js"></script>
 	<script>
 		document.addEventListener("DOMContentLoaded", function() {
-			var processout = new ProcessOut.ProcessOut("proj_Vc2EW0ZKQtLG1PKl3EDdy7neti8YobCD");
+			var processout = new ProcessOut.ProcessOut("proj_QHeiFsmPiaadVizlKTuJrTavLkqVImQ3");
 			var formElement = document.getElementById("card-form")
 			processout.setupForm(formElement, {
 				style: {
@@ -179,7 +179,6 @@
 						document.getElementById("success").innerHTML = "Success! Your created card token is "+token;
 
 					}, function(err) {
-						console.log(err);
 						document.getElementById("errors").innerHTML = err.message;
 					});
 

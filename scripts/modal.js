@@ -271,6 +271,8 @@ var ProcessOut;
 })(ProcessOut || (ProcessOut = {}));
 var ProcessOut;
 (function (ProcessOut) {
+    var processoutjsQuery = "processoutjs";
+    var processoutjsQueryTrue = "true";
     var ThreeDS = (function () {
         function ThreeDS(instance, options) {
             this.instance = instance;
@@ -279,11 +281,12 @@ var ProcessOut;
             }
             var url = null;
             if (options.invoiceID) {
-                url = options.invoiceID + "/three-d-s/redirect/" + options.source;
+                url = options.invoiceID + "/three-d-s/redirect/" + options.source + "?" + processoutjsQuery + "=" + processoutjsQueryTrue;
             }
             if (!url) {
                 url = "three-d-s/" + encodeURIComponent(this.instance.getProjectID()) +
-                    ("?amount=" + encodeURIComponent(options.amount)) +
+                    ("?" + processoutjsQuery + "=" + processoutjsQueryTrue) +
+                    ("&amount=" + encodeURIComponent(options.amount)) +
                     ("&currency=" + encodeURIComponent(options.currency)) +
                     ("&name=" + encodeURIComponent(options.name)) +
                     ("&return_url=" + encodeURIComponent(options.returnURL ? options.returnURL : "")) +
