@@ -1227,10 +1227,15 @@ var ProcessOut;
                     request.setRequestHeader(k, headers[k]);
             }
             request.onload = function (e) {
+                var parsed;
+                try {
+                    parsed = JSON.parse(request.responseText);
+                }
+                catch (err) { }
                 if (legacy)
-                    success(JSON.parse(request.responseText), 200, request, e);
+                    success(parsed, 200, request, e);
                 else if (e.currentTarget.readyState == 4)
-                    success(JSON.parse(request.responseText), request.status, request, e);
+                    success(parsed, request.status, request, e);
                 return;
             };
             request.onerror = function (e) {
@@ -1542,12 +1547,24 @@ var ProcessOut;
                     window.focus();
                     return;
                 }
-                if (!newWindow || newWindow.closed) {
+                var cancelf = function () {
                     clearInterval(timer);
                     timer = null;
                     error(new ProcessOut.Exception("customer.canceled"));
                     window.focus();
-                    return;
+                };
+                try {
+                    if (!newWindow || newWindow.closed) {
+                        cancelf();
+                        return;
+                    }
+                }
+                catch (err) {
+                    try {
+                        newWindow.close();
+                    }
+                    catch (err) { }
+                    cancelf();
                 }
             });
             ActionHandler.listenerCount++;

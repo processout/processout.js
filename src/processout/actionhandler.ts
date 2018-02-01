@@ -76,12 +76,26 @@ module ProcessOut {
                     return;
                 }
 
-                if (!newWindow || newWindow.closed) {
+                var cancelf = function() {
                     // The payment window was closed
                     clearInterval(timer); timer = null;
                     error(new Exception("customer.canceled"));
                     window.focus();
-                    return;
+                }
+                try {
+                    // We want to run the newWindow.closed condition in a try
+                    // catch as Chrome has a bug in which the access to the 
+                    // window is lost when the user navigates back (ie clicks
+                    // on the back button)
+                    if (!newWindow || newWindow.closed) {
+                        cancelf();
+                        return;
+                    }
+                } catch (err) {
+                    // Close the newWindow, just in case it didn't crash for
+                    // that reason
+                    try { newWindow.close(); } catch (err) { }
+                    cancelf();
                 }
             });
 

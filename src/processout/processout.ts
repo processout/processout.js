@@ -315,10 +315,17 @@ module ProcessOut {
             }
 
             request.onload = function(e: any) {
+                // Parse the response in a try catch so we can properly
+                // handle bad connectivity/proxy error cases
+                var parsed;
+                try {
+                    parsed = JSON.parse(request.responseText);
+                } catch (err) { /* ... */ }
+
                 if (legacy)
-                    success(JSON.parse(request.responseText), 200, request, e);
+                    success(parsed, 200, request, e);
                 else if (e.currentTarget.readyState == 4)
-                    success(JSON.parse(request.responseText), request.status, 
+                    success(parsed, request.status, 
                     request, e);
                 return;
             };
