@@ -315,10 +315,17 @@ module ProcessOut {
             }
 
             request.onload = function(e: any) {
+                // Parse the response in a try catch so we can properly
+                // handle bad connectivity/proxy error cases
+                var parsed;
+                try {
+                    parsed = JSON.parse(request.responseText);
+                } catch (err) { /* ... */ }
+
                 if (legacy)
-                    success(JSON.parse(request.responseText), 200, request, e);
+                    success(parsed, 200, request, e);
                 else if (e.currentTarget.readyState == 4)
-                    success(JSON.parse(request.responseText), request.status, 
+                    success(parsed, request.status, 
                     request, e);
                 return;
             };
@@ -471,7 +478,7 @@ module ProcessOut {
                     req: XMLHttpRequest, e: Event): void {
 
                     if (!data.success) {
-                        error(new Exception("card.invalid"));
+                        error(new Exception(data.error_type, data.message));
                         return
                     }
 
@@ -666,7 +673,7 @@ module ProcessOut {
          */
         public handleAction(
             url:     string,
-            success: (token: string)    => void,
+            success: (data:  any)       => void,
             error:   (err:   Exception) => void): ActionHandler {
             
             var handler = new ActionHandler(this, this.getResourceID());

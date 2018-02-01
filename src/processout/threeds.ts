@@ -4,65 +4,86 @@
  * ProcessOut module/namespace
  */
 module ProcessOut {
+
+    const processoutjsQuery     = "processoutjs";
+    const processoutjsQueryTrue = "true";
     
+    /**
+     * ActionHandler is the class handling the customer actions
+     */
+    export class ThreeDS {
+
         /**
-         * ActionHandler is the class handling the customer actions
+         * ProcessOut instance of the current context
+         * @type {ProcessOut}
          */
-        export class ThreeDS {
-    
-            /**
-             * ProcessOut instance of the current context
-             * @type {ProcessOut}
-             */
-            protected instance: ProcessOut;
+        protected instance: ProcessOut;
 
-            /**
-             * invoiceID is the ID of the invoice to be used to initiate the
-             * 3-D Secure authentication flow
-             * @type {string}
-             */
-            protected invoiceID: string;
+        /**
+         * url contains the URL to which the user should be redirected
+         * to initiate the 3DS flow
+         * @type {string}
+         */
+        protected url: string;
 
-            /**
-             * source contains the source to be used for the 3DS authentication.
-             * It can be a card token, or a customer token representing a card
-             * @type {string}
-             */
-            protected source: string;
+        /**
+         * ThreeDS constructor
+         * @param {ProcessOut} instance
+         * @param {ThreeDSOptions} options
+         */
+        constructor(instance: ProcessOut, options: ThreeDSOptions) {
+            this.instance  = instance;
 
-            /**
-             * ThreeDS constructor
-             * @param {ProcessOut} instance
-             * @param {string} invoiceID
-             */
-            constructor(instance: ProcessOut, options: ThreeDSOptions) {
-                this.instance  = instance;
+            if (!options.source) {
+                throw new Exception("request.validation.error", "Please provide a source to be used to start the 3D-Secure flow.");
+            }
 
-                if (!options.invoiceID || !options.source) {
-                    throw new Exception("request.validation.error", "Please provide an invoiceID and source to be used to start the 3D Secure flow.");
+            var url = null;
+            if (options.invoiceID) {
+                url = `${options.invoiceID}/three-d-s/redirect/${options.source}?${processoutjsQuery}=${processoutjsQueryTrue}`;
+            }
+
+            if (!url) {
+                url = `three-d-s/${encodeURIComponent(this.instance.getProjectID())}`+
+                    `?${processoutjsQuery}=${processoutjsQueryTrue}`+
+                    `&amount=${encodeURIComponent(options.amount)}`+
+                    `&currency=${encodeURIComponent(options.currency)}`+
+                    `&name=${encodeURIComponent(options.name)}`+
+                    `&return_url=${encodeURIComponent(options.returnURL?options.returnURL:"")}`+
+                    `&source=${encodeURIComponent(options.source)}`;
+
+                if (options.metadata && typeof options.metadata == 'object') {
+                    for (var i in options.metadata) {
+                        if (!options.metadata.hasOwnProperty(i))
+                            continue;
+
+                        url += `&metadata[${i}]=${encodeURIComponent(options.metadata[i])}`;
+                    }
                 }
-
-                this.invoiceID = options.invoiceID;
-                this.source    = options.source;
             }
-    
-            /**
-             * handle handles the 3-D Secure authentication using the 
-             * ActionHandler object
-             * @param {callback} success 
-             * @param {callback} error 
-             * @return {ActionHandler}
-             */
-            public handle(success: ()                 => void,
-                          error:   (err:   Exception) => void): ActionHandler {
 
-                var t = this;
-                var link = `${this.invoiceID}/three-d-s/redirect/${this.source}`;
-                return this.instance.handleAction(this.instance.endpoint("checkout", link),
-                    function(token) { success(); }, error);
+            if (!url) {
+                throw new Exception("request.validation.error", "Please provide an invoice ID or invoice parameters (amount, currency and name) to start the 3D-Secure flow.");
             }
-    
+
+            this.url = url;
         }
-    
+
+        /**
+         * handle handles the 3-D Secure authentication using the 
+         * ActionHandler object
+         * @param {callback} success 
+         * @param {callback} error 
+         * @return {ActionHandler}
+         */
+        public handle(success: (invoiceID: string)    => void,
+                        error:   (err:       Exception) => void): ActionHandler {
+
+            return this.instance.handleAction(this.instance.endpoint("checkout", this.url),
+                function(invoiceID) { success(invoiceID); }, error);
+        }
+
     }
+
+}
     
