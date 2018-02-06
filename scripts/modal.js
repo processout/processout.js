@@ -786,10 +786,14 @@ var ProcessOut;
                         this.eventCallback("onmouseleave", d);
                     break;
                 case "focusEvent":
+                    this.el.className = this.el.className + " processout-input-focused";
                     if (this.eventCallback)
                         this.eventCallback("onfocus", d);
                     break;
                 case "blurEvent":
+                    this.el.className = this.el.className
+                        .replace(/\bprocessout-input-focused\b/g, "")
+                        .replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, '');
                     if (this.eventCallback)
                         this.eventCallback("onblur", d);
                     break;
