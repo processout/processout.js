@@ -1211,6 +1211,7 @@ var ProcessOut;
 })(ProcessOut || (ProcessOut = {}));
 var ProcessOut;
 (function (ProcessOut_1) {
+    ProcessOut_1.TestModePrefix = "test-";
     var ProcessOut = (function () {
         function ProcessOut(projectID, resourceID, publicKey) {
             this.timeout = 10000;
@@ -1242,7 +1243,7 @@ var ProcessOut;
                 this.host = "processout.com";
             }
             this.projectID = projectID;
-            if (this.projectID && this.projectID.substring(0, 5) == "test-")
+            if (this.projectID && this.projectID.lastIndexOf(ProcessOut_1.TestModePrefix, 0) === 0)
                 this.sandbox = true;
             if (publicKey)
                 this.publicKey = publicKey;
