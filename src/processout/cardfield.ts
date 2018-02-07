@@ -34,20 +34,21 @@ module ProcessOut {
     }
 
     export class CardFieldStyle {
-        public color:          string;
-        public fontFamily:     string;
-        public fontSize:       string;
-        public fontSizeAdjust: string;
-        public fontStretch:    string;
-        public fontSmoothing:  string;
-        public fontStyle:      string;
-        public fontVariant:    string;
-        public fontWeight:     string;
-        public lineHeight:     string;
-        public textShadow:     string;
-        public textTransform:  string;
-        public textDecoration: string;
-        public transition:     string;
+        public color:                string;
+        public fontFamily:           string;
+        public loadCustomFontFamily: string;
+        public fontSize:             string;
+        public fontSizeAdjust:       string;
+        public fontStretch:          string;
+        public fontSmoothing:        string;
+        public fontStyle:            string;
+        public fontVariant:          string;
+        public fontWeight:           string;
+        public lineHeight:           string;
+        public textShadow:           string;
+        public textTransform:        string;
+        public textDecoration:       string;
+        public transition:           string;
 
         // pseudo class/elements:
         // :hover
