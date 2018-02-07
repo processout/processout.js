@@ -11,6 +11,8 @@ interface Window {
  */
 module ProcessOut {
 
+    export const TestModePrefix = "test-";
+
     /**
      * ProcessOut main class
      */
@@ -49,7 +51,7 @@ module ProcessOut {
 
         /**
         * Sandbox mode. Is set to true if a project ID prefixed with `test-`
-        * is used
+        * (cf TestModePrefix) is used
         * @type {boolean}
         */
         public sandbox = false;
@@ -119,7 +121,7 @@ module ProcessOut {
             }
 
             this.projectID = projectID;
-            if (this.projectID && this.projectID.substring(0, 5) == "test-")
+            if (this.projectID && this.projectID.lastIndexOf(TestModePrefix, 0) === 0)
                 this.sandbox = true;
 
             if (publicKey) this.publicKey = publicKey;
