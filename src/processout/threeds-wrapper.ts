@@ -12,7 +12,44 @@ module ProcessOut {
          * the 3-D Secure protocole
          * @type {string}
          */
-        public invoiceID: string;
+        public invoiceID?: string;
+
+        /**
+         * amount is the amount used to create a 3D-Secure authentication if
+         * no invoice ID is specified
+         * @type {string}
+         */
+        public amount?: string;
+
+        /**
+         * currency is the currency used to create a 3D-Secure authentication
+         * if no invoice ID is spcified
+         * @type {string}
+         */
+        public currency?: string;
+
+        /**
+         * name is the name of the invoice that'll be created to initiate the
+         * 3D-Secure authentication if no invoice ID is specified
+         * @type {string}
+         */
+        public name?: string;
+
+        /**
+         * metadata is the metadata that'll be associated with the invoice
+         * used to initiate the 3D-Secure authentication if no invoice ID is
+         * specified
+         * @type {object}
+         */
+        public metadata?: any;
+
+        /**
+         * returnURL is the URL to which the user is redirected when
+         * he finishes the 3D-Secure authentication, if no invoice ID is
+         * specified when initiating the flow
+         * @type {string}
+         */
+        public returnURL?: string;
 
         /**
          * source contains the source to be used to authenticate the invoice
@@ -47,7 +84,8 @@ module ProcessOut {
          * @return {ActionHandler}
          */
         public authenticate(options: ThreeDSOptions,
-            success: () => void, error?: (e: Exception) => void): ActionHandler {
+            success: (invoiceID: string)    => void, 
+            error?:  (e:         Exception) => void): ActionHandler {
 
             return new ThreeDS(this.instance, options).handle(success, error);
         }
