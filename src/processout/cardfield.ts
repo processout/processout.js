@@ -95,7 +95,7 @@ module ProcessOut {
          * Timeout is the number of ms to wait before timing out a field
          * @var {string}
          */
-        protected static timeout = 10000;
+        protected static timeout = 30000;
 
         /** 
          * instance is the current ProcessOut instance
@@ -198,10 +198,14 @@ module ProcessOut {
         protected spawn(success: ()                 => void, 
                         error:   (err:   Exception) => void): void {
 
-            this.uid = `#${Math.random().toString(36).substring(7)}`;
+            var tmp = Math.random().toString(36).substring(7);
+            this.uid = `#${tmp}`;
+            var endpoint = this.instance.endpoint("js", `ccfield.html?r=${tmp}${this.uid}`);
+
             this.iframe = document.createElement('iframe');
             this.iframe.className = "processout-field-cc-iframe";
-            this.iframe.setAttribute("src", this.instance.endpoint("js", `ccfield.html${this.uid}`));
+            this.iframe.name = tmp;
+            this.iframe.setAttribute("src", endpoint);
             this.iframe.setAttribute("style", "background: none; width: 100%;");
             this.iframe.setAttribute("frameborder", "0");
             this.iframe.setAttribute("allowtransparency", "1");
@@ -209,12 +213,21 @@ module ProcessOut {
             this.iframe.style.display = "none";
             this.iframe.height = "14px"; // Default height
 
-            var errored = false
+            var errored = false;
             var iframeError = setTimeout(function() {
                 errored = true;
                 if (typeof(error) === typeof(Function))
                     error(new Exception("processout-js.field.unavailable"));
             }, CardField.timeout);
+
+            this.iframe.onload = function() {
+                try {
+                    // We want to reset the iframe src to prevent
+                    // Firefox & IE/Edge from (wrongfully) caching the iframe
+                    // content
+                    this.iframe.src = endpoint;
+                } catch(e) { /* ... */ }
+            }.bind(this);
 
             // Hook the ok message
             window.addEventListener("message", function (event) {
@@ -222,6 +235,7 @@ module ProcessOut {
                     return;
 
                 var data = Message.parseEvent(event);
+
                 if (data.frameID != this.uid)
                     return;
                 if (data.namespace != Message.fieldNamespace)
