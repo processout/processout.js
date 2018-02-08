@@ -720,10 +720,13 @@ var ProcessOut;
             }.bind(this), error);
         }
         CardField.prototype.spawn = function (success, error) {
-            this.uid = "#" + Math.random().toString(36).substring(7);
+            var tmp = Math.random().toString(36).substring(7);
+            this.uid = "#" + tmp;
+            var endpoint = this.instance.endpoint("js", "ccfield.html?r=" + tmp + this.uid);
             this.iframe = document.createElement('iframe');
             this.iframe.className = "processout-field-cc-iframe";
-            this.iframe.setAttribute("src", this.instance.endpoint("js", "ccfield.html" + this.uid));
+            this.iframe.name = tmp;
+            this.iframe.setAttribute("src", endpoint);
             this.iframe.setAttribute("style", "background: none; width: 100%;");
             this.iframe.setAttribute("frameborder", "0");
             this.iframe.setAttribute("allowtransparency", "1");
@@ -735,6 +738,12 @@ var ProcessOut;
                 if (typeof (error) === typeof (Function))
                     error(new ProcessOut.Exception("processout-js.field.unavailable"));
             }, CardField.timeout);
+            this.iframe.onload = function () {
+                try {
+                    this.iframe.src = endpoint;
+                }
+                catch (e) { }
+            }.bind(this);
             window.addEventListener("message", function (event) {
                 if (errored)
                     return;
@@ -919,7 +928,7 @@ var ProcessOut;
     CardField.expiryMonth = "expiry-month";
     CardField.expiryYear = "expiry-year";
     CardField.cvc = "cvc";
-    CardField.timeout = 10000;
+    CardField.timeout = 30000;
     ProcessOut.CardField = CardField;
 })(ProcessOut || (ProcessOut = {}));
 var ProcessOut;
@@ -1282,7 +1291,7 @@ var ProcessOut;
                     throw new ProcessOut_1.Exception("default", "Could not fetch the project public key. Are you sure " + this.projectID + " is the correct project ID?");
                 }
             }.bind(this);
-            this.apiRequest("post", this.endpoint("checkout", "vault"), {}, function (data, code, req, e) {
+            this.apiRequest("get", this.endpoint("checkout", "vault"), {}, function (data, code, req, e) {
                 if (!data.success || !data.public_key) {
                     err();
                     return;
@@ -1317,7 +1326,10 @@ var ProcessOut;
         ProcessOut.prototype.endpoint = function (subdomain, path) {
             return "https://" + subdomain + "." + this.host + "/" + path;
         };
-        ProcessOut.prototype.apiRequest = function (method, path, data, success, error, legacy) {
+        ProcessOut.prototype.apiRequest = function (method, path, data, success, error, retry) {
+            if (!retry)
+                retry = 0;
+            var legacy = false;
             if (window.XDomainRequest) {
                 legacy = true;
             }
@@ -1337,7 +1349,8 @@ var ProcessOut;
                 path += "?";
                 if (legacy) {
                     data["legacyrequest"] = "true";
-                    data.concat(headers);
+                    for (var key in headers)
+                        data[key] = headers[key];
                 }
                 for (var key in data) {
                     path += key + "=" + encodeURIComponent(data[key]) + "&";
@@ -1355,6 +1368,7 @@ var ProcessOut;
                 for (var k in headers)
                     request.setRequestHeader(k, headers[k]);
             }
+            request.timeout = 0;
             request.onload = function (e) {
                 var parsed;
                 try {
@@ -1368,8 +1382,22 @@ var ProcessOut;
                 return;
             };
             request.onerror = function (e) {
-                error(request.status, request, e);
+                if (request.status && request.status >= 200 && request.status < 500)
+                    request.onload(e);
+                else
+                    error(request.status, request, e);
             };
+            request.ontimeout = function () {
+                error(524, request, null);
+            };
+            if (request.onabort) {
+                request.onabort = function () {
+                    if (retry > 3)
+                        error(599, request, null);
+                    else
+                        this.request(method, path, data, success, error, retry + 1);
+                }.bind(this);
+            }
             request.send(JSON.stringify(data));
         };
         ProcessOut.prototype.setupForm = function (form, options, success, error) {

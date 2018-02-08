@@ -183,7 +183,7 @@ module ProcessOut {
                 }
             }.bind(this);
 
-            this.apiRequest("post", this.endpoint("checkout", "vault"), {}, 
+            this.apiRequest("get", this.endpoint("checkout", "vault"), {}, 
                 function(data: any, code: number, req: XMLHttpRequest, 
                     e: Event): void {
 
@@ -268,8 +268,11 @@ module ProcessOut {
         public apiRequest(method: string, path: string, data,
             success: (data: any, code: number, req: XMLHttpRequest, e: Event) => void,
             error:   (code: number, req: XMLHttpRequest, e: Event) => void,
-            legacy?: boolean): void {
+            retry?:   number): void {
 
+            if (!retry) retry = 0;
+
+            var legacy = false;
             // Force legacy if we have to
             if (window.XDomainRequest) {
                 legacy = true;
@@ -292,7 +295,8 @@ module ProcessOut {
                 path += "?";
                 if (legacy) {
                     data["legacyrequest"] = "true";
-                    data.concat(headers);
+                    for (var key in headers)
+                        data[key] = headers[key];
                 }
                 for (var key in data) {
                     path += `${key}=${encodeURIComponent(data[key])}&`;
@@ -316,6 +320,7 @@ module ProcessOut {
                     request.setRequestHeader(k, headers[k]);
             }
 
+            request.timeout = 0;
             request.onload = function(e: any) {
                 // Parse the response in a try catch so we can properly
                 // handle bad connectivity/proxy error cases
@@ -327,13 +332,26 @@ module ProcessOut {
                 if (legacy)
                     success(parsed, 200, request, e);
                 else if (e.currentTarget.readyState == 4)
-                    success(parsed, request.status, 
-                    request, e);
+                    success(parsed, request.status, request, e);
                 return;
             };
             request.onerror = function(e: Event) {
-                error(request.status, request, e);
+                if (request.status && request.status >= 200 && request.status < 500)
+                    request.onload(e);
+                else
+                    error(request.status, request, e);
             };
+            request.ontimeout = function() {
+                error(524, request, null);
+            };
+            if (request.onabort) {
+                request.onabort = function() {
+                    // We want to retry the call: in some cases IE fails
+                    // to finish requests
+                    if (retry > 3) error(599, request, null);
+                    else           this.request(method, path, data, success, error, retry + 1);
+                }.bind(this);
+            }
 
             request.send(JSON.stringify(data));
         }
