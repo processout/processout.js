@@ -103,16 +103,14 @@ module ProcessOut {
                 t.instance.apiRequest("post", t.instance.endpoint("api", "applepay/sessions"), {
                     "session_url": event.validationURL,
                     "domain_name": window.location.hostname
-                }, function(data: any, code: number, req: XMLHttpRequest, 
-                    e: Event): void {
-
+                }, function(data: any, req: XMLHttpRequest, e: Event): void {
                     if (!data.success) {
                         t.onerror(new Exception(data.error_code, data.message));
                         t.session.abort();
                     } else
                         t.session.completeMerchantValidation(data.session_payload);
 
-                }, function(code: number, req: XMLHttpRequest, e: Event): void {
+                }, function(req: XMLHttpRequest, e: Event): void {
                     t.onerror(new Exception("processout-js.network-issue"));
                     t.session.abort();
                 });
@@ -123,16 +121,14 @@ module ProcessOut {
                 req.applepay_response = event.payment;
                 req.token_type = "applepay";
                 t.instance.apiRequest("post", t.instance.endpoint("api", "cards"),
-                    req, function(data: any, code: number, req: XMLHttpRequest, 
-                    e: Event): void {
-
+                    req, function(data: any, req: XMLHttpRequest, e: Event): void {
                         if (!data.success) {
                             t.onerror(new Exception(data.error_code, data.message));
                             t.session.abort();
                         } else
                             t.onsuccess(data.card);
 
-                }, function(code: number, req: XMLHttpRequest, e: Event): void {
+                }, function(req: XMLHttpRequest, e: Event): void {
                     t.onerror(new Exception("processout-js.network-issue"));
                     t.session.abort();
                 });
