@@ -184,8 +184,7 @@ module ProcessOut {
             }.bind(this);
 
             this.apiRequest("get", this.endpoint("checkout", "vault"), {}, 
-                function(data: any, code: number, req: XMLHttpRequest, 
-                    e: Event): void {
+                function(data: any, req: XMLHttpRequest, e: Event): void {
 
                     if (!data.success || !data.public_key) {
                         err();
@@ -194,7 +193,7 @@ module ProcessOut {
 
                     this.publicKey = data.public_key;
                     this.bind      = data.bind;
-                }.bind(this), function(code: number, req: XMLHttpRequest, e: Event): void {
+                }.bind(this), function(req: XMLHttpRequest, e: Event): void {
                     err();
                 });
         }
@@ -266,8 +265,8 @@ module ProcessOut {
          * @return {void}
          */
         public apiRequest(method: string, path: string, data,
-            success: (data: any, code: number, req: XMLHttpRequest, e: Event) => void,
-            error:   (code: number, req: XMLHttpRequest, e: Event) => void,
+            success: (data: any, req: XMLHttpRequest, e: Event) => void,
+            error:   (req: XMLHttpRequest, e: Event) => void,
             retry?:   number): void {
 
             if (!retry) retry = 0;
@@ -330,28 +329,27 @@ module ProcessOut {
                 } catch (err) { /* ... */ }
 
                 if (legacy)
-                    success(parsed, 200, request, e);
+                    success(parsed, request, e);
                 else if (e.currentTarget.readyState == 4)
-                    success(parsed, request.status, request, e);
+                    success(parsed, request, e);
                 return;
             };
             request.onerror = function(e: Event) {
-                if (request.status && request.status >= 200 && request.status < 500)
+                if (request.status && request.status >= 200 && 
+                    request.status < 500 && request.responseText)
+
                     request.onload(e);
                 else
-                    error(request.status, request, e);
+                    error(request, e);
             };
-            request.ontimeout = function() {
-                error(524, request, null);
-            };
-            if (request.onabort) {
-                request.onabort = function() {
-                    // We want to retry the call: in some cases IE fails
-                    // to finish requests
-                    if (retry > 3) error(599, request, null);
-                    else           this.request(method, path, data, success, error, retry + 1);
-                }.bind(this);
-            }
+            request.ontimeout  = function() {}; // Prevent IE from aborting
+            request.onprogress = function() {}; // ''
+            request.onabort = function() {
+                // We want to retry the call: in some cases IE fails
+                // to finish requests
+                if (retry > 3) error(request, null);
+                else           this.request(method, path, data, success, error, retry + 1);
+            }.bind(this);
 
             request.send(JSON.stringify(data));
         }
@@ -494,7 +492,7 @@ module ProcessOut {
                 req.bind = this.bind;
 
                 // and send it
-                this.apiRequest("post", "cards", req, function(data: any, code: number, 
+                this.apiRequest("post", "cards", req, function(data: any,
                     req: XMLHttpRequest, e: Event): void {
 
                     if (!data.success) {
@@ -503,7 +501,7 @@ module ProcessOut {
                     }
 
                     success(data.card.id);
-                }, function(code: number, req: XMLHttpRequest, e: Event): void {
+                }, function(req: XMLHttpRequest, e: Event): void {
                     error(new Exception("processout-js.network-issue"));
                 });
             }.bind(this), error);
@@ -609,16 +607,14 @@ module ProcessOut {
             this.assertPKFetched(function() {
                 this.apiRequest("put", `cards/${cardUID}`, {
                     "cvc": cvc
-                }, function(data: any, code: number, 
-                    req: XMLHttpRequest, e: Event): void {
-
+                }, function(data: any, req: XMLHttpRequest, e: Event): void {
                     if (!data.success) {
                         error(new Exception("card.invalid"));
                         return
                     }
 
                     success(data.card.id);
-                }, function(code: number, req: XMLHttpRequest, e: Event): void {
+                }, function(req: XMLHttpRequest, e: Event): void {
                     error(new Exception("processout-js.network-issue"));
                 });
             }.bind(this), error);

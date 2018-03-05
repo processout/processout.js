@@ -167,14 +167,14 @@ var ProcessOut;
                 t.instance.apiRequest("post", t.instance.endpoint("api", "applepay/sessions"), {
                     "session_url": event.validationURL,
                     "domain_name": window.location.hostname
-                }, function (data, code, req, e) {
+                }, function (data, req, e) {
                     if (!data.success) {
                         t.onerror(new ProcessOut.Exception(data.error_code, data.message));
                         t.session.abort();
                     }
                     else
                         t.session.completeMerchantValidation(data.session_payload);
-                }, function (code, req, e) {
+                }, function (req, e) {
                     t.onerror(new ProcessOut.Exception("processout-js.network-issue"));
                     t.session.abort();
                 });
@@ -185,14 +185,14 @@ var ProcessOut;
                     req = {};
                 req.applepay_response = event.payment;
                 req.token_type = "applepay";
-                t.instance.apiRequest("post", t.instance.endpoint("api", "cards"), req, function (data, code, req, e) {
+                t.instance.apiRequest("post", t.instance.endpoint("api", "cards"), req, function (data, req, e) {
                     if (!data.success) {
                         t.onerror(new ProcessOut.Exception(data.error_code, data.message));
                         t.session.abort();
                     }
                     else
                         t.onsuccess(data.card);
-                }, function (code, req, e) {
+                }, function (req, e) {
                     t.onerror(new ProcessOut.Exception("processout-js.network-issue"));
                     t.session.abort();
                 });
@@ -265,12 +265,12 @@ var ProcessOut;
             }
             this.instance.apiRequest("get", this.instance.endpoint("api", "applepay/available"), {
                 "domain_name": window.location.hostname
-            }, function (data, code, req, e) {
+            }, function (data, req, e) {
                 if (data.success)
                     callback(null);
                 else
                     callback(new ProcessOut.Exception("applepay.not-available", data.message));
-            }.bind(this), function (code, req, e) {
+            }.bind(this), function (req, e) {
                 callback(new ProcessOut.Exception("processout-js.network-issue"));
             });
         };
@@ -1291,14 +1291,14 @@ var ProcessOut;
                     throw new ProcessOut_1.Exception("default", "Could not fetch the project public key. Are you sure " + this.projectID + " is the correct project ID?");
                 }
             }.bind(this);
-            this.apiRequest("get", this.endpoint("checkout", "vault"), {}, function (data, code, req, e) {
+            this.apiRequest("get", this.endpoint("checkout", "vault"), {}, function (data, req, e) {
                 if (!data.success || !data.public_key) {
                     err();
                     return;
                 }
                 this.publicKey = data.public_key;
                 this.bind = data.bind;
-            }.bind(this), function (code, req, e) {
+            }.bind(this), function (req, e) {
                 err();
             });
         };
@@ -1376,28 +1376,26 @@ var ProcessOut;
                 }
                 catch (err) { }
                 if (legacy)
-                    success(parsed, 200, request, e);
+                    success(parsed, request, e);
                 else if (e.currentTarget.readyState == 4)
-                    success(parsed, request.status, request, e);
+                    success(parsed, request, e);
                 return;
             };
             request.onerror = function (e) {
-                if (request.status && request.status >= 200 && request.status < 500)
+                if (request.status && request.status >= 200 &&
+                    request.status < 500 && request.responseText)
                     request.onload(e);
                 else
-                    error(request.status, request, e);
+                    error(request, e);
             };
-            request.ontimeout = function () {
-                error(524, request, null);
-            };
-            if (request.onabort) {
-                request.onabort = function () {
-                    if (retry > 3)
-                        error(599, request, null);
-                    else
-                        this.request(method, path, data, success, error, retry + 1);
-                }.bind(this);
-            }
+            request.ontimeout = function () { };
+            request.onprogress = function () { };
+            request.onabort = function () {
+                if (retry > 3)
+                    error(request, null);
+                else
+                    this.request(method, path, data, success, error, retry + 1);
+            }.bind(this);
             request.send(JSON.stringify(data));
         };
         ProcessOut.prototype.setupForm = function (form, options, success, error) {
@@ -1453,13 +1451,13 @@ var ProcessOut;
                 req.exp_year = expYear;
                 req.cvc2 = cvc;
                 req.bind = this.bind;
-                this.apiRequest("post", "cards", req, function (data, code, req, e) {
+                this.apiRequest("post", "cards", req, function (data, req, e) {
                     if (!data.success) {
                         error(new ProcessOut_1.Exception(data.error_type, data.message));
                         return;
                     }
                     success(data.card.id);
-                }, function (code, req, e) {
+                }, function (req, e) {
                     error(new ProcessOut_1.Exception("processout-js.network-issue"));
                 });
             }.bind(this), error);
@@ -1495,13 +1493,13 @@ var ProcessOut;
             this.assertPKFetched(function () {
                 this.apiRequest("put", "cards/" + cardUID, {
                     "cvc": cvc
-                }, function (data, code, req, e) {
+                }, function (data, req, e) {
                     if (!data.success) {
                         error(new ProcessOut_1.Exception("card.invalid"));
                         return;
                     }
                     success(data.card.id);
-                }, function (code, req, e) {
+                }, function (req, e) {
                     error(new ProcessOut_1.Exception("processout-js.network-issue"));
                 });
             }.bind(this), error);
