@@ -85,8 +85,8 @@ module ProcessOut {
             var expMonthReady = false;
             var expYearReady  = false;
 
-            // Our handler to check everytime we receive a ready state we got
-            // all of them
+            // Our handler to check if, everytime we receive a ready state,
+            // we received all of them
             var ev = function() {
                 if (numberReady && cvcReady && expMonthReady && expYearReady) {
                     // Let's put our auto formatting in place
