@@ -7,10 +7,10 @@ build:
 	tsc -p src/processout/
 	tsc -p src/modal/
 	mv ${MODALJS} ${MODALJS}_tmp
-	cat ${BINS} ${MODALJS}_tmp > ${MODALJS}
+	cat ${BINS} ${MODALJS}_tmp | minify --js > ${MODALJS}
 	rm ${MODALJS}_tmp
 	mv ${PROCESSOUTJS} ${PROCESSOUTJS}_tmp
-	cat ${BINS} ${PROCESSOUTJS}_tmp > ${PROCESSOUTJS}
+	cat ${BINS} ${PROCESSOUTJS}_tmp | minify --js > ${PROCESSOUTJS}
 	rm ${PROCESSOUTJS}_tmp
 
 .PHONY: test

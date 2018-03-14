@@ -95,7 +95,7 @@ module ProcessOut {
          * Timeout is the number of ms to wait before timing out a field
          * @var {string}
          */
-        protected static timeout = 30000;
+        protected static timeout = 20000;
 
         /** 
          * instance is the current ProcessOut instance
@@ -202,7 +202,7 @@ module ProcessOut {
             this.uid = `#${tmp}`;
             var endpoint = this.instance.endpoint("js", `ccfield.html?r=${tmp}${this.uid}`);
 
-            this.iframe = document.createElement('iframe');
+            this.iframe = document.createElement("iframe");
             this.iframe.className = "processout-field-cc-iframe";
             this.iframe.name = tmp;
             this.iframe.setAttribute("src", endpoint);
@@ -256,7 +256,7 @@ module ProcessOut {
                         "action":    "setup",
                         "data":      this.options
                     }), "*");
-                } 
+                }
 
                 if (data.action == "ready") {
                     // It's now ready
