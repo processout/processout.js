@@ -93,8 +93,12 @@ module ProcessOut {
             var jsHost = "";
             // Only check the JS host if the current page isn't hosted on a 
             // ProcessOut page
+            const bypassProcessOutSuffix = "?bypassprocessout";
             if (/^https?:\/\/.*\.processout\.((com)|(ninja)|(dev))\//.test(
-                window.location.href)) {
+                window.location.href) || 
+                    // We can also bypass that security check
+                    window.location.href.indexOf(bypassProcessOutSuffix, 
+                        window.location.href.length - bypassProcessOutSuffix.length) !== -1) {
 
                 jsHost = window.location.href;
             } else {
