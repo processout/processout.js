@@ -105,17 +105,17 @@ module ProcessOut {
                         // Make sure that we can't scroll behind the modal
                         document.body.style.overflow = "hidden";
                         // Make sure our iframe is of the correct dimension
-                        window.onresize = function() {
+                        window.addEventListener("resize", function(event) {
                             iframe.width = window.outerWidth + "px";
                             iframe.height = window.outerHeight + "px";
-                        }
-                        window.dispatchEvent(new Event('resize'));
+                        });
+                        window.dispatchEvent(new Event("resize"));
                         // Show the iframe
                         iframe.style.display = "block";
                         iframeW.postMessage(JSON.stringify({
                             namespace: Message.modalNamespace,
                             frameID:   frameid,
-                            action:    "launch"    
+                            action:    "launch"
                         }), "*");
                         if (typeof(onShow) === typeof(Function))
                             onShow(modal);

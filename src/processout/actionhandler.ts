@@ -5,6 +5,40 @@
  */
 module ProcessOut {
 
+    class MockedIFrameWindow {
+        protected element: HTMLElement;
+        protected iframe:  HTMLIFrameElement;
+        public closed:     boolean;
+
+        constructor(el: HTMLElement, iframe: HTMLIFrameElement) {
+            this.element = el;
+            this.iframe  = iframe;
+
+            window.addEventListener("resize", function(event) {
+                console.log("test");
+                this.element.style.width = window.outerWidth + "px";
+                this.element.style.height = window.outerHeight + "px";
+            }.bind(this));
+            window.dispatchEvent(new Event("resize"));
+        }
+
+        public open(url: string) {
+            // Load the page in our modal
+            this.iframe.setAttribute("src", url);
+            // Make sure that we can't scroll behind the modal
+            document.body.style.overflow = "hidden";
+
+            // And finally show the modal to the user
+            document.body.appendChild(this.element);
+        }
+
+        public close() {
+            document.body.style.overflow = "";
+            this.closed = true;
+            this.element.remove();
+        }
+    }
+
     /**
      * ActionHandler is the class handling the customer actions
      */
@@ -36,6 +70,13 @@ module ProcessOut {
         protected canceled = false;
 
         /**
+         * IFrame wrapper to be used instead of a new tab to handle the
+         * given customer action
+         * @type {HTMLElement}
+         */
+        protected iframeWrapper: MockedIFrameWindow;
+
+        /**
          * listenerCount is the number of listener that were set
          * @type {number}
          */
@@ -46,9 +87,39 @@ module ProcessOut {
          * @param {ProcessOut} instance
          * @param {string} resourceID
          */
-        constructor(instance: ProcessOut, resourceID: string) {
+        constructor(instance: ProcessOut, resourceID: string, useIFrame?: boolean) {
             this.instance   = instance;
             this.resourceID = resourceID;
+            if (useIFrame) {
+                var iframeWrapper = document.createElement("div");
+                iframeWrapper.id = "processoutjs-action-modal";
+                iframeWrapper.style.position = "fixed";
+                iframeWrapper.style.top = "0";
+                iframeWrapper.style.left = "0";
+                iframeWrapper.style.height = "100%";
+                iframeWrapper.style.width = "100%";
+                iframeWrapper.setAttribute("style", "position: fixed; top: 0; left: 0; background: rgba(0, 0, 0, 0.5); z-index: 9999999;");
+
+                // Create the IFrame to be used later
+                var iframe = document.createElement("iframe");
+                iframe.setAttribute("style", "margin: 1em auto; width: 440px; height: 480px; max-width: 100%; max-height: 100%; display: block; box-shadow: 0 15px 35px rgba(50, 50, 93, 0.1), 0 5px 15px rgba(0, 0, 0, 0.07); background: #ECEFF1;");
+                iframe.setAttribute("frameborder", "0");
+
+                // And crete the cancel button
+                var buttonWrapper = document.createElement("div");
+                buttonWrapper.setAttribute("style", "width: 100%; text-align: center;");
+                var button = document.createElement("div");
+                button.setAttribute("style", "cursor: pointer; color: white;");
+                button.innerHTML = "Cancel";
+                buttonWrapper.appendChild(button);
+
+                iframeWrapper.appendChild(iframe);
+                iframeWrapper.appendChild(buttonWrapper);
+                this.iframeWrapper = new MockedIFrameWindow(iframeWrapper, iframe);
+                button.onclick = function() {
+                    this.iframeWrapper.close();
+                }.bind(this);
+            }
         }
 
         protected handleRedirection(
@@ -57,11 +128,19 @@ module ProcessOut {
             error:   (err:   Exception) => void): void {
 
             var t         = this;
-            var newWindow = window.open(url, '_blank');
-            if (!newWindow) {
-                error(new Exception("customer.popup-blocked"));
-                window.focus();
-                return
+            var newWindow;
+            if (!this.iframeWrapper) {
+                // Let's handle that in a new tab
+                newWindow = window.open(url, '_blank');
+                if (!newWindow) {
+                    error(new Exception("customer.popup-blocked"));
+                    window.focus();
+                    return
+                }
+            } else {
+                // Let's handle that in an IFrame
+                newWindow = this.iframeWrapper;
+                newWindow.open(url);
             }
 
             // We now want to monitor the payment page
