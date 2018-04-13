@@ -1,4 +1,4 @@
-BINS=bin/forge.min.js bin/base64.polyfill.min.js bin/object.assign.polyfill.min.js
+BINS=bin/forge.min.js bin/base64.polyfill.min.js bin/object.assign.polyfill.min.js bin/remove.polyfill.js
 MODALJS=scripts/modal.js
 PROCESSOUTJS=scripts/processout.js
 

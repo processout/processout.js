@@ -15,11 +15,16 @@ module ProcessOut {
             this.iframe  = iframe;
 
             window.addEventListener("resize", function(event) {
-                console.log("test");
                 this.element.style.width = window.outerWidth + "px";
                 this.element.style.height = window.outerHeight + "px";
             }.bind(this));
-            window.dispatchEvent(new Event("resize"));
+            if(typeof(Event) === "function") {
+                var event = new Event("resize");
+            } else {
+                var event = document.createEvent("Event");
+                event.initEvent("resize", true, true);
+            }
+            window.dispatchEvent(event);
         }
 
         public open(url: string) {

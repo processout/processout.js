@@ -109,7 +109,13 @@ module ProcessOut {
                             iframe.width = window.outerWidth + "px";
                             iframe.height = window.outerHeight + "px";
                         });
-                        window.dispatchEvent(new Event("resize"));
+                        if(typeof(Event) === "function") {
+                            var devent = new Event("resize");
+                        } else {
+                            var devent = document.createEvent("Event");
+                            event.initEvent("resize", true, true);
+                        }
+                        window.dispatchEvent(devent);
                         // Show the iframe
                         iframe.style.display = "block";
                         iframeW.postMessage(JSON.stringify({
