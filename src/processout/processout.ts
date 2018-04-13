@@ -664,7 +664,7 @@ module ProcessOut {
             iframe.className = "processout-iframe";
             iframe.setAttribute("id", "processout-iframe-" + uniqId);
             iframe.setAttribute("src", url);
-            iframe.setAttribute("style", "position: fixed; top: 0; left: 0; background: none;z-index: 9999999;");
+            iframe.setAttribute("style", "position: fixed; top: 0; left: 0; background: none; z-index: 9999999;");
             iframe.setAttribute("frameborder", "0");
             iframe.setAttribute("allowtransparency", "1");
 
@@ -694,9 +694,10 @@ module ProcessOut {
         public handleAction(
             url:     string,
             success: (data:  any)       => void,
-            error:   (err:   Exception) => void): ActionHandler {
+            error:   (err:   Exception) => void,
+            useIFrame?: boolean): ActionHandler {
             
-            var handler = new ActionHandler(this, this.getResourceID());
+            var handler = new ActionHandler(this, this.getResourceID(), useIFrame);
             return handler.handle(url, success, error);
         }
     }

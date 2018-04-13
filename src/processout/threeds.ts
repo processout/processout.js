@@ -80,7 +80,7 @@ module ProcessOut {
                         error:   (err:       Exception) => void): ActionHandler {
 
             return this.instance.handleAction(this.instance.endpoint("checkout", this.url),
-                function(invoiceID) { success(invoiceID); }, error);
+                function(invoiceID) { success(invoiceID); }, error, true);
         }
 
     }
