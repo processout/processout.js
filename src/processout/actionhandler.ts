@@ -16,7 +16,12 @@ module ProcessOut {
 
             window.addEventListener("resize", function(event) {
                 this.element.style.width = window.outerWidth + "px";
-                this.element.style.height = window.outerHeight + "px";
+                var height = Math.max(document.body.scrollHeight,
+                    document.body.offsetHeight,
+                    document.documentElement.clientHeight,
+                    document.documentElement.scrollHeight,
+                    document.documentElement.offsetHeight);
+                this.element.style.height = height + "px";
             }.bind(this));
             if(typeof(Event) === "function") {
                 var event = new Event("resize");
