@@ -108,7 +108,7 @@ module ProcessOut {
                 iframeWrapper.style.left = "0";
                 iframeWrapper.style.height = "100%";
                 iframeWrapper.style.width = "100%";
-                iframeWrapper.setAttribute("style", "position: fixed; top: 0; left: 0; background: rgba(0, 0, 0, 0.5); z-index: 9999999;");
+                iframeWrapper.setAttribute("style", "position: fixed; top: 0; left: 0; background: rgba(0, 0, 0, 0.5); z-index: 9999999; overflow: auto;");
 
                 // Create the IFrame to be used later
                 var iframe = document.createElement("iframe");
@@ -117,7 +117,7 @@ module ProcessOut {
 
                 // And crete the cancel button
                 var buttonWrapper = document.createElement("div");
-                buttonWrapper.setAttribute("style", "width: 100%; text-align: center;");
+                buttonWrapper.setAttribute("style", "width: 100%; text-align: center; margin-bottom: 1em;");
                 var button = document.createElement("div");
                 button.setAttribute("style", "cursor: pointer; color: white;");
                 button.innerHTML = "Cancel";
