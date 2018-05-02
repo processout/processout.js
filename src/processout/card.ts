@@ -367,7 +367,7 @@ module ProcessOut {
             if (number.length < 12)
                 return new Exception("card.invalid-number");
 
-            if (!Card.luhn(Number(number)))
+            if (!Card.luhn(number))
                 return new Exception("card.invalid-number");
 
             return null;
