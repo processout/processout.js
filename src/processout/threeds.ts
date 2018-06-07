@@ -40,11 +40,11 @@ module ProcessOut {
 
             var url = null;
             if (options.invoiceID) {
-                url = `${options.invoiceID}/three-d-s/redirect/${options.source}?${processoutjsQuery}=${processoutjsQueryTrue}`;
+                url = `/${options.invoiceID}/three-d-s/redirect/${options.source}?${processoutjsQuery}=${processoutjsQueryTrue}`;
             }
 
             if (!url) {
-                url = `three-d-s/${encodeURIComponent(this.instance.getProjectID())}`+
+                url = `/three-d-s/${encodeURIComponent(this.instance.getProjectID())}`+
                     `?${processoutjsQuery}=${processoutjsQueryTrue}`+
                     `&amount=${encodeURIComponent(options.amount)}`+
                     `&currency=${encodeURIComponent(options.currency)}`+

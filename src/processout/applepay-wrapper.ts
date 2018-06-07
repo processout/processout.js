@@ -35,7 +35,7 @@ module ProcessOut {
                 return;
             }
 
-            this.instance.apiRequest("get", this.instance.endpoint("api", "applepay/available"), {
+            this.instance.apiRequest("get", this.instance.endpoint("api", "/applepay/available"), {
                 "domain_name": window.location.hostname
             }, 
                 function(data: any, req: XMLHttpRequest, e: Event): void {
