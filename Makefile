@@ -1,4 +1,4 @@
-BINS=bin/forge.min.js bin/base64.polyfill.min.js bin/object.assign.polyfill.min.js bin/remove.polyfill.js bin/includes.polyfill.js
+BINS=bin/base64.polyfill.min.js bin/object.assign.polyfill.min.js bin/remove.polyfill.js bin/includes.polyfill.js
 MODALJS=scripts/modal.js
 PROCESSOUTJS=scripts/processout.js
 
@@ -11,6 +11,19 @@ build:
 	rm ${MODALJS}_tmp
 	mv ${PROCESSOUTJS} ${PROCESSOUTJS}_tmp
 	cat ${BINS} ${PROCESSOUTJS}_tmp | minify --js > ${PROCESSOUTJS}
+	rm ${PROCESSOUTJS}_tmp
+
+.PHONY: buildtest
+buildtest:
+	tsc -p src/processout/
+	tsc -p src/modal/
+	mv ${MODALJS} ${MODALJS}_tmp
+	cat ${BINS} ${MODALJS}_tmp > ${MODALJS}
+	echo "\n;ProcessOut.DEBUG = true;" >> ${MODALJS}
+	rm ${MODALJS}_tmp
+	mv ${PROCESSOUTJS} ${PROCESSOUTJS}_tmp
+	cat ${BINS} ${PROCESSOUTJS}_tmp > ${PROCESSOUTJS}
+	echo "\n;ProcessOut.DEBUG = true;" >> ${PROCESSOUTJS}
 	rm ${PROCESSOUTJS}_tmp
 
 .PHONY: test

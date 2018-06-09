@@ -6,12 +6,12 @@
 module ProcessOut {
 
     export class CardFieldValue {
-        public number:      string;
-        public expiryMonth: number;
-        public expiryYear:  number;
-        public cvc:         string;
-        public name:        string;
-        public metadata:    string;
+        public number:      string = null;
+        public expiryMonth: number = null;
+        public expiryYear:  number = null;
+        public cvc:         string = null;
+        public name:        string = null;
+        public metadata:    string = null;
     }
 
     export class CardFieldOptions {
@@ -148,7 +148,7 @@ module ProcessOut {
          * @var {callback[]}
          */
         protected handlers: { [key: string]: ((e: any) => void)[] } = {} ;
-        
+
         /**
          * CardField constructor
          * @param {ProcessOut} instance
@@ -202,7 +202,7 @@ module ProcessOut {
 
             var tmp = Math.random().toString(36).substring(7);
             this.uid = `#${tmp}`;
-            var endpoint = this.instance.endpoint("js", `/ccfield.html?r=${tmp}${this.uid}`);
+            var endpoint = this.instance.getProcessOutFieldEndpoint(`?r=${tmp}${this.uid}`);
 
             this.iframe = document.createElement("iframe");
             this.iframe.className = "processout-field-cc-iframe";
@@ -256,7 +256,7 @@ module ProcessOut {
                         "namespace": Message.fieldNamespace,
                         "projectID": this.instance.getProjectID(),
                         "action":    "setup",
-                        "formID":    this.form.getID(),
+                        "formID":    this.form.getUID(),
                         "data":      this.options
                     }), "*");
                 }
@@ -506,9 +506,56 @@ module ProcessOut {
                 clearTimeout(fetchingTimeout);
 
                 // We successfully tokenized: let's return the data
-                success(data.data);
-                if (data.data.token) success(data.data.token);
-                else                 error(<Exception>data.data.error);
+                if (data.data.token)      success(data.data.token);
+                else if (data.data.error) error(new Exception(data.data.error.code, data.data.error.message));
+                else                      error(new Exception("default"));
+            }.bind(this));
+        }
+
+        /** 
+         * refreshCVC asks the field to refresh the CVC of the given card. 
+         * The success callback is called with the card UID if it was successful
+         * otherwise the error callback is called with the Exception
+         * @param {any[]}    fields 
+         * @param {callback} success
+         * @param {callback} error
+         * @return {void}
+         */
+        public refreshCVC(cardUID: string, success: (token: string)  => void,
+                                           error:   (err: Exception) => void): void {
+
+            // Tell our field it should start the tokenization process and
+            // expect a response
+            var id = Math.random().toString();
+            this.iframe.contentWindow.postMessage(JSON.stringify({
+                "messageID": id,
+                "namespace": Message.fieldNamespace,
+                "projectID": this.instance.getProjectID(),
+                "action":    "refresh-cvc",
+                "data": {
+                    "data":   cardUID
+                }
+            }), "*");
+
+            // Our timeout, just in case
+            var fetchingTimeout =
+                setTimeout(function(){
+                    error(new Exception("processout-js.field.unavailable"));
+                }, CardField.timeout);
+
+            window.addEventListener("message", function (event) {
+                var data = Message.parseEvent(event);
+                if (data.messageID != id)
+                    return;
+                if (data.action != "refresh-cvc")
+                    return;
+
+                clearTimeout(fetchingTimeout);
+
+                // We successfully tokenized: let's return the data
+                if (data.data.token)      success(data.data.token);
+                else if (data.data.error) error(new Exception(data.data.error.code, data.data.error.message));
+                else                      error(new Exception("default"));
             }.bind(this));
         }
     }

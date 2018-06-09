@@ -11,6 +11,7 @@ interface Window {
  */
 module ProcessOut {
 
+    export const DEBUG = false;
     export const TestModePrefix = "test-";
 
     /**
@@ -58,6 +59,12 @@ module ProcessOut {
         protected host = "processout.com";
 
         /**
+         * Path to the ProcessOut field to be used to load the card forms
+         * @type {string}
+         */
+        protected processOutFieldEndpoint = "";
+
+        /**
         * Version of the API used by ProcessOut.js
         * @type {string}
         */
@@ -84,14 +91,8 @@ module ProcessOut {
             // We want to make sure ProcessOut.js is loaded from ProcessOut CDN.
             var scripts = document.getElementsByTagName("script");
             var jsHost = "";
-            // Only check the JS host if the current page isn't hosted on a 
-            // ProcessOut page
-            const bypassProcessOutSuffix = "?bypassprocessout";
             if (/^https?:\/\/.*\.processout\.((com)|(ninja)|(dev))\//.test(
-                window.location.href) || 
-                    // We can also bypass that security check
-                    window.location.href.indexOf(bypassProcessOutSuffix, 
-                        window.location.href.length - bypassProcessOutSuffix.length) !== -1) {
+                window.location.href)) {
 
                 jsHost = window.location.href;
             } else {
@@ -106,7 +107,7 @@ module ProcessOut {
                 }
             }
 
-            if (jsHost == "") {
+            if (jsHost == "" && !DEBUG) {
                 throw new Exception("processout-js.not-hosted");
             }
             if (/^https?:\/\/.*\.processout\.ninja\//.test(jsHost)) {
@@ -149,6 +150,25 @@ module ProcessOut {
          */
         public getProjectID(): string {
             return this.projectID;
+        }
+
+        /**
+         * Return the ProcessOut field endpoint
+         * @return {string}
+         */
+        public getProcessOutFieldEndpoint(suffix: string): string {
+            var endpoint = this.endpoint("js", "/ccfield.html");
+            if (DEBUG && this.processOutFieldEndpoint) endpoint = this.processOutFieldEndpoint;
+            return `${endpoint}${suffix}`;
+        }
+
+        /**
+         * Set a custom processout field endpoint
+         * @return {string}
+         */
+        public setProcessOutFieldEndpoint(endpoint: string): void {
+            if (!DEBUG) return;
+            this.processOutFieldEndpoint = endpoint;
         }
 
         /**
@@ -337,10 +357,10 @@ module ProcessOut {
             if (!data.contact)   data.contact = {};
 
             // fill up the request
-            data.number = card.getNumber();
+            data.number    = card.getNumber();
             data.exp_month = card.getExpiry().getMonth().toString();
-            data.exp_year = card.getExpiry().getYear().toString();
-            data.cvc2 = card.getCVC();
+            data.exp_year  = card.getExpiry().getYear().toString();
+            data.cvc2      = card.getCVC();
 
             // and send it
             this.apiRequest("post", "cards", data, function(data: any,
@@ -426,11 +446,7 @@ module ProcessOut {
             error:   (err: Exception) => void): void {
 
             form.validate(function() {
-                form.getCVCField().value(function(val: CardFieldValue): void {
-                    this.refreshCVCEncrypted(cardUID, val.cvc, success, error);
-                }.bind(this), function(err: Exception) {
-                    error(err)
-                });
+                form.refreshCVC(cardUID, success, error);
             }.bind(this), error);
         }
 

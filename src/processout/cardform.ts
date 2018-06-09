@@ -19,7 +19,7 @@ module ProcessOut {
          * Whether or not the form is only used to refresh a card CVC
          * @var {boolean}
          */
-        protected refreshCVC: boolean;
+        protected isRefreshCVC: boolean;
 
         /**
          * DOM element which contains our card inputs
@@ -174,7 +174,7 @@ module ProcessOut {
             error:          (err:  Exception) => void,
             eventCallback?: (name: string, data: any) => void): CardForm {
 
-            this.refreshCVC = true;
+            this.isRefreshCVC = true;
 
             this.cvc = new CardField(this.instance, this, new CardFieldOptions(CardField.cvc).apply(options),
                 <HTMLInputElement>this.element.querySelector("[data-processout-input=cc-cvc]"), 
@@ -266,7 +266,7 @@ module ProcessOut {
         public validate(success: ()               => void,
                         error:   (err: Exception) => void): void {
 
-            if (this.refreshCVC) {
+            if (this.isRefreshCVC) {
                 // We only want to check the CVC field
                 this.cvc.validate(function() {
                     success();
@@ -316,9 +316,10 @@ module ProcessOut {
         }
 
         /**
-         * FetchValues will fetch the values of all the inputs of the CardForm
-         * and call the callback function. If the values couldn't be fetched
-         * after the defined timeout, the error callback is executed
+         * tokenize tokenizes the cards from the card form fields and calls
+         * the success callback with the newly created card token when 
+         * successfull. If an error arises, the error callback is called
+         * @param {any}      any
          * @param {Callback} success
          * @param {Callback} error
          * @return {void}
@@ -327,20 +328,32 @@ module ProcessOut {
                                     error:   (err: Exception) => void): void {
 
             // Fields are the fields the leader should wait for to tokenize
-            var fields = [];
-            var leader = this.cvc;
-            if (this.cvc) {
-                // If the CVC field is available, that'll be our leader
-                if (this.number) fields.push("number");
-            } else {
-                // Otherwise we'll use number as the leader
-                leader = this.number;
-            }
-            if (this.exp) fields.push("exp");
+            var fields = ["number"];
+            if (this.cvc)      fields.push("cvc");
+            if (this.exp)      fields.push("exp");
             if (this.expMonth) fields.push("exp-month");
-            if (this.expYear) fields.push("exp-year");
+            if (this.expYear)  fields.push("exp-year");
 
-            leader.tokenize(fields, data, success, error);
+            this.number.tokenize(fields, data, success, error);
+        }
+
+        /**
+         * refreshCVC refreshes the given card CVC and calls the success
+         * callback with the card token when successful. If an error arises,
+         * the error callback is called
+         * @param {string}   cardUID
+         * @param {Callback} success
+         * @param {Callback} error
+         * @return {void}
+         */
+        public refreshCVC(cardUID: string, success: (token: string)  => void,
+                                           error:   (err: Exception) => void): void {
+
+            if (!this.cvc)
+                error(new Exception("processout-js.wrong-type-for-action", 
+                    "RefreshCVC was called but the form has no CVC field initialized."));
+
+            this.cvc.refreshCVC(cardUID, success, error);
         }
     }
 }
