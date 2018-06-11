@@ -275,7 +275,15 @@ module ProcessOut {
                         "projectID": this.instance.getProjectID(),
                         "action":    "resize"
                     }), "*");
-                }                    
+
+                    // Hook an event listener for the focus event to focus
+                    // on the input when the user presses tab on older
+                    // browser: otherwise the iframe would get focused, but
+                    // not the field within it (hello IE)
+                    this.iframe.addEventListener("focus", function (event) {
+                        this.focus();
+                    }.bind(this));
+                }
             }.bind(this));
 
             this.el.appendChild(this.iframe);
