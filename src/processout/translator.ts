@@ -63,6 +63,7 @@ module ProcessOut {
             "processout-js.network-issue":                 "There seems to be some connectivity issue preventing the payment from making it through. Please switch to another network or try again in a few minutes.",
             "processout-js.invalid-type":                  "The specified parameter had an unknown type.",
             "processout-js.missing-source":                "A source must be specified.",
+            "processout-js.wrong-type-for-action":         "The requested action could not be performed on the given field because its type is invalid.",
 
             "resource.invalid-type": "The provided resource was invalid. It must be an invoice, a subscription or an authorization request.",
 

@@ -6,19 +6,18 @@
 module ProcessOut {
 
     export class CardFieldValue {
-        public number:      string;
-        public expiryMonth: string;
-        public expiryYear:  string;
-        public cvc:         string;
-        public name:        string;
-        public metadata:    string;
+        public number:      string = null;
+        public expiryMonth: number = null;
+        public expiryYear:  number = null;
+        public cvc:         string = null;
+        public name:        string = null;
+        public metadata:    string = null;
     }
 
     export class CardFieldOptions {
         public type:        string;
         public placeholder: string;
         public style:       CardFieldStyle;
-        public publicKey:   string;
 
         public constructor(type: string) {
             this.type = type;
@@ -27,7 +26,6 @@ module ProcessOut {
         public apply(o: CardFieldOptions): CardFieldOptions {
             if (o.placeholder)   this.placeholder   = o.placeholder;
             if (o.style)         this.style         = o.style;
-            if (o.publicKey)     this.publicKey     = o.publicKey;
 
             return this;
         }
@@ -119,7 +117,13 @@ module ProcessOut {
          * uid is the uid of the iframe
          * @var {string}
          */
-        protected uid: string
+        protected uid: string;
+
+        /**
+         * Form class wrapping the card field
+         * @var {CardForm}
+         */
+        protected form: CardForm;
 
         /** 
          * Callback executed when an event is triggered on an input
@@ -144,15 +148,15 @@ module ProcessOut {
          * @var {callback[]}
          */
         protected handlers: { [key: string]: ((e: any) => void)[] } = {} ;
-        
+
         /**
          * CardField constructor
          * @param {ProcessOut} instance
          * @param {options} CardFieldOptions
          * @param {HTMLElement} el
          */
-        public constructor(instance: ProcessOut, options: CardFieldOptions, 
-            container:      HTMLElement, 
+        public constructor(instance: ProcessOut, form: CardForm, 
+            options: CardFieldOptions, container: HTMLElement, 
             success:        ()  => void, 
             error:          (err:  Exception) => void) {
 
@@ -175,18 +179,16 @@ module ProcessOut {
                 throw new Exception("processout-js.invalid-field-type");
 
             this.instance  = instance;
+            this.form      = form;
 
-            this.instance.assertPKFetched(function() {
-                options.publicKey = this.instance.getPublicKey();
-                this.options   = options;
-                this.el        = container;
-    
-                var placeholder = this.el.getAttribute("data-processout-placeholder");
-                if (placeholder)
-                    this.options.placeholder = placeholder;
-    
-                this.spawn(success, error);
-            }.bind(this), error);
+            this.options   = options;
+            this.el        = container;
+
+            var placeholder = this.el.getAttribute("data-processout-placeholder");
+            if (placeholder)
+                this.options.placeholder = placeholder;
+
+            this.spawn(success, error);
         }
 
         /**
@@ -200,7 +202,7 @@ module ProcessOut {
 
             var tmp = Math.random().toString(36).substring(7);
             this.uid = `#${tmp}`;
-            var endpoint = this.instance.endpoint("js", `ccfield.html?r=${tmp}${this.uid}`);
+            var endpoint = this.instance.getProcessOutFieldEndpoint(`?r=${tmp}${this.uid}`);
 
             this.iframe = document.createElement("iframe");
             this.iframe.className = "processout-field-cc-iframe";
@@ -254,6 +256,7 @@ module ProcessOut {
                         "namespace": Message.fieldNamespace,
                         "projectID": this.instance.getProjectID(),
                         "action":    "setup",
+                        "formID":    this.form.getUID(),
                         "data":      this.options
                     }), "*");
                 }
@@ -272,7 +275,15 @@ module ProcessOut {
                         "projectID": this.instance.getProjectID(),
                         "action":    "resize"
                     }), "*");
-                }                    
+
+                    // Hook an event listener for the focus event to focus
+                    // on the input when the user presses tab on older
+                    // browser: otherwise the iframe would get focused, but
+                    // not the field within it (hello IE)
+                    this.iframe.addEventListener("focus", function (event) {
+                        this.focus();
+                    }.bind(this));
+                }
             }.bind(this));
 
             this.el.appendChild(this.iframe);
@@ -416,7 +427,7 @@ module ProcessOut {
             }), "*");
         }
 
-        /** 
+        /**
          * Validate validates the field
          * @param {callback} success
          * @param {callback} error
@@ -463,22 +474,28 @@ module ProcessOut {
         }
 
         /** 
-         * Value asyncronously fetches the card field value. The returned 
-         * value is encrypted
-         * @param {callback} callback
+         * Tokenize asks the leader field to tokenize using the sub-fields
+         * and calls success with the final card token
+         * @param {any[]}    fields 
+         * @param {callback} success
          * @param {callback} error
          * @return {void}
          */
-        public value(callback: (val: CardFieldValue) => void,
-                     error:    (err: Exception)      => void): void {
-            var id = Math.random().toString();
+        public tokenize(fields: any[], data: any,  success: (token: string)  => void,
+                                                   error:   (err: Exception) => void): void {
 
-            // Ask the iframe for its value
+            // Tell our field it should start the tokenization process and
+            // expect a response
+            var id = Math.random().toString();
             this.iframe.contentWindow.postMessage(JSON.stringify({
                 "messageID": id,
                 "namespace": Message.fieldNamespace,
                 "projectID": this.instance.getProjectID(),
-                "action":    "value"
+                "action":    "tokenize",
+                "data": {
+                    "fields": fields,
+                    "data":   data
+                }
             }), "*");
 
             // Our timeout, just in case
@@ -489,18 +506,64 @@ module ProcessOut {
 
             window.addEventListener("message", function (event) {
                 var data = Message.parseEvent(event);
-                if (data.frameID != this.uid)
-                    return;
-                if (data.namespace != Message.fieldNamespace)
-                    return;
                 if (data.messageID != id)
                     return;
-                if (data.action != "value")
+                if (data.action != "tokenize")
                     return;
 
                 clearTimeout(fetchingTimeout);
 
-                callback(data.data);
+                // We successfully tokenized: let's return the data
+                if (data.data.token)      success(data.data.token);
+                else if (data.data.error) error(new Exception(data.data.error.code, data.data.error.message));
+                else                      error(new Exception("default"));
+            }.bind(this));
+        }
+
+        /** 
+         * refreshCVC asks the field to refresh the CVC of the given card. 
+         * The success callback is called with the card UID if it was successful
+         * otherwise the error callback is called with the Exception
+         * @param {any[]}    fields 
+         * @param {callback} success
+         * @param {callback} error
+         * @return {void}
+         */
+        public refreshCVC(cardUID: string, success: (token: string)  => void,
+                                           error:   (err: Exception) => void): void {
+
+            // Tell our field it should start the tokenization process and
+            // expect a response
+            var id = Math.random().toString();
+            this.iframe.contentWindow.postMessage(JSON.stringify({
+                "messageID": id,
+                "namespace": Message.fieldNamespace,
+                "projectID": this.instance.getProjectID(),
+                "action":    "refresh-cvc",
+                "data": {
+                    "data":   cardUID
+                }
+            }), "*");
+
+            // Our timeout, just in case
+            var fetchingTimeout =
+                setTimeout(function(){
+                    error(new Exception("processout-js.field.unavailable"));
+                }, CardField.timeout);
+
+            window.addEventListener("message", function (event) {
+                var data = Message.parseEvent(event);
+                if (data.messageID != id)
+                    return;
+                if (data.action != "refresh-cvc")
+                    return;
+
+                clearTimeout(fetchingTimeout);
+
+                // We successfully tokenized: let's return the data
+                if (data.data.token)      success(data.data.token);
+                else if (data.data.error) error(new Exception(data.data.error.code, data.data.error.message));
+                else                      error(new Exception("default"));
             }.bind(this));
         }
     }

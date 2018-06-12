@@ -11,6 +11,7 @@ interface Window {
  */
 module ProcessOut {
 
+    export const DEBUG = false;
     export const TestModePrefix = "test-";
 
     /**
@@ -23,12 +24,6 @@ module ProcessOut {
          * @type {string}
          */
         protected projectID: string;
-
-        /**
-         * Project public key used to tokenize the credit cards
-         * @type {string}
-         */
-        protected publicKey?: string;
 
         /**
          * Bind is an object used during the tokenization flow
@@ -64,6 +59,12 @@ module ProcessOut {
         protected host = "processout.com";
 
         /**
+         * Path to the ProcessOut field to be used to load the card forms
+         * @type {string}
+         */
+        protected processOutFieldEndpoint = "";
+
+        /**
         * Version of the API used by ProcessOut.js
         * @type {string}
         */
@@ -85,20 +86,13 @@ module ProcessOut {
          * ProcessOut constructor
          * @param  {string} projectID
          * @param  {string} resourceID
-         * @param  {string} publicKey
          */
-        constructor(projectID?: string, resourceID?: string, publicKey?: string) {
+        constructor(projectID?: string, resourceID?: string) {
             // We want to make sure ProcessOut.js is loaded from ProcessOut CDN.
             var scripts = document.getElementsByTagName("script");
             var jsHost = "";
-            // Only check the JS host if the current page isn't hosted on a 
-            // ProcessOut page
-            const bypassProcessOutSuffix = "?bypassprocessout";
             if (/^https?:\/\/.*\.processout\.((com)|(ninja)|(dev))\//.test(
-                window.location.href) || 
-                    // We can also bypass that security check
-                    window.location.href.indexOf(bypassProcessOutSuffix, 
-                        window.location.href.length - bypassProcessOutSuffix.length) !== -1) {
+                window.location.href)) {
 
                 jsHost = window.location.href;
             } else {
@@ -113,7 +107,7 @@ module ProcessOut {
                 }
             }
 
-            if (jsHost == "") {
+            if (jsHost == "" && !DEBUG) {
                 throw new Exception("processout-js.not-hosted");
             }
             if (/^https?:\/\/.*\.processout\.ninja\//.test(jsHost)) {
@@ -127,9 +121,6 @@ module ProcessOut {
             this.projectID = projectID;
             if (this.projectID && this.projectID.lastIndexOf(TestModePrefix, 0) === 0)
                 this.sandbox = true;
-
-            if (publicKey) this.publicKey = publicKey;
-            this.fetchPublicKey();
 
             this.resourceID = resourceID;
             if (this.resourceID &&
@@ -162,91 +153,22 @@ module ProcessOut {
         }
 
         /**
-         * fetchPublicKey fetches the project public key used to later encrypt
-         * the credit card fields
-         * @return {void}
-         */
-        protected fetchPublicKey(retrynumber?: number): void {
-            if (retrynumber == null || retrynumber == undefined)
-                retrynumber = 3; // Retry x times before giving up
-
-            if (!this.projectID)
-                return;
-            // The public key was already fetched
-            if (this.publicKey && this.publicKey.length > 0)
-                return;
-
-            this.publicKey = null;
-
-            var err = function() {
-                if (retrynumber > 1) {
-                    this.fetchPublicKey(retrynumber - 1);
-                } else {
-                    this.publicKey = "";
-                    throw new Exception("default", `Could not fetch the project public key. Are you sure ${this.projectID} is the correct project ID?`);
-                }
-            }.bind(this);
-
-            this.apiRequest("get", this.endpoint("checkout", "vault"), {}, 
-                function(data: any, req: XMLHttpRequest, e: Event): void {
-
-                    if (!data.success || !data.public_key) {
-                        err();
-                        return;
-                    }
-
-                    this.publicKey = data.public_key;
-                    this.bind      = data.bind;
-                }.bind(this), function(req: XMLHttpRequest, e: Event): void {
-                    err();
-                });
-        }
-
-        /**
-         * Queue up the function an execute it once the public key has been 
-         * fetched. assertPKFetched is a non-blocking call (it waits to
-         * run the function, but doesn't make the call itself wait)
-         * @param {function} func
-         * @param {function} err
-         * @return {void}
-         */
-        public assertPKFetched(func: () => void, error: (err: Exception) => void): void {
-            // The public key could not be fetched, an error was already
-            // thrown
-            if (this.publicKey === "") {
-                error(new Exception("default", `re: Could not fetch the project public key. Are you sure ${this.projectID} is the correct project ID?`));
-                return;
-            }
-            // The public key hasn't been fetched yet
-            if (this.publicKey === null) {
-                setTimeout(function() {this.assertPKFetched(func, error);}.bind(this), 100);
-                return;
-            }
-
-            func();
-        }
-
-        /**
-         * Return the fetched public key. Returns null if the public key
-         * as not been fetched yet, and "" (empty string) if the public key
-         * could not be fetched
+         * Return the ProcessOut field endpoint
          * @return {string}
          */
-        public getPublicKey(): string {
-            return this.publicKey;
+        public getProcessOutFieldEndpoint(suffix: string): string {
+            var endpoint = this.endpoint("js", "/ccfield.html");
+            if (DEBUG && this.processOutFieldEndpoint) endpoint = this.processOutFieldEndpoint;
+            return `${endpoint}${suffix}`;
         }
 
         /**
-         * Encrypt encrypts the given string
-         * @param {string} str
+         * Set a custom processout field endpoint
          * @return {string}
          */
-        public encrypt(str: string): string {
-            var w = <any>window;
-            return w.processoutforge.util.encode64(w.processoutforge.pki.publicKeyFromPem(this.publicKey)
-                .encrypt(w.processoutforge.util.encodeUtf8(str), "RSA-OAEP", {
-                    md: w.processoutforge.md.sha256.create()
-                }));
+        public setProcessOutFieldEndpoint(endpoint: string): void {
+            if (!DEBUG) return;
+            this.processOutFieldEndpoint = endpoint;
         }
 
         /**
@@ -256,7 +178,7 @@ module ProcessOut {
          * @return {string}
          */
         public endpoint(subdomain: string, path: string): string {
-            return `https://${subdomain}.${this.host}/${path}`;
+            return `https://${subdomain}.${this.host}${path}`;
         }
 
         /**
@@ -282,7 +204,7 @@ module ProcessOut {
             }
 
             if (path.substring(0, 4) != "http" && path[0] != "/")
-                path = this.endpoint("api", path);
+                path = this.endpoint("api", "/"+path);
 
             var headers = {
                 "Content-Type": "application/json",
@@ -424,20 +346,35 @@ module ProcessOut {
             success: (token: string) => void,
             error:   (err: Exception) => void): void {
 
-            this.assertPKFetched(function() {
-                // Let's first validate the card
-                var err = card.validate();
-                if (err) {
-                    error(err);
-                    return;
+            // Let's first validate the card
+            var err = card.validate();
+            if (err) {
+                error(err);
+                return;
+            }
+
+            if (!data)           data = {};
+            if (!data.contact)   data.contact = {};
+
+            // fill up the request
+            data.number    = card.getNumber();
+            data.exp_month = card.getExpiry().getMonth().toString();
+            data.exp_year  = card.getExpiry().getYear().toString();
+            data.cvc2      = card.getCVC();
+
+            // and send it
+            this.apiRequest("post", "cards", data, function(data: any,
+                req: XMLHttpRequest, e: Event): void {
+
+                if (!data.success) {
+                    error(new Exception(data.error_type, data.message));
+                    return
                 }
 
-                this.tokenizeEncrypted(this.encrypt(card.getNumber()), 
-                    this.encrypt(card.getExpiry().getMonth().toString()),
-                    this.encrypt(card.getExpiry().getYear().toString()),
-                    this.encrypt(card.getCVC()),
-                    data, success, error);
-            }.bind(this), error);
+                success(data.card.id);
+            }, function(req: XMLHttpRequest, e: Event): void {
+                error(new Exception("processout-js.network-issue"));
+            });
         }
 
         /**
@@ -452,62 +389,8 @@ module ProcessOut {
             success: (token: string)  => void,
             error:   (err: Exception) => void): void {
 
-            this.assertPKFetched(function() {
-                form.validate(function() {
-                    form.fetchValues(function(number: string, cvc: string, 
-                        expMonth: string, expYear: string) {
-
-                        this.tokenizeEncrypted(number, expMonth, expYear, cvc, 
-                            data, success, error);
-                    }.bind(this), function(err: Exception) {
-                        error(err);
-                    });
-                }.bind(this), error);
-            }.bind(this), error);
-        }
-
-        /**
-         * TokenizeEncrypted tokenizes the given encrypted card data
-         * @param {string} number
-         * @param {string} expMonth
-         * @param {string} expYear
-         * @param {string} cvc
-         * @param {any} data
-         * @param {callback} success
-         * @param {callback} error
-         */
-        protected tokenizeEncrypted(number: string, expMonth: string, 
-            expYear: string, cvc: string, req: any,
-            success: (token: string) => void,
-            error:   (err: Exception) => void): void {
-
-            this.assertPKFetched(function() {
-                if (!req)           req = {};
-                if (!req.contact)   req.contact = {};
-                if (req.name)       req.name = this.encrypt(req.name);
-
-                // fill up the request
-                req.number = number;
-                req.exp_month = expMonth;
-                req.exp_year = expYear;
-                req.cvc2 = cvc;
-
-                // send the bind parameter
-                req.bind = this.bind;
-
-                // and send it
-                this.apiRequest("post", "cards", req, function(data: any,
-                    req: XMLHttpRequest, e: Event): void {
-
-                    if (!data.success) {
-                        error(new Exception(data.error_type, data.message));
-                        return
-                    }
-
-                    success(data.card.id);
-                }, function(req: XMLHttpRequest, e: Event): void {
-                    error(new Exception("processout-js.network-issue"));
-                });
+            form.validate(function() {
+                form.tokenize(data, success, error);
             }.bind(this), error);
         }
 
@@ -562,14 +445,8 @@ module ProcessOut {
             success: (token: string)  => void,
             error:   (err: Exception) => void): void {
 
-            this.assertPKFetched(function() {
-                form.validate(function() {
-                    form.getCVCField().value(function(val: CardFieldValue): void {
-                        this.refreshCVCEncrypted(cardUID, val.cvc, success, error);
-                    }.bind(this), function(err: Exception) {
-                        error(err)
-                    });
-                }.bind(this), error);
+            form.validate(function() {
+                form.refreshCVC(cardUID, success, error);
             }.bind(this), error);
         }
 
@@ -592,36 +469,18 @@ module ProcessOut {
                 return;
             }
 
-            this.assertPKFetched(this.refreshCVCEncrypted.bind(
-                this, cardUID, this.encrypt(cvc), success, error), error);
-        }
+            this.apiRequest("put", `cards/${cardUID}`, {
+                "cvc": cvc
+            }, function(data: any, req: XMLHttpRequest, e: Event): void {
+                if (!data.success) {
+                    error(new Exception("card.invalid"));
+                    return
+                }
 
-        /**
-         * refreshCVCEncrypted refreshes the card CVC using the given encrypted
-         * CVC code
-         * @param {string} cardUID
-         * @param {string} cvc
-         * @param {callback} success
-         * @param {callback} error
-         */
-        protected refreshCVCEncrypted(cardUID: string, cvc: string,
-            success: (token: string) => void,
-            error:   (err: Exception) => void): void {
-
-            this.assertPKFetched(function() {
-                this.apiRequest("put", `cards/${cardUID}`, {
-                    "cvc": cvc
-                }, function(data: any, req: XMLHttpRequest, e: Event): void {
-                    if (!data.success) {
-                        error(new Exception("card.invalid"));
-                        return
-                    }
-
-                    success(data.card.id);
-                }, function(req: XMLHttpRequest, e: Event): void {
-                    error(new Exception("processout-js.network-issue"));
-                });
-            }.bind(this), error);
+                success(data.card.id);
+            }, function(req: XMLHttpRequest, e: Event): void {
+                error(new Exception("processout-js.network-issue"));
+            });
         }
 
         /**
@@ -643,7 +502,7 @@ module ProcessOut {
 
                 // Let's try to build the URL ourselves
                 if (!url) {
-                    url = this.endpoint("checkout", `oneoff/${encodeURIComponent(this.getProjectID())}`+
+                    url = this.endpoint("checkout", `/oneoff/${encodeURIComponent(this.getProjectID())}`+
                         `?amount=${encodeURIComponent(options.amount)}`+
                         `&currency=${encodeURIComponent(options.currency)}`+
                         `&name=${encodeURIComponent(options.name)}`);

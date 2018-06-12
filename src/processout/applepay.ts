@@ -100,7 +100,7 @@ module ProcessOut {
             // Hook the session events we need
             var t = this;
             this.session.onvalidatemerchant = function(event: any): void {
-                t.instance.apiRequest("post", t.instance.endpoint("api", "applepay/sessions"), {
+                t.instance.apiRequest("post", t.instance.endpoint("api", "/applepay/sessions"), {
                     "session_url": event.validationURL,
                     "domain_name": window.location.hostname
                 }, function(data: any, req: XMLHttpRequest, e: Event): void {
@@ -120,7 +120,7 @@ module ProcessOut {
                 if (!req) req = {};
                 req.applepay_response = event.payment;
                 req.token_type = "applepay";
-                t.instance.apiRequest("post", t.instance.endpoint("api", "cards"),
+                t.instance.apiRequest("post", t.instance.endpoint("api", "/cards"),
                     req, function(data: any, req: XMLHttpRequest, e: Event): void {
                         if (!data.success) {
                             t.onerror(new Exception(data.error_code, data.message));

@@ -19,7 +19,7 @@ module ProcessOut {
          * Whether or not the form is only used to refresh a card CVC
          * @var {boolean}
          */
-        protected refreshCVC: boolean;
+        protected isRefreshCVC: boolean;
 
         /**
          * DOM element which contains our card inputs
@@ -58,12 +58,27 @@ module ProcessOut {
         protected expYear: CardField;
 
         /**
+         * ID of the form
+         * @var {string}
+         */
+        protected uid: string
+
+        /**
          * CardForm constructor.
          * @param {ProcessOut} instance
          */
         public constructor(instance: ProcessOut, el: HTMLElement) {
             this.instance = instance;
-            this.element = el;
+            this.element  = el;
+            this.uid   = Math.random().toString();
+        }
+
+        /**
+         * GetUID returns the ID of the form
+         * @param {string}
+         */
+        public getUID(): string {
+            return this.uid;
         }
 
         /**
@@ -106,14 +121,14 @@ module ProcessOut {
                 }
             }.bind(this);
 
-            this.number = new CardField(this.instance, new CardFieldOptions(CardField.number).apply(options),
+            this.number = new CardField(this.instance, this, new CardFieldOptions(CardField.number).apply(options),
                 <HTMLInputElement>this.element.querySelector("[data-processout-input=cc-number]"), 
                 function() {
                     numberReady = true; ev();
                 }, error);
             var cvcEl = this.element.querySelector("[data-processout-input=cc-cvc]");
             if (cvcEl) {
-                this.cvc = new CardField(this.instance, new CardFieldOptions(CardField.cvc).apply(options),
+                this.cvc = new CardField(this.instance, this, new CardFieldOptions(CardField.cvc).apply(options),
                 <HTMLInputElement>cvcEl,
                 function() {
                     cvcReady = true; ev();
@@ -123,18 +138,18 @@ module ProcessOut {
             }
             var expEl = this.element.querySelector("[data-processout-input=cc-exp]");
             if (expEl) {
-                this.exp = new CardField(this.instance, new CardFieldOptions(CardField.expiry).apply(options),
+                this.exp = new CardField(this.instance, this, new CardFieldOptions(CardField.expiry).apply(options),
                     <HTMLInputElement>expEl,
                 function() {
                     expMonthReady = true; expYearReady = true; ev();
                 }, error);
             } else {
-                this.expMonth = new CardField(this.instance, new CardFieldOptions(CardField.expiryMonth).apply(options),
+                this.expMonth = new CardField(this.instance, this, new CardFieldOptions(CardField.expiryMonth).apply(options),
                     <HTMLInputElement>this.element.querySelector("[data-processout-input=cc-exp-month]"),
                 function() {
                     expMonthReady = true; ev();
                 }, error);
-                this.expYear = new CardField(this.instance, new CardFieldOptions(CardField.expiryYear).apply(options),
+                this.expYear = new CardField(this.instance, this, new CardFieldOptions(CardField.expiryYear).apply(options),
                     <HTMLInputElement>this.element.querySelector("[data-processout-input=cc-exp-year]"),
                 function() {
                     expYearReady = true; ev();
@@ -159,9 +174,9 @@ module ProcessOut {
             error:          (err:  Exception) => void,
             eventCallback?: (name: string, data: any) => void): CardForm {
 
-            this.refreshCVC = true;
+            this.isRefreshCVC = true;
 
-            this.cvc = new CardField(this.instance, new CardFieldOptions(CardField.cvc).apply(options),
+            this.cvc = new CardField(this.instance, this, new CardFieldOptions(CardField.cvc).apply(options),
                 <HTMLInputElement>this.element.querySelector("[data-processout-input=cc-cvc]"), 
                 function() {
                     success(this);
@@ -251,7 +266,7 @@ module ProcessOut {
         public validate(success: ()               => void,
                         error:   (err: Exception) => void): void {
 
-            if (this.refreshCVC) {
+            if (this.isRefreshCVC) {
                 // We only want to check the CVC field
                 this.cvc.validate(function() {
                     success();
@@ -301,58 +316,44 @@ module ProcessOut {
         }
 
         /**
-         * FetchValues will fetch the values of all the inputs of the CardForm
-         * and call the callback function. If the values couldn't be fetched
-         * after the defined timeout, the error callback is executed
+         * tokenize tokenizes the cards from the card form fields and calls
+         * the success callback with the newly created card token when 
+         * successfull. If an error arises, the error callback is called
+         * @param {any}      any
          * @param {Callback} success
          * @param {Callback} error
          * @return {void}
          */
-        public fetchValues(success: (number: string, cvc: string, 
-                                expMonth: string, expYear: string) => void,
-                            error: (err: Exception) => void): void {
+        public tokenize(data: any,  success: (token: string)  => void,
+                                    error:   (err: Exception) => void): void {
 
-            // Let's setup the values we want to fetch
-            var number:   string = null;
-            var cvc:      string = null;
-            var expMonth: string = null;
-            var expYear:  string = null;
+            // Fields are the fields the leader should wait for to tokenize
+            var fields = ["number"];
+            if (this.cvc)      fields.push("cvc");
+            if (this.exp)      fields.push("exp");
+            if (this.expMonth) fields.push("exp-month");
+            if (this.expYear)  fields.push("exp-year");
 
-            // Our handler to check everytime we receive a value if we have
-            // all of them
-            var ev = function() {
-                if (number != null && cvc != null && 
-                    expMonth != null && expYear != null) {
+            this.number.tokenize(fields, data, success, error);
+        }
 
-                    // All values are fetched
-                    success(number, cvc, expMonth, expYear);
-                    return;
-                }
-            }
+        /**
+         * refreshCVC refreshes the given card CVC and calls the success
+         * callback with the card token when successful. If an error arises,
+         * the error callback is called
+         * @param {string}   cardUID
+         * @param {Callback} success
+         * @param {Callback} error
+         * @return {void}
+         */
+        public refreshCVC(cardUID: string, success: (token: string)  => void,
+                                           error:   (err: Exception) => void): void {
 
-            // And let's finally fetch everything
-            this.number.value(function(val: CardFieldValue): void {
-                number = val.number; ev();
-            }, error);
-            if (this.cvc) {
-                this.cvc.value(function(val: CardFieldValue): void {
-                    cvc = val.cvc; ev();
-                }, error);
-            } else {
-                cvc = "";
-            }
-            if (this.exp) {
-                this.exp.value(function(val: CardFieldValue): void {
-                    expMonth = val.expiryMonth; expYear = val.expiryYear; ev();
-                }, error);
-            } else {
-                this.expMonth.value(function(val: CardFieldValue): void {
-                    expMonth = val.expiryMonth; ev();
-                }, error);
-                this.expYear.value(function(val: CardFieldValue): void {
-                    expYear = val.expiryYear; ev();
-                }, error);
-            }
+            if (!this.cvc)
+                error(new Exception("processout-js.wrong-type-for-action", 
+                    "RefreshCVC was called but the form has no CVC field initialized."));
+
+            this.cvc.refreshCVC(cardUID, success, error);
         }
     }
 }

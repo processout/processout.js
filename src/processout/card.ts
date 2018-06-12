@@ -353,7 +353,9 @@ module ProcessOut {
          * @return {string}
          */
         public static parseNumber(number: string): string {
-            return number.replace(/ /gi, "").replace(/\-/gi, "").replace(/\-/gi, "");
+            // Make sure to return a String as IE sometimes detects it as 
+            // an object (?)
+            return String(number.replace(/ /gi, "").replace(/\-/gi, "").replace(/\-/gi, ""));
         }
 
         /**
@@ -569,8 +571,6 @@ module ProcessOut {
                 "union-pay":            ["62"],
                 "diners-club":          ["300", "301", "302", "303", "304", "305", "309", "36", "38", "39"],
                 "discover":             ["6011", "62", "64", "65"],
-                "interpayment":         ["636"],
-                "instapayment":         ["637", "638", "639"],
                 "jcb":                  ["35"],
                 "maestro":              ["50", "56", "57", "58", "59", "6"],
                 "dankort":              ["5019", "4175", "4571"],
@@ -602,7 +602,7 @@ module ProcessOut {
                 for (let optionKey in options) {
                     var option = options[optionKey];
                     var l = (iin.length > option.length) ? option.length : iin.length;
-                    if (iin.substring(0, l) == option.substring(0, l)) {
+                    if (iin.substring(0, l) == option.toString().substring(0, l)) {
                         matches.push(scheme);
                         break;
                     }

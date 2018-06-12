@@ -15,6 +15,7 @@ module ProcessOut {
 
         public messageID:    string;
         public frameID:      string;
+        public formID:       string
         public projectID:    string;
         public namespace:    string;
         public action:       string;
