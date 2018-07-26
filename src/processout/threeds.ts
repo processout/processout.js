@@ -44,7 +44,7 @@ module ProcessOut {
             }
 
             if (!url) {
-                url = `/three-d-s/${encodeURIComponent(this.instance.getProjectID())}`+
+                url = `/${encodeURIComponent(this.instance.getProjectID())}/three-d-s`+
                     `?${processoutjsQuery}=${processoutjsQueryTrue}`+
                     `&amount=${encodeURIComponent(options.amount)}`+
                     `&currency=${encodeURIComponent(options.currency)}`+
