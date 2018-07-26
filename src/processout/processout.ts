@@ -87,7 +87,7 @@ module ProcessOut {
          * @param  {string} projectID
          * @param  {string} resourceID
          */
-        constructor(projectID?: string, resourceID?: string) {
+        constructor(projectID: string, resourceID?: string) {
             // We want to make sure ProcessOut.js is loaded from ProcessOut CDN.
             var scripts = document.getElementsByTagName("script");
             var jsHost = "";
@@ -118,8 +118,11 @@ module ProcessOut {
                 this.host = "processout.com";
             }
 
+            if (!projectID)
+                throw new Exception("processout-js.missing-project-id");
+
             this.projectID = projectID;
-            if (this.projectID && this.projectID.lastIndexOf(TestModePrefix, 0) === 0)
+            if (this.projectID.lastIndexOf(TestModePrefix, 0) === 0)
                 this.sandbox = true;
 
             this.resourceID = resourceID;
@@ -502,7 +505,7 @@ module ProcessOut {
 
                 // Let's try to build the URL ourselves
                 if (!url) {
-                    url = this.endpoint("checkout", `/oneoff/${encodeURIComponent(this.getProjectID())}`+
+                    url = this.endpoint("checkout", `${encodeURIComponent(this.getProjectID())}/oneoff`+
                         `?amount=${encodeURIComponent(options.amount)}`+
                         `&currency=${encodeURIComponent(options.currency)}`+
                         `&name=${encodeURIComponent(options.name)}`);
