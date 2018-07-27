@@ -92,12 +92,24 @@ module ProcessOut {
         }
 
         /**
-         * ParseYear parses the given year and makes it a 4 digits year
-         * @param {string|number} year
+         * ParseMonth parses the given month
+         * @param {string|number} monthn
          * @return {number}
          */
-        public static parseYear(yearsn: string|number): number {
-            var year = Number(yearsn);
+        public static parseMonth(monthn: string|number): number {
+            var month = Number(monthn);
+            if (!month) month = 0;
+            return month;
+        }
+
+        /**
+         * ParseYear parses the given year and makes it a 4 digits year
+         * @param {string|number} yearn
+         * @return {number}
+         */
+        public static parseYear(yearn: string|number): number {
+            var year = Number(yearn);
+            if (!year) year = 0;
             if (year < 2000) {
                 year += 2000;
             }
@@ -179,7 +191,7 @@ module ProcessOut {
          * @return {Exception}
          */
         public static validateMonth(month: number): Exception {
-            if (month < 1 || month > 12)
+            if (!month || month < 1 || month > 12)
                 return new Exception("card.invalid-month");
 
             return null;
@@ -195,7 +207,7 @@ module ProcessOut {
                 year += 2000;
             
             var date = new Date();
-            if (year < date.getFullYear())
+            if (!year || year < date.getFullYear())
                 return new Exception("card.invalid-year");
 
             return null;
