@@ -40,7 +40,7 @@ module ProcessOut {
 
             var url = null;
             if (options.invoiceID) {
-                url = `/${options.invoiceID}/three-d-s/redirect/${options.source}?${processoutjsQuery}=${processoutjsQueryTrue}`;
+                url = `/${encodeURIComponent(this.instance.getProjectID())}/${options.invoiceID}/three-d-s/redirect/${options.source}?${processoutjsQuery}=${processoutjsQueryTrue}`;
             }
 
             if (!url) {
