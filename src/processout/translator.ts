@@ -13,6 +13,7 @@ module ProcessOut {
             "card.duplicate":          "The payment could not be completed. Please try again later.",
             "card.network-failed":     "The payment could not be completed. Please try again later.",
             "card.invalid":            "The given card is invalid.",
+            "card.invalid-name":       "The cardholder name is invalid.",
             "card.invalid-number":     "The card number is invalid.",
             "card.invalid-date":       "The card expiry date is invalid.",
             "card.invalid-month":      "The card expiry month is invalid.",
