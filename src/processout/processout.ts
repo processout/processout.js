@@ -218,7 +218,7 @@ module ProcessOut {
 
             if (method != "get") {
                 if (legacy)
-                    path += `?legacyrequest=true`;
+                    path += `?legacyrequest=true&project_id=${this.projectID}`;
             } else {
                 path += "?";
                 if (legacy) {
