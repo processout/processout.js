@@ -23,7 +23,7 @@
 
             // Get the project ID from the resource URL
             var url = button.getAttribute("href");
-            var projectIDs = url.match(/proj_[a-zA-Z0-9]+/);
+            var projectIDs = url.match(/(test\-)?proj_[a-zA-Z0-9]+/);
             var projectID = "";
             if (projectIDs.length > 0) {
                 projectID = projectIDs[0];
