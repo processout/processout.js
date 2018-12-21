@@ -200,7 +200,7 @@ module ProcessOut {
 
             if (!retry) retry = 0;
 
-            var legacy = false;
+            var legacy = true;
             // Force legacy if we have to
             if (window.XDomainRequest) {
                 legacy = true;
@@ -216,37 +216,25 @@ module ProcessOut {
             if (this.projectID)
                 headers["Authorization"] = `Basic ${btoa(this.projectID+":")}`;
 
-            if (method != "get") {
-                if (legacy)
-                    path += `?legacyrequest=true&project_id=${this.projectID}`;
-            } else {
-                path += "?";
-                if (legacy) {
-                    data["legacyrequest"] = "true";
-                    for (var key in headers)
-                        data[key] = headers[key];
-                }
-                for (var key in data) {
-                    path += `${key}=${encodeURIComponent(data[key])}&`;
-                }
+            // We need to hack our request headers for legacy browsers to work,
+            // but also for modern browsers with extensions playing with headers
+            // (such as antiviruses)
+            for (var k in headers)
+                data[`X-${k}`] = headers[k];
+
+            // We also need to hack our project ID in the URL itself so that
+            // ProcessOut's load-balancers and routers can route the request
+            // to the project's region
+            path += `?legacyrequest=true&project_id=${this.projectID}`
+            if (method == "get") {
+                for (var key in data)
+                    path += `&${key}=${encodeURIComponent(data[key])}`;
             }
 
             var request = new XMLHttpRequest();
-            // Handle legacy scenario
-            if (legacy) {
+            if (window.XDomainRequest)
                 request = new XDomainRequest();
-
-                // We also need to hack our request headers
-                for (var k in headers)
-                    data[`X-${k}`] = headers[k];
-
-                request.open(method, path, true);
-            } else {
-                request.open(method, path, true);
-
-                for (var k in headers)
-                    request.setRequestHeader(k, headers[k]);
-            }
+            request.open(method, path, true);
 
             request.timeout = 0;
             request.onload = function(e: any) {
@@ -267,7 +255,7 @@ module ProcessOut {
                 if (request.status && request.status >= 200 && 
                     request.status < 500 && request.responseText)
 
-                    request.onload(e);
+                    request.onload(<ProgressEvent>e);
                 else
                     error(request, e);
             };
