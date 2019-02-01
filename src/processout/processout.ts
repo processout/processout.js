@@ -247,7 +247,7 @@ module ProcessOut {
                     success(parsed, request, e);
                 return;
             };
-            request.onerror = function(e: Event) {
+            request.onerror = function(e: ProgressEvent) {
                 if (request.status && request.status >= 200 && 
                     request.status < 500 && request.responseText)
 
