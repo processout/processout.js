@@ -238,7 +238,9 @@ module ProcessOut {
                 try {
                     parsed = JSON.parse(request.responseText);
                 } catch (e) {
-                    error(request, e);
+                    // Set sensible default for the success calls below to
+                    // behave as expected down the chain
+                    parsed = {};
                 }
 
                 if (window.XDomainRequest)
