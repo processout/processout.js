@@ -40,9 +40,12 @@
       return false;
     };
   }var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -1265,10 +1268,6 @@ var ProcessOut;
         ProcessOut.prototype.apiRequest = function (method, path, data, success, error, retry) {
             if (!retry)
                 retry = 0;
-            var legacy = true;
-            if (window.XDomainRequest) {
-                legacy = true;
-            }
             if (path.substring(0, 4) != "http" && path[0] != "/")
                 path = this.endpoint("api", "/" + path);
             var headers = {
@@ -1294,8 +1293,10 @@ var ProcessOut;
                 try {
                     parsed = JSON.parse(request.responseText);
                 }
-                catch (err) { }
-                if (legacy)
+                catch (e) {
+                    error(request, e);
+                }
+                if (window.XDomainRequest)
                     success(parsed, request, e);
                 else if (e.currentTarget.readyState == 4)
                     success(parsed, request, e);

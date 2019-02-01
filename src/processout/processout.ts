@@ -200,12 +200,6 @@ module ProcessOut {
 
             if (!retry) retry = 0;
 
-            var legacy = true;
-            // Force legacy if we have to
-            if (window.XDomainRequest) {
-                legacy = true;
-            }
-
             if (path.substring(0, 4) != "http" && path[0] != "/")
                 path = this.endpoint("api", "/"+path);
 
@@ -240,12 +234,14 @@ module ProcessOut {
             request.onload = function(e: any) {
                 // Parse the response in a try catch so we can properly
                 // handle bad connectivity/proxy error cases
-                var parsed;
+                var parsed: any;
                 try {
                     parsed = JSON.parse(request.responseText);
-                } catch (err) { /* ... */ }
+                } catch (e) {
+                    error(request, e);
+                }
 
-                if (legacy)
+                if (window.XDomainRequest)
                     success(parsed, request, e);
                 else if (e.currentTarget.readyState == 4)
                     success(parsed, request, e);
