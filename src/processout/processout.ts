@@ -210,6 +210,9 @@ module ProcessOut {
             if (this.projectID)
                 headers["Authorization"] = `Basic ${btoa(this.projectID+":")}`;
 
+            // We need the data to at least be an empty object
+            if (!data) data = {};
+
             // We need to hack our request headers for legacy browsers to work,
             // but also for modern browsers with extensions playing with headers
             // (such as antiviruses)
