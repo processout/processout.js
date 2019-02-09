@@ -233,6 +233,12 @@ module ProcessOut {
                 request = new XDomainRequest();
             request.open(method, path, true);
 
+            // We still want to push the headers when we can
+            if (!window.XDomainRequest) {
+                for (var k in headers)	
+                    request.setRequestHeader(k, headers[k]);
+            }
+
             request.timeout = 0;
             request.onload = function(e: any) {
                 // Parse the response in a try catch so we can properly
