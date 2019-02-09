@@ -213,16 +213,17 @@ module ProcessOut {
             // We need the data to at least be an empty object
             if (!data) data = {};
 
-            // We need to hack our request headers for legacy browsers to work,
-            // but also for modern browsers with extensions playing with headers
-            // (such as antiviruses)
-            for (var k in headers)
-                data[`X-${k}`] = headers[k];
-
-            // We also need to hack our project ID in the URL itself so that
+            // We need to hack our project ID in the URL itself so that
             // ProcessOut's load-balancers and routers can route the request
             // to the project's region
             path += `?legacyrequest=true&project_id=${this.projectID}`
+
+            // We also need to hack our request headers for legacy browsers to 
+            // work, but also for modern browsers with extensions playing with 
+            // headers (such as antiviruses)
+            for (var k in headers)
+                path += `&x-${k}=${headers[k]}`;
+
             if (method == "get") {
                 for (var key in data)
                     path += `&${key}=${encodeURIComponent(data[key])}`;
@@ -232,6 +233,12 @@ module ProcessOut {
             if (window.XDomainRequest)
                 request = new XDomainRequest();
             request.open(method, path, true);
+
+            // We still want to push the headers when we can
+            if (!window.XDomainRequest) {
+                for (var k in headers)	
+                    request.setRequestHeader(k, headers[k]);
+            }
 
             request.timeout = 0;
             request.onload = function(e: any) {
