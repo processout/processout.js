@@ -82,13 +82,15 @@ module ProcessOut {
          * translate returns the translated message if found, or the default
          * error message otherwise
          * @param {string} code
+         * @param {string?} message
          * @return string
          */
-        public static translate(code: string): string {
-            if (!messages[Translator.locale][code])
-                return messages[Translator.locale]["default"];
+        public static translate(code: string, message?: string): string {
+            if (messages[Translator.locale][code])
+                return messages[Translator.locale][code];
 
-            return messages[Translator.locale][code];
+            if (message) return message;
+            return messages[Translator.locale]["default"];
         }
 
         /**
