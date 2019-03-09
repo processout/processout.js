@@ -501,7 +501,7 @@ module ProcessOut {
 
                 // Let's try to build the URL ourselves
                 if (!url) {
-                    url = this.endpoint("checkout", `${encodeURIComponent(this.getProjectID())}/oneoff`+
+                    url = this.endpoint("checkout", `/${this.getProjectID()}/oneoff`+
                         `?amount=${encodeURIComponent(options.amount)}`+
                         `&currency=${encodeURIComponent(options.currency)}`+
                         `&name=${encodeURIComponent(options.name)}`);
@@ -540,6 +540,77 @@ module ProcessOut {
             }.bind(this);
 
             document.body.appendChild(iframe);
+        }
+
+        /**
+         * FetchGatewayConfigurations fetches the gateway configurations enabled
+         * on the project matching the given configuration. Config supports
+         * the following options:
+         * - {bool} alternativePaymentMethods: matches APMs
+         * - {bool} tokenization:              matches gateways supporting tokenization
+         * @param {any} config
+         * @param {callback} success 
+         * @param {callback} error 
+         */
+        public fetchGatewayConfigurations(
+            config:  any, 
+            success: (confs: any[])     => void, 
+            error:   (err:   Exception) => void): void {
+
+            let data = {};
+            if (!config) config = {};
+
+            if (!config.invoiceID)
+                throw new Exception("processout-js.missing-invoice-id");
+
+            if (config.hasOwnProperty("alternativePaymentMethods"))  data["redirection"]  = !!config.alternativePaymentMethods;
+            if (config.hasOwnProperty("tokenization"))               data['tokenization'] = !!config.tokenization;
+
+            this.apiRequest("GET", "gateway-configurations", data,
+                function(data: any): void {
+                    if (!data.success) {
+                        error(new Exception(data.error_type, data.message));
+                        return;
+                    }
+
+                    // We want to inject some helpers in our gateway confs
+                    var confs = [];
+                    for (var conf of data.gateway_configurations) {
+                        conf.hookForInvoice = this.buildConfHookForInvoice(config.invoiceID, conf.id);
+                        confs.push(conf);
+                    }
+                    success(confs);
+                }.bind(this), function(req: XMLHttpRequest, e: Event): void {
+                    error(new Exception("processout-js.network-issue"));
+                });
+        }
+
+        protected buildConfHookForInvoice(
+            invoiceID:     string, 
+            gatewayConfID: string
+        ): (
+            el:      HTMLElement, 
+            success: (token: string)    => void, 
+            error:   (err:   Exception) => void
+        ) => void{
+
+            return function(
+                el:         HTMLElement,
+                tokenized:  (token: string) => void,
+                tokenError: (err: Exception) => void) {
+
+                var url = this.endpoint("checkout", `/${this.getProjectID()}/${invoiceID}/redirect/${gatewayConfID}`);
+
+                el.addEventListener("click", function(e) {
+                    // Prevent from doing the default redirection
+                    e.preventDefault();
+
+                    var action = this.handleAction(
+                        url, tokenized, tokenError);
+
+                    return false;
+                }.bind(this));
+            }.bind(this);
         }
 
         /**

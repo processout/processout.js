@@ -1,5 +1,4 @@
 /// <reference path="flow.ts" />
-/// <reference path="gatewayconfiguration.ts" />
 /// <reference path="actionhandler.ts" />
 /// <reference path="applepay.ts" />
 /// <reference path="applepay-wrapper.ts" />
