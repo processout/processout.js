@@ -200,6 +200,8 @@ module ProcessOut {
 
             if (!retry) retry = 0;
 
+            method = method.toLowerCase();
+
             if (path.substring(0, 4) != "http" && path[0] != "/")
                 path = this.endpoint("api", "/"+path);
 
@@ -553,20 +555,18 @@ module ProcessOut {
          * @param {callback} error 
          */
         public fetchGatewayConfigurations(
-            config:  any, 
-            success: (confs: any[])     => void, 
+            config:  any,
+            success: (confs: any[])     => void,
             error:   (err:   Exception) => void): void {
 
-            let data = {};
             if (!config) config = {};
 
             if (!config.invoiceID)
                 throw new Exception("processout-js.missing-invoice-id");
 
-            if (config.hasOwnProperty("alternativePaymentMethods"))  data["redirection"]  = !!config.alternativePaymentMethods;
-            if (config.hasOwnProperty("tokenization"))               data['tokenization'] = !!config.tokenization;
-
-            this.apiRequest("GET", "gateway-configurations", data,
+            this.apiRequest("GET", "gateway-configurations", {
+                "filter": config.filter
+            },
                 function(data: any): void {
                     if (!data.success) {
                         error(new Exception(data.error_type, data.message));
