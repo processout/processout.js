@@ -1,1 +1,1871 @@
-!function(){function e(e){this.message=e}var t="undefined"!=typeof exports?exports:self,n="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";e.prototype=new Error,e.prototype.name="InvalidCharacterError",t.btoa||(t.btoa=function(t){for(var i,o,r=String(t),s=0,a=n,c="";r.charAt(0|s)||(a="=",s%1);c+=a.charAt(63&i>>8-s%1*8)){if((o=r.charCodeAt(s+=.75))>255)throw new e("'btoa' failed: The string to be encoded contains characters outside of the Latin1 range.");i=i<<8|o}return c}),t.atob||(t.atob=function(t){var i=String(t).replace(/=+$/,"");if(i.length%4==1)throw new e("'atob' failed: The string to be decoded is not correctly encoded.");for(var o,r,s=0,a=0,c="";r=i.charAt(a++);~r&&(o=s%4?64*o+r:r,s++%4)?c+=String.fromCharCode(255&o>>(-2*s&6)):0)r=n.indexOf(r);return c})}(),"function"!=typeof Object.assign&&(Object.assign=function(e,t){"use strict";if(null==e)throw new TypeError("Cannot convert undefined or null to object");for(var n=Object(e),i=1;i<arguments.length;i++){var o=arguments[i];if(null!=o)for(var r in o)Object.prototype.hasOwnProperty.call(o,r)&&(n[r]=o[r])}return n}),[Element.prototype,CharacterData.prototype,DocumentType.prototype].forEach(function(e){e.hasOwnProperty("remove")||Object.defineProperty(e,"remove",{configurable:!0,enumerable:!0,writable:!0,value:function(){this.parentNode.removeChild(this)}})}),[].includes||(Array.prototype.includes=function(e){"use strict";var t=Object(this),n=parseInt(t.length)||0;if(0===n)return!1;var i,o,r=parseInt(arguments[1])||0;for(r>=0?i=r:(i=n+r)<0&&(i=0);i<n;){if(e===(o=t[i])||e!=e&&o!=o)return!0;i++}return!1});var ProcessOut,__extends=this&&this.__extends||function(){var e=function(t,n){return(e=Object.setPrototypeOf||{__proto__:[]}instanceof Array&&function(e,t){e.__proto__=t}||function(e,t){for(var n in t)t.hasOwnProperty(n)&&(e[n]=t[n])})(t,n)};return function(t,n){function i(){this.constructor=t}e(t,n),t.prototype=null===n?Object.create(n):(i.prototype=n.prototype,new i)}}();!function(e){!function(e){e[e.None=1]="None",e[e.OneOff=2]="OneOff",e[e.Subscription=3]="Subscription",e[e.Tokenization=4]="Tokenization"}(e.Flow||(e.Flow={}))}(ProcessOut||(ProcessOut={})),function(e){var t=function(){function t(t,n){this.instance=t,n.merchantCapabilities&&n.merchantCapabilities.length||(n.merchantCapabilities=["supports3DS"]),n.supportedNetworks&&n.supportedNetworks.length||(n.supportedNetworks=["amex","discover","masterCard","visa"]),this.request=n,this.session=new ApplePaySession(1,this.request);var i=this;this.session.onvalidatemerchant=function(t){i.instance.apiRequest("post",i.instance.endpoint("api","/applepay/sessions"),{session_url:t.validationURL,domain_name:window.location.hostname},function(t,n,o){t.success?i.session.completeMerchantValidation(t.session_payload):(i.onerror(new e.Exception(t.error_code,t.message)),i.session.abort())},function(t,n){i.onerror(new e.Exception("processout-js.network-issue")),i.session.abort()})},this.session.onpaymentauthorized=function(t){var n=i.data;n||(n={}),n.applepay_response=t.payment,n.token_type="applepay",i.instance.apiRequest("post",i.instance.endpoint("api","/cards"),n,function(t,n,o){t.success?i.onsuccess(t.card):(i.onerror(new e.Exception(t.error_code,t.message)),i.session.abort())},function(t,n){i.onerror(new e.Exception("processout-js.network-issue")),i.session.abort()})},this.session.oncancel=this.onCancelHandler.bind(this),this.session.onshippingcontactselected=this.onShippingContactSelectedHandler.bind(this),this.session.onshippingmethodselected=this.onShippingMethodSelectedHandler.bind(this)}return t.prototype.setHandlers=function(t,n){if(!t)throw new e.Exception("applepay.no-success-handler");this.onsuccess=t,this.onerror=function(e){n&&n(e)}},t.prototype.tokenize=function(e,t,n){this.setHandlers(t,n),this.session.begin()},t.prototype.abort=function(){this.session.abort()},t.prototype.completePayment=function(e){this.session.completePayment(e)},t.prototype.completePaymentMethodSelection=function(e,t){this.session.completePaymentMethodSelection(e,t)},t.prototype.completeShippingContactSelection=function(e,t,n,i){this.session.completeShippingContactSelection(e,t,n,i)},t.prototype.completeShippingMethodSelection=function(e,t,n){this.session.completeShippingMethodSelection(e,t,n)},t.prototype.getSession=function(){return this.session},t.prototype.onCancelHandler=function(e){this.oncancel&&this.oncancel(e)},t.prototype.onPaymentMethodSelectedHandler=function(e){this.onpaymentmethodselected&&this.onpaymentmethodselected(e)},t.prototype.onShippingContactSelectedHandler=function(e){this.onshippingcontactselected&&this.onshippingcontactselected(e)},t.prototype.onShippingMethodSelectedHandler=function(e){this.onshippingmethodselected&&this.onshippingmethodselected(e)},t}();e.ApplePay=t}(ProcessOut||(ProcessOut={})),function(e){var t=function(){function t(e){this.instance=e}return t.prototype.checkAvailability=function(t){window.ApplePaySession&&ApplePaySession.canMakePayments()?this.instance.apiRequest("get",this.instance.endpoint("api","/applepay/available"),{domain_name:window.location.hostname},function(n,i,o){n.success?t(null):t(new e.Exception("applepay.not-available",n.message))}.bind(this),function(n,i){t(new e.Exception("processout-js.network-issue"))}):t(new e.Exception("applepay.not-supported"))},t.prototype.newSession=function(t,n,i){return new e.ApplePay(this.instance,t)},t}();e.ApplePayWrapper=t}(ProcessOut||(ProcessOut={})),function(e){var t="processoutjs",n="true",i=function(){function i(i,o){if(this.instance=i,!o.source)throw new e.Exception("request.validation.error","Please provide a source to be used to start the 3D-Secure flow.");var r=null;if(o.invoiceID&&(r="/"+this.instance.getProjectID()+"/"+o.invoiceID+"/three-d-s/redirect/"+o.source+"?"+t+"="+n),!r&&(r="/"+this.instance.getProjectID()+"/three-d-s?"+t+"="+n+"&amount="+encodeURIComponent(o.amount)+"&currency="+encodeURIComponent(o.currency)+"&name="+encodeURIComponent(o.name)+"&return_url="+encodeURIComponent(o.returnURL?o.returnURL:"")+"&source="+encodeURIComponent(o.source),o.metadata&&"object"==typeof o.metadata))for(var s in o.metadata)o.metadata.hasOwnProperty(s)&&(r+="&metadata["+s+"]="+encodeURIComponent(o.metadata[s]));if(!r)throw new e.Exception("request.validation.error","Please provide an invoice ID or invoice parameters (amount, currency and name) to start the 3D-Secure flow.");this.url=r}return i.prototype.handle=function(e,t){return this.instance.handleAction(this.instance.endpoint("checkout",this.url),function(t){e(t)},t,!0)},i}();e.ThreeDS=i}(ProcessOut||(ProcessOut={})),function(e){var t=function(){return function(){}}();e.ThreeDSOptions=t;var n=function(){function t(e){this.instance=e}return t.prototype.authenticate=function(t,n,i){return new e.ThreeDS(this.instance,t).handle(n,i)},t}();e.ThreeDSWrapper=n}(ProcessOut||(ProcessOut={})),function(e){var t=function(){function e(){}return e.prototype.token=function(){return"gway_req_"+btoa(JSON.stringify({gateway_configuration_id:this.gatewayConfigurationID,url:this.url,method:this.method,headers:this.headers,body:this.body,prepare:this.prepare}))},e}();e.GatewayRequest=t}(ProcessOut||(ProcessOut={})),function(e){var t=function(){return function(){}}();e.CardHolder=t;var n=function(){function t(e,n){this.month=e,this.year=t.parseYear(n)}return t.parse=function(e){var n=e.split(" / ");return n.length<=1&&(n=e.split("/")).length<=1?new t(0,0):new t(Number(n[0]),Number(n[1]))},t.parseMonth=function(e){var t=Number(e);return t||(t=0),t},t.parseYear=function(e){var t=Number(e);return t||(t=0),t<2e3&&(t+=2e3),t},t.prototype.getMonth=function(){return this.month},t.prototype.getYear=function(){return this.year},t.prototype.string=function(){return this.month+" / "+this.year},t.prototype.validate=function(){var n=t.validateMonth(this.getMonth());if(n)return n;if(n=t.validateYear(this.getYear()))return n;var i=new Date;return this.getMonth()<i.getMonth()&&this.getYear()==i.getFullYear()?new e.Exception("card.invalid-date"):null},t.format=function(e){for(var t="",n=0;n<e.length;n++)-1!=="1234567890 /".indexOf(e[n])&&(t+=e[n]);return 2==t.length?t+" / ":4==t.length?t.slice(0,-3):t},t.validateMonth=function(t){return!t||t<1||t>12?new e.Exception("card.invalid-month"):null},t.validateYear=function(t){t<100&&(t+=2e3);var n=new Date;return!t||t<n.getFullYear()?new e.Exception("card.invalid-year"):null},t}();e.Expiry=n;var i=function(){function t(e,n,i){this.number=t.parseNumber(e),this.cvc=i,this.expiry=n}return t.prototype.getNumber=function(){return this.number},t.prototype.getExpiry=function(){return this.expiry},t.prototype.getCVC=function(){return this.cvc},t.luhn=function(e){for(var t=0,n=!1,i=e.length-1;i>=0;i--){var o=+e[i];n&&(o*=2)>9&&(o-=9),t+=o,n=!n}return t%10==0},t.prototype.validate=function(){var n=t.validateNumber(this.number);return n||(null==this.expiry?new e.Exception("card.invalid-date"):(n=this.expiry.validate())||t.validateCVC(this.cvc))},t.prototype.getIIN=function(){return t.getIIN(this.number)},t.prototype.getLast4Digits=function(){return t.getLast4Digits(this.number)},t.formatNumber=function(e){var n=t.getCardFormat(t.getIIN(e));e=t.parseNumber(e);for(var i="",o=0,r=0,s=0;s<e.length;s++)if(!isNaN(e[s])){if(r>=n[o]){if(r=0,++o>=n.length)break;i+=" "}i+=e[s],r++}return i},t.parseNumber=function(e){return String(e.replace(/ /gi,"").replace(/\-/gi,"").replace(/\-/gi,""))},t.validateNumber=function(n){return(n=t.parseNumber(n)).length<12?new e.Exception("card.invalid-number"):t.luhn(n)?null:new e.Exception("card.invalid-number")},t.validateCVC=function(t){return t&&t.length<3?new e.Exception("card.invalid-cvc"):null},t.getIIN=function(e){var n=(e=t.parseNumber(e)).length;return n>6&&(n=6),e.substring(0,n)},t.getLast4Digits=function(e){var n=(e=t.parseNumber(e)).length;return n>4&&(n=4),e.substr(e.length-n)},t.autoFormatNumber=function(e,n){var i=0;e.addEventListener("input",function(e){var o=this.selectionStart,r=this.value.length;this.value=t.formatNumber(this.value),o&&o<r&&(this.setSelectionRange(o,o),o>0&&" "==this.value[o-1]&&r>i&&this.setSelectionRange(o+1,o+1));var s=t.getPossibleCardLength(t.getIIN(this.value));n&&r>i&&t.parseNumber(this.value).length==s[1]&&n(),i=r})},t.autoFormatExpiry=function(e,t){var i=0;e.addEventListener("input",function(e){var o=this.selectionStart,r=this.value.length,s=n.format(this.value);s.length>7||(this.value=s,o&&o<r&&(this.setSelectionRange(o,o),o>0&&" "==this.value[o-1]&&r>i&&this.setSelectionRange(o+1,o+1)),t&&r>i&&7==this.value.length&&t(),i=r)})},t.getCardFormat=function(e){var n=t.getPossibleSchemes(e);return 1==n.length&&"american-express"==n[0]?[4,6,5]:[4,4,4,4,4]},t.getPossibleCardLength=function(e){for(var n=19,i=12,o=t.getPossibleSchemes(e),r=0;r<o.length;r++)switch(o[r]){case"visa":n=Math.min(n,13),i=Math.max(i,19);break;case"mastercard":case"instapayment":case"jcb":case"cardguard ead bg ils":case"elo":case"hipercard":n=Math.min(n,16),i=Math.max(i,16);break;case"american-express":case"uatp":n=Math.min(n,15),i=Math.max(i,15);break;case"diners-club":n=Math.min(n,14),i=Math.max(i,16);break;case"union-pay":case"discover":case"interpayment":case"dankort":case"naranja":case"cabal":case"argencard":n=Math.min(n,16),i=Math.max(i,19);break;case"maestro":n=Math.min(n,12),i=Math.max(i,19)}return n>i&&(n=12,i=19),[n,i]},t.getPossibleSchemes=function(e){e=t.parseNumber(e);var n={visa:["4"],mastercard:["22","23","24","25","26","27","51","52","53","54","55"],"american-express":["34","37"],"union-pay":["62"],"diners-club":["300","301","302","303","304","305","309","36","38","39"],discover:["6011","62","64","65"],jcb:["35"],maestro:["50","56","57","58","59","6"],dankort:["5019","4175","4571"],uatp:["1"],"cardguard ead bg ils":["5392"],hipercard:["606282"],elo:["401178","401179","438935","451416","457632","457393","431274","438935","457631","457632","506699","50670","50671","50672","50673","50674","50675","50676","506770","506771","506772","506773","506774","506775","506776","506777","506778","504175","509","627780","636297","636368","651652","651653","651654","651655","651656","651657","651658","651659","65166","65167","650031","650032","650033","650035","650036","650037","650038","650039","65004","650050","650051","65500","65501","650485","650486","650487","650488","650489","65049","65050","65051","65052","650530","650531","650532","650533","650534","650535","650536","650537","650538","650541","650542","650543","650544","650545","650546","650547","650548","650549","65055","65056","65057","65058","650590","650591","650592","650593","650594","650595","650596","650597","650598","65070","650710","650711","650712","650713","650714","650715","650716","650717","650718","650720","650721","650722","650723","650724","650725","650726","650727","655021","655022","655023","655024","655025","655026","655027","655028","655029","65503","65504","655050","655051","655052","655053","655054","655055","655056","655057","655058","650901","650902","650903","650904","650905","650906","650907","650908","650909","65091","65092","65093","65094","65095","65096","650970","650971","650972","650973","650974","650975","650976","650977","650978","650405","650406","650407","650408","650409","65041","65042","65043"],naranja:["377798","377799","402917","402918","527571","527572","589562"],cabal:["589657","600691","603522","6042","6043","636908"],argencard:["501105"]},i=new Array;for(var o in n){var r=n[o];for(var s in r){var a=r[s],c=e.length>a.length?a.length:e.length;if(e.substring(0,c)==a.toString().substring(0,c)){i.push(o);break}}}return i},t}();e.Card=i}(ProcessOut||(ProcessOut={})),function(e){var t=function(){return function(){this.number=null,this.expiryMonth=null,this.expiryYear=null,this.cvc=null,this.name=null,this.metadata=null}}();e.CardFieldValue=t;var n=function(){function e(e){this.type=e}return e.prototype.apply=function(e){return e.placeholder&&(this.placeholder=e.placeholder),e.style&&(this.style=e.style),this},e}();e.CardFieldOptions=n;var i=function(){return function(){}}();e.CardFieldStyle=i;var o=function(){function t(n,i,o,r,s,a){if(this.handlers={},!o||!o.type)throw new e.Exception("processout-js.invalid-field-type","Options and a the field type must be provided to setup the field.");if(!r)throw new e.Exception("processout-js.undefined-field","The card field for the "+o.type+" does not exist in the given container.");if(r instanceof HTMLInputElement)throw new e.Exception("processout-js.invalid-field","The card field for the "+o.type+" must be an input field.");if(o.type!=t.number&&o.type!=t.expiry&&o.type!=t.expiryMonth&&o.type!=t.expiryYear&&o.type!=t.cvc)throw new e.Exception("processout-js.invalid-field-type");this.instance=n,this.form=i,this.options=o,this.el=r;var c=this.el.getAttribute("data-processout-placeholder");c&&(this.options.placeholder=c),this.spawn(s,a)}return t.prototype.spawn=function(n,i){var o=Math.random().toString(36).substring(7);this.uid="#"+o;var r=this.instance.getProcessOutFieldEndpoint("?r="+o+this.uid);this.iframe=document.createElement("iframe"),this.iframe.className="processout-field-cc-iframe",this.iframe.name=o,this.iframe.setAttribute("src",r),this.iframe.setAttribute("style","background: none; width: 100%;"),this.iframe.setAttribute("frameborder","0"),this.iframe.setAttribute("allowtransparency","1"),this.iframe.style.display="none",this.iframe.height="14px";var s=!1,a=setTimeout(function(){s=!0,typeof i==typeof Function&&i(new e.Exception("processout-js.field.unavailable"))},t.timeout);this.iframe.onload=function(){try{this.iframe.src=r}catch(e){}}.bind(this),window.addEventListener("message",function(t){if(!s){var i=e.Message.parseEvent(t);i.frameID==this.uid&&i.namespace==e.Message.fieldNamespace&&(this.handlEvent(i),"alive"==i.action&&this.iframe.contentWindow.postMessage(JSON.stringify({namespace:e.Message.fieldNamespace,projectID:this.instance.getProjectID(),action:"setup",formID:this.form.getUID(),data:this.options}),"*"),"ready"==i.action&&(this.iframe.style.display="block",clearTimeout(a),n(),this.iframe.contentWindow.postMessage(JSON.stringify({namespace:e.Message.fieldNamespace,projectID:this.instance.getProjectID(),action:"resize"}),"*"),this.iframe.addEventListener("focus",function(e){this.focus()}.bind(this))))}}.bind(this)),this.el.appendChild(this.iframe)},t.prototype.handlEvent=function(e){var t={field:this,type:this.options.type,element:this.el,data:e.data};switch(e.action){case"inputEvent":this.eventCallback&&this.eventCallback("oninput",t);break;case"mouseEnterEvent":this.eventCallback&&this.eventCallback("onmouseenter",t);break;case"mouseLeaveEvent":this.eventCallback&&this.eventCallback("onmouseleave",t);break;case"focusEvent":this.el.className=this.el.className+" processout-input-focused",this.eventCallback&&this.eventCallback("onfocus",t);break;case"blurEvent":this.el.className=this.el.className.replace(/\bprocessout-input-focused\b/g,"").replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g,""),this.eventCallback&&this.eventCallback("onblur",t);break;case"next":this.next&&this.next();break;case"event":if(e.data.name in this.handlers)for(var n=this.handlers[e.data.name],i=0;i<n.length;i++)n[0](e.data.data);break;case"resize":this.iframe.height=e.data}},t.prototype.setNext=function(e){this.next=e},t.prototype.update=function(t){t.placeholder&&(this.options.placeholder=t.placeholder),t.style&&(this.options.style=Object.assign(this.options.style,t.style)),this.iframe.contentWindow.postMessage(JSON.stringify({namespace:e.Message.fieldNamespace,projectID:this.instance.getProjectID(),action:"update",data:this.options}),"*")},t.prototype.addEventListener=function(t,n){t in this.handlers||(this.handlers[t]=[]),this.handlers[t].push(n),this.iframe.contentWindow.postMessage(JSON.stringify({namespace:e.Message.fieldNamespace,projectID:this.instance.getProjectID(),action:"registerEvent",data:t}),"*")},t.prototype.on=function(e,t){return this.addEventListener(e,t)},t.prototype.blur=function(){this.iframe.contentWindow.postMessage(JSON.stringify({messageID:Math.random().toString(),namespace:e.Message.fieldNamespace,projectID:this.instance.getProjectID(),action:"blur"}),"*")},t.prototype.focus=function(){this.iframe.contentWindow.postMessage(JSON.stringify({messageID:Math.random().toString(),namespace:e.Message.fieldNamespace,projectID:this.instance.getProjectID(),action:"focus"}),"*")},t.prototype.validate=function(n,i){var o=Math.random().toString();this.iframe.contentWindow.postMessage(JSON.stringify({messageID:o,namespace:e.Message.fieldNamespace,projectID:this.instance.getProjectID(),action:"validate"}),"*");var r=setTimeout(function(){i(new e.Exception("processout-js.field.unavailable"))},t.timeout);window.addEventListener("message",function(t){var s=e.Message.parseEvent(t);s.frameID==this.uid&&s.namespace==e.Message.fieldNamespace&&s.messageID==o&&"validate"==s.action&&(clearTimeout(r),s.data?i(new e.Exception(s.data)):n())}.bind(this))},t.prototype.tokenize=function(n,i,o,r){var s=Math.random().toString();this.iframe.contentWindow.postMessage(JSON.stringify({messageID:s,namespace:e.Message.fieldNamespace,projectID:this.instance.getProjectID(),action:"tokenize",data:{fields:n,data:i}}),"*");var a=setTimeout(function(){r(new e.Exception("processout-js.field.unavailable"))},t.timeout);window.addEventListener("message",function(t){var n=e.Message.parseEvent(t);n.messageID==s&&"tokenize"==n.action&&(clearTimeout(a),n.data.token?o(n.data.token):n.data.error?r(new e.Exception(n.data.error.code,n.data.error.message)):r(new e.Exception("default")))}.bind(this))},t.prototype.refreshCVC=function(n,i,o){var r=Math.random().toString();this.iframe.contentWindow.postMessage(JSON.stringify({messageID:r,namespace:e.Message.fieldNamespace,projectID:this.instance.getProjectID(),action:"refresh-cvc",data:{data:n}}),"*");var s=setTimeout(function(){o(new e.Exception("processout-js.field.unavailable"))},t.timeout);window.addEventListener("message",function(t){var n=e.Message.parseEvent(t);n.messageID==r&&"refresh-cvc"==n.action&&(clearTimeout(s),n.data.token?i(n.data.token):n.data.error?o(new e.Exception(n.data.error.code,n.data.error.message)):o(new e.Exception("default")))}.bind(this))},t.number="number",t.expiry="expiry",t.expiryMonth="expiry-month",t.expiryYear="expiry-year",t.cvc="cvc",t.timeout=2e4,t}();e.CardField=o}(ProcessOut||(ProcessOut={})),function(e){var t=function(){function t(e,t){this.instance=e,this.element=t,this.uid=Math.random().toString()}return t.prototype.getUID=function(){return this.uid},t.prototype.setup=function(t,n,i){var o=!1,r=!1,s=!1,a=!1,c=function(){if(o&&r&&s&&a)return this.number.setNext(function(){this.exp&&this.exp.focus(),this.expMonth&&this.expMonth.focus()}.bind(this)),this.exp&&this.exp.setNext(function(){this.cvc&&this.cvc.focus()}.bind(this)),void n(this)}.bind(this);this.number=new e.CardField(this.instance,this,new e.CardFieldOptions(e.CardField.number).apply(t),this.element.querySelector("[data-processout-input=cc-number]"),function(){o=!0,c()},i);var u=this.element.querySelector("[data-processout-input=cc-cvc]");u?this.cvc=new e.CardField(this.instance,this,new e.CardFieldOptions(e.CardField.cvc).apply(t),u,function(){r=!0,c()},i):r=!0;var p=this.element.querySelector("[data-processout-input=cc-exp]");return p?this.exp=new e.CardField(this.instance,this,new e.CardFieldOptions(e.CardField.expiry).apply(t),p,function(){s=!0,a=!0,c()},i):(this.expMonth=new e.CardField(this.instance,this,new e.CardFieldOptions(e.CardField.expiryMonth).apply(t),this.element.querySelector("[data-processout-input=cc-exp-month]"),function(){s=!0,c()},i),this.expYear=new e.CardField(this.instance,this,new e.CardFieldOptions(e.CardField.expiryYear).apply(t),this.element.querySelector("[data-processout-input=cc-exp-year]"),function(){a=!0,c()},i)),this},t.prototype.setupCVC=function(t,n,i,o){return this.isRefreshCVC=!0,this.cvc=new e.CardField(this.instance,this,new e.CardFieldOptions(e.CardField.cvc).apply(t),this.element.querySelector("[data-processout-input=cc-cvc]"),function(){n(this)}.bind(this),i),this},t.prototype.getElement=function(){return this.element},t.prototype.addEventListener=function(e,t,n){return this.element.addEventListener(e,t,n)},t.prototype.on=function(e,t,n){return this.element.addEventListener(e,t,n)},t.prototype.getNumberField=function(){return this.number},t.prototype.getCVCField=function(){return this.cvc},t.prototype.getExpiryField=function(){return this.exp},t.prototype.getExpiryMonthField=function(){return this.expMonth},t.prototype.getExpiryYearField=function(){return this.expYear},t.prototype.validate=function(e,t){if(this.isRefreshCVC)this.cvc.validate(function(){e()},t);else{var n=!1,i=!1,o=!1,r=!1,s=function(){n&&i&&o&&r&&e()};this.number.validate(function(){n=!0,s()},t),this.cvc?this.cvc.validate(function(){i=!0,s()},t):i=!0,this.exp?this.exp.validate(function(){o=!0,r=!0,s()},t):(this.expMonth.validate(function(){o=!0,s()},t),this.expYear.validate(function(){r=!0,s()},t))}},t.prototype.tokenize=function(e,t,n){var i=["number"];this.cvc&&i.push("cvc"),this.exp&&i.push("exp"),this.expMonth&&i.push("exp-month"),this.expYear&&i.push("exp-year"),this.number.tokenize(i,e,t,n)},t.prototype.refreshCVC=function(t,n,i){this.cvc||i(new e.Exception("processout-js.wrong-type-for-action","RefreshCVC was called but the form has no CVC field initialized.")),this.cvc.refreshCVC(t,n,i)},t}();e.CardForm=t}(ProcessOut||(ProcessOut={})),function(e){var t={en:{default:"An error occured: your payment was declined.","card.declined":"The credit card has been declined.","card.expired":"The given card has expired.","card.duplicate":"The payment could not be completed. Please try again later.","card.network-failed":"The payment could not be completed. Please try again later.","card.invalid":"The given card is invalid.","card.invalid-name":"The cardholder name is invalid.","card.invalid-number":"The card number is invalid.","card.invalid-date":"The card expiry date is invalid.","card.invalid-month":"The card expiry month is invalid.","card.invalid-year":"The card expiry year is invalid.","card.invalid-cvc":"The card CVC is invalid.","card.invalid-zip":"The card's ZIP code is valid.","card.failed-cvc-and-avs":"The CVC and AVS code were invalid.","card.failed-three-d-s":"The 3D-Secure authentication failed.","card.bad-track-data":"The card could not be verified. Maybe your CVC is invalid?","card.not-registered":"The card is not registered.","card.issuer-not-found":"The card issuer could not be found. Please try another card.","card.possible-fraud":"The payment could not be completed. Please contact your bank for further help.","card.contact-bank":"The payment could not be completed. Please contact your bank for further help.","card.not-authorized":"The payment could not be authorized using the provided card.","card.do-not-honor":"The payment could not be completed. Please contact your bank for further help.","card.maximum-attempts":"The card maximum attempts has been reached and the payment could not be processed.","card.stolen":"The payment could not be processed as the provided card was marked as stolen.","card.lost":"The payment could not be processed as the provided card was marked as lost.","card.exceeded-limits":"The payment could not be processed as the payment limits of the card have been exceeded.","card.no-money":"There doesn't seem to be enough money on the bank account linked to the provided card.","customer.canceled":"The customer canceled the payment.","customer.popup-blocked":"Please allow pop-ups to continue with your payment flow.","gateway.declined":"The payment was declined.","payment.declined":"The payment was declined.","payment.pending":"The payment is currently pending, please wait a few minutes for it to fully go through.","request.validation.error":"The provided information is invalid or missing.","request.validation.invalid-country":"The provided country is invalid.","request.validation.missing-name":"A name must be provided.","request.validation.invalid-name":"The provided name is invalid.","request.validation.missing-email":"An email must be provided.","request.validation.invalid-email":"The provided email is invalid.","request.validation.invalid-address":"The provided address is invalid.","request.validation.no-method-selected":"Please select a payment method.","request.gateway.not-available":"The requested gateway is currently unavailable.","request.gateway.not-supported":"The gateway is not supported by ProcessOut.js","processout-js.missing-project-id":"Your project ID was not specified when loading ProcessOut.js.","processout-js.not-hosted":"ProcessOut.js was not loaded from ProcessOut CDN. Please do not host ProcessOut.js yourself but rather use ProcessOut CDN: https://js.processout.com/processout.js","processout-js.modal.unavailable":"The ProcessOut.js modal is unavailable.","processout-js.field.unavailable":"The ProcessOut.js credit card field is unavailable.","processout-js.invalid-config":"The provided gateway configuration is invalid.","processout-js.no-customer-action":"No customer action is required for the given gateway configuration and resource.","processout-js.customer-action-not-supported":"The requested customer action is not supported by ProcessOut.js.","processout-js.invalid-field":"The given HTML element may not be used by ProcessOut.js: it is an input. Please only use divs when creating a ProcessOut.js credit card field.","processout-js.undefined-field":"The given HTML element was undefined.","processout-js.invalid-field-type":"The given field type was incorrect. It must either be number, expiry, expiryMonth, expiryYear or CVC.","processout-js.network-issue":"There seems to be some connectivity issue preventing the payment from making it through. Please switch to another network or try again in a few minutes.","processout-js.invalid-type":"The specified parameter had an unknown type.","processout-js.missing-source":"A source must be specified.","processout-js.wrong-type-for-action":"The requested action could not be performed on the given field because its type is invalid.","processout-js.missing-invoice-id":"An invoice ID be specified.","resource.invalid-type":"The provided resource was invalid. It must be an invoice, a subscription or an authorization request.","applepay.not-supported":"The current browser/device does not support Apple Pay.","applepay.no-success-handler":"A success handler must be specified when setting up Apple Pay.","applepay.not-available":"Apple Pay is not available for the current browser, device or ProcessOut project."}},n=function(){function e(){}return e.translate=function(n,i){return t[e.locale][n]?t[e.locale][n]:i||t[e.locale].default},e.setLocale=function(n){t[n]&&(e.locale=n)},e.locale="en",e}();e.Translator=n}(ProcessOut||(ProcessOut={})),function(e){var t=function(t){function n(n,i){var o=this;return i||(i=e.Translator.translate(n)),(o=t.call(this,i)||this).code=n,o.message=i,o.name="ProcessOutException",o.stack=(new Error).stack,o}return __extends(n,t),n}(Error);e.Exception=t}(ProcessOut||(ProcessOut={})),function(e){e.DEBUG=!1,e.TestModePrefix="test-";var t=function(){function t(t,n){this.timeout=1e4,this.sandbox=!1,this.host="processout.com",this.processOutFieldEndpoint="",this.apiVersion="1.3.0.0";var i=document.getElementsByTagName("script"),o="";if(/^https?:\/\/.*\.processout\.((com)|(ninja)|(dev))\//.test(window.location.href))o=window.location.href;else for(var r=0;r<i.length;r++)/^https?:\/\/.*\.processout\.((com)|(ninja)|(dev))\//.test(i[r].getAttribute("src"))&&(o=i[r].getAttribute("src"));if(""==o&&!e.DEBUG)throw new e.Exception("processout-js.not-hosted");if(/^https?:\/\/.*\.processout\.ninja\//.test(o)?this.host="processout.ninja":/^https?:\/\/.*\.processout\.dev\//.test(o)?this.host="processout.dev":this.host="processout.com",!t)throw new e.Exception("processout-js.missing-project-id");if(this.projectID=t,0===this.projectID.lastIndexOf(e.TestModePrefix,0)&&(this.sandbox=!0),this.resourceID=n,this.resourceID&&""!=this.resourceID&&"iv_"!=this.resourceID.substring(0,3)&&"sub_"!=this.resourceID.substring(0,4)&&"auth_req_"!=this.resourceID.substring(0,9))throw new e.Exception("resource.invalid-type");this.applePay=new e.ApplePayWrapper(this),this.threeDS=new e.ThreeDSWrapper(this)}return t.prototype.getResourceID=function(){return this.resourceID},t.prototype.getProjectID=function(){return this.projectID},t.prototype.getProcessOutFieldEndpoint=function(t){var n=this.endpoint("js","/ccfield.html");return e.DEBUG&&this.processOutFieldEndpoint&&(n=this.processOutFieldEndpoint),""+n+t},t.prototype.setProcessOutFieldEndpoint=function(t){e.DEBUG&&(this.processOutFieldEndpoint=t)},t.prototype.endpoint=function(e,t){return"https://"+e+"."+this.host+t},t.prototype.apiRequest=function(e,t,n,i,o,r){r||(r=0),e=e.toLowerCase(),"http"!=t.substring(0,4)&&"/"!=t[0]&&(t=this.endpoint("api","/"+t));var s={"Content-Type":"application/json","API-Version":this.apiVersion};for(var a in this.projectID&&(s.Authorization="Basic "+btoa(this.projectID+":")),n||(n={}),t+="?legacyrequest=true&project_id="+this.projectID,s)t+="&x-"+a+"="+s[a];if("get"==e)for(var c in n)t+="&"+c+"="+encodeURIComponent(n[c]);var u=new XMLHttpRequest;if(window.XDomainRequest&&(u=new XDomainRequest),u.open(e,t,!0),!window.XDomainRequest)for(var a in s)u.setRequestHeader(a,s[a]);u.timeout=0,u.onload=function(e){var t;try{t=JSON.parse(u.responseText)}catch(e){t={}}window.XDomainRequest?i(t,u,e):4==e.currentTarget.readyState&&i(t,u,e)},u.onerror=function(e){u.status&&u.status>=200&&u.status<500&&u.responseText?u.onload(e):o(u,e)},u.ontimeout=function(){},u.onprogress=function(){},u.onabort=function(){r>3?o(u,null):this.request(e,t,n,i,o,r+1)}.bind(this),u.send(JSON.stringify(n))},t.prototype.setupForm=function(t,n,i,o){if(!this.projectID)throw new e.Exception("default","You must instanciate ProcessOut.js with a valid project ID in order to use ProcessOut's hosted forms.");if(!t)throw new e.Exception("default","The provided form element wasn't set. Make sure to provide setupForm with a valid form element.");return"function"==typeof n?new e.CardForm(this,t).setup(new e.CardFieldOptions(""),n,i):new e.CardForm(this,t).setup(n,i,o)},t.prototype.tokenize=function(t,n,i,o){if(t instanceof e.Card)return this.tokenizeCard(t,n,i,o);if(t instanceof e.CardForm)return this.tokenizeForm(t,n,i,o);if(t instanceof e.ApplePay)return t.tokenize(n,i,o);throw new e.Exception("processout-js.invalid-type","The first parameter had an unknown type/instance. The value must be an instance of either Card, CardForm or ApplePay.")},t.prototype.tokenizeCard=function(t,n,i,o){var r=t.validate();r?o(r):(n||(n={}),n.contact||(n.contact={}),n.number=t.getNumber(),n.exp_month=t.getExpiry().getMonth().toString(),n.exp_year=t.getExpiry().getYear().toString(),n.cvc2=t.getCVC(),this.apiRequest("post","cards",n,function(t,n,r){t.success?i(t.card.id):o(new e.Exception(t.error_type,t.message))},function(t,n){o(new e.Exception("processout-js.network-issue"))}))},t.prototype.tokenizeForm=function(e,t,n,i){e.validate(function(){e.tokenize(t,n,i)}.bind(this),i)},t.prototype.setupFormCVC=function(t,n,i,o){return new e.CardForm(this,t).setupCVC(n,i,o)},t.prototype.refreshCVC=function(t,n,i,o){return n instanceof e.CardForm?this.refreshCVCForm(t,n,i,o):this.refreshCVCString(t,n,i,o)},t.prototype.refreshCVCForm=function(e,t,n,i){t.validate(function(){t.refreshCVC(e,n,i)}.bind(this),i)},t.prototype.refreshCVCString=function(t,n,i,o){var r=e.Card.validateCVC(n);r?o(r):this.apiRequest("put","cards/"+t,{cvc:n},function(t,n,r){t.success?i(t.card.id):o(new e.Exception("card.invalid"))},function(t,n){o(new e.Exception("processout-js.network-issue"))})},t.prototype.newModal=function(t,n,i){var o="";if("object"==typeof t&&(o=t.url,n=t.onReady,i=t.onError,!o&&(o=this.endpoint("checkout","/"+this.getProjectID()+"/oneoff?amount="+encodeURIComponent(t.amount)+"&currency="+encodeURIComponent(t.currency)+"&name="+encodeURIComponent(t.name)),t.metadata&&"object"==typeof t.metadata)))for(var r in t.metadata)t.metadata.hasOwnProperty(r)&&(o+="&metadata["+r+"]="+encodeURIComponent(t.metadata[r]));var s=Math.random().toString(36).substr(2,9),a=document.createElement("iframe");a.className="processout-iframe",a.setAttribute("id","processout-iframe-"+s),a.setAttribute("src",o),a.setAttribute("style","position: fixed; top: 0; left: 0; background: none; z-index: 9999999;"),a.setAttribute("frameborder","0"),a.setAttribute("allowtransparency","1"),a.style.display="none";var c=setTimeout(function(){typeof i==typeof Function&&i(new e.Exception("processout-js.modal.unavailable"))},this.timeout);a.onload=function(){clearTimeout(c),typeof n==typeof Function&&n(new e.Modal(this,a,s))}.bind(this),document.body.appendChild(a)},t.prototype.fetchGatewayConfigurations=function(t,n,i){if(t||(t={}),!t.invoiceID)throw new e.Exception("processout-js.missing-invoice-id");this.apiRequest("GET","gateway-configurations",{filter:t.filter},function(o){if(o.success){for(var r=[],s=0,a=o.gateway_configurations;s<a.length;s++){var c=a[s];c.hookForInvoice=this.buildConfHookForInvoice(t.invoiceID,c.id),r.push(c)}n(r)}else i(new e.Exception(o.error_type,o.message))}.bind(this),function(t,n){i(new e.Exception("processout-js.network-issue"))})},t.prototype.buildConfHookForInvoice=function(e,t){return function(n,i,o){var r=this.endpoint("checkout","/"+this.getProjectID()+"/"+e+"/redirect/"+t);n.addEventListener("click",function(e){e.preventDefault();this.handleAction(r,i,o);return!1}.bind(this))}.bind(this)},t.prototype.handleAction=function(t,n,i,o){return new e.ActionHandler(this,this.getResourceID(),o).handle(t,n,i)},t}();e.ProcessOut=t}(ProcessOut||(ProcessOut={})),function(e){var t=function(){function t(e,t,n){this.deleted=!1,this.timeout=1e4,this.instance=e,this.iframe=t,this.uniqId=n}return t.prototype.show=function(t,n,i){var o,r,s,a=t;"object"==typeof t&&(a=t.onShow,n=t.onHide,i=t.onError,o=t.onPayment,r=t.onPaymentError,s=t.hideAfterSuccessTimeout),null==s&&(s=2500);var c=this,u=c.iframe,p=u.contentWindow,d=c.uniqId;p.postMessage(JSON.stringify({namespace:e.Message.modalNamespace,frameID:d,action:"check"}),"*");var l=setTimeout(function(){typeof i==typeof Function&&i(c,new e.Exception("processout-js.modal.unavailable"))},this.timeout);window.addEventListener("message",function(t){var h=e.Message.parseEvent(t);if(h.frameID==d&&h.namespace==e.Message.modalNamespace)switch(h.action){case"openModal":if(clearTimeout(l),document.body.style.overflow="hidden",window.addEventListener("resize",function(e){u.width=window.outerWidth+"px",u.height=window.outerHeight+"px"}),"function"==typeof Event)var f=new Event("resize");else{f=document.createEvent("Event");t.initEvent("resize",!0,!0)}window.dispatchEvent(f),u.style.display="block",p.postMessage(JSON.stringify({namespace:e.Message.modalNamespace,frameID:d,action:"launch"}),"*"),typeof a==typeof Function&&a(c);break;case"closeModal":c.hide(),typeof n==typeof Function&&n(c);break;case"error":clearTimeout(l),typeof i==typeof Function&&i(c,new e.Exception(h.errorCode,h.errorMessage));break;case"onPayment":typeof o==typeof Function&&o(c,h.data),s>0&&setTimeout(function(){c.hide()},s);break;case"onPaymentError":typeof r==typeof Function&&r(c,new e.Exception(h.errorCode,h.errorMessage));break;default:console.log("Could not read event action from modal.",t.data)}},!1)},t.prototype.hide=function(){this.iframe.style.display="none",document.body.style.overflow="",this.iframe.remove(),this.deleted=!0},t.prototype.isDeleted=function(){return this.deleted},t}();e.Modal=t}(ProcessOut||(ProcessOut={})),function(e){var t=function(){function e(){}return e.parseEvent=function(t){try{return JSON.parse(t.data)}catch(t){return new e}},e.modalNamespace="processout.modal",e.checkoutNamespace="processout.checkout",e.fieldNamespace="processout.field",e}();e.Message=t}(ProcessOut||(ProcessOut={})),function(e){var t=function(){function e(e,t){if(this.element=e,this.iframe=t,window.addEventListener("resize",function(e){this.element.style.width=window.outerWidth+"px";var t=Math.max(document.body.scrollHeight,document.body.offsetHeight,document.documentElement.clientHeight,document.documentElement.scrollHeight,document.documentElement.offsetHeight);this.element.style.height=t+"px"}.bind(this)),"function"==typeof Event)var n=new Event("resize");else(n=document.createEvent("Event")).initEvent("resize",!0,!0);window.dispatchEvent(n)}return e.prototype.open=function(e){this.iframe.setAttribute("src",e),document.body.style.overflow="hidden",document.body.appendChild(this.element)},e.prototype.close=function(){document.body.style.overflow="",this.closed=!0,this.element.remove()},e}(),n=function(){function n(e,n,i){if(this.canceled=!1,this.instance=e,this.resourceID=n,i){var o=document.createElement("div");o.id="processoutjs-action-modal",o.style.position="fixed",o.style.top="0",o.style.left="0",o.style.height="100%",o.style.width="100%",o.setAttribute("style","position: fixed; top: 0; left: 0; background: rgba(0, 0, 0, 0.5); z-index: 9999999; overflow: auto;");var r=document.createElement("iframe");r.setAttribute("style",'margin: 1em auto; width: 440px; height: 480px; max-width: 100%; max-height: 100%; display: block; box-shadow: 0 15px 35px rgba(50, 50, 93, 0.1), 0 5px 15px rgba(0, 0, 0, 0.07); background-color: #ECEFF1; background-image: url("'+this.instance.endpoint("js","/images/loader.gif")+'"); background-repeat: no-repeat; background-position: center;")'),r.setAttribute("frameborder","0");var s=document.createElement("div");s.setAttribute("style","width: 100%; text-align: center; margin-bottom: 1em;");var a=document.createElement("div");a.setAttribute("style","cursor: pointer; color: white;"),a.innerHTML="Cancel",s.appendChild(a),o.appendChild(r),o.appendChild(s),this.iframeWrapper=new t(o,r),a.onclick=function(){this.iframeWrapper.close()}.bind(this)}}return n.prototype.handleRedirection=function(t,i,o){var r,s=this;if(this.iframeWrapper)(r=this.iframeWrapper).open(t);else if(!(r=window.open(t,"_blank")))return o(new e.Exception("customer.popup-blocked")),void window.focus();var a=setInterval(function(){if(a){if(s.isCanceled())return clearInterval(a),a=null,r.close(),o(new e.Exception("customer.canceled")),void window.focus();var t=function(){clearInterval(a),a=null,o(new e.Exception("customer.canceled")),window.focus()};try{if(!r||r.closed)return void t()}catch(e){try{r.close()}catch(e){}t()}}});n.listenerCount++;var c=n.listenerCount;window.addEventListener("message",function(t){var s=e.Message.parseEvent(t);if(s.namespace==e.Message.checkoutNamespace)if(n.listenerCount==c)switch(s.action){case"success":a&&(clearInterval(a),a=null),r.close(),i(s.data),window.focus();break;case"canceled":a&&(clearInterval(a),a=null),r.close(),o(new e.Exception("customer.canceled")),window.focus();break;case"none":a&&(clearInterval(a),a=null),r.close(),o(new e.Exception("processout-js.no-customer-action")),window.focus();break;case"error":a&&(clearInterval(a),a=null),r.close(),o(new e.Exception(s.errorCode,s.errorMessage)),window.focus();break;default:a&&(clearInterval(a),a=null),r.close(),o(new e.Exception("default")),window.focus()}else a&&(clearInterval(a),a=null)})},n.prototype.handle=function(e,t,n){return this.handleRedirection(e,t,n),this},n.prototype.cancel=function(){this.canceled=!0},n.prototype.isCanceled=function(){return this.canceled},n.listenerCount=0,n}();e.ActionHandler=n}(ProcessOut||(ProcessOut={}));
+!function(){function t(t){this.message=t}var r="undefined"!=typeof exports?exports:self,e="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";t.prototype=new Error,t.prototype.name="InvalidCharacterError",r.btoa||(r.btoa=function(r){for(var o,n,a=String(r),i=0,c=e,d="";a.charAt(0|i)||(c="=",i%1);d+=c.charAt(63&o>>8-i%1*8)){if(n=a.charCodeAt(i+=.75),n>255)throw new t("'btoa' failed: The string to be encoded contains characters outside of the Latin1 range.");o=o<<8|n}return d}),r.atob||(r.atob=function(r){var o=String(r).replace(/=+$/,"");if(o.length%4==1)throw new t("'atob' failed: The string to be decoded is not correctly encoded.");for(var n,a,i=0,c=0,d="";a=o.charAt(c++);~a&&(n=i%4?64*n+a:a,i++%4)?d+=String.fromCharCode(255&n>>(-2*i&6)):0)a=e.indexOf(a);return d})}();"function"!=typeof Object.assign&&(Object.assign=function(a,b){"use strict";if(null==a)throw new TypeError("Cannot convert undefined or null to object");for(var c=Object(a),d=1;d<arguments.length;d++){var e=arguments[d];if(null!=e)for(var f in e)Object.prototype.hasOwnProperty.call(e,f)&&(c[f]=e[f])}return c});(function (arr) {
+    arr.forEach(function (item) {
+      if (item.hasOwnProperty('remove')) {
+        return;
+      }
+      Object.defineProperty(item, 'remove', {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+        value: function remove() {
+          this.parentNode.removeChild(this);
+        }
+      });
+    });
+  })([Element.prototype, CharacterData.prototype, DocumentType.prototype]);if (![].includes) {
+    Array.prototype.includes = function(searchElement /*, fromIndex*/ ) {
+      'use strict';
+      var O = Object(this);
+      var len = parseInt(O.length) || 0;
+      if (len === 0) {
+        return false;
+      }
+      var n = parseInt(arguments[1]) || 0;
+      var k;
+      if (n >= 0) {
+        k = n;
+      } else {
+        k = len + n;
+        if (k < 0) {k = 0;}
+      }
+      var currentElement;
+      while (k < len) {
+        currentElement = O[k];
+        if (searchElement === currentElement ||
+           (searchElement !== searchElement && currentElement !== currentElement)) {
+          return true;
+        }
+        k++;
+      }
+      return false;
+    };
+  }var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var ProcessOut;
+(function (ProcessOut) {
+    var Flow;
+    (function (Flow) {
+        Flow[Flow["None"] = 1] = "None";
+        Flow[Flow["OneOff"] = 2] = "OneOff";
+        Flow[Flow["Subscription"] = 3] = "Subscription";
+        Flow[Flow["Tokenization"] = 4] = "Tokenization";
+    })(Flow = ProcessOut.Flow || (ProcessOut.Flow = {}));
+})(ProcessOut || (ProcessOut = {}));
+var ProcessOut;
+(function (ProcessOut) {
+    var ApplePay = (function () {
+        function ApplePay(instance, req) {
+            this.instance = instance;
+            if (!req.merchantCapabilities || !req.merchantCapabilities.length)
+                req.merchantCapabilities = ['supports3DS'];
+            if (!req.supportedNetworks || !req.supportedNetworks.length)
+                req.supportedNetworks = ['amex', 'discover', 'masterCard', 'visa'];
+            this.request = req;
+            this.session = new ApplePaySession(1, this.request);
+            var t = this;
+            this.session.onvalidatemerchant = function (event) {
+                t.instance.apiRequest("post", t.instance.endpoint("api", "/applepay/sessions"), {
+                    "session_url": event.validationURL,
+                    "domain_name": window.location.hostname
+                }, function (data, req, e) {
+                    if (!data.success) {
+                        t.onerror(new ProcessOut.Exception(data.error_code, data.message));
+                        t.session.abort();
+                    }
+                    else
+                        t.session.completeMerchantValidation(data.session_payload);
+                }, function (req, e) {
+                    t.onerror(new ProcessOut.Exception("processout-js.network-issue"));
+                    t.session.abort();
+                });
+            };
+            this.session.onpaymentauthorized = function (event) {
+                var req = t.data;
+                if (!req)
+                    req = {};
+                req.applepay_response = event.payment;
+                req.token_type = "applepay";
+                t.instance.apiRequest("post", t.instance.endpoint("api", "/cards"), req, function (data, req, e) {
+                    if (!data.success) {
+                        t.onerror(new ProcessOut.Exception(data.error_code, data.message));
+                        t.session.abort();
+                    }
+                    else
+                        t.onsuccess(data.card);
+                }, function (req, e) {
+                    t.onerror(new ProcessOut.Exception("processout-js.network-issue"));
+                    t.session.abort();
+                });
+            };
+            this.session.oncancel = this.onCancelHandler.bind(this);
+            this.session.onshippingcontactselected = this.onShippingContactSelectedHandler.bind(this);
+            this.session.onshippingmethodselected = this.onShippingMethodSelectedHandler.bind(this);
+        }
+        ApplePay.prototype.setHandlers = function (onsuccess, onerror) {
+            if (!onsuccess)
+                throw new ProcessOut.Exception("applepay.no-success-handler");
+            this.onsuccess = onsuccess;
+            this.onerror = function (err) {
+                if (onerror)
+                    onerror(err);
+            };
+        };
+        ApplePay.prototype.tokenize = function (data, onsuccess, onerror) {
+            this.setHandlers(onsuccess, onerror);
+            this.session.begin();
+        };
+        ApplePay.prototype.abort = function () {
+            this.session.abort();
+        };
+        ApplePay.prototype.completePayment = function (status) {
+            this.session.completePayment(status);
+        };
+        ApplePay.prototype.completePaymentMethodSelection = function (newTotal, newLineItems) {
+            this.session.completePaymentMethodSelection(newTotal, newLineItems);
+        };
+        ApplePay.prototype.completeShippingContactSelection = function (status, newShippingMethods, newTotal, newLineItems) {
+            this.session.completeShippingContactSelection(status, newShippingMethods, newTotal, newLineItems);
+        };
+        ApplePay.prototype.completeShippingMethodSelection = function (status, newTotal, newLineItems) {
+            this.session.completeShippingMethodSelection(status, newTotal, newLineItems);
+        };
+        ApplePay.prototype.getSession = function () {
+            return this.session;
+        };
+        ApplePay.prototype.onCancelHandler = function (event) {
+            if (this.oncancel)
+                this.oncancel(event);
+        };
+        ApplePay.prototype.onPaymentMethodSelectedHandler = function (event) {
+            if (this.onpaymentmethodselected)
+                this.onpaymentmethodselected(event);
+        };
+        ApplePay.prototype.onShippingContactSelectedHandler = function (event) {
+            if (this.onshippingcontactselected)
+                this.onshippingcontactselected(event);
+        };
+        ApplePay.prototype.onShippingMethodSelectedHandler = function (event) {
+            if (this.onshippingmethodselected)
+                this.onshippingmethodselected(event);
+        };
+        return ApplePay;
+    }());
+    ProcessOut.ApplePay = ApplePay;
+})(ProcessOut || (ProcessOut = {}));
+var ProcessOut;
+(function (ProcessOut) {
+    var ApplePayWrapper = (function () {
+        function ApplePayWrapper(instance) {
+            this.instance = instance;
+        }
+        ApplePayWrapper.prototype.checkAvailability = function (callback) {
+            if (!window.ApplePaySession || !ApplePaySession.canMakePayments()) {
+                callback(new ProcessOut.Exception("applepay.not-supported"));
+                return;
+            }
+            this.instance.apiRequest("get", this.instance.endpoint("api", "/applepay/available"), {
+                "domain_name": window.location.hostname
+            }, function (data, req, e) {
+                if (data.success)
+                    callback(null);
+                else
+                    callback(new ProcessOut.Exception("applepay.not-available", data.message));
+            }.bind(this), function (req, e) {
+                callback(new ProcessOut.Exception("processout-js.network-issue"));
+            });
+        };
+        ApplePayWrapper.prototype.newSession = function (req, onsuccess, onerror) {
+            return new ProcessOut.ApplePay(this.instance, req);
+        };
+        return ApplePayWrapper;
+    }());
+    ProcessOut.ApplePayWrapper = ApplePayWrapper;
+})(ProcessOut || (ProcessOut = {}));
+var ProcessOut;
+(function (ProcessOut) {
+    var processoutjsQuery = "processoutjs";
+    var processoutjsQueryTrue = "true";
+    var ThreeDS = (function () {
+        function ThreeDS(instance, options) {
+            this.instance = instance;
+            if (!options.source) {
+                throw new ProcessOut.Exception("request.validation.error", "Please provide a source to be used to start the 3D-Secure flow.");
+            }
+            var url = null;
+            if (options.invoiceID) {
+                url = "/" + this.instance.getProjectID() + "/" + options.invoiceID + "/three-d-s/redirect/" + options.source + "?" + processoutjsQuery + "=" + processoutjsQueryTrue;
+            }
+            if (!url) {
+                url = "/" + this.instance.getProjectID() + "/three-d-s" +
+                    ("?" + processoutjsQuery + "=" + processoutjsQueryTrue) +
+                    ("&amount=" + encodeURIComponent(options.amount)) +
+                    ("&currency=" + encodeURIComponent(options.currency)) +
+                    ("&name=" + encodeURIComponent(options.name)) +
+                    ("&return_url=" + encodeURIComponent(options.returnURL ? options.returnURL : "")) +
+                    ("&source=" + encodeURIComponent(options.source));
+                if (options.metadata && typeof options.metadata == 'object') {
+                    for (var i in options.metadata) {
+                        if (!options.metadata.hasOwnProperty(i))
+                            continue;
+                        url += "&metadata[" + i + "]=" + encodeURIComponent(options.metadata[i]);
+                    }
+                }
+            }
+            if (!url) {
+                throw new ProcessOut.Exception("request.validation.error", "Please provide an invoice ID or invoice parameters (amount, currency and name) to start the 3D-Secure flow.");
+            }
+            this.url = url;
+        }
+        ThreeDS.prototype.handle = function (success, error) {
+            return this.instance.handleAction(this.instance.endpoint("checkout", this.url), function (invoiceID) { success(invoiceID); }, error, new ProcessOut.ActionHandlerOptions(ProcessOut.ActionHandlerOptions.ThreeDSFlow));
+        };
+        return ThreeDS;
+    }());
+    ProcessOut.ThreeDS = ThreeDS;
+})(ProcessOut || (ProcessOut = {}));
+var ProcessOut;
+(function (ProcessOut) {
+    var ThreeDSOptions = (function () {
+        function ThreeDSOptions() {
+        }
+        return ThreeDSOptions;
+    }());
+    ProcessOut.ThreeDSOptions = ThreeDSOptions;
+    var ThreeDSWrapper = (function () {
+        function ThreeDSWrapper(instance) {
+            this.instance = instance;
+        }
+        ThreeDSWrapper.prototype.authenticate = function (options, success, error) {
+            return new ProcessOut.ThreeDS(this.instance, options).handle(success, error);
+        };
+        return ThreeDSWrapper;
+    }());
+    ProcessOut.ThreeDSWrapper = ThreeDSWrapper;
+})(ProcessOut || (ProcessOut = {}));
+var ProcessOut;
+(function (ProcessOut) {
+    var GatewayRequest = (function () {
+        function GatewayRequest() {
+        }
+        GatewayRequest.prototype.token = function () {
+            return "gway_req_" + btoa(JSON.stringify({
+                "gateway_configuration_id": this.gatewayConfigurationID,
+                "url": this.url,
+                "method": this.method,
+                "headers": this.headers,
+                "body": this.body,
+                "prepare": this.prepare
+            }));
+        };
+        return GatewayRequest;
+    }());
+    ProcessOut.GatewayRequest = GatewayRequest;
+})(ProcessOut || (ProcessOut = {}));
+var ProcessOut;
+(function (ProcessOut) {
+    var CardHolder = (function () {
+        function CardHolder() {
+        }
+        return CardHolder;
+    }());
+    ProcessOut.CardHolder = CardHolder;
+    var Expiry = (function () {
+        function Expiry(month, year) {
+            this.month = month;
+            this.year = Expiry.parseYear(year);
+        }
+        Expiry.parse = function (exp) {
+            var exps = exp.split(" / ");
+            if (exps.length <= 1) {
+                exps = exp.split("/");
+                if (exps.length <= 1)
+                    return new Expiry(0, 0);
+            }
+            return new Expiry(Number(exps[0]), Number(exps[1]));
+        };
+        Expiry.parseMonth = function (monthn) {
+            var month = Number(monthn);
+            if (!month)
+                month = 0;
+            return month;
+        };
+        Expiry.parseYear = function (yearn) {
+            var year = Number(yearn);
+            if (!year)
+                year = 0;
+            if (year < 2000) {
+                year += 2000;
+            }
+            return year;
+        };
+        Expiry.prototype.getMonth = function () {
+            return this.month;
+        };
+        Expiry.prototype.getYear = function () {
+            return this.year;
+        };
+        Expiry.prototype.string = function () {
+            return this.month + " / " + this.year;
+        };
+        Expiry.prototype.validate = function () {
+            var err = Expiry.validateMonth(this.getMonth());
+            if (err)
+                return err;
+            err = Expiry.validateYear(this.getYear());
+            if (err)
+                return err;
+            var date = new Date();
+            if (this.getMonth() < date.getMonth() && this.getYear() == date.getFullYear())
+                return new ProcessOut.Exception("card.invalid-date");
+            return null;
+        };
+        Expiry.format = function (exp) {
+            var allowed = "1234567890 /";
+            var str = "";
+            for (var i = 0; i < exp.length; i++) {
+                if (allowed.indexOf(exp[i]) === -1)
+                    continue;
+                str += exp[i];
+            }
+            if (str.length == 2)
+                return str + " / ";
+            if (str.length == 4)
+                return str.slice(0, -3);
+            return str;
+        };
+        Expiry.validateMonth = function (month) {
+            if (!month || month < 1 || month > 12)
+                return new ProcessOut.Exception("card.invalid-month");
+            return null;
+        };
+        Expiry.validateYear = function (year) {
+            if (year < 100)
+                year += 2000;
+            var date = new Date();
+            if (!year || year < date.getFullYear())
+                return new ProcessOut.Exception("card.invalid-year");
+            return null;
+        };
+        return Expiry;
+    }());
+    ProcessOut.Expiry = Expiry;
+    var Card = (function () {
+        function Card(number, expiry, cvc) {
+            this.number = Card.parseNumber(number);
+            this.cvc = cvc;
+            this.expiry = expiry;
+        }
+        Card.prototype.getNumber = function () {
+            return this.number;
+        };
+        Card.prototype.getExpiry = function () {
+            return this.expiry;
+        };
+        Card.prototype.getCVC = function () {
+            return this.cvc;
+        };
+        Card.luhn = function (cardNo) {
+            var s = 0;
+            var doubleDigit = false;
+            for (var i = cardNo.length - 1; i >= 0; i--) {
+                var digit = +cardNo[i];
+                if (doubleDigit) {
+                    digit *= 2;
+                    if (digit > 9)
+                        digit -= 9;
+                }
+                s += digit;
+                doubleDigit = !doubleDigit;
+            }
+            return s % 10 == 0;
+        };
+        Card.prototype.validate = function () {
+            var err = Card.validateNumber(this.number);
+            if (err)
+                return err;
+            if (this.expiry == null)
+                return new ProcessOut.Exception("card.invalid-date");
+            err = this.expiry.validate();
+            if (err)
+                return err;
+            return Card.validateCVC(this.cvc);
+        };
+        Card.prototype.getIIN = function () {
+            return Card.getIIN(this.number);
+        };
+        Card.prototype.getLast4Digits = function () {
+            return Card.getLast4Digits(this.number);
+        };
+        Card.formatNumber = function (number) {
+            var format = Card.getCardFormat(Card.getIIN(number));
+            number = Card.parseNumber(number);
+            var formatted = "";
+            var currentBlock = 0;
+            var currentBlockChar = 0;
+            for (var i = 0; i < number.length; i++) {
+                if (isNaN(number[i]))
+                    continue;
+                if (currentBlockChar >= format[currentBlock]) {
+                    currentBlock++;
+                    currentBlockChar = 0;
+                    if (currentBlock >= format.length)
+                        break;
+                    formatted += " ";
+                }
+                formatted += number[i];
+                currentBlockChar++;
+            }
+            return formatted;
+        };
+        Card.parseNumber = function (number) {
+            return String(number.replace(/ /gi, "").replace(/\-/gi, "").replace(/\-/gi, ""));
+        };
+        Card.validateNumber = function (number) {
+            number = Card.parseNumber(number);
+            if (number.length < 12)
+                return new ProcessOut.Exception("card.invalid-number");
+            if (!Card.luhn(number))
+                return new ProcessOut.Exception("card.invalid-number");
+            return null;
+        };
+        Card.validateCVC = function (cvc) {
+            if (!cvc)
+                return null;
+            if (cvc.length < 3)
+                return new ProcessOut.Exception("card.invalid-cvc");
+            return null;
+        };
+        Card.getIIN = function (number) {
+            number = Card.parseNumber(number);
+            var l = number.length;
+            if (l > 6)
+                l = 6;
+            return number.substring(0, l);
+        };
+        Card.getLast4Digits = function (number) {
+            number = Card.parseNumber(number);
+            var l = number.length;
+            if (l > 4)
+                l = 4;
+            return number.substr(number.length - l);
+        };
+        Card.autoFormatNumber = function (number, next) {
+            var lastLen = 0;
+            number.addEventListener("input", function (e) {
+                var field = this;
+                var cursor = field.selectionStart;
+                var l = field.value.length;
+                field.value = Card.formatNumber(field.value);
+                if (cursor && cursor < l) {
+                    field.setSelectionRange(cursor, cursor);
+                    if (cursor > 0 && field.value[cursor - 1] == " " && l > lastLen)
+                        field.setSelectionRange(cursor + 1, cursor + 1);
+                }
+                var cardLength = Card.getPossibleCardLength(Card.getIIN(field.value));
+                if (next && l > lastLen && Card.parseNumber(field.value).length == cardLength[1])
+                    next();
+                lastLen = l;
+            });
+        };
+        Card.autoFormatExpiry = function (exp, next) {
+            var lastLen = 0;
+            exp.addEventListener("input", function (e) {
+                var field = this;
+                var cursor = field.selectionStart;
+                var l = field.value.length;
+                var formatted = Expiry.format(field.value);
+                if (formatted.length > 7)
+                    return;
+                field.value = formatted;
+                if (cursor && cursor < l) {
+                    field.setSelectionRange(cursor, cursor);
+                    if (cursor > 0 && field.value[cursor - 1] == " " && l > lastLen)
+                        field.setSelectionRange(cursor + 1, cursor + 1);
+                }
+                if (next && l > lastLen && field.value.length == 7)
+                    next();
+                lastLen = l;
+            });
+        };
+        Card.getCardFormat = function (iin) {
+            var schemes = Card.getPossibleSchemes(iin);
+            if (schemes.length == 1 && schemes[0] == "american-express")
+                return [4, 6, 5];
+            return [4, 4, 4, 4, 4];
+        };
+        Card.getPossibleCardLength = function (iin) {
+            var actualMin = 12;
+            var actualMax = 19;
+            var minLength = actualMax, maxLength = actualMin;
+            var schemes = Card.getPossibleSchemes(iin);
+            for (var i = 0; i < schemes.length; i++) {
+                switch (schemes[i]) {
+                    case "visa":
+                        minLength = Math.min(minLength, 13);
+                        maxLength = Math.max(maxLength, 19);
+                        break;
+                    case "mastercard":
+                    case "instapayment":
+                    case "jcb":
+                    case "cardguard ead bg ils":
+                    case "elo":
+                    case "hipercard":
+                        minLength = Math.min(minLength, 16);
+                        maxLength = Math.max(maxLength, 16);
+                        break;
+                    case "american-express":
+                    case "uatp":
+                        minLength = Math.min(minLength, 15);
+                        maxLength = Math.max(maxLength, 15);
+                        break;
+                    case "diners-club":
+                        minLength = Math.min(minLength, 14);
+                        maxLength = Math.max(maxLength, 16);
+                        break;
+                    case "union-pay":
+                    case "discover":
+                    case "interpayment":
+                    case "dankort":
+                    case "naranja":
+                    case "cabal":
+                    case "argencard":
+                        minLength = Math.min(minLength, 16);
+                        maxLength = Math.max(maxLength, 19);
+                        break;
+                    case "maestro":
+                        minLength = Math.min(minLength, 12);
+                        maxLength = Math.max(maxLength, 19);
+                        break;
+                }
+            }
+            if (minLength > maxLength) {
+                minLength = actualMin;
+                maxLength = actualMax;
+            }
+            return [minLength, maxLength];
+        };
+        Card.getPossibleSchemes = function (iin) {
+            iin = Card.parseNumber(iin);
+            var schemes = {
+                "visa": ["4"],
+                "mastercard": ["22", "23", "24", "25", "26", "27", "51", "52", "53", "54", "55"],
+                "american-express": ["34", "37"],
+                "union-pay": ["62"],
+                "diners-club": ["300", "301", "302", "303", "304", "305", "309", "36", "38", "39"],
+                "discover": ["6011", "62", "64", "65"],
+                "jcb": ["35"],
+                "maestro": ["50", "56", "57", "58", "59", "6"],
+                "dankort": ["5019", "4175", "4571"],
+                "uatp": ["1"],
+                "cardguard ead bg ils": ["5392"],
+                "hipercard": ["606282"],
+                "elo": ["401178", "401179", "438935", "451416", "457632", "457393", "431274", "438935", "457631", "457632",
+                    "506699", "50670", "50671", "50672", "50673", "50674", "50675", "50676", "506770", "506771", "506772", "506773", "506774",
+                    "506775", "506776", "506777", "506778", "504175", "509",
+                    "627780", "636297", "636368", "651652", "651653", "651654", "651655", "651656", "651657", "651658", "651659", "65166", "65167",
+                    "650031", "650032", "650033", "650035", "650036", "650037", "650038", "650039", "65004", "650050", "650051", "65500", "65501",
+                    "650485", "650486", "650487", "650488", "650489", "65049", "65050", "65051", "65052", "650530", "650531", "650532", "650533",
+                    "650534", "650535", "650536", "650537", "650538", "650541", "650542", "650543", "650544", "650545", "650546", "650547",
+                    "650548", "650549", "65055", "65056", "65057", "65058", "650590", "650591", "650592", "650593", "650594", "650595", "650596",
+                    "650597", "650598", "65070", "650710", "650711", "650712", "650713", "650714", "650715", "650716", "650717", "650718", "650720",
+                    "650721", "650722", "650723", "650724", "650725", "650726", "650727", "655021", "655022", "655023", "655024", "655025", "655026",
+                    "655027", "655028", "655029", "65503", "65504", "655050", "655051", "655052", "655053", "655054", "655055", "655056", "655057",
+                    "655058", "650901", "650902", "650903", "650904", "650905", "650906", "650907", "650908", "650909", "65091", "65092", "65093",
+                    "65094", "65095", "65096", "650970", "650971", "650972", "650973", "650974", "650975", "650976", "650977", "650978", "650405",
+                    "650406", "650407", "650408", "650409", "65041", "65042", "65043"],
+                "naranja": ["377798", "377799", "402917", "402918", "527571", "527572", "589562"],
+                "cabal": ["589657", "600691", "603522", "6042", "6043", "636908"],
+                "argencard": ["501105"]
+            };
+            var matches = new Array();
+            for (var scheme in schemes) {
+                var options = schemes[scheme];
+                for (var optionKey in options) {
+                    var option = options[optionKey];
+                    var l = (iin.length > option.length) ? option.length : iin.length;
+                    if (iin.substring(0, l) == option.toString().substring(0, l)) {
+                        matches.push(scheme);
+                        break;
+                    }
+                }
+            }
+            return matches;
+        };
+        return Card;
+    }());
+    ProcessOut.Card = Card;
+})(ProcessOut || (ProcessOut = {}));
+var ProcessOut;
+(function (ProcessOut) {
+    var CardFieldValue = (function () {
+        function CardFieldValue() {
+            this.number = null;
+            this.expiryMonth = null;
+            this.expiryYear = null;
+            this.cvc = null;
+            this.name = null;
+            this.metadata = null;
+        }
+        return CardFieldValue;
+    }());
+    ProcessOut.CardFieldValue = CardFieldValue;
+    var CardFieldOptions = (function () {
+        function CardFieldOptions(type) {
+            this.type = type;
+        }
+        CardFieldOptions.prototype.apply = function (o) {
+            if (o.placeholder)
+                this.placeholder = o.placeholder;
+            if (o.style)
+                this.style = o.style;
+            return this;
+        };
+        return CardFieldOptions;
+    }());
+    ProcessOut.CardFieldOptions = CardFieldOptions;
+    var CardFieldStyle = (function () {
+        function CardFieldStyle() {
+        }
+        return CardFieldStyle;
+    }());
+    ProcessOut.CardFieldStyle = CardFieldStyle;
+    var CardField = (function () {
+        function CardField(instance, form, options, container, success, error) {
+            this.handlers = {};
+            if (!options || !options.type) {
+                throw new ProcessOut.Exception("processout-js.invalid-field-type", "Options and a the field type must be provided to setup the field.");
+            }
+            if (!container) {
+                throw new ProcessOut.Exception("processout-js.undefined-field", "The card field for the " + options.type + " does not exist in the given container.");
+            }
+            if (container instanceof HTMLInputElement) {
+                throw new ProcessOut.Exception("processout-js.invalid-field", "The card field for the " + options.type + " must be an input field.");
+            }
+            if (options.type != CardField.number &&
+                options.type != CardField.expiry &&
+                options.type != CardField.expiryMonth &&
+                options.type != CardField.expiryYear &&
+                options.type != CardField.cvc)
+                throw new ProcessOut.Exception("processout-js.invalid-field-type");
+            this.instance = instance;
+            this.form = form;
+            this.options = options;
+            this.el = container;
+            var placeholder = this.el.getAttribute("data-processout-placeholder");
+            if (placeholder)
+                this.options.placeholder = placeholder;
+            this.spawn(success, error);
+        }
+        CardField.prototype.spawn = function (success, error) {
+            var tmp = Math.random().toString(36).substring(7);
+            this.uid = "#" + tmp;
+            var endpoint = this.instance.getProcessOutFieldEndpoint("?r=" + tmp + this.uid);
+            this.iframe = document.createElement("iframe");
+            this.iframe.className = "processout-field-cc-iframe";
+            this.iframe.name = tmp;
+            this.iframe.setAttribute("src", endpoint);
+            this.iframe.setAttribute("style", "background: none; width: 100%;");
+            this.iframe.setAttribute("frameborder", "0");
+            this.iframe.setAttribute("allowtransparency", "1");
+            this.iframe.style.display = "none";
+            this.iframe.height = "14px";
+            var errored = false;
+            var iframeError = setTimeout(function () {
+                errored = true;
+                if (typeof (error) === typeof (Function))
+                    error(new ProcessOut.Exception("processout-js.field.unavailable"));
+            }, CardField.timeout);
+            this.iframe.onload = function () {
+                try {
+                    this.iframe.src = endpoint;
+                }
+                catch (e) { }
+            }.bind(this);
+            window.addEventListener("message", function (event) {
+                if (errored)
+                    return;
+                var data = ProcessOut.Message.parseEvent(event);
+                if (data.frameID != this.uid)
+                    return;
+                if (data.namespace != ProcessOut.Message.fieldNamespace)
+                    return;
+                this.handlEvent(data);
+                if (data.action == "alive") {
+                    this.iframe.contentWindow.postMessage(JSON.stringify({
+                        "namespace": ProcessOut.Message.fieldNamespace,
+                        "projectID": this.instance.getProjectID(),
+                        "action": "setup",
+                        "formID": this.form.getUID(),
+                        "data": this.options
+                    }), "*");
+                }
+                if (data.action == "ready") {
+                    this.iframe.style.display = "block";
+                    clearTimeout(iframeError);
+                    success();
+                    this.iframe.contentWindow.postMessage(JSON.stringify({
+                        "namespace": ProcessOut.Message.fieldNamespace,
+                        "projectID": this.instance.getProjectID(),
+                        "action": "resize"
+                    }), "*");
+                    this.iframe.addEventListener("focus", function (event) {
+                        this.focus();
+                    }.bind(this));
+                }
+            }.bind(this));
+            this.el.appendChild(this.iframe);
+        };
+        CardField.prototype.handlEvent = function (data) {
+            var d = {
+                field: this,
+                type: this.options.type,
+                element: this.el,
+                data: data.data
+            };
+            switch (data.action) {
+                case "inputEvent":
+                    if (this.eventCallback)
+                        this.eventCallback("oninput", d);
+                    break;
+                case "mouseEnterEvent":
+                    if (this.eventCallback)
+                        this.eventCallback("onmouseenter", d);
+                    break;
+                case "mouseLeaveEvent":
+                    if (this.eventCallback)
+                        this.eventCallback("onmouseleave", d);
+                    break;
+                case "focusEvent":
+                    this.el.className = this.el.className + " processout-input-focused";
+                    if (this.eventCallback)
+                        this.eventCallback("onfocus", d);
+                    break;
+                case "blurEvent":
+                    this.el.className = this.el.className
+                        .replace(/\bprocessout-input-focused\b/g, "")
+                        .replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, '');
+                    if (this.eventCallback)
+                        this.eventCallback("onblur", d);
+                    break;
+                case "next":
+                    if (this.next)
+                        this.next();
+                    break;
+                case "event":
+                    if (data.data.name in this.handlers) {
+                        var handlers = this.handlers[data.data.name];
+                        for (var i = 0; i < handlers.length; i++)
+                            handlers[0](data.data.data);
+                    }
+                    break;
+                case "resize":
+                    this.iframe.height = data.data;
+                    break;
+            }
+        };
+        CardField.prototype.setNext = function (next) {
+            this.next = next;
+        };
+        CardField.prototype.update = function (options) {
+            if (options.placeholder)
+                this.options.placeholder = options.placeholder;
+            if (options.style)
+                this.options.style = Object.assign(this.options.style, options.style);
+            this.iframe.contentWindow.postMessage(JSON.stringify({
+                "namespace": ProcessOut.Message.fieldNamespace,
+                "projectID": this.instance.getProjectID(),
+                "action": "update",
+                "data": this.options
+            }), "*");
+        };
+        CardField.prototype.addEventListener = function (e, h) {
+            if (!(e in this.handlers))
+                this.handlers[e] = [];
+            this.handlers[e].push(h);
+            this.iframe.contentWindow.postMessage(JSON.stringify({
+                "namespace": ProcessOut.Message.fieldNamespace,
+                "projectID": this.instance.getProjectID(),
+                "action": "registerEvent",
+                "data": e
+            }), "*");
+        };
+        CardField.prototype.on = function (e, h) {
+            return this.addEventListener(e, h);
+        };
+        CardField.prototype.blur = function () {
+            this.iframe.contentWindow.postMessage(JSON.stringify({
+                "messageID": Math.random().toString(),
+                "namespace": ProcessOut.Message.fieldNamespace,
+                "projectID": this.instance.getProjectID(),
+                "action": "blur"
+            }), "*");
+        };
+        CardField.prototype.focus = function () {
+            this.iframe.contentWindow.postMessage(JSON.stringify({
+                "messageID": Math.random().toString(),
+                "namespace": ProcessOut.Message.fieldNamespace,
+                "projectID": this.instance.getProjectID(),
+                "action": "focus"
+            }), "*");
+        };
+        CardField.prototype.validate = function (success, error) {
+            var id = Math.random().toString();
+            this.iframe.contentWindow.postMessage(JSON.stringify({
+                "messageID": id,
+                "namespace": ProcessOut.Message.fieldNamespace,
+                "projectID": this.instance.getProjectID(),
+                "action": "validate"
+            }), "*");
+            var fetchingTimeout = setTimeout(function () {
+                error(new ProcessOut.Exception("processout-js.field.unavailable"));
+            }, CardField.timeout);
+            window.addEventListener("message", function (event) {
+                var data = ProcessOut.Message.parseEvent(event);
+                if (data.frameID != this.uid)
+                    return;
+                if (data.namespace != ProcessOut.Message.fieldNamespace)
+                    return;
+                if (data.messageID != id)
+                    return;
+                if (data.action != "validate")
+                    return;
+                clearTimeout(fetchingTimeout);
+                if (data.data) {
+                    error(new ProcessOut.Exception(data.data));
+                    return;
+                }
+                success();
+            }.bind(this));
+        };
+        CardField.prototype.tokenize = function (fields, data, success, error) {
+            var id = Math.random().toString();
+            this.iframe.contentWindow.postMessage(JSON.stringify({
+                "messageID": id,
+                "namespace": ProcessOut.Message.fieldNamespace,
+                "projectID": this.instance.getProjectID(),
+                "action": "tokenize",
+                "data": {
+                    "fields": fields,
+                    "data": data
+                }
+            }), "*");
+            var fetchingTimeout = setTimeout(function () {
+                error(new ProcessOut.Exception("processout-js.field.unavailable"));
+            }, CardField.timeout);
+            window.addEventListener("message", function (event) {
+                var data = ProcessOut.Message.parseEvent(event);
+                if (data.messageID != id)
+                    return;
+                if (data.action != "tokenize")
+                    return;
+                clearTimeout(fetchingTimeout);
+                if (data.data.token)
+                    success(data.data.token);
+                else if (data.data.error)
+                    error(new ProcessOut.Exception(data.data.error.code, data.data.error.message));
+                else
+                    error(new ProcessOut.Exception("default"));
+            }.bind(this));
+        };
+        CardField.prototype.refreshCVC = function (cardUID, success, error) {
+            var id = Math.random().toString();
+            this.iframe.contentWindow.postMessage(JSON.stringify({
+                "messageID": id,
+                "namespace": ProcessOut.Message.fieldNamespace,
+                "projectID": this.instance.getProjectID(),
+                "action": "refresh-cvc",
+                "data": {
+                    "data": cardUID
+                }
+            }), "*");
+            var fetchingTimeout = setTimeout(function () {
+                error(new ProcessOut.Exception("processout-js.field.unavailable"));
+            }, CardField.timeout);
+            window.addEventListener("message", function (event) {
+                var data = ProcessOut.Message.parseEvent(event);
+                if (data.messageID != id)
+                    return;
+                if (data.action != "refresh-cvc")
+                    return;
+                clearTimeout(fetchingTimeout);
+                if (data.data.token)
+                    success(data.data.token);
+                else if (data.data.error)
+                    error(new ProcessOut.Exception(data.data.error.code, data.data.error.message));
+                else
+                    error(new ProcessOut.Exception("default"));
+            }.bind(this));
+        };
+        CardField.number = "number";
+        CardField.expiry = "expiry";
+        CardField.expiryMonth = "expiry-month";
+        CardField.expiryYear = "expiry-year";
+        CardField.cvc = "cvc";
+        CardField.timeout = 20000;
+        return CardField;
+    }());
+    ProcessOut.CardField = CardField;
+})(ProcessOut || (ProcessOut = {}));
+var ProcessOut;
+(function (ProcessOut) {
+    var CardForm = (function () {
+        function CardForm(instance, el) {
+            this.instance = instance;
+            this.element = el;
+            this.uid = Math.random().toString();
+        }
+        CardForm.prototype.getUID = function () {
+            return this.uid;
+        };
+        CardForm.prototype.setup = function (options, success, error) {
+            var numberReady = false;
+            var cvcReady = false;
+            var expMonthReady = false;
+            var expYearReady = false;
+            var ev = function () {
+                if (numberReady && cvcReady && expMonthReady && expYearReady) {
+                    this.number.setNext(function () {
+                        if (this.exp)
+                            this.exp.focus();
+                        if (this.expMonth)
+                            this.expMonth.focus();
+                    }.bind(this));
+                    if (this.exp) {
+                        this.exp.setNext(function () {
+                            if (this.cvc)
+                                this.cvc.focus();
+                        }.bind(this));
+                    }
+                    success(this);
+                    return;
+                }
+            }.bind(this);
+            this.number = new ProcessOut.CardField(this.instance, this, new ProcessOut.CardFieldOptions(ProcessOut.CardField.number).apply(options), this.element.querySelector("[data-processout-input=cc-number]"), function () {
+                numberReady = true;
+                ev();
+            }, error);
+            var cvcEl = this.element.querySelector("[data-processout-input=cc-cvc]");
+            if (cvcEl) {
+                this.cvc = new ProcessOut.CardField(this.instance, this, new ProcessOut.CardFieldOptions(ProcessOut.CardField.cvc).apply(options), cvcEl, function () {
+                    cvcReady = true;
+                    ev();
+                }, error);
+            }
+            else {
+                cvcReady = true;
+            }
+            var expEl = this.element.querySelector("[data-processout-input=cc-exp]");
+            if (expEl) {
+                this.exp = new ProcessOut.CardField(this.instance, this, new ProcessOut.CardFieldOptions(ProcessOut.CardField.expiry).apply(options), expEl, function () {
+                    expMonthReady = true;
+                    expYearReady = true;
+                    ev();
+                }, error);
+            }
+            else {
+                this.expMonth = new ProcessOut.CardField(this.instance, this, new ProcessOut.CardFieldOptions(ProcessOut.CardField.expiryMonth).apply(options), this.element.querySelector("[data-processout-input=cc-exp-month]"), function () {
+                    expMonthReady = true;
+                    ev();
+                }, error);
+                this.expYear = new ProcessOut.CardField(this.instance, this, new ProcessOut.CardFieldOptions(ProcessOut.CardField.expiryYear).apply(options), this.element.querySelector("[data-processout-input=cc-exp-year]"), function () {
+                    expYearReady = true;
+                    ev();
+                }, error);
+            }
+            return this;
+        };
+        CardForm.prototype.setupCVC = function (options, success, error, eventCallback) {
+            this.isRefreshCVC = true;
+            this.cvc = new ProcessOut.CardField(this.instance, this, new ProcessOut.CardFieldOptions(ProcessOut.CardField.cvc).apply(options), this.element.querySelector("[data-processout-input=cc-cvc]"), function () {
+                success(this);
+            }.bind(this), error);
+            return this;
+        };
+        CardForm.prototype.getElement = function () {
+            return this.element;
+        };
+        CardForm.prototype.addEventListener = function (type, listener, useCapture) {
+            return this.element.addEventListener(type, listener, useCapture);
+        };
+        CardForm.prototype.on = function (type, listener, useCapture) {
+            return this.element.addEventListener(type, listener, useCapture);
+        };
+        CardForm.prototype.getNumberField = function () {
+            return this.number;
+        };
+        CardForm.prototype.getCVCField = function () {
+            return this.cvc;
+        };
+        CardForm.prototype.getExpiryField = function () {
+            return this.exp;
+        };
+        CardForm.prototype.getExpiryMonthField = function () {
+            return this.expMonth;
+        };
+        CardForm.prototype.getExpiryYearField = function () {
+            return this.expYear;
+        };
+        CardForm.prototype.validate = function (success, error) {
+            if (this.isRefreshCVC) {
+                this.cvc.validate(function () {
+                    success();
+                }, error);
+                return;
+            }
+            var number = false;
+            var cvc = false;
+            var expMonth = false;
+            var expYear = false;
+            var ev = function () {
+                if (number && cvc && expMonth && expYear) {
+                    success();
+                }
+            };
+            this.number.validate(function () {
+                number = true;
+                ev();
+            }, error);
+            if (this.cvc)
+                this.cvc.validate(function () {
+                    cvc = true;
+                    ev();
+                }, error);
+            else
+                cvc = true;
+            if (this.exp) {
+                this.exp.validate(function () {
+                    expMonth = true;
+                    expYear = true;
+                    ev();
+                }, error);
+            }
+            else {
+                this.expMonth.validate(function () {
+                    expMonth = true;
+                    ev();
+                }, error);
+                this.expYear.validate(function () {
+                    expYear = true;
+                    ev();
+                }, error);
+            }
+        };
+        CardForm.prototype.tokenize = function (data, success, error) {
+            var fields = ["number"];
+            if (this.cvc)
+                fields.push("cvc");
+            if (this.exp)
+                fields.push("exp");
+            if (this.expMonth)
+                fields.push("exp-month");
+            if (this.expYear)
+                fields.push("exp-year");
+            this.number.tokenize(fields, data, success, error);
+        };
+        CardForm.prototype.refreshCVC = function (cardUID, success, error) {
+            if (!this.cvc)
+                error(new ProcessOut.Exception("processout-js.wrong-type-for-action", "RefreshCVC was called but the form has no CVC field initialized."));
+            this.cvc.refreshCVC(cardUID, success, error);
+        };
+        return CardForm;
+    }());
+    ProcessOut.CardForm = CardForm;
+})(ProcessOut || (ProcessOut = {}));
+var ProcessOut;
+(function (ProcessOut) {
+    var messages = {
+        "en": {
+            "default": "An error occured: your payment was declined.",
+            "card.declined": "The credit card has been declined.",
+            "card.expired": "The given card has expired.",
+            "card.duplicate": "The payment could not be completed. Please try again later.",
+            "card.network-failed": "The payment could not be completed. Please try again later.",
+            "card.invalid": "The given card is invalid.",
+            "card.invalid-name": "The cardholder name is invalid.",
+            "card.invalid-number": "The card number is invalid.",
+            "card.invalid-date": "The card expiry date is invalid.",
+            "card.invalid-month": "The card expiry month is invalid.",
+            "card.invalid-year": "The card expiry year is invalid.",
+            "card.invalid-cvc": "The card CVC is invalid.",
+            "card.invalid-zip": "The card's ZIP code is valid.",
+            "card.failed-cvc-and-avs": "The CVC and AVS code were invalid.",
+            "card.failed-three-d-s": "The 3D-Secure authentication failed.",
+            "card.bad-track-data": "The card could not be verified. Maybe your CVC is invalid?",
+            "card.not-registered": "The card is not registered.",
+            "card.issuer-not-found": "The card issuer could not be found. Please try another card.",
+            "card.possible-fraud": "The payment could not be completed. Please contact your bank for further help.",
+            "card.contact-bank": "The payment could not be completed. Please contact your bank for further help.",
+            "card.not-authorized": "The payment could not be authorized using the provided card.",
+            "card.do-not-honor": "The payment could not be completed. Please contact your bank for further help.",
+            "card.maximum-attempts": "The card maximum attempts has been reached and the payment could not be processed.",
+            "card.stolen": "The payment could not be processed as the provided card was marked as stolen.",
+            "card.lost": "The payment could not be processed as the provided card was marked as lost.",
+            "card.exceeded-limits": "The payment could not be processed as the payment limits of the card have been exceeded.",
+            "card.no-money": "There doesn't seem to be enough money on the bank account linked to the provided card.",
+            "customer.canceled": "The customer canceled the payment.",
+            "customer.popup-blocked": "Please allow pop-ups to continue with your payment flow.",
+            "gateway.declined": "The payment was declined.",
+            "payment.declined": "The payment was declined.",
+            "payment.pending": "The payment is currently pending, please wait a few minutes for it to fully go through.",
+            "request.validation.error": "The provided information is invalid or missing.",
+            "request.validation.invalid-country": "The provided country is invalid.",
+            "request.validation.missing-name": "A name must be provided.",
+            "request.validation.invalid-name": "The provided name is invalid.",
+            "request.validation.missing-email": "An email must be provided.",
+            "request.validation.invalid-email": "The provided email is invalid.",
+            "request.validation.invalid-address": "The provided address is invalid.",
+            "request.validation.no-method-selected": "Please select a payment method.",
+            "request.gateway.not-available": "The requested gateway is currently unavailable.",
+            "request.gateway.not-supported": "The gateway is not supported by ProcessOut.js",
+            "processout-js.missing-project-id": "Your project ID was not specified when loading ProcessOut.js.",
+            "processout-js.not-hosted": "ProcessOut.js was not loaded from ProcessOut CDN. Please do not host ProcessOut.js yourself but rather use ProcessOut CDN: https://js.processout.com/processout.js",
+            "processout-js.modal.unavailable": "The ProcessOut.js modal is unavailable.",
+            "processout-js.field.unavailable": "The ProcessOut.js credit card field is unavailable.",
+            "processout-js.invalid-config": "The provided gateway configuration is invalid.",
+            "processout-js.no-customer-action": "No customer action is required for the given gateway configuration and resource.",
+            "processout-js.customer-action-not-supported": "The requested customer action is not supported by ProcessOut.js.",
+            "processout-js.invalid-field": "The given HTML element may not be used by ProcessOut.js: it is an input. Please only use divs when creating a ProcessOut.js credit card field.",
+            "processout-js.undefined-field": "The given HTML element was undefined.",
+            "processout-js.invalid-field-type": "The given field type was incorrect. It must either be number, expiry, expiryMonth, expiryYear or CVC.",
+            "processout-js.network-issue": "There seems to be some connectivity issue preventing the payment from making it through. Please switch to another network or try again in a few minutes.",
+            "processout-js.invalid-type": "The specified parameter had an unknown type.",
+            "processout-js.missing-source": "A source must be specified.",
+            "processout-js.wrong-type-for-action": "The requested action could not be performed on the given field because its type is invalid.",
+            "processout-js.missing-invoice-id": "An invoice ID be specified.",
+            "resource.invalid-type": "The provided resource was invalid. It must be an invoice, a subscription or an authorization request.",
+            "applepay.not-supported": "The current browser/device does not support Apple Pay.",
+            "applepay.no-success-handler": "A success handler must be specified when setting up Apple Pay.",
+            "applepay.not-available": "Apple Pay is not available for the current browser, device or ProcessOut project."
+        }
+    };
+    var Translator = (function () {
+        function Translator() {
+        }
+        Translator.translate = function (code, message) {
+            if (messages[Translator.locale][code])
+                return messages[Translator.locale][code];
+            if (message)
+                return message;
+            return messages[Translator.locale]["default"];
+        };
+        Translator.setLocale = function (locale) {
+            if (!messages[locale])
+                return;
+            Translator.locale = locale;
+        };
+        Translator.locale = "en";
+        return Translator;
+    }());
+    ProcessOut.Translator = Translator;
+})(ProcessOut || (ProcessOut = {}));
+var ProcessOut;
+(function (ProcessOut) {
+    var Exception = (function (_super) {
+        __extends(Exception, _super);
+        function Exception(code, message) {
+            var _this = this;
+            if (!message)
+                message = ProcessOut.Translator.translate(code);
+            _this = _super.call(this, message) || this;
+            _this.code = code;
+            _this.message = message;
+            _this.name = "ProcessOutException";
+            _this.stack = new Error().stack;
+            return _this;
+        }
+        return Exception;
+    }(Error));
+    ProcessOut.Exception = Exception;
+})(ProcessOut || (ProcessOut = {}));
+var ProcessOut;
+(function (ProcessOut_1) {
+    ProcessOut_1.DEBUG = false;
+    ProcessOut_1.TestModePrefix = "test-";
+    var ProcessOut = (function () {
+        function ProcessOut(projectID, resourceID) {
+            this.timeout = 10000;
+            this.sandbox = false;
+            this.host = "processout.com";
+            this.processOutFieldEndpoint = "";
+            this.apiVersion = "1.3.0.0";
+            var scripts = document.getElementsByTagName("script");
+            var jsHost = "";
+            if (/^https?:\/\/.*\.processout\.((com)|(ninja)|(dev))\//.test(window.location.href)) {
+                jsHost = window.location.href;
+            }
+            else {
+                for (var i = 0; i < scripts.length; i++) {
+                    if (/^https?:\/\/.*\.processout\.((com)|(ninja)|(dev))\//.test(scripts[i].getAttribute("src"))) {
+                        jsHost = scripts[i].getAttribute("src");
+                    }
+                }
+            }
+            if (jsHost == "" && !ProcessOut_1.DEBUG) {
+                throw new ProcessOut_1.Exception("processout-js.not-hosted");
+            }
+            if (/^https?:\/\/.*\.processout\.ninja\//.test(jsHost)) {
+                this.host = "processout.ninja";
+            }
+            else if (/^https?:\/\/.*\.processout\.dev\//.test(jsHost)) {
+                this.host = "processout.dev";
+            }
+            else {
+                this.host = "processout.com";
+            }
+            if (!projectID)
+                throw new ProcessOut_1.Exception("processout-js.missing-project-id");
+            this.projectID = projectID;
+            if (this.projectID.lastIndexOf(ProcessOut_1.TestModePrefix, 0) === 0)
+                this.sandbox = true;
+            this.resourceID = resourceID;
+            if (this.resourceID &&
+                this.resourceID != "" &&
+                this.resourceID.substring(0, 3) != "iv_" &&
+                this.resourceID.substring(0, 4) != "sub_" &&
+                this.resourceID.substring(0, 9) != "auth_req_") {
+                throw new ProcessOut_1.Exception("resource.invalid-type");
+            }
+            this.applePay = new ProcessOut_1.ApplePayWrapper(this);
+            this.threeDS = new ProcessOut_1.ThreeDSWrapper(this);
+        }
+        ProcessOut.prototype.getResourceID = function () {
+            return this.resourceID;
+        };
+        ProcessOut.prototype.getProjectID = function () {
+            return this.projectID;
+        };
+        ProcessOut.prototype.getProcessOutFieldEndpoint = function (suffix) {
+            var endpoint = this.endpoint("js", "/ccfield.html");
+            if (ProcessOut_1.DEBUG && this.processOutFieldEndpoint)
+                endpoint = this.processOutFieldEndpoint;
+            return "" + endpoint + suffix;
+        };
+        ProcessOut.prototype.setProcessOutFieldEndpoint = function (endpoint) {
+            if (!ProcessOut_1.DEBUG)
+                return;
+            this.processOutFieldEndpoint = endpoint;
+        };
+        ProcessOut.prototype.endpoint = function (subdomain, path) {
+            return "https://" + subdomain + "." + this.host + path;
+        };
+        ProcessOut.prototype.apiRequest = function (method, path, data, success, error, retry) {
+            if (!retry)
+                retry = 0;
+            method = method.toLowerCase();
+            if (path.substring(0, 4) != "http" && path[0] != "/")
+                path = this.endpoint("api", "/" + path);
+            var headers = {
+                "Content-Type": "application/json",
+                "API-Version": this.apiVersion
+            };
+            if (this.projectID)
+                headers["Authorization"] = "Basic " + btoa(this.projectID + ":");
+            if (!data)
+                data = {};
+            path += "?legacyrequest=true&project_id=" + this.projectID;
+            for (var k in headers)
+                path += "&x-" + k + "=" + headers[k];
+            if (method == "get") {
+                for (var key in data)
+                    path += "&" + key + "=" + encodeURIComponent(data[key]);
+            }
+            var request = new XMLHttpRequest();
+            if (window.XDomainRequest)
+                request = new XDomainRequest();
+            request.open(method, path, true);
+            if (!window.XDomainRequest) {
+                for (var k in headers)
+                    request.setRequestHeader(k, headers[k]);
+            }
+            request.timeout = 0;
+            request.onload = function (e) {
+                var parsed;
+                try {
+                    parsed = JSON.parse(request.responseText);
+                }
+                catch (e) {
+                    parsed = {};
+                }
+                if (window.XDomainRequest)
+                    success(parsed, request, e);
+                else if (e.currentTarget.readyState == 4)
+                    success(parsed, request, e);
+                return;
+            };
+            request.onerror = function (e) {
+                if (request.status && request.status >= 200 &&
+                    request.status < 500 && request.responseText)
+                    request.onload(e);
+                else
+                    error(request, e);
+            };
+            request.ontimeout = function () { };
+            request.onprogress = function () { };
+            request.onabort = function () {
+                if (retry > 3)
+                    error(request, null);
+                else
+                    this.request(method, path, data, success, error, retry + 1);
+            }.bind(this);
+            request.send(JSON.stringify(data));
+        };
+        ProcessOut.prototype.setupForm = function (form, options, success, error) {
+            if (!this.projectID)
+                throw new ProcessOut_1.Exception("default", "You must instanciate ProcessOut.js with a valid project ID in order to use ProcessOut's hosted forms.");
+            if (!form)
+                throw new ProcessOut_1.Exception("default", "The provided form element wasn't set. Make sure to provide setupForm with a valid form element.");
+            if (typeof options == "function")
+                return new ProcessOut_1.CardForm(this, form).setup(new ProcessOut_1.CardFieldOptions(""), options, success);
+            else
+                return new ProcessOut_1.CardForm(this, form).setup(options, success, error);
+        };
+        ProcessOut.prototype.tokenize = function (val, data, success, error) {
+            if (val instanceof ProcessOut_1.Card)
+                return this.tokenizeCard(val, data, success, error);
+            if (val instanceof ProcessOut_1.CardForm)
+                return this.tokenizeForm(val, data, success, error);
+            if (val instanceof ProcessOut_1.ApplePay)
+                return val.tokenize(data, success, error);
+            throw new ProcessOut_1.Exception("processout-js.invalid-type", "The first parameter had an unknown type/instance. The value must be an instance of either Card, CardForm or ApplePay.");
+        };
+        ProcessOut.prototype.tokenizeCard = function (card, data, success, error) {
+            var err = card.validate();
+            if (err) {
+                error(err);
+                return;
+            }
+            if (!data)
+                data = {};
+            if (!data.contact)
+                data.contact = {};
+            data.number = card.getNumber();
+            data.exp_month = card.getExpiry().getMonth().toString();
+            data.exp_year = card.getExpiry().getYear().toString();
+            data.cvc2 = card.getCVC();
+            this.apiRequest("post", "cards", data, function (data, req, e) {
+                if (!data.success) {
+                    error(new ProcessOut_1.Exception(data.error_type, data.message));
+                    return;
+                }
+                success(data.card.id);
+            }, function (req, e) {
+                error(new ProcessOut_1.Exception("processout-js.network-issue"));
+            });
+        };
+        ProcessOut.prototype.tokenizeForm = function (form, data, success, error) {
+            form.validate(function () {
+                form.tokenize(data, success, error);
+            }.bind(this), error);
+        };
+        ProcessOut.prototype.setupFormCVC = function (form, options, success, error) {
+            return new ProcessOut_1.CardForm(this, form).setupCVC(options, success, error);
+        };
+        ProcessOut.prototype.refreshCVC = function (cardUID, val, success, error) {
+            if (val instanceof ProcessOut_1.CardForm)
+                return this.refreshCVCForm(cardUID, val, success, error);
+            return this.refreshCVCString(cardUID, val, success, error);
+        };
+        ProcessOut.prototype.refreshCVCForm = function (cardUID, form, success, error) {
+            form.validate(function () {
+                form.refreshCVC(cardUID, success, error);
+            }.bind(this), error);
+        };
+        ProcessOut.prototype.refreshCVCString = function (cardUID, cvc, success, error) {
+            var err = ProcessOut_1.Card.validateCVC(cvc);
+            if (err) {
+                error(err);
+                return;
+            }
+            this.apiRequest("put", "cards/" + cardUID, {
+                "cvc": cvc
+            }, function (data, req, e) {
+                if (!data.success) {
+                    error(new ProcessOut_1.Exception("card.invalid"));
+                    return;
+                }
+                success(data.card.id);
+            }, function (req, e) {
+                error(new ProcessOut_1.Exception("processout-js.network-issue"));
+            });
+        };
+        ProcessOut.prototype.newModal = function (options, onReady, onError) {
+            var url = '';
+            if (typeof (options) == 'object') {
+                url = options.url;
+                onReady = options.onReady;
+                onError = options.onError;
+                if (!url) {
+                    url = this.endpoint("checkout", "/" + this.getProjectID() + "/oneoff" +
+                        ("?amount=" + encodeURIComponent(options.amount)) +
+                        ("&currency=" + encodeURIComponent(options.currency)) +
+                        ("&name=" + encodeURIComponent(options.name)));
+                    if (options.metadata && typeof options.metadata == 'object') {
+                        for (var i in options.metadata) {
+                            if (!options.metadata.hasOwnProperty(i))
+                                continue;
+                            url += "&metadata[" + i + "]=" + encodeURIComponent(options.metadata[i]);
+                        }
+                    }
+                }
+            }
+            var uniqId = Math.random().toString(36).substr(2, 9);
+            var iframe = document.createElement('iframe');
+            iframe.className = "processout-iframe";
+            iframe.setAttribute("id", "processout-iframe-" + uniqId);
+            iframe.setAttribute("src", url);
+            iframe.setAttribute("style", "position: fixed; top: 0; left: 0; background: none; z-index: 9999999;");
+            iframe.setAttribute("frameborder", "0");
+            iframe.setAttribute("allowtransparency", "1");
+            iframe.style.display = "none";
+            var iframeError = setTimeout(function () {
+                if (typeof (onError) === typeof (Function))
+                    onError(new ProcessOut_1.Exception("processout-js.modal.unavailable"));
+            }, this.timeout);
+            iframe.onload = function () {
+                clearTimeout(iframeError);
+                if (typeof (onReady) === typeof (Function))
+                    onReady(new ProcessOut_1.Modal(this, iframe, uniqId));
+            }.bind(this);
+            document.body.appendChild(iframe);
+        };
+        ProcessOut.prototype.fetchGatewayConfigurations = function (config, success, error) {
+            if (!config)
+                config = {};
+            if (!config.invoiceID)
+                throw new ProcessOut_1.Exception("processout-js.missing-invoice-id");
+            this.apiRequest("GET", "gateway-configurations", {
+                "filter": config.filter
+            }, function (data) {
+                if (!data.success) {
+                    error(new ProcessOut_1.Exception(data.error_type, data.message));
+                    return;
+                }
+                var confs = [];
+                for (var _i = 0, _a = data.gateway_configurations; _i < _a.length; _i++) {
+                    var conf = _a[_i];
+                    conf.hookForInvoice = this.buildConfHookForInvoice(config.invoiceID, conf);
+                    confs.push(conf);
+                }
+                success(confs);
+            }.bind(this), function (req, e) {
+                error(new ProcessOut_1.Exception("processout-js.network-issue"));
+            });
+        };
+        ProcessOut.prototype.buildConfHookForInvoice = function (invoiceID, gatewayConf) {
+            return function (el, tokenized, tokenError) {
+                var url = this.endpoint("checkout", "/" + this.getProjectID() + "/" + invoiceID + "/redirect/" + gatewayConf.id);
+                el.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    var gatewayName = null;
+                    var gatewayLogo = null;
+                    if (gatewayConf.gateway) {
+                        gatewayName = gatewayConf.gateway.name;
+                        gatewayLogo = gatewayConf.gateway.logo_url;
+                    }
+                    var options = new ProcessOut_1.ActionHandlerOptions(gatewayName, gatewayLogo);
+                    var action = this.handleAction(url, tokenized, tokenError, options);
+                    return false;
+                }.bind(this));
+            }.bind(this);
+        };
+        ProcessOut.prototype.handleAction = function (url, success, error, options) {
+            var handler = new ProcessOut_1.ActionHandler(this, options);
+            return handler.handle(url, success, error);
+        };
+        return ProcessOut;
+    }());
+    ProcessOut_1.ProcessOut = ProcessOut;
+})(ProcessOut || (ProcessOut = {}));
+var ProcessOut;
+(function (ProcessOut) {
+    var Modal = (function () {
+        function Modal(instance, iframe, uniqId) {
+            this.deleted = false;
+            this.timeout = 10000;
+            this.instance = instance;
+            this.iframe = iframe;
+            this.uniqId = uniqId;
+        }
+        Modal.prototype.show = function (options, onHide, onError) {
+            var onShow = options;
+            var onPayment, onPaymentError, hideAfterSuccessTimeout;
+            if (typeof (options) == 'object') {
+                onShow = options.onShow;
+                onHide = options.onHide;
+                onError = options.onError;
+                onPayment = options.onPayment;
+                onPaymentError = options.onPaymentError;
+                hideAfterSuccessTimeout = options.hideAfterSuccessTimeout;
+            }
+            if (hideAfterSuccessTimeout == null)
+                hideAfterSuccessTimeout = 2500;
+            var modal = this;
+            var iframe = modal.iframe;
+            var iframeW = iframe.contentWindow;
+            var frameid = modal.uniqId;
+            iframeW.postMessage(JSON.stringify({
+                namespace: ProcessOut.Message.modalNamespace,
+                frameID: frameid,
+                action: "check"
+            }), "*");
+            var redirectTimeout = setTimeout(function () {
+                if (typeof (onError) === typeof (Function))
+                    onError(modal, new ProcessOut.Exception("processout-js.modal.unavailable"));
+            }, this.timeout);
+            window.addEventListener("message", function (event) {
+                var data = ProcessOut.Message.parseEvent(event);
+                if (data.frameID != frameid)
+                    return;
+                if (data.namespace != ProcessOut.Message.modalNamespace)
+                    return;
+                switch (data.action) {
+                    case "openModal":
+                        clearTimeout(redirectTimeout);
+                        document.body.style.overflow = "hidden";
+                        window.addEventListener("resize", function (event) {
+                            iframe.width = window.outerWidth + "px";
+                            iframe.height = window.outerHeight + "px";
+                        });
+                        if (typeof (Event) === "function") {
+                            var devent = new Event("resize");
+                        }
+                        else {
+                            var devent = document.createEvent("Event");
+                            event.initEvent("resize", true, true);
+                        }
+                        window.dispatchEvent(devent);
+                        iframe.style.display = "block";
+                        iframeW.postMessage(JSON.stringify({
+                            namespace: ProcessOut.Message.modalNamespace,
+                            frameID: frameid,
+                            action: "launch"
+                        }), "*");
+                        if (typeof (onShow) === typeof (Function))
+                            onShow(modal);
+                        break;
+                    case "closeModal":
+                        modal.hide();
+                        if (typeof (onHide) === typeof (Function))
+                            onHide(modal);
+                        break;
+                    case "error":
+                        clearTimeout(redirectTimeout);
+                        if (typeof (onError) === typeof (Function))
+                            onError(modal, new ProcessOut.Exception(data.errorCode, data.errorMessage));
+                        break;
+                    case "onPayment":
+                        if (typeof (onPayment) === typeof (Function))
+                            onPayment(modal, data.data);
+                        if (hideAfterSuccessTimeout > 0) {
+                            setTimeout(function () {
+                                modal.hide();
+                            }, hideAfterSuccessTimeout);
+                        }
+                        break;
+                    case "onPaymentError":
+                        if (typeof (onPaymentError) === typeof (Function))
+                            onPaymentError(modal, new ProcessOut.Exception(data.errorCode, data.errorMessage));
+                        break;
+                    default:
+                        console.log("Could not read event action from modal.", event.data);
+                        break;
+                }
+            }, false);
+        };
+        Modal.prototype.hide = function () {
+            this.iframe.style.display = "none";
+            document.body.style.overflow = "";
+            this.iframe.remove();
+            this.deleted = true;
+        };
+        Modal.prototype.isDeleted = function () {
+            return this.deleted;
+        };
+        return Modal;
+    }());
+    ProcessOut.Modal = Modal;
+})(ProcessOut || (ProcessOut = {}));
+var ProcessOut;
+(function (ProcessOut) {
+    var Message = (function () {
+        function Message() {
+        }
+        Message.parseEvent = function (e) {
+            try {
+                var d = JSON.parse(e.data);
+                return d;
+            }
+            catch (e) {
+                return new Message();
+            }
+        };
+        Message.modalNamespace = "processout.modal";
+        Message.checkoutNamespace = "processout.checkout";
+        Message.fieldNamespace = "processout.field";
+        return Message;
+    }());
+    ProcessOut.Message = Message;
+})(ProcessOut || (ProcessOut = {}));
+var ProcessOut;
+(function (ProcessOut) {
+    var MockedIFrameWindow = (function () {
+        function MockedIFrameWindow(el, iframe) {
+            this.element = el;
+            this.iframe = iframe;
+            window.addEventListener("resize", function (event) {
+                this.element.style.width = window.outerWidth + "px";
+                var height = Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight);
+                this.element.style.height = height + "px";
+            }.bind(this));
+            if (typeof (Event) === "function") {
+                var event = new Event("resize");
+            }
+            else {
+                var event = document.createEvent("Event");
+                event.initEvent("resize", true, true);
+            }
+            window.dispatchEvent(event);
+        }
+        MockedIFrameWindow.prototype.open = function (url) {
+            this.iframe.setAttribute("src", url);
+            document.body.style.overflow = "hidden";
+            document.body.appendChild(this.element);
+        };
+        MockedIFrameWindow.prototype.close = function () {
+            document.body.style.overflow = "";
+            this.closed = true;
+            this.element.remove();
+        };
+        return MockedIFrameWindow;
+    }());
+    var ActionHandlerOptions = (function () {
+        function ActionHandlerOptions(gatewayName, gatewayLogo) {
+            this.gatewayLogo = gatewayLogo;
+            switch (gatewayName) {
+                case ActionHandlerOptions.ThreeDSFlow:
+                    this.useIFrame = true;
+                    this.useNewWindow = false;
+                    break;
+                case "paypal":
+                case "paypalexpresscheckout":
+                    this.useIFrame = false;
+                    this.useNewWindow = true;
+                    this.newWindowHeight = 645;
+                    this.newWindowWidth = 450;
+                    break;
+                case "test-credit-card":
+                case "test-alternative-payment":
+                    this.useIFrame = false;
+                    this.useNewWindow = true;
+                    this.newWindowHeight = 645;
+                    this.newWindowWidth = 450;
+                    break;
+                default:
+                    this.useIFrame = false;
+                    this.useNewWindow = false;
+            }
+        }
+        ActionHandlerOptions.ThreeDSFlow = "three-d-s-flow";
+        return ActionHandlerOptions;
+    }());
+    ProcessOut.ActionHandlerOptions = ActionHandlerOptions;
+    var ActionHandler = (function () {
+        function ActionHandler(instance, options) {
+            this.canceled = false;
+            this.instance = instance;
+            this.options = options;
+            if (!this.options)
+                this.options = new ActionHandlerOptions();
+            if (this.options.useIFrame) {
+                var iframeWrapper = document.createElement("div");
+                iframeWrapper.id = "processoutjs-action-modal";
+                iframeWrapper.style.position = "fixed";
+                iframeWrapper.style.top = "0";
+                iframeWrapper.style.left = "0";
+                iframeWrapper.style.height = "100%";
+                iframeWrapper.style.width = "100%";
+                iframeWrapper.setAttribute("style", "position: fixed; top: 0; left: 0; background: rgba(0, 0, 0, 0.5); z-index: 9999999; overflow: auto;");
+                var iframe = document.createElement("iframe");
+                iframe.setAttribute("style", "margin: 1em auto; width: 440px; height: 480px; max-width: 100%; max-height: 100%; display: block; box-shadow: 0 15px 35px rgba(50, 50, 93, 0.1), 0 5px 15px rgba(0, 0, 0, 0.07); background-color: #ECEFF1; background-image: url(\"" + this.instance.endpoint("js", "/images/loader.gif") + "\"); background-repeat: no-repeat; background-position: center;\")");
+                iframe.setAttribute("frameborder", "0");
+                var buttonWrapper = document.createElement("div");
+                buttonWrapper.setAttribute("style", "width: 100%; text-align: center; margin-bottom: 1em;");
+                var button = document.createElement("div");
+                button.setAttribute("style", "cursor: pointer; color: white;");
+                button.innerHTML = "Cancel";
+                buttonWrapper.appendChild(button);
+                iframeWrapper.appendChild(iframe);
+                iframeWrapper.appendChild(buttonWrapper);
+                this.iframeWrapper = new MockedIFrameWindow(iframeWrapper, iframe);
+                button.onclick = function () {
+                    this.iframeWrapper.close();
+                }.bind(this);
+            }
+        }
+        ActionHandler.prototype.handleRedirection = function (url, success, error) {
+            var topLayer;
+            var t = this;
+            var newWindow;
+            var refocus = function () {
+                if (topLayer)
+                    topLayer.remove();
+                window.focus();
+            };
+            if (!this.iframeWrapper) {
+                if (this.options.useNewWindow) {
+                    var h = this.options.newWindowHeight;
+                    var w = this.options.newWindowWidth;
+                    var y = window.top.outerHeight / 2 + window.top.screenY - (h / 2);
+                    var x = window.top.outerWidth / 2 + window.top.screenX - (w / 2);
+                    newWindow = window.open(url, '', "menubar=false,toolbar=false,width=" + w + ",height=" + h + ",top=" + y + ",left=" + x);
+                }
+                else {
+                    newWindow = window.open(url, '_blank');
+                }
+                if (!newWindow) {
+                    error(new ProcessOut.Exception("customer.popup-blocked"));
+                    refocus();
+                    return;
+                }
+                window.addEventListener("beforeunload", function (e) {
+                    newWindow.close();
+                }, false);
+                topLayer = document.createElement("div");
+                topLayer.id = "processoutjs-action-modal";
+                topLayer.setAttribute("style", "position: fixed; top: 0; left: 0; background: rgba(0, 0, 0, 0.7); z-index: 9999999; overflow: auto; height: 100%; width: 100%; cursor: pointer;");
+                topLayer.addEventListener("click", function () {
+                    newWindow.focus();
+                }, false);
+                var topLayerMessage = document.createElement("div");
+                topLayerMessage.setAttribute("style", "text-align: center; margin-top: 10%;");
+                var topLayerMessageImage = document.createElement("img");
+                topLayerMessageImage.setAttribute("style", "max-height: 30px; max-width: 250px; filter: brightness(0) invert(1);");
+                topLayerMessageImage.setAttribute("src", this.options.gatewayLogo);
+                topLayerMessage.appendChild(topLayerMessageImage);
+                topLayer.appendChild(topLayerMessage);
+                document.body.appendChild(topLayer);
+            }
+            else {
+                newWindow = this.iframeWrapper;
+                newWindow.open(url);
+            }
+            var timer = setInterval(function () {
+                if (!timer)
+                    return;
+                if (t.isCanceled()) {
+                    clearInterval(timer);
+                    timer = null;
+                    newWindow.close();
+                    error(new ProcessOut.Exception("customer.canceled"));
+                    refocus();
+                    return;
+                }
+                var cancelf = function () {
+                    clearInterval(timer);
+                    timer = null;
+                    error(new ProcessOut.Exception("customer.canceled"));
+                    refocus();
+                };
+                try {
+                    if (!newWindow || newWindow.closed) {
+                        cancelf();
+                    }
+                }
+                catch (err) {
+                    try {
+                        newWindow.close();
+                    }
+                    catch (err) { }
+                    cancelf();
+                }
+            });
+            ActionHandler.listenerCount++;
+            var cur = ActionHandler.listenerCount;
+            window.addEventListener("message", function (event) {
+                var data = ProcessOut.Message.parseEvent(event);
+                if (data.namespace != ProcessOut.Message.checkoutNamespace)
+                    return;
+                if (ActionHandler.listenerCount != cur) {
+                    if (timer) {
+                        clearInterval(timer);
+                        timer = null;
+                    }
+                    return;
+                }
+                switch (data.action) {
+                    case "success":
+                        if (timer) {
+                            clearInterval(timer);
+                            timer = null;
+                        }
+                        newWindow.close();
+                        success(data.data);
+                        refocus();
+                        break;
+                    case "canceled":
+                        if (timer) {
+                            clearInterval(timer);
+                            timer = null;
+                        }
+                        newWindow.close();
+                        error(new ProcessOut.Exception("customer.canceled"));
+                        refocus();
+                        break;
+                    case "none":
+                        if (timer) {
+                            clearInterval(timer);
+                            timer = null;
+                        }
+                        newWindow.close();
+                        error(new ProcessOut.Exception("processout-js.no-customer-action"));
+                        refocus();
+                        break;
+                    case "error":
+                        if (timer) {
+                            clearInterval(timer);
+                            timer = null;
+                        }
+                        newWindow.close();
+                        error(new ProcessOut.Exception(data.errorCode, data.errorMessage));
+                        refocus();
+                        break;
+                    default:
+                        if (timer) {
+                            clearInterval(timer);
+                            timer = null;
+                        }
+                        newWindow.close();
+                        error(new ProcessOut.Exception("default"));
+                        refocus();
+                        break;
+                }
+            });
+        };
+        ActionHandler.prototype.handle = function (url, success, error) {
+            this.handleRedirection(url, success, error);
+            return this;
+        };
+        ActionHandler.prototype.cancel = function () {
+            this.canceled = true;
+        };
+        ActionHandler.prototype.isCanceled = function () {
+            return this.canceled;
+        };
+        ActionHandler.listenerCount = 0;
+        return ActionHandler;
+    }());
+    ProcessOut.ActionHandler = ActionHandler;
+})(ProcessOut || (ProcessOut = {}));
+
+;ProcessOut.DEBUG = true;

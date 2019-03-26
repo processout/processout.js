@@ -49,6 +49,61 @@ module ProcessOut {
         }
     }
 
+    export class ActionHandlerOptions {
+        // defines if we want to use an iframe or not
+        public useIFrame: boolean;
+
+        // defines if we want to open in a new tab or window
+        public useNewWindow: boolean;
+
+        // newWindowHeight and Widths used when the action is done on a new
+        // window
+        public newWindowHeight?: number;
+        public newWindowWidth?: number;
+
+        // gatewayLogo is shown when the action is done on another tab or window
+        public gatewayLogo?: string;
+
+        public static ThreeDSFlow = "three-d-s-flow";
+
+        constructor(gatewayName?: string, gatewayLogo?: string) {
+            this.gatewayLogo = gatewayLogo;
+
+            switch (gatewayName) {
+            // The 3DS flow is a special one where we always want to load it
+            // in an iframe
+            case ActionHandlerOptions.ThreeDSFlow:
+                this.useIFrame    = true;
+                this.useNewWindow = false;
+                break;
+
+            // For PayPal we want to open a new window on top of
+            // the payment page to emulate the "in-context" flow
+            case "paypal":
+            case "paypalexpresscheckout":
+                this.useIFrame       = false;
+                this.useNewWindow    = true;
+                this.newWindowHeight = 645;
+                this.newWindowWidth  = 450;
+                break;
+
+            // For sandbox mode we also want to emulate it like that
+            case "test-credit-card":
+            case "test-alternative-payment":
+                this.useIFrame       = false;
+                this.useNewWindow    = true;
+                this.newWindowHeight = 645;
+                this.newWindowWidth  = 450;
+                break;
+
+            // By default we just want a new tab
+            default:
+                this.useIFrame    = false;
+                this.useNewWindow = false;
+            }
+        }
+    }
+
     /**
      * ActionHandler is the class handling the customer actions
      */
@@ -87,6 +142,12 @@ module ProcessOut {
         protected iframeWrapper: MockedIFrameWindow;
 
         /**
+         * Options contains the options for the action handler
+         * @type {ActionHandlerOptions}
+         */
+        protected options: ActionHandlerOptions;
+
+        /**
          * listenerCount is the number of listener that were set
          * @type {number}
          */
@@ -97,10 +158,13 @@ module ProcessOut {
          * @param {ProcessOut} instance
          * @param {string} resourceID
          */
-        constructor(instance: ProcessOut, resourceID: string, useIFrame?: boolean) {
-            this.instance   = instance;
-            this.resourceID = resourceID;
-            if (useIFrame) {
+        constructor(instance: ProcessOut, options?: ActionHandlerOptions) {
+            this.instance = instance;
+            this.options  = options;
+
+            if (!this.options) this.options = new ActionHandlerOptions();
+
+            if (this.options.useIFrame) {
                 var iframeWrapper = document.createElement("div");
                 iframeWrapper.id = "processoutjs-action-modal";
                 iframeWrapper.style.position = "fixed";
@@ -137,16 +201,60 @@ module ProcessOut {
             success: (data:  any)    => void,
             error:   (err:   Exception) => void): void {
 
+            var topLayer;
             var t         = this;
             var newWindow;
+            
+            var refocus = function() {
+                if (topLayer) topLayer.remove();
+                window.focus();
+            }
+
             if (!this.iframeWrapper) {
-                // Let's handle that in a new tab
-                newWindow = window.open(url, '_blank');
+                if (this.options.useNewWindow) {
+                    // In new window
+                    var h = this.options.newWindowHeight;
+                    var w = this.options.newWindowWidth;
+                    var y = window.top.outerHeight / 2 + window.top.screenY - ( h / 2);
+                    var x = window.top.outerWidth / 2 + window.top.screenX - ( w / 2);
+                    newWindow = window.open(url, '',
+                        `menubar=false,toolbar=false,width=${w},height=${h},top=${y},left=${x}`);
+                } else {
+                    // In new tab
+                    newWindow = window.open(url, '_blank');
+                }
+
                 if (!newWindow) {
                     error(new Exception("customer.popup-blocked"));
-                    window.focus();
+                    refocus()
                     return
                 }
+
+                // Add a handler to this window to close child windows/tabs
+                // when this tab closes.
+                window.addEventListener("beforeunload", function(e){
+                    newWindow.close();
+                 }, false);
+
+                // Add a layer on top of the website to prevent other actions
+                // from the user during checkout
+                topLayer = document.createElement("div");
+                topLayer.id = "processoutjs-action-modal";
+                topLayer.setAttribute("style", "position: fixed; top: 0; left: 0; background: rgba(0, 0, 0, 0.7); z-index: 9999999; overflow: auto; height: 100%; width: 100%; cursor: pointer;");
+                topLayer.addEventListener("click", function() {
+                    newWindow.focus();
+                }, false);
+
+                // Also add a friendly little message
+                var topLayerMessage = document.createElement("div");
+                topLayerMessage.setAttribute("style", "text-align: center; margin-top: 10%;")
+                var topLayerMessageImage = document.createElement("img");
+                topLayerMessageImage.setAttribute("style", "max-height: 30px; max-width: 250px; filter: brightness(0) invert(1);")
+                topLayerMessageImage.setAttribute("src", this.options.gatewayLogo);
+                topLayerMessage.appendChild(topLayerMessageImage);
+                topLayer.appendChild(topLayerMessage);
+
+                document.body.appendChild(topLayer);
             } else {
                 // Let's handle that in an IFrame
                 newWindow = this.iframeWrapper;
@@ -161,7 +269,7 @@ module ProcessOut {
                     clearInterval(timer); timer = null;
                     newWindow.close();
                     error(new Exception("customer.canceled"));
-                    window.focus();
+                    refocus();
                     return;
                 }
 
@@ -169,7 +277,7 @@ module ProcessOut {
                     // The payment window was closed
                     clearInterval(timer); timer = null;
                     error(new Exception("customer.canceled"));
-                    window.focus();
+                    refocus();
                 }
                 try {
                     // We want to run the newWindow.closed condition in a try
@@ -178,7 +286,6 @@ module ProcessOut {
                     // on the back button)
                     if (!newWindow || newWindow.closed) {
                         cancelf();
-                        return;
                     }
                 } catch (err) {
                     // Close the newWindow, just in case it didn't crash for
@@ -212,7 +319,7 @@ module ProcessOut {
 
                     // The checkout page sent us the token we want
                     success(data.data);
-                    window.focus();
+                    refocus();
                     break;
 
                 case "canceled":
@@ -220,7 +327,7 @@ module ProcessOut {
                     newWindow.close();
 
                     error(new Exception("customer.canceled"));
-                    window.focus();
+                    refocus();
                     break;
 
                 case "none":
@@ -229,7 +336,7 @@ module ProcessOut {
                     newWindow.close();
 
                     error(new Exception("processout-js.no-customer-action"));
-                    window.focus();
+                    refocus();
                     break;
 
                 case "error":
@@ -237,7 +344,7 @@ module ProcessOut {
                     newWindow.close();
 
                     error(new Exception(data.errorCode, data.errorMessage));
-                    window.focus();
+                    refocus();
                     break;
 
                 default:
@@ -247,7 +354,7 @@ module ProcessOut {
                     newWindow.close();
 
                     error(new Exception("default"));
-                    window.focus();
+                    refocus();
                     break
                 }
             });

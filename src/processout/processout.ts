@@ -576,7 +576,7 @@ module ProcessOut {
                     // We want to inject some helpers in our gateway confs
                     var confs = [];
                     for (var conf of data.gateway_configurations) {
-                        conf.hookForInvoice = this.buildConfHookForInvoice(config.invoiceID, conf.id);
+                        conf.hookForInvoice = this.buildConfHookForInvoice(config.invoiceID, conf);
                         confs.push(conf);
                     }
                     success(confs);
@@ -586,27 +586,34 @@ module ProcessOut {
         }
 
         protected buildConfHookForInvoice(
-            invoiceID:     string, 
-            gatewayConfID: string
+            invoiceID:   string, 
+            gatewayConf: any
         ): (
             el:      HTMLElement, 
             success: (token: string)    => void, 
             error:   (err:   Exception) => void
-        ) => void{
+        ) => void {
 
             return function(
                 el:         HTMLElement,
                 tokenized:  (token: string) => void,
                 tokenError: (err: Exception) => void) {
 
-                var url = this.endpoint("checkout", `/${this.getProjectID()}/${invoiceID}/redirect/${gatewayConfID}`);
+                var url = this.endpoint("checkout", `/${this.getProjectID()}/${invoiceID}/redirect/${gatewayConf.id}`);
 
                 el.addEventListener("click", function(e) {
                     // Prevent from doing the default redirection
                     e.preventDefault();
 
-                    var action = this.handleAction(
-                        url, tokenized, tokenError);
+                    var gatewayName = null;
+                    var gatewayLogo = null;
+                    if (gatewayConf.gateway) {
+                        gatewayName = gatewayConf.gateway.name;
+                        gatewayLogo = gatewayConf.gateway.logo_url;
+                    }
+                    var options = new ActionHandlerOptions(gatewayName, gatewayLogo);
+
+                    var action = this.handleAction(url, tokenized, tokenError, options);
 
                     return false;
                 }.bind(this));
@@ -616,17 +623,19 @@ module ProcessOut {
         /**
          * HandleAction handles the action needed to be performed by the
          * customer for the given gateway configuration
+         * @param  {string}   url
          * @param  {callback} success
          * @param  {callback} error
+         * @param  {ActionHandlerOptions?} options
          * @return {ActionHandler}
          */
         public handleAction(
             url:     string,
             success: (data:  any)       => void,
             error:   (err:   Exception) => void,
-            useIFrame?: boolean): ActionHandler {
-            
-            var handler = new ActionHandler(this, this.getResourceID(), useIFrame);
+            options?: ActionHandlerOptions): ActionHandler {
+
+            var handler = new ActionHandler(this, options);
             return handler.handle(url, success, error);
         }
     }
