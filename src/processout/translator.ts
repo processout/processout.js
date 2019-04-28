@@ -39,6 +39,7 @@ module ProcessOut {
             "gateway.declined":        "The payment was declined.",
             "payment.declined":        "The payment was declined.",
             "payment.pending":         "The payment is currently pending, please wait a few minutes for it to fully go through.",
+            "three-d-s-2.fingerprint-timed-out": "The 3D-Secure fingerprinting timed out.",
 
             "request.validation.error":              "The provided information is invalid or missing.",
             "request.validation.invalid-country":    "The provided country is invalid.",

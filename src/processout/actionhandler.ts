@@ -49,12 +49,15 @@ module ProcessOut {
         }
     }
 
-    export class ActionHandlerOptions {
-        // defines if we want to use an iframe or not
-        public useIFrame: boolean;
+    export enum ActionFlow {
+        NewTab,
+        NewWindow,
+        IFrame,
+        Fingerprint,
+    }
 
-        // defines if we want to open in a new tab or window
-        public useNewWindow: boolean;
+    export class ActionHandlerOptions {
+        public flow: ActionFlow;
 
         // newWindowHeight and Widths used when the action is done on a new
         // window
@@ -64,25 +67,30 @@ module ProcessOut {
         // gatewayLogo is shown when the action is done on another tab or window
         public gatewayLogo?: string;
 
-        public static ThreeDSFlow = "three-d-s-flow";
+        public static ThreeDSChallengeFlow = "three-d-s-challenge-flow";
+        public static ThreeDSFingerprintFlow = "three-d-s-fingerprint-flow";
 
-        constructor(gatewayName?: string, gatewayLogo?: string) {
+        constructor(actionType?: string, gatewayLogo?: string) {
             this.gatewayLogo = gatewayLogo;
 
-            switch (gatewayName) {
+            switch (actionType) {
             // The 3DS flow is a special one where we always want to load it
             // in an iframe
-            case ActionHandlerOptions.ThreeDSFlow:
-                this.useIFrame    = true;
-                this.useNewWindow = false;
+            case ActionHandlerOptions.ThreeDSChallengeFlow:
+                this.flow = ActionFlow.IFrame;
+                break;
+
+            // The 3DS Fingerprint flow is another special one where we
+            // only want to load the iframe in the back, hidden to the user
+            case ActionHandlerOptions.ThreeDSFingerprintFlow:
+                this.flow = ActionFlow.Fingerprint;
                 break;
 
             // For PayPal we want to open a new window on top of
             // the payment page to emulate the "in-context" flow
             case "paypal":
             case "paypalexpresscheckout":
-                this.useIFrame       = false;
-                this.useNewWindow    = true;
+                this.flow = ActionFlow.NewWindow;
                 this.newWindowHeight = 645;
                 this.newWindowWidth  = 450;
                 break;
@@ -90,16 +98,14 @@ module ProcessOut {
             // For sandbox mode we also want to emulate it like that
             case "test-credit-card":
             case "test-alternative-payment":
-                this.useIFrame       = false;
-                this.useNewWindow    = true;
+                this.flow = ActionFlow.NewWindow;
                 this.newWindowHeight = 645;
                 this.newWindowWidth  = 450;
                 break;
 
             // By default we just want a new tab
             default:
-                this.useIFrame    = false;
-                this.useNewWindow = false;
+                this.flow = ActionFlow.NewTab;
             }
         }
     }
@@ -164,7 +170,8 @@ module ProcessOut {
 
             if (!this.options) this.options = new ActionHandlerOptions();
 
-            if (this.options.useIFrame) {
+            // We need to create the wrapper beforehand
+            if (this.options.flow == ActionFlow.IFrame) {
                 var iframeWrapper = document.createElement("div");
                 iframeWrapper.id = "processoutjs-action-modal";
                 iframeWrapper.style.position = "fixed";
@@ -174,7 +181,7 @@ module ProcessOut {
                 iframeWrapper.style.width = "100%";
                 iframeWrapper.setAttribute("style", "position: fixed; top: 0; left: 0; background: rgba(0, 0, 0, 0.5); z-index: 9999999; overflow: auto;");
 
-                // Create the IFrame to be used later
+                // Create the iFrame to be used later
                 var iframe = document.createElement("iframe");
                 iframe.setAttribute("style", `margin: 1em auto; width: 440px; height: 480px; max-width: 100%; max-height: 100%; display: block; box-shadow: 0 15px 35px rgba(50, 50, 93, 0.1), 0 5px 15px rgba(0, 0, 0, 0.07); background-color: #ECEFF1; background-image: url("${this.instance.endpoint("js", "/images/loader.gif")}"); background-repeat: no-repeat; background-position: center;")`);
                 iframe.setAttribute("frameborder", "0");
@@ -196,69 +203,50 @@ module ProcessOut {
             }
         }
 
-        protected handleRedirection(
+        /**
+         * Handle will execute the customer action
+         * @param  {callback} success
+         * @param  {callback} error
+         * @return {ActionHandler}
+         */
+        public handle(
             url:     string,
             success: (data:  any)    => void,
-            error:   (err:   Exception) => void): void {
+            error:   (err:   Exception) => void): ActionHandler {
 
-            var topLayer;
             var t         = this;
+            var timeout;
+            var topLayer;
             var newWindow;
-            
+
             var refocus = function() {
                 if (topLayer) topLayer.remove();
                 window.focus();
             }
 
-            if (!this.iframeWrapper) {
-                if (this.options.useNewWindow) {
-                    // In new window
-                    var h = this.options.newWindowHeight;
-                    var w = this.options.newWindowWidth;
-                    var y = window.top.outerHeight / 2 + window.top.screenY - ( h / 2);
-                    var x = window.top.outerWidth / 2 + window.top.screenX - ( w / 2);
-                    newWindow = window.open(url, '',
-                        `menubar=false,toolbar=false,width=${w},height=${h},top=${y},left=${x}`);
-                } else {
-                    // In new tab
-                    newWindow = window.open(url, '_blank');
-                }
+            switch (this.options.flow) {
+            case ActionFlow.NewWindow:
+                ({topLayer, newWindow} = this.createNewWindowOrTab(url, true, refocus, error));
+                break;
 
-                if (!newWindow) {
-                    error(new Exception("customer.popup-blocked"));
-                    refocus()
-                    return
-                }
-
-                // Add a handler to this window to close child windows/tabs
-                // when this tab closes.
-                window.addEventListener("beforeunload", function(e){
-                    newWindow.close();
-                 }, false);
-
-                // Add a layer on top of the website to prevent other actions
-                // from the user during checkout
-                topLayer = document.createElement("div");
-                topLayer.id = "processoutjs-action-modal";
-                topLayer.setAttribute("style", "position: fixed; top: 0; left: 0; background: rgba(0, 0, 0, 0.7); z-index: 9999999; overflow: auto; height: 100%; width: 100%; cursor: pointer;");
-                topLayer.addEventListener("click", function() {
-                    newWindow.focus();
-                }, false);
-
-                // Also add a friendly little message
-                var topLayerMessage = document.createElement("div");
-                topLayerMessage.setAttribute("style", "text-align: center; margin-top: 10%;")
-                var topLayerMessageImage = document.createElement("img");
-                topLayerMessageImage.setAttribute("style", "max-height: 30px; max-width: 250px; filter: brightness(0) invert(1);")
-                topLayerMessageImage.setAttribute("src", this.options.gatewayLogo);
-                topLayerMessage.appendChild(topLayerMessageImage);
-                topLayer.appendChild(topLayerMessage);
-
-                document.body.appendChild(topLayer);
-            } else {
-                // Let's handle that in an IFrame
+            case ActionFlow.IFrame:
                 newWindow = this.iframeWrapper;
                 newWindow.open(url);
+                break;
+
+            case ActionFlow.Fingerprint:
+                newWindow = this.createFingerprintIFrame();
+                newWindow.open(url);
+                // The fingerprint should always finish up after max 10s, so
+                // we'll auto timeout after that time
+                timeout = setTimeout(function() {
+                    error(new Exception("three-d-s-2.fingerprint-timed-out"));
+                }, 10000);
+                break;
+
+            default:
+                // Default to new tab
+                ({topLayer, newWindow} = this.createNewWindowOrTab(url, false, refocus, error));
             }
 
             // We now want to monitor the payment page
@@ -294,6 +282,95 @@ module ProcessOut {
                     cancelf();
                 }
             });
+
+            this.listenEvents(newWindow, timer, refocus, 
+                function(data: any): void {
+                    if (timeout) clearTimeout(timeout);
+                    success(data);
+                }, function(err: Exception): void {
+                    if (timeout) clearTimeout(timeout);
+                    error(err);
+                });
+            return this;
+        }
+
+        protected createNewWindowOrTab(url: string, inNewWindow: boolean, 
+            refocus: () => void,
+            error:   (err: Exception) => void): any {
+
+            var ret = {
+                topLayer: null,
+                newWindow: null
+            };
+            if (inNewWindow) {
+                // In new window
+                var h = this.options.newWindowHeight;
+                var w = this.options.newWindowWidth;
+                var y = window.top.outerHeight / 2 + window.top.screenY - ( h / 2);
+                var x = window.top.outerWidth / 2 + window.top.screenX - ( w / 2);
+                ret.newWindow = window.open(url, '',
+                    `menubar=false,toolbar=false,width=${w},height=${h},top=${y},left=${x}`);
+            } else {
+                // Default to new tab
+                ret.newWindow = window.open(url, '_blank');
+            }
+
+            if (!ret.newWindow) {
+                error(new Exception("customer.popup-blocked"));
+                refocus();
+                return
+            }
+
+            // Add a handler to this window to close child windows/tabs
+            // when this tab closes.
+            window.addEventListener("beforeunload", function(e) {
+                ret.newWindow.close();
+            }, false);
+
+            // Add a layer on top of the website to prevent other actions
+            // from the user during checkout
+            ret.topLayer = document.createElement("div");
+            ret.topLayer.id = "processoutjs-action-modal";
+            ret.topLayer.setAttribute("style", "position: fixed; top: 0; left: 0; background: rgba(0, 0, 0, 0.7); z-index: 9999999; overflow: auto; height: 100%; width: 100%; cursor: pointer;");
+            ret.topLayer.addEventListener("click", function() {
+                ret.newWindow.focus();
+            }, false);
+
+            // Also add a friendly little message
+            var topLayerMessage = document.createElement("div");
+            topLayerMessage.setAttribute("style", "text-align: center; margin-top: 10%;");
+            if (this.options.gatewayLogo) {
+                var topLayerMessageImage = document.createElement("img");
+                topLayerMessageImage.setAttribute("style", "max-height: 30px; max-width: 250px; filter: brightness(0) invert(1);")
+                topLayerMessageImage.setAttribute("src", this.options.gatewayLogo);
+                topLayerMessage.appendChild(topLayerMessageImage);
+            }
+            ret.topLayer.appendChild(topLayerMessage);
+
+            document.body.appendChild(ret.topLayer);
+            return ret;
+        }
+
+        protected createFingerprintIFrame(): MockedIFrameWindow {
+            var iframeWrapper = document.createElement("div");
+            iframeWrapper.id = "processoutjs-fingerprint-wrapper";
+            iframeWrapper.style.height = "0";
+            iframeWrapper.style.width = "0";
+
+            // Create the iFrame to be used later
+            var iframe = document.createElement("iframe");
+            iframe.style.display = "none";
+            iframe.setAttribute("frameborder", "0");
+
+            iframeWrapper.appendChild(iframe);
+            var wrapper = new MockedIFrameWindow(iframeWrapper, iframe);
+            return wrapper;
+        }
+
+        protected listenEvents(newWindow: Window, timer: number,
+            refocus: ()                => void,
+            success: (data: any)       => void,
+            error:   (err:  Exception) => void): void {
 
             ActionHandler.listenerCount++;
             var cur = ActionHandler.listenerCount;
@@ -358,22 +435,6 @@ module ProcessOut {
                     break
                 }
             });
-        }
-
-        /**
-         * Handle will handle the customer action for the current resource 
-         * and gateway configuration, passed in the constructor
-         * @param  {callback} success
-         * @param  {callback} error
-         * @return {ActionHandler}
-         */
-        public handle(
-            url:     string,
-            success: (data:  any)    => void, 
-            error:   (err:   Exception) => void): ActionHandler {
-
-           this.handleRedirection(url, success, error);
-           return this;
         }
 
         /**
