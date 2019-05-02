@@ -77,7 +77,7 @@ module ProcessOut {
          * @return {ActionHandler}
          */
         public handle(success: (invoiceID: string)    => void,
-                        error:   (err:       Exception) => void): ActionHandler {
+                        error: (err:       Exception) => void): ActionHandler {
 
             return this.instance.handleAction(this.instance.endpoint("checkout", this.url),
                 function(invoiceID) { success(invoiceID); }, error, 
