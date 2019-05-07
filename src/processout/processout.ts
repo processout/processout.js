@@ -115,7 +115,7 @@ module ProcessOut {
             } else if (/^https?:\/\/.*\.processout\.dev\//.test(jsHost)) {
                 this.host = "processout.dev";
             } else {
-                this.host = "processout.ninja";//TODO: change back to .com
+                this.host = "processout.com";
             }
 
             if (!projectID)
@@ -576,7 +576,8 @@ module ProcessOut {
                 throw new Exception("processout-js.missing-invoice-id");
 
             this.apiRequest("GET", "gateway-configurations", {
-                "filter": config.filter
+                "filter":                   config.filter,
+                "expand_merchant_accounts": "true"
             },
                 function(data: any): void {
                     if (!data.success) {
@@ -672,8 +673,17 @@ module ProcessOut {
             return handler.handle(url, success, error);
         }
 
+        /**
+         * MakeCardPayment makes a full card payment, handling any required
+         * customer action such as authentication for SCA (like 3DS 1 or 2)
+         * @param {string} invoiceID
+         * @param {string} cardID 
+         * @param {any} options 
+         * @param {callback} success 
+         * @param {callback} error
+         */
         public makeCardPayment(invoiceID: string, cardID: string,
-            options: any, //TODO: type this
+            options: any,
             success:  (data: any)       => void, 
             error:    (err:  Exception) => void): void {
 
