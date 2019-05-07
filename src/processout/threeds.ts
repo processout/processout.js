@@ -35,7 +35,7 @@ module ProcessOut {
             this.instance  = instance;
 
             if (!options.source) {
-                throw new Exception("request.validation.error", "Please provide a source to be used to start the 3D-Secure flow.");
+                throw new Exception("request.validation.error", "Please provide a source to be used to start the 3-D Secure flow.");
             }
 
             var url = options.url;
