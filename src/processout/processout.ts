@@ -589,6 +589,7 @@ module ProcessOut {
                     var confs = [];
                     for (var conf of data.gateway_configurations) {
                         conf.hookForInvoice = this.buildConfHookForInvoice(config.invoiceID, conf);
+                        conf.handleInvoiceAction = this.buildHandleInvoiceAction(config.invoiceID, conf);
                         confs.push(conf);
                     }
                     success(confs);
@@ -610,8 +611,8 @@ module ProcessOut {
             invoiceID:   string, 
             gatewayConf: any,
             tokenized:   (token: string)    => void,
-            tokenError:  (err:   Exception) => void): ActionHandler {
-
+            tokenError:  (err:   Exception) => void
+        ): ActionHandler {
             var gatewayConfID = gatewayConf;
             var gatewayName = null;
             var gatewayLogo = null;
@@ -626,6 +627,23 @@ module ProcessOut {
             var options = new ActionHandlerOptions(gatewayName, gatewayLogo);
             var url = this.endpoint("checkout", `/${this.getProjectID()}/${invoiceID}/redirect/${gatewayConfID}`);
             return this.handleAction(url, tokenized, tokenError, options);
+        }
+
+        protected buildHandleInvoiceAction(
+            invoiceID:   string, 
+            gatewayConf: any
+        ): (
+            tokenized:   (token: string)    => void,
+            tokenError:  (err:   Exception) => void
+        ) => ActionHandler {
+
+            return function(
+                tokenized:   (token: string)    => void,
+                tokenError:  (err:   Exception) => void
+            ): ActionHandler {
+
+                return this.handleInvoiceAction(invoiceID, gatewayConf, tokenized, tokenError);
+            }.bind(this);
         }
 
         protected buildConfHookForInvoice(
@@ -648,7 +666,7 @@ module ProcessOut {
                     // Prevent from doing the default redirection
                     e.preventDefault();
 
-                    this.handleInvoiceAction(invoiceID, gatewayConf, tokenized, tokenError);
+                    gatewayConf.handleInvoiceAction(tokenized, tokenError);
                     return false;
                 }.bind(this));
             }.bind(this);
