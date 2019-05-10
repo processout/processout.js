@@ -373,6 +373,8 @@ module ProcessOut {
             if (screen.width)
                 data.app_screen_width = screen.width;
             data.time_zone_offset = Number(new Date().getTimezoneOffset());
+            if (window.navigator)
+                data.app_java_enabled = window.navigator.javaEnabled();
 
             // and send it
             this.apiRequest("post", "cards", data, function(data: any,
