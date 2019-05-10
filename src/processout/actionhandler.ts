@@ -81,7 +81,7 @@ module ProcessOut {
                 break;
 
             // The 3DS Fingerprint flow is another special one where we
-            // only want to load the iframe in the back, hidden to the user
+            // only want to load the iframe in the back, hidden from the user
             case ActionHandlerOptions.ThreeDSFingerprintFlow:
                 this.flow = ActionFlow.Fingerprint;
                 break;
