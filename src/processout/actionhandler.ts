@@ -81,7 +81,7 @@ module ProcessOut {
                 break;
 
             // The 3DS Fingerprint flow is another special one where we
-            // only want to load the iframe in the back, hidden to the user
+            // only want to load the iframe in the back, hidden from the user
             case ActionHandlerOptions.ThreeDSFingerprintFlow:
                 this.flow = ActionFlow.FingerprintIframe;
                 break;
@@ -181,7 +181,7 @@ module ProcessOut {
                 iframeWrapper.style.width = "100%";
                 iframeWrapper.setAttribute("style", "position: fixed; top: 0; left: 0; background: rgba(0, 0, 0, 0.5); z-index: 9999999; overflow: auto;");
 
-                // Create the iFrame to be used later
+                // Create the iframe to be used later
                 var iframe = document.createElement("iframe");
                 iframe.setAttribute("style", `margin: 1em auto; width: 440px; height: 480px; max-width: 100%; max-height: 100%; display: block; box-shadow: 0 15px 35px rgba(50, 50, 93, 0.1), 0 5px 15px rgba(0, 0, 0, 0.07); background-color: #ECEFF1; background-image: url("${this.instance.endpoint("js", "/images/loader.gif")}"); background-repeat: no-repeat; background-position: center;")`);
                 iframe.setAttribute("frameborder", "0");
