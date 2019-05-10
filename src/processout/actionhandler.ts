@@ -53,7 +53,7 @@ module ProcessOut {
         NewTab,
         NewWindow,
         IFrame,
-        Fingerprint,
+        FingerprintIframe,
     }
 
     export class ActionHandlerOptions {
@@ -83,7 +83,7 @@ module ProcessOut {
             // The 3DS Fingerprint flow is another special one where we
             // only want to load the iframe in the back, hidden to the user
             case ActionHandlerOptions.ThreeDSFingerprintFlow:
-                this.flow = ActionFlow.Fingerprint;
+                this.flow = ActionFlow.FingerprintIframe;
                 break;
 
             // For PayPal we want to open a new window on top of
@@ -226,7 +226,7 @@ module ProcessOut {
 
             switch (this.options.flow) {
             case ActionFlow.NewWindow:
-                ({topLayer, newWindow} = this.createNewWindowOrTab(url, true, refocus, error));
+                ({topLayer, newWindow} = this.createNewWindow(url));
                 break;
 
             case ActionFlow.IFrame:
@@ -234,7 +234,7 @@ module ProcessOut {
                 newWindow.open(url);
                 break;
 
-            case ActionFlow.Fingerprint:
+            case ActionFlow.FingerprintIframe:
                 newWindow = this.createFingerprintIFrame();
                 newWindow.open(url);
                 // The fingerprint should always finish up after max 10s, so
@@ -246,7 +246,13 @@ module ProcessOut {
 
             default:
                 // Default to new tab
-                ({topLayer, newWindow} = this.createNewWindowOrTab(url, false, refocus, error));
+                ({topLayer, newWindow} = this.createNewTab(url));
+            }
+
+            if (!newWindow) {
+                error(new Exception("customer.popup-blocked"));
+                refocus();
+                return null;
             }
 
             // We now want to monitor the payment page
@@ -294,32 +300,28 @@ module ProcessOut {
             return this;
         }
 
-        protected createNewWindowOrTab(url: string, inNewWindow: boolean, 
-            refocus: () => void,
-            error:   (err: Exception) => void): any {
+        protected createNewWindow(url: string): any {
+            return this.setupWindowObject(window.open(url, '_blank'));
+        }
+
+        protected createNewTab(url: string): any {
+            var h = this.options.newWindowHeight;
+            var w = this.options.newWindowWidth;
+            var y = window.top.outerHeight / 2 + window.top.screenY - (h / 2);
+            var x = window.top.outerWidth / 2 + window.top.screenX - (w / 2);
+            return this.setupWindowObject(window.open(url, '',
+                `menubar=false,toolbar=false,width=${w},height=${h},top=${y},left=${x}`));
+        }
+
+        protected setupWindowObject(newWindow: any): any {
+            if (!newWindow) {
+                return {};
+            }
 
             var ret = {
-                topLayer: null,
-                newWindow: null
+                topLayer:  null,
+                newWindow: newWindow
             };
-            if (inNewWindow) {
-                // In new window
-                var h = this.options.newWindowHeight;
-                var w = this.options.newWindowWidth;
-                var y = window.top.outerHeight / 2 + window.top.screenY - ( h / 2);
-                var x = window.top.outerWidth / 2 + window.top.screenX - ( w / 2);
-                ret.newWindow = window.open(url, '',
-                    `menubar=false,toolbar=false,width=${w},height=${h},top=${y},left=${x}`);
-            } else {
-                // Default to new tab
-                ret.newWindow = window.open(url, '_blank');
-            }
-
-            if (!ret.newWindow) {
-                error(new Exception("customer.popup-blocked"));
-                refocus();
-                return
-            }
 
             // Add a handler to this window to close child windows/tabs
             // when this tab closes.
