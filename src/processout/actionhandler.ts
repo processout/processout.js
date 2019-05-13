@@ -300,11 +300,11 @@ module ProcessOut {
             return this;
         }
 
-        protected createNewWindow(url: string): any {
+        protected createNewTab(url: string): any {
             return this.setupWindowObject(window.open(url, '_blank'));
         }
 
-        protected createNewTab(url: string): any {
+        protected createNewWindow(url: string): any {
             var h = this.options.newWindowHeight;
             var w = this.options.newWindowWidth;
             var y = window.top.outerHeight / 2 + window.top.screenY - (h / 2);
