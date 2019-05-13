@@ -363,6 +363,19 @@ module ProcessOut {
             data.exp_year  = card.getExpiry().getYear().toString();
             data.cvc2      = card.getCVC();
 
+            if (screen.colorDepth)
+                data.app_color_depth = Number(screen.colorDepth);
+            var language = navigator.language || (<any>navigator).userLanguage;
+            if (language)
+                data.app_language = language;
+            if (screen.height)
+                data.app_screen_height = screen.height;
+            if (screen.width)
+                data.app_screen_width = screen.width;
+            data.time_zone_offset = Number(new Date().getTimezoneOffset());
+            if (window.navigator)
+                data.app_java_enabled = window.navigator.javaEnabled();
+
             // and send it
             this.apiRequest("post", "cards", data, function(data: any,
                 req: XMLHttpRequest, e: Event): void {
@@ -565,7 +578,8 @@ module ProcessOut {
                 throw new Exception("processout-js.missing-invoice-id");
 
             this.apiRequest("GET", "gateway-configurations", {
-                "filter": config.filter
+                "filter":                   config.filter,
+                "expand_merchant_accounts": "true"
             },
                 function(data: any): void {
                     if (!data.success) {
@@ -577,12 +591,61 @@ module ProcessOut {
                     var confs = [];
                     for (var conf of data.gateway_configurations) {
                         conf.hookForInvoice = this.buildConfHookForInvoice(config.invoiceID, conf);
+                        conf.handleInvoiceAction = this.buildHandleInvoiceAction(config.invoiceID, conf);
                         confs.push(conf);
                     }
                     success(confs);
                 }.bind(this), function(req: XMLHttpRequest, e: Event): void {
                     error(new Exception("processout-js.network-issue"));
                 });
+        }
+
+        /**
+         * HandleInvoiceAction handles the invoice action for the given invoice
+         * ID and gateway configuration. This creates a new tab, iFrame or
+         * window depending on the gateway used
+         * @param {string} invoiceID
+         * @param {any|string} gatewayConf
+         * @param {callback} tokenized 
+         * @param {callback} tokenError 
+         */
+        public handleInvoiceAction(
+            invoiceID:   string, 
+            gatewayConf: any,
+            tokenized:   (token: string)    => void,
+            tokenError:  (err:   Exception) => void
+        ): ActionHandler {
+            var gatewayConfID = gatewayConf;
+            var gatewayName = null;
+            var gatewayLogo = null;
+            if (gatewayConf && gatewayConf.id) {
+                gatewayConfID = gatewayConf.id;
+                if (gatewayConf.gateway) {
+                    gatewayName = gatewayConf.gateway.name;
+                    gatewayLogo = gatewayConf.gateway.logo_url;
+                }
+            }
+
+            var options = new ActionHandlerOptions(gatewayName, gatewayLogo);
+            var url = this.endpoint("checkout", `/${this.getProjectID()}/${invoiceID}/redirect/${gatewayConfID}`);
+            return this.handleAction(url, tokenized, tokenError, options);
+        }
+
+        protected buildHandleInvoiceAction(
+            invoiceID:   string, 
+            gatewayConf: any
+        ): (
+            tokenized:   (token: string)    => void,
+            tokenError:  (err:   Exception) => void
+        ) => ActionHandler {
+
+            return function(
+                tokenized:   (token: string)    => void,
+                tokenError:  (err:   Exception) => void
+            ): ActionHandler {
+
+                return this.handleInvoiceAction(invoiceID, gatewayConf, tokenized, tokenError);
+            }.bind(this);
         }
 
         protected buildConfHookForInvoice(
@@ -605,16 +668,7 @@ module ProcessOut {
                     // Prevent from doing the default redirection
                     e.preventDefault();
 
-                    var gatewayName = null;
-                    var gatewayLogo = null;
-                    if (gatewayConf.gateway) {
-                        gatewayName = gatewayConf.gateway.name;
-                        gatewayLogo = gatewayConf.gateway.logo_url;
-                    }
-                    var options = new ActionHandlerOptions(gatewayName, gatewayLogo);
-
-                    var action = this.handleAction(url, tokenized, tokenError, options);
-
+                    gatewayConf.handleInvoiceAction(tokenized, tokenError);
                     return false;
                 }.bind(this));
             }.bind(this);
@@ -637,6 +691,78 @@ module ProcessOut {
 
             var handler = new ActionHandler(this, options);
             return handler.handle(url, success, error);
+        }
+
+        /**
+         * MakeCardPayment makes a full card payment, handling any required
+         * customer action such as authentication for SCA (like 3DS 1 or 2)
+         * @param {string} invoiceID
+         * @param {string} cardID 
+         * @param {any} options 
+         * @param {callback} success 
+         * @param {callback} error
+         */
+        public makeCardPayment(invoiceID: string, cardID: string,
+            options: any,
+            success:  (data: any)       => void, 
+            error:    (err:  Exception) => void): void {
+
+            if (!options) options = {};
+
+            var source = cardID;
+            if (options.gatewayRequestSource)
+                source = options.gatewayRequestSource;
+
+            this.apiRequest("POST", `invoices/${invoiceID}/capture`, {
+                "authorize_only": options.authorize_only,
+                "capture_amount": options.capture_amount,
+                "source":         source,
+
+                "enable_three_d_s_2": true
+            }, function(data: any): void {
+                if (!data.success) {
+                    error(new Exception(data.error_type, data.message));
+                    return;
+                }
+
+                if (!data.customer_action) {
+                    success(invoiceID);
+                    return;
+                }
+
+                var nextStep = function(data: any): void {
+                    options.gatewayRequestSource = data;
+                    this.makeCardPayment(invoiceID, cardID, options, success, error);
+                }.bind(this);
+
+                switch (data.customer_action.type) {
+                case "url":
+                    // This is for 3DS1
+                    this.handleAction(data.customer_action.value, function(data: any): void {
+                        options.gatewayRequestSource = null;
+                        this.makeCardPayment(invoiceID, cardID, options, success, error);
+                    }, error, new ActionHandlerOptions(ActionHandlerOptions.ThreeDSChallengeFlow));
+                    break;
+
+                case "fingerprint":
+                    this.handleAction(data.customer_action.value, nextStep, error,
+                        new ActionHandlerOptions(ActionHandlerOptions.ThreeDSFingerprintFlow));
+                    break;
+
+                case "redirect":
+                    // This is for 3DS2
+                    this.handleAction(data.customer_action.value, nextStep, error, 
+                        new ActionHandlerOptions(ActionHandlerOptions.ThreeDSChallengeFlow));
+                    break;
+
+                default:
+                    error(new Exception("processout-js.wrong-type-for-action", 
+                        `The customer action type ${data.customer_action.type} is not supported.`));
+                    break;
+                }
+            }.bind(this), function(req: XMLHttpRequest, e: Event): void {
+                error(new Exception("processout-js.network-issue"));
+            });
         }
     }
 }

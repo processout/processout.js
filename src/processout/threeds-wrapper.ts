@@ -8,6 +8,12 @@ module ProcessOut {
 
     export class ThreeDSOptions {
         /**
+         * URL is the URL to which the ThreeDS authentication should be done
+         * @type {string}
+         */
+        public url?: string;
+
+        /**
          * invoiceID contains the ID of the invoice to be authenticated using
          * the 3-D Secure protocole
          * @type {string}

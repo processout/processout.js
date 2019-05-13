@@ -35,11 +35,11 @@ module ProcessOut {
             this.instance  = instance;
 
             if (!options.source) {
-                throw new Exception("request.validation.error", "Please provide a source to be used to start the 3D-Secure flow.");
+                throw new Exception("request.validation.error", "Please provide a source to be used to start the 3-D Secure flow.");
             }
 
-            var url = null;
-            if (options.invoiceID) {
+            var url = options.url;
+            if (!url && options.invoiceID) {
                 url = `/${this.instance.getProjectID()}/${options.invoiceID}/three-d-s/redirect/${options.source}?${processoutjsQuery}=${processoutjsQueryTrue}`;
             }
 
@@ -63,7 +63,7 @@ module ProcessOut {
             }
 
             if (!url) {
-                throw new Exception("request.validation.error", "Please provide an invoice ID or invoice parameters (amount, currency and name) to start the 3D-Secure flow.");
+                throw new Exception("request.validation.error", "Please provide a 3DS challenge URL or an invoice ID.");
             }
 
             this.url = url;
@@ -77,11 +77,11 @@ module ProcessOut {
          * @return {ActionHandler}
          */
         public handle(success: (invoiceID: string)    => void,
-                        error:   (err:       Exception) => void): ActionHandler {
+                        error: (err:       Exception) => void): ActionHandler {
 
             return this.instance.handleAction(this.instance.endpoint("checkout", this.url),
                 function(invoiceID) { success(invoiceID); }, error, 
-                new ActionHandlerOptions(ActionHandlerOptions.ThreeDSFlow));
+                new ActionHandlerOptions(ActionHandlerOptions.ThreeDSChallengeFlow));
         }
 
     }
