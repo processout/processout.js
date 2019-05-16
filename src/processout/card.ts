@@ -83,12 +83,14 @@ module ProcessOut {
             var exps = exp.split(" / ");
             if (exps.length <= 1) {
                 exps = exp.split("/");
-
-                if (exps.length <= 1)
-                    return new Expiry(0, 0);
             }
 
-            return new Expiry(Number(exps[0]), Number(exps[1]));
+            var month = Number(exps[0]);
+            var year  = 0;
+            if (exps.length > 1)
+                year = Number(exps[1]);
+
+            return new Expiry(month, year);
         }
 
         /**
