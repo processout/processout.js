@@ -215,6 +215,11 @@ module ProcessOut {
             // We need the data to at least be an empty object
             if (!data) data = {};
 
+            if (data.idempotency_key) {
+                headers["Idempotency-Key"] = data.idempotency_key;
+                delete data.idempotency_key;
+            }
+
             // We need to hack our project ID in the URL itself so that
             // ProcessOut's load-balancers and routers can route the request
             // to the project's region
@@ -713,13 +718,17 @@ module ProcessOut {
             if (options.gatewayRequestSource)
                 source = options.gatewayRequestSource;
 
-            this.apiRequest("POST", `invoices/${invoiceID}/capture`, {
+            var payload = <any>{
                 "authorize_only": options.authorize_only,
                 "capture_amount": options.capture_amount,
                 "source":         source,
 
                 "enable_three_d_s_2": true
-            }, function(data: any): void {
+            };
+            if (options.idempotency_key)
+                payload.idempotency_key = options.idempotency_key;
+
+            this.apiRequest("POST", `invoices/${invoiceID}/capture`, payload, function(data: any): void {
                 if (!data.success) {
                     error(new Exception(data.error_type, data.message));
                     return;
