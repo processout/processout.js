@@ -325,9 +325,15 @@ module ProcessOut {
 
             // Add a handler to this window to close child windows/tabs
             // when this tab closes.
-            window.addEventListener("beforeunload", function(e) {
-                ret.newWindow.close();
-            }, false);
+            var onunload = function(e) {
+                try {
+                    ret.newWindow.close();
+                } catch(err) {
+                    //
+                }
+            }
+            window.addEventListener("beforeunload", onunload, false);
+            window.addEventListener("pagehide", onunload, false); // for iOS and new browsers
 
             // Add a layer on top of the website to prevent other actions
             // from the user during checkout
