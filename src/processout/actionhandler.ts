@@ -15,7 +15,8 @@ module ProcessOut {
             this.iframe  = iframe;
 
             window.addEventListener("resize", function(event) {
-                this.element.style.width = window.outerWidth + "px";
+                var width = Math.max(window.outerWidth, window.innerWidth);
+                this.element.style.width = width + "px";
                 var height = Math.max(document.body.scrollHeight,
                     document.body.offsetHeight,
                     document.documentElement.clientHeight,
