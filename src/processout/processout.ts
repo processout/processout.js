@@ -725,8 +725,14 @@ module ProcessOut {
 
                 "enable_three_d_s_2": true
             };
-            if (options.idempotency_key)
-                payload.idempotency_key = options.idempotency_key;
+
+            if (options.idempotency_key) {
+                // As we're executing this multiple times, we need to keep
+                // track of the executing number
+                if (!options.iterationNumber) options.iterationNumber = 1;
+                payload.idempotency_key = `${options.idempotency_key}-${options.iterationNumber}`;
+                options.iterationNumber++;
+            }
 
             this.apiRequest("POST", `invoices/${invoiceID}/capture`, payload, function(data: any): void {
                 if (!data.success) {
