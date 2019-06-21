@@ -307,8 +307,8 @@ module ProcessOut {
             if (typeof options == "function")
                 return new CardForm(this, form).setup(
                     new CardFieldOptions(""), <any>options, <any>success);
-            else
-                return new CardForm(this, form).setup(options, <any>success, error);
+
+            return new CardForm(this, form).setup(options, <any>success, error);
         }
 
         /**
@@ -429,8 +429,8 @@ module ProcessOut {
             if (typeof options == "function")
                 return new CardForm(this, form).setupCVC(
                     new CardFieldOptions(""), <any>options, <any>success);
-            else
-                return new CardForm(this, form).setupCVC(options, <any>success, error);
+
+            return new CardForm(this, form).setupCVC(options, <any>success, error);
         }
 
         /**
