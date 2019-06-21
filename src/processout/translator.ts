@@ -67,7 +67,8 @@ module ProcessOut {
             "processout-js.invalid-type":                  "The specified parameter had an unknown type.",
             "processout-js.missing-source":                "A source must be specified.",
             "processout-js.wrong-type-for-action":         "The requested action could not be performed on the given field because its type is invalid.",
-            "processout-js.missing-invoice-id":            "An invoice ID be specified.",
+            "processout-js.missing-invoice-id":            "An invoice ID must be specified.",
+            "processout-js.missing-resource-id":           "A resource ID must be specified.",
 
             "resource.invalid-type": "The provided resource was invalid. It must be an invoice, a subscription or an authorization request.",
 
