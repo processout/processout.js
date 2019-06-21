@@ -579,8 +579,8 @@ module ProcessOut {
 
             if (!config) config = {};
 
-            if (!config.invoiceID)
-                throw new Exception("processout-js.missing-invoice-id");
+            if (!config.invoiceID && (!config.customerID !== !config.tokenID))
+                throw new Exception("processout-js.missing-resource-id");
 
             this.apiRequest("GET", "gateway-configurations", {
                 "filter":                   config.filter,
@@ -595,8 +595,10 @@ module ProcessOut {
                     // We want to inject some helpers in our gateway confs
                     var confs = [];
                     for (var conf of data.gateway_configurations) {
-                        conf.hookForInvoice = this.buildConfHookForInvoice(config.invoiceID, conf);
                         conf.handleInvoiceAction = this.buildHandleInvoiceAction(config.invoiceID, conf);
+                        conf.hookForInvoice = this.buildConfHookForInvoice(conf);
+                        conf.handleCustomerTokenAction = this.buildHandleCustomerTokenAction(config.customerID, config.tokenID, conf);
+                        conf.hookForCustomerToken = this.buildConfHookForCustomerToken(conf);
                         confs.push(conf);
                     }
                     success(confs);
@@ -654,7 +656,6 @@ module ProcessOut {
         }
 
         protected buildConfHookForInvoice(
-            invoiceID:   string, 
             gatewayConf: any
         ): (
             el:      HTMLElement, 
@@ -667,13 +668,85 @@ module ProcessOut {
                 tokenized:  (token: string) => void,
                 tokenError: (err: Exception) => void) {
 
-                var url = this.endpoint("checkout", `/${this.getProjectID()}/${invoiceID}/redirect/${gatewayConf.id}`);
-
                 el.addEventListener("click", function(e) {
                     // Prevent from doing the default redirection
                     e.preventDefault();
 
                     gatewayConf.handleInvoiceAction(tokenized, tokenError);
+                    return false;
+                }.bind(this));
+            }.bind(this);
+        }
+
+        /**
+         * HandleCustomerTokenAction handles the tokenization action for the 
+         * given customer token ID and gateway configuration. This creates a new 
+         * tab, iFrame or window depending on the gateway used
+         * @param {string} customerID
+         * @param {string} tokenID
+         * @param {any|string} gatewayConf
+         * @param {callback} tokenized 
+         * @param {callback} tokenError 
+         */
+        public handleCustomerTokenAction(
+            customerID:  string,
+            tokenID:     string,
+            gatewayConf: any,
+            tokenized:   (token: string)    => void,
+            tokenError:  (err:   Exception) => void
+        ): ActionHandler {
+            var gatewayConfID = gatewayConf;
+            var gatewayName = null;
+            var gatewayLogo = null;
+            if (gatewayConf && gatewayConf.id) {
+                gatewayConfID = gatewayConf.id;
+                if (gatewayConf.gateway) {
+                    gatewayName = gatewayConf.gateway.name;
+                    gatewayLogo = gatewayConf.gateway.logo_url;
+                }
+            }
+
+            var options = new ActionHandlerOptions(gatewayName, gatewayLogo);
+            var url = this.endpoint("checkout", `/${this.getProjectID()}/${customerID}/${tokenID}/redirect/${gatewayConfID}`);
+            return this.handleAction(url, tokenized, tokenError, options);
+        }
+
+        protected buildHandleCustomerTokenAction(
+            customerID:  string,
+            tokenID:     string,
+            gatewayConf: any
+        ): (
+            tokenized:   (token: string)    => void,
+            tokenError:  (err:   Exception) => void
+        ) => ActionHandler {
+
+            return function(
+                tokenized:   (token: string)    => void,
+                tokenError:  (err:   Exception) => void
+            ): ActionHandler {
+
+                return this.handleCustomerTokenAction(customerID, tokenID, gatewayConf, tokenized, tokenError);
+            }.bind(this);
+        }
+
+        protected buildConfHookForCustomerToken(
+            gatewayConf: any
+        ): (
+            el:      HTMLElement, 
+            success: (token: string)    => void, 
+            error:   (err:   Exception) => void
+        ) => void {
+
+            return function(
+                el:         HTMLElement,
+                tokenized:  (token: string) => void,
+                tokenError: (err: Exception) => void) {
+
+                el.addEventListener("click", function(e) {
+                    // Prevent from doing the default redirection
+                    e.preventDefault();
+
+                    gatewayConf.handleCustomerTokenAction(tokenized, tokenError);
                     return false;
                 }.bind(this));
             }.bind(this);
@@ -719,9 +792,10 @@ module ProcessOut {
                 source = options.gatewayRequestSource;
 
             var payload = <any>{
-                "authorize_only": options.authorize_only,
-                "capture_amount": options.capture_amount,
-                "source":         source,
+                "authorize_only":  options.authorize_only,
+                "capture_amount":  options.capture_amount,
+                "auto_capture_at": options.auto_capture_at,
+                "source":          source,
 
                 "enable_three_d_s_2": true
             };

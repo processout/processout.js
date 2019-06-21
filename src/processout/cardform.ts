@@ -70,7 +70,7 @@ module ProcessOut {
         public constructor(instance: ProcessOut, el: HTMLElement) {
             this.instance = instance;
             this.element  = el;
-            this.uid   = Math.random().toString();
+            this.uid      = Math.random().toString();
         }
 
         /**
@@ -160,19 +160,15 @@ module ProcessOut {
         }
 
         /**
-         * Setup prepares the generic card form. Expects the card fields 
-         * for the number, cvc and expiration fields. Both a general expiration 
-         * field or separate fields for month and year can be provided
+         * Setup prepares the card form specific to CVC refreshes
          * @param {HTMLElement} form
          * @param {callback} success
          * @param {callback} error
-         * @param {callback} event
          * @return {CardForm}
          */
         public setupCVC(options: CardFieldOptions,
             success:        (form: CardForm)  => void,
-            error:          (err:  Exception) => void,
-            eventCallback?: (name: string, data: any) => void): CardForm {
+            error:          (err:  Exception) => void): CardForm {
 
             this.isRefreshCVC = true;
 

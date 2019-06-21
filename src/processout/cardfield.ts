@@ -540,9 +540,7 @@ module ProcessOut {
                 "namespace": Message.fieldNamespace,
                 "projectID": this.instance.getProjectID(),
                 "action":    "refresh-cvc",
-                "data": {
-                    "data":   cardUID
-                }
+                "data":      cardUID
             }), "*");
 
             // Our timeout, just in case
