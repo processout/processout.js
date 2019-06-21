@@ -307,8 +307,8 @@ module ProcessOut {
             if (typeof options == "function")
                 return new CardForm(this, form).setup(
                     new CardFieldOptions(""), <any>options, <any>success);
-            else
-                return new CardForm(this, form).setup(options, <any>success, error);
+
+            return new CardForm(this, form).setup(options, <any>success, error);
         }
 
         /**
@@ -422,11 +422,15 @@ module ProcessOut {
          * @param {callback?} eventCallback
          * @return {CardForm}
          */
-        public setupFormCVC(form: HTMLElement, options: CardFieldOptions,
-            success:        (form: CardForm)          => void, 
-            error:          (err: Exception)          => void): CardForm {
+        public setupFormCVC(form: HTMLElement, options: CardFieldOptions | ((form: CardForm) => void),
+            success: ((form: CardForm) => void) | ((err: Exception) => void),
+            error?:   (err: Exception) => void): CardForm {
 
-            return new CardForm(this, form).setupCVC(options, success, error);
+            if (typeof options == "function")
+                return new CardForm(this, form).setupCVC(
+                    new CardFieldOptions(""), <any>options, <any>success);
+
+            return new CardForm(this, form).setupCVC(options, <any>success, error);
         }
 
         /**
