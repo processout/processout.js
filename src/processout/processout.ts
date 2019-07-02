@@ -834,7 +834,7 @@ module ProcessOut {
                     this.handleAction(data.customer_action.value, function(data: any): void {
                         options.gatewayRequestSource = null;
                         this.makeCardPayment(invoiceID, cardID, options, success, error);
-                    }, error, new ActionHandlerOptions(ActionHandlerOptions.ThreeDSChallengeFlow));
+                    }.bind(this), error, new ActionHandlerOptions(ActionHandlerOptions.ThreeDSChallengeFlow));
                     break;
 
                 case "fingerprint":
