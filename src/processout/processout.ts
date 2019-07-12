@@ -621,7 +621,7 @@ module ProcessOut {
          * @param {callback} tokenError 
          */
         public handleInvoiceAction(
-            invoiceID:   string, 
+            invoiceID:   string,
             gatewayConf: any,
             tokenized:   (token: string)    => void,
             tokenError:  (err:   Exception) => void

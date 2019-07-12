@@ -108,6 +108,14 @@ module ProcessOut {
             default:
                 this.flow = ActionFlow.NewTab;
             }
+
+            if (this.flow == ActionFlow.NewWindow) {
+                // If we're on mobile, sometimes creating a new window will
+                // break the browser
+                if(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
+                    this.flow = ActionFlow.NewTab;
+                }
+            }
         }
     }
 
@@ -192,7 +200,7 @@ module ProcessOut {
                 buttonWrapper.setAttribute("style", "width: 100%; text-align: center; margin-bottom: 1em;");
                 var button = document.createElement("div");
                 button.setAttribute("style", "cursor: pointer; color: white;");
-                button.innerHTML = "Cancel";
+                button.innerHTML = Translator.translateMessage("label.cancel", "Cancel");
                 buttonWrapper.appendChild(button);
 
                 iframeWrapper.appendChild(iframe);
@@ -302,7 +310,8 @@ module ProcessOut {
         }
 
         protected createNewTab(url: string): any {
-            return this.setupWindowObject(window.open(url, '_blank'));
+            var win = window.open(url, '_blank');
+            return this.setupWindowObject(win);
         }
 
         protected createNewWindow(url: string): any {
@@ -310,8 +319,9 @@ module ProcessOut {
             var w = this.options.newWindowWidth;
             var y = window.top.outerHeight / 2 + window.top.screenY - (h / 2);
             var x = window.top.outerWidth / 2 + window.top.screenX - (w / 2);
-            return this.setupWindowObject(window.open(url, '',
-                `menubar=false,toolbar=false,width=${w},height=${h},top=${y},left=${x}`));
+            var win = window.open(url, '',
+                `menubar=false,toolbar=false,width=${w},height=${h},top=${y},left=${x}`);
+            return this.setupWindowObject(win);
         }
 
         protected setupWindowObject(newWindow: any): any {
@@ -336,25 +346,41 @@ module ProcessOut {
             window.addEventListener("beforeunload", onunload, false);
             window.addEventListener("pagehide", onunload, false); // for iOS and new browsers
 
+            var sightTimer = setInterval(function() {
+                if (!ret.newWindow || ret.newWindow.closed) {
+                    clearInterval(sightTimer);
+                }
+
+                try {
+                    ret.newWindow.postMessage("processout.ping-ready", "*");
+                } catch (err) {
+                    //
+                }
+            }, 250);
+
             // Add a layer on top of the website to prevent other actions
             // from the user during checkout
             ret.topLayer = document.createElement("div");
             ret.topLayer.id = "processoutjs-action-modal";
-            ret.topLayer.setAttribute("style", "position: fixed; top: 0; left: 0; background: rgba(0, 0, 0, 0.7); z-index: 9999999; overflow: auto; height: 100%; width: 100%; cursor: pointer;");
-            ret.topLayer.addEventListener("click", function() {
-                ret.newWindow.focus();
-            }, false);
+            ret.topLayer.setAttribute("style", "position: fixed; top: 0; left: 0; background: rgba(0, 0, 0, 0.7); z-index: 9999999; overflow: auto; height: 100%; width: 100%;");
 
             // Also add a friendly little message
             var topLayerMessage = document.createElement("div");
-            topLayerMessage.setAttribute("style", "text-align: center; margin-top: 10%;");
+            topLayerMessage.setAttribute("style", "text-align: center; color: white; max-width: 350px; margin: 0 auto; margin-top: 10%; cursor: pointer;");
             if (this.options.gatewayLogo) {
                 var topLayerMessageImage = document.createElement("img");
-                topLayerMessageImage.setAttribute("style", "max-height: 30px; max-width: 250px; filter: brightness(0) invert(1);")
+                topLayerMessageImage.setAttribute("style", "max-height: 70px; max-width: 230px; filter: brightness(0) invert(1); margin-bottom: 2em;");
                 topLayerMessageImage.setAttribute("src", this.options.gatewayLogo);
                 topLayerMessage.appendChild(topLayerMessageImage);
             }
+            var topLayerMessageText = document.createElement("div");
+            topLayerMessageText.innerHTML = Translator.translateMessage("label.apm-description");
+            topLayerMessage.appendChild(topLayerMessageText);
             ret.topLayer.appendChild(topLayerMessage);
+
+            topLayerMessage.addEventListener("click", function() {
+                ret.newWindow.focus();
+            }, false);
 
             document.body.appendChild(ret.topLayer);
             return ret;
@@ -384,6 +410,8 @@ module ProcessOut {
             ActionHandler.listenerCount++;
             var cur = ActionHandler.listenerCount;
 
+            var alreadyDone = false;
+
             // To monitor the status, we will use event listeners for messages
             // sent between the checkout and processout.js
             window.addEventListener("message", function(event) {
@@ -397,6 +425,9 @@ module ProcessOut {
                     if (timer) { clearInterval(timer); timer = null; }
                     return;
                 }
+
+                if (alreadyDone) return;
+                alreadyDone = true;
 
                 switch (data.action) {
                 case "success":
@@ -441,7 +472,7 @@ module ProcessOut {
 
                     error(new Exception("default"));
                     refocus();
-                    break
+                    break;
                 }
             });
         }
