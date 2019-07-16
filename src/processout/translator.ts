@@ -88,7 +88,7 @@ module ProcessOut {
         },
         "fr": {
             "label.cancel":          "Annuler",
-            "label.apm-description": "Une nouvelle fenêtre s'est ouverte pour procéder au paiement. Cliquez ici pour continuer."
+            "label.apm-description": "Une nouvelle fen&ecirc;tre s'est ouverte pour proc&eacute;der au paiement. Cliquez ici pour continuer."
         }
     };
 
@@ -96,13 +96,13 @@ module ProcessOut {
 
     export class Translator {
         protected static getTranslated(l: {[locale: string]: {[name:string]: string}}, code: string, message?: string): string {
-            if (l[this.getLocale()][code])
+            if (l[this.getLocale()] && l[this.getLocale()][code])
                 return l[this.getLocale()][code];
             if (l[defaultLocale][code])
                 return l[defaultLocale][code];
 
-            if (message)                         return message;
-            if (l[this.getLocale()]["default"]) return l[this.getLocale()]["default"];
+            if (message)                                               return message;
+            if (l[this.getLocale()] && l[this.getLocale()]["default"]) return l[this.getLocale()]["default"];
             return code;
         }
 
