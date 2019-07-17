@@ -15,7 +15,7 @@ module ProcessOut {
 
         constructor(code: string, message?: string) {
             if (! message)
-                message = Translator.translate(code);
+                message = Translator.translateError(code);
 
             super(message);
 

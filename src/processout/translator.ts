@@ -5,7 +5,7 @@
  */
 module ProcessOut {
 
-    const messages: {[locale: string]: {[name:string]: string}} = {
+    const errors: {[locale: string]: {[name:string]: string}} = {
         "en": {
             "default":                 "An error occured: your payment was declined.",
             "card.declined":           "The credit card has been declined.",
@@ -76,24 +76,57 @@ module ProcessOut {
             "applepay.no-success-handler": "A success handler must be specified when setting up Apple Pay.",
             "applepay.not-available":      "Apple Pay is not available for the current browser, device or ProcessOut project."
         },
+        "fr": {
+            "default": "Une erreur est survenue lors du paiement.",
+        }
     };
 
+    const messages: {[locale: string]: {[name:string]: string}} = {
+        "en": {
+            "label.cancel":          "Cancel",
+            "label.apm-description": "A new window was opened to process your payment. Click here to continue."
+        },
+        "fr": {
+            "label.cancel":          "Annuler",
+            "label.apm-description": "Une nouvelle fen&ecirc;tre s'est ouverte pour proc&eacute;der au paiement. Cliquez ici pour continuer."
+        }
+    };
+
+    const defaultLocale: string = "en";
+
     export class Translator {
-        protected static locale: string = "en";
+        protected static getTranslated(l: {[locale: string]: {[name:string]: string}}, code: string, message?: string): string {
+            if (l[this.getLocale()] && l[this.getLocale()][code])
+                return l[this.getLocale()][code];
+            if (l[defaultLocale][code])
+                return l[defaultLocale][code];
+
+            if (message)                                               return message;
+            if (l[this.getLocale()] && l[this.getLocale()]["default"]) return l[this.getLocale()]["default"];
+            if (l[defaultLocale]["default"])                           return l[defaultLocale]["default"];
+            return code;
+        }
 
         /**
-         * translate returns the translated message if found, or the default
+         * translateError returns the translated error if found, or the default
          * error message otherwise
          * @param {string} code
          * @param {string?} message
          * @return string
          */
-        public static translate(code: string, message?: string): string {
-            if (messages[Translator.locale][code])
-                return messages[Translator.locale][code];
+        public static translateError(code: string, message?: string): string {
+            return this.getTranslated(errors, code, message);
+        }
 
-            if (message) return message;
-            return messages[Translator.locale]["default"];
+        /**
+         * translateMessage returns the translated message if found, or the default
+         * message otherwise
+         * @param {string} code
+         * @param {string?} message
+         * @return string
+         */
+        public static translateMessage(code: string, message?: string): string {
+            return this.getTranslated(messages, code, message);
         }
 
         /**
@@ -101,11 +134,10 @@ module ProcessOut {
          * @param {string} locale
          * @return void
          */
-        public static setLocale(locale: string): void {
-            if (!messages[locale])
-                return;
-
-            Translator.locale = locale;
+        public static getLocale(): string {
+            var locale = navigator.language || (<any>navigator).userLanguage;
+            if (locale.length < 2) return "en";
+            return locale.substring(0, 2).toLowerCase();
         }
     }
 
