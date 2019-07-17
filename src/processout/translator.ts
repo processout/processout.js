@@ -103,6 +103,7 @@ module ProcessOut {
 
             if (message)                                               return message;
             if (l[this.getLocale()] && l[this.getLocale()]["default"]) return l[this.getLocale()]["default"];
+            if (l[defaultLocale]["default"])                           return l[defaultLocale]["default"];
             return code;
         }
 
