@@ -169,6 +169,13 @@ module ProcessOut {
         protected static listenerCount = 0;
 
         /**
+         * newWindowName is the name of the new windows created by the 
+         * ActionHandler
+         * @type {string}
+         */
+        protected newWindowName = 'processout.checkout-window';
+
+        /**
          * ActionHandler constructor
          * @param {ProcessOut} instance
          * @param {string} resourceID
@@ -255,7 +262,7 @@ module ProcessOut {
 
             default:
                 // Default to new tab
-                ({topLayer, newWindow} = this.createNewTab(url));
+                ({topLayer, newWindow} = this.createNewTabOrWindow(url));
             }
 
             if (!newWindow) {
@@ -309,17 +316,21 @@ module ProcessOut {
             return this;
         }
 
-        protected createNewTab(url: string): any {
-            var win = window.open(url, '_blank');
+        protected createNewTabOrWindow(url: string): any {
+            // The following will open a new tab or window, depending on the
+            // user's browser preference
+            var win = window.open(url, this.newWindowName);
             return this.setupWindowObject(win);
         }
 
         protected createNewWindow(url: string): any {
+            // As we force a window size, the following should force a new
+            // window to pop
             var h = this.options.newWindowHeight;
             var w = this.options.newWindowWidth;
             var y = window.top.outerHeight / 2 + window.top.screenY - (h / 2);
             var x = window.top.outerWidth / 2 + window.top.screenX - (w / 2);
-            var win = window.open(url, '',
+            var win = window.open(url, this.newWindowName,
                 `menubar=false,toolbar=false,width=${w},height=${h},top=${y},left=${x}`);
             return this.setupWindowObject(win);
         }
@@ -349,6 +360,7 @@ module ProcessOut {
             var sightTimer = setInterval(function() {
                 if (!ret.newWindow || ret.newWindow.closed) {
                     clearInterval(sightTimer);
+                    return;
                 }
 
                 try {
