@@ -599,8 +599,11 @@ module ProcessOut {
                     // We want to inject some helpers in our gateway confs
                     var confs = [];
                     for (var conf of data.gateway_configurations) {
+                        conf.getInvoiceActionURL = this.buildGetInvoiceActionURL(config.invoiceID, conf);
                         conf.handleInvoiceAction = this.buildHandleInvoiceAction(config.invoiceID, conf);
                         conf.hookForInvoice = this.buildConfHookForInvoice(conf);
+
+                        conf.getCustomerTokenActionURL = this.buildGetCustomerTokenActionURL(config.customerID, config.tokenID, conf);
                         conf.handleCustomerTokenAction = this.buildHandleCustomerTokenAction(config.customerID, config.tokenID, conf);
                         conf.hookForCustomerToken = this.buildConfHookForCustomerToken(conf);
                         confs.push(conf);
@@ -612,6 +615,28 @@ module ProcessOut {
         }
 
         /**
+         * BuildGetInvoiceActionURL returns the invoice action URL
+         * @param {string} invoiceID
+         * @param {any|string} gatewayConf 
+         * @return {string}
+         */
+        public getInvoiceActionURL(
+            invoiceID:   string,
+            gatewayConf: any
+        ): string {
+            var gatewayConfID = gatewayConf;
+            if (gatewayConf && gatewayConf.id) {
+                gatewayConfID = gatewayConf.id;
+            }
+
+            if (!invoiceID) {
+                throw new Exception("processout-js.missing-resource-id", "An Invoice Action was requested, but the Invoice ID was missing. Make sure you didn't rather want to call `customerToken` helpers on the gateway configuration instead of `invoice` ones.")
+            }
+
+            return this.endpoint("checkout", `/${this.getProjectID()}/${invoiceID}/redirect/${gatewayConfID}`);
+        }
+
+        /**
          * HandleInvoiceAction handles the invoice action for the given invoice
          * ID and gateway configuration. This creates a new tab, iFrame or
          * window depending on the gateway used
@@ -619,6 +644,7 @@ module ProcessOut {
          * @param {any|string} gatewayConf
          * @param {callback} tokenized 
          * @param {callback} tokenError 
+         * @return {ActionHandler}
          */
         public handleInvoiceAction(
             invoiceID:   string,
@@ -626,20 +652,26 @@ module ProcessOut {
             tokenized:   (token: string)    => void,
             tokenError:  (err:   Exception) => void
         ): ActionHandler {
-            var gatewayConfID = gatewayConf;
             var gatewayName = null;
             var gatewayLogo = null;
-            if (gatewayConf && gatewayConf.id) {
-                gatewayConfID = gatewayConf.id;
-                if (gatewayConf.gateway) {
-                    gatewayName = gatewayConf.gateway.name;
-                    gatewayLogo = gatewayConf.gateway.logo_url;
-                }
+            if (gatewayConf && gatewayConf.id && gatewayConf.gateway) {
+                gatewayName = gatewayConf.gateway.name;
+                gatewayLogo = gatewayConf.gateway.logo_url;
             }
 
             var options = new ActionHandlerOptions(gatewayName, gatewayLogo);
-            var url = this.endpoint("checkout", `/${this.getProjectID()}/${invoiceID}/redirect/${gatewayConfID}`);
-            return this.handleAction(url, tokenized, tokenError, options);
+            return this.handleAction(this.getInvoiceActionURL(invoiceID, gatewayConf), 
+                tokenized, tokenError, options);
+        }
+
+        protected buildGetInvoiceActionURL(
+            invoiceID:   string, 
+            gatewayConf: any
+        ): () => string {
+
+            return function(): string {
+                return this.getInvoiceActionURL(invoiceID, gatewayConf);
+            }.bind(this);
         }
 
         protected buildHandleInvoiceAction(
@@ -683,6 +715,30 @@ module ProcessOut {
         }
 
         /**
+         * getCustomerTokenActionURL returns the customer token action URL
+         * @param {string} customerID
+         * @param {string} tokenID
+         * @param {any|string} gatewayConf 
+         * @return {string}
+         */
+        public getCustomerTokenActionURL(
+            customerID:  string,
+            tokenID:     string,
+            gatewayConf: any
+        ): string {
+            var gatewayConfID = gatewayConf;
+            if (gatewayConf && gatewayConf.id) {
+                gatewayConfID = gatewayConf.id;
+            }
+
+            if (!customerID || !tokenID) {
+                throw new Exception("processout-js.missing-resource-id", "A Customer Token Action was requested, but a customer ID or a token ID was missing. Make sure you didn't rather want to call `invoice` helpers on the gateway configuration instead of `customerToken` ones.")
+            }
+
+            return this.endpoint("checkout", `/${this.getProjectID()}/${customerID}/${tokenID}/redirect/${gatewayConfID}`);
+        }
+
+        /**
          * HandleCustomerTokenAction handles the tokenization action for the 
          * given customer token ID and gateway configuration. This creates a new 
          * tab, iFrame or window depending on the gateway used
@@ -691,6 +747,7 @@ module ProcessOut {
          * @param {any|string} gatewayConf
          * @param {callback} tokenized 
          * @param {callback} tokenError 
+         * @return {ActionHandler}
          */
         public handleCustomerTokenAction(
             customerID:  string,
@@ -699,20 +756,27 @@ module ProcessOut {
             tokenized:   (token: string)    => void,
             tokenError:  (err:   Exception) => void
         ): ActionHandler {
-            var gatewayConfID = gatewayConf;
             var gatewayName = null;
             var gatewayLogo = null;
-            if (gatewayConf && gatewayConf.id) {
-                gatewayConfID = gatewayConf.id;
-                if (gatewayConf.gateway) {
-                    gatewayName = gatewayConf.gateway.name;
-                    gatewayLogo = gatewayConf.gateway.logo_url;
-                }
+            if (gatewayConf && gatewayConf.id && gatewayConf.gateway) {
+                gatewayName = gatewayConf.gateway.name;
+                gatewayLogo = gatewayConf.gateway.logo_url;
             }
 
             var options = new ActionHandlerOptions(gatewayName, gatewayLogo);
-            var url = this.endpoint("checkout", `/${this.getProjectID()}/${customerID}/${tokenID}/redirect/${gatewayConfID}`);
-            return this.handleAction(url, tokenized, tokenError, options);
+            return this.handleAction(this.getCustomerTokenActionURL(customerID, tokenID, gatewayConf), 
+                tokenized, tokenError, options);
+        }
+
+        protected buildGetCustomerTokenActionURL(
+            customerID:  string, 
+            tokenID:     string,
+            gatewayConf: any
+        ): () => string {
+
+            return function(): string {
+                return this.getCustomerTokenActionURL(customerID, tokenID, gatewayConf);
+            }.bind(this);
         }
 
         protected buildHandleCustomerTokenAction(
