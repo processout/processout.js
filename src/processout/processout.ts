@@ -840,6 +840,61 @@ module ProcessOut {
         }
 
         /**
+         * MakeCardToken finishes a Customer Token using the card ID, Card Object
+         * or CardForm object as the source. If any customer action is required,
+         * makeCardToken handles them automatically, such as authentication for SCA
+         * @param {string|Card|CardForm} val
+         * @param {string} customerID
+         * @param {string} customerTokenID 
+         * @param {any} options 
+         * @param {callback} success 
+         * @param {callback} error
+         */
+        public makeCardToken(val: string|Card|CardForm, customerID: string, customerTokenID: string,
+            options: any, 
+            success:  (data: any)       => void, 
+            error:    (err:  Exception) => void): void {
+
+            if ((val instanceof Card) || (val instanceof CardForm))
+                return this.tokenize(val, options, function(token: string): void {
+                    return this.makeCardTokenFromCardID(token, customerID, customerTokenID, options, success, error);
+                }, error);
+
+            return this.makeCardTokenFromCardID(<string>val, customerID, customerTokenID, options, success, error);
+        }
+
+        protected makeCardTokenFromCardID(cardID: string, customerID: string, customerTokenID: string, options: any, 
+            success:  (data: any)       => void, 
+            error:    (err:  Exception) => void): void {
+
+            if (!options) options = {};
+
+            var payload = {
+                source:          cardID,
+                verify:          options.verify,
+                verify_metadata: options.verify_metadata,
+                set_default:     options.set_default
+            }
+
+            this.apiRequest("PUT", `customers/${customerID}/tokens/${customerTokenID}`, payload, function(data: any): void {
+                if (!data.success) {
+                    error(new Exception(data.error_type, data.message));
+                    return;
+                }
+                if (data.customer_action) {
+                    //TODO: add support
+                    error(new Exception("processout-js.wrong-type-for-action", 
+                        `makeCardToken doesn't support customer actions yet.`));
+                    return;
+                }
+                success(customerTokenID);
+
+            }.bind(this), function(req: XMLHttpRequest, e: Event): void {
+                error(new Exception("processout-js.network-issue"));
+            });
+        }
+
+        /**
          * MakeCardPayment makes a full card payment, handling any required
          * customer action such as authentication for SCA (like 3DS 1 or 2)
          * @param {string} invoiceID
