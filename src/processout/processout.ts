@@ -843,8 +843,9 @@ module ProcessOut {
          * MakeCardToken finishes a Customer Token using the card ID, Card Object
          * or CardForm object as the source. If any customer action is required,
          * makeCardToken handles them automatically, such as authentication for SCA
-         * @param {string} invoiceID
-         * @param {string} cardID 
+         * @param {string|Card|CardForm} val
+         * @param {string} customerID
+         * @param {string} customerTokenID 
          * @param {any} options 
          * @param {callback} success 
          * @param {callback} error
