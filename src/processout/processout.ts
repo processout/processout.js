@@ -871,11 +871,11 @@ module ProcessOut {
             var payload = {
                 source:          cardID,
                 verify:          options.verify,
-                veirfy_metadata: options.veirfy_metadata,
+                verify_metadata: options.verify_metadata,
                 set_default:     options.set_default
             }
 
-            this.apiRequest("POST", `customers/${customerID}/tokens/${customerTokenID}`, payload, function(data: any): void {
+            this.apiRequest("PUT", `customers/${customerID}/tokens/${customerTokenID}`, payload, function(data: any): void {
                 if (!data.success) {
                     error(new Exception(data.error_type, data.message));
                     return;
