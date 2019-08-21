@@ -923,10 +923,22 @@ module ProcessOut {
                 "enable_three_d_s_2": true
             };
 
+            if (!options.iterationNumber) {
+                // This is the first iteration, let's tell the Checkout
+                // that this is running on ProcessOut.js
+                this.apiRequest("GET", this.endpoint("checkout", `/helpers/set-processoutjs-cookie/${invoiceID}`), 
+                    {}, function(d: any) {
+                        options.iterationNumber = 1;
+                        this.makeCardPayment(invoiceID, cardID, options, success, error);
+                    }.bind(this), function(req: XMLHttpRequest, e: Event): void {
+                        error(new Exception("processout-js.network-issue"));
+                    });
+                return;
+            }
+
             if (options.idempotency_key) {
                 // As we're executing this multiple times, we need to keep
                 // track of the executing number
-                if (!options.iterationNumber) options.iterationNumber = 1;
                 payload.idempotency_key = `${options.idempotency_key}-${options.iterationNumber}`;
                 options.iterationNumber++;
             }
