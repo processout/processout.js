@@ -957,8 +957,21 @@ module ProcessOut {
                     break;
 
                 case "fingerprint":
-                    this.handleAction(data.customer_action.value, nextStep, error,
-                        new ActionHandlerOptions(ActionHandlerOptions.ThreeDSFingerprintFlow));
+                    this.handleAction(data.customer_action.value, nextStep, function(err) {
+                        var gReq = new GatewayRequest();
+                        gReq.url = data.customer_action.value;
+                        gReq.method = "POST";
+                        gReq.headers = {
+                            "Content-Type": "application/json"
+                        };
+                        // We're encoding the timeout in a custom field in the
+                        // body so that internal services can detect when
+                        // the fingerprinting has timed out. We're using
+                        // the camelCase convention for this field as it is
+                        // what drives the 3DS specs
+                        gReq.body = `{"threeDS2FingerprintTimeout":true}`;
+                        nextStep(gReq.token());
+                    }, new ActionHandlerOptions(ActionHandlerOptions.ThreeDSFingerprintFlow));
                     break;
 
                 case "redirect":
