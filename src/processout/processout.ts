@@ -362,24 +362,13 @@ module ProcessOut {
             if (!data)           data = {};
             if (!data.contact)   data.contact = {};
 
+            data = this.injectDeviceData(data);
+
             // fill up the request
             data.number    = card.getNumber();
             data.exp_month = card.getExpiry().getMonth().toString();
             data.exp_year  = card.getExpiry().getYear().toString();
             data.cvc2      = card.getCVC();
-
-            if (screen.colorDepth)
-                data.app_color_depth = Number(screen.colorDepth);
-            var language = navigator.language || (<any>navigator).userLanguage;
-            if (language)
-                data.app_language = language;
-            if (screen.height)
-                data.app_screen_height = screen.height;
-            if (screen.width)
-                data.app_screen_width = screen.width;
-            data.time_zone_offset = Number(new Date().getTimezoneOffset());
-            if (window.navigator)
-                data.app_java_enabled = window.navigator.javaEnabled();
 
             // and send it
             this.apiRequest("post", "cards", data, function(data: any,
@@ -394,6 +383,23 @@ module ProcessOut {
             }, function(req: XMLHttpRequest, e: Event): void {
                 error(new Exception("processout-js.network-issue"));
             });
+        }
+
+        protected injectDeviceData(data: any): any {
+            if (screen.colorDepth)
+                data["app_color_depth"] = Number(screen.colorDepth);
+            var language = navigator.language || (<any>navigator).userLanguage;
+            if (language)
+                data["app_language"] = language;
+            if (screen.height)
+                data["app_screen_height"] = screen.height;
+            if (screen.width)
+                data["app_screen_width"] = screen.width;
+            data["time_zone_offset"] = Number(new Date().getTimezoneOffset());
+            if (window.navigator)
+                data["app_java_enabled"] = window.navigator.javaEnabled();
+
+            return data;
         }
 
         /**
@@ -922,6 +928,7 @@ module ProcessOut {
 
                 "enable_three_d_s_2": true
             };
+            payload = this.injectDeviceData(payload);
 
             if (options.idempotency_key) {
                 // As we're executing this multiple times, we need to keep
