@@ -858,7 +858,7 @@ module ProcessOut {
             if ((val instanceof Card) || (val instanceof CardForm))
                 return this.tokenize(val, options, function(token: string): void {
                     return this.makeCardTokenFromCardID(token, customerID, customerTokenID, options, success, error);
-                }, error);
+                }.bind(this), error);
 
             return this.makeCardTokenFromCardID(<string>val, customerID, customerTokenID, options, success, error);
         }
