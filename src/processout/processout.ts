@@ -206,9 +206,8 @@ module ProcessOut {
                 path = this.endpoint("api", "/"+path);
 
             var headers = {
-                "Content-Type":        "application/json",
-                "API-Version":         this.apiVersion,
-                "ProcessOut-Frontend": "true"
+                "Content-Type": "application/json",
+                "API-Version":  this.apiVersion
             };
             if (this.projectID)
                 headers["Authorization"] = `Basic ${btoa(this.projectID+":")}`;
@@ -387,18 +386,29 @@ module ProcessOut {
         }
 
         protected injectDeviceData(data: any): any {
+            var device = {};
+            // Flag the device with appropriate data
+            device["request_origin"] = "web";
+
             if (screen.colorDepth)
-                data["app_color_depth"] = Number(screen.colorDepth);
+                device["app_color_depth"] = Number(screen.colorDepth);
             var language = navigator.language || (<any>navigator).userLanguage;
             if (language)
-                data["app_language"] = language;
+                device["app_language"] = language;
             if (screen.height)
-                data["app_screen_height"] = screen.height;
+                device["app_screen_height"] = screen.height;
             if (screen.width)
-                data["app_screen_width"] = screen.width;
-            data["time_zone_offset"] = Number(new Date().getTimezoneOffset());
+                device["app_screen_width"] = screen.width;
+            device["time_zone_offset"] = Number(new Date().getTimezoneOffset());
             if (window.navigator)
-                data["app_java_enabled"] = window.navigator.javaEnabled();
+                device["app_java_enabled"] = window.navigator.javaEnabled();
+
+            data["device"] = device;
+
+            // Legacy: also inject at root level
+            Object.keys(device).forEach(function(key) {
+                data[key] = device[key];
+            });
 
             return data;
         }
