@@ -206,8 +206,8 @@ module ProcessOut {
                 path = this.endpoint("api", "/"+path);
 
             var headers = {
-                "Content-Type":           "application/json",
-                "API-Version":            this.apiVersion,
+                "Content-Type":        "application/json",
+                "API-Version":         this.apiVersion,
                 "ProcessOut-Frontend": "true"
             };
             if (this.projectID)
