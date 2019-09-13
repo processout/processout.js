@@ -410,7 +410,6 @@ module ProcessOut {
             var cur = ActionHandler.listenerCount;
 
             var alreadyDone = false;
-
             var handler = function(event) {
                 var data = Message.parseEvent(event);
                 if (data.namespace != Message.checkoutNamespace)
@@ -475,8 +474,6 @@ module ProcessOut {
             window.addEventListener("message", handler);
 
             new MessageHub(this.instance, null, function(k: string, v: string) {
-                if (!handler) return;
-
                 var data = Message.parseEvent(<MessageEvent>{
                     data: v,
                 });
