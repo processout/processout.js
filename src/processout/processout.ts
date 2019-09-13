@@ -980,14 +980,14 @@ module ProcessOut {
                         gReq.url = data.customer_action.value;
                         gReq.method = "POST";
                         gReq.headers = {
-                            "Content-Type": "application/json"
+                            "Content-Type": "application/x-www-form-urlencoded"
                         };
                         // We're encoding the timeout in a custom field in the
                         // body so that internal services can detect when
                         // the fingerprinting has timed out. We're using
                         // the camelCase convention for this field as it is
                         // what drives the 3DS specs
-                        gReq.body = `{"threeDS2FingerprintTimeout":true}`;
+                        gReq.body = `threeDSMethodData={"threeDS2FingerprintTimeout":true}`;
                         nextStep(gReq.token());
                     }, new ActionHandlerOptions(ActionHandlerOptions.ThreeDSFingerprintFlow));
                     break;
