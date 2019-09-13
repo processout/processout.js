@@ -357,19 +357,6 @@ module ProcessOut {
             window.addEventListener("beforeunload", onunload, false);
             window.addEventListener("pagehide", onunload, false); // for iOS and new browsers
 
-            var sightTimer = setInterval(function() {
-                if (!ret.newWindow || ret.newWindow.closed) {
-                    clearInterval(sightTimer);
-                    return;
-                }
-
-                try {
-                    ret.newWindow.postMessage("processout.ping-ready", "*");
-                } catch (err) {
-                    //
-                }
-            }, 250);
-
             // Add a layer on top of the website to prevent other actions
             // from the user during checkout
             ret.topLayer = document.createElement("div");
@@ -423,10 +410,7 @@ module ProcessOut {
             var cur = ActionHandler.listenerCount;
 
             var alreadyDone = false;
-
-            // To monitor the status, we will use event listeners for messages
-            // sent between the checkout and processout.js
-            window.addEventListener("message", function(event) {
+            var handler = function(event) {
                 var data = Message.parseEvent(event);
                 if (data.namespace != Message.checkoutNamespace)
                     return;
@@ -486,6 +470,17 @@ module ProcessOut {
                     refocus();
                     break;
                 }
+            };
+            window.addEventListener("message", handler);
+
+            new MessageHub(this.instance, null, function(k: string, v: string) {
+                var data = Message.parseEvent(<MessageEvent>{
+                    data: v,
+                });
+                data.namespace = k;
+                handler({
+                    data: JSON.stringify(data)
+                });
             });
         }
 

@@ -12,4 +12,5 @@
 /// <reference path="exception.ts" />
 /// <reference path="processout.ts" />
 /// <reference path="modal.ts" />
+/// <reference path="messagehub.ts" />
 /// <reference path="message.ts" />
