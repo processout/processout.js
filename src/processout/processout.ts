@@ -110,13 +110,13 @@ module ProcessOut {
             if (jsHost == "" && !DEBUG) {
                 throw new Exception("processout-js.not-hosted");
             }
-            // if (/^https?:\/\/.*\.processout\.ninja\//.test(jsHost)) {
+            if (/^https?:\/\/.*\.processout\.ninja\//.test(jsHost)) {
                 this.host = "processout.ninja";
-            // } else if (/^https?:\/\/.*\.processout\.dev\//.test(jsHost)) {
-            //     this.host = "processout.dev";
-            // } else {
-            //     this.host = "processout.com";
-            // }
+            } else if (/^https?:\/\/.*\.processout\.dev\//.test(jsHost)) {
+                this.host = "processout.dev";
+            } else {
+                this.host = "processout.com";
+            }
 
             if (!projectID)
                 throw new Exception("processout-js.missing-project-id");
