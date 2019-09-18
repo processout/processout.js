@@ -96,6 +96,14 @@ module ProcessOut {
                 this.newWindowWidth  = 450;
                 break;
 
+            // iDeal's flow can be similar to PayPal's
+            case "ideal":
+            case "checkoutcomideal":
+                this.flow = ActionFlow.NewWindow;
+                this.newWindowHeight = 645;
+                this.newWindowWidth  = 450;
+                break;
+
             // For sandbox mode we also want to emulate it like that
             case "test-credit-card":
             case "test-alternative-payment":
