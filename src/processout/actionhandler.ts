@@ -368,7 +368,7 @@ module ProcessOut {
             topLayerMessage.setAttribute("style", "text-align: center; color: white; max-width: 350px; margin: 0 auto; margin-top: 10%; cursor: pointer;");
             if (this.options.gatewayLogo) {
                 var topLayerMessageImage = document.createElement("img");
-                topLayerMessageImage.setAttribute("style", "max-height: 70px; max-width: 230px; filter: brightness(0) invert(1); margin-bottom: 2em;");
+                topLayerMessageImage.setAttribute("style", "max-height: 70px; max-width: 230px; filter: saturate(0) grayscale(1) brightness(0.6) contrast(100000) invert(1); margin-bottom: 2em;");
                 topLayerMessageImage.setAttribute("src", this.options.gatewayLogo);
                 topLayerMessage.appendChild(topLayerMessageImage);
             }
