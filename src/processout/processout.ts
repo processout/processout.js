@@ -884,31 +884,8 @@ module ProcessOut {
             success:  (data: any)       => void, 
             error:    (err:  Exception) => void): void {
 
-            if (!options) options = {};
-
-            var payload = {
-                source:          cardID,
-                verify:          options.verify,
-                verify_metadata: options.verify_metadata,
-                set_default:     options.set_default
-            }
-
-            this.apiRequest("PUT", `customers/${customerID}/tokens/${customerTokenID}`, payload, function(data: any): void {
-                if (!data.success) {
-                    error(new Exception(data.error_type, data.message));
-                    return;
-                }
-                if (data.customer_action) {
-                    //TODO: add support
-                    error(new Exception("processout-js.wrong-type-for-action", 
-                        `makeCardToken doesn't support customer actions yet.`));
-                    return;
-                }
-                success(customerTokenID);
-
-            }.bind(this), function(req: XMLHttpRequest, e: Event): void {
-                error(new Exception("processout-js.network-issue"));
-            });
+            this.handleCardActions("PUT", `customers/${customerID}/tokens/${customerTokenID}`, customerTokenID, 
+                cardID, options, success, error);
         }
 
         /**
@@ -925,6 +902,16 @@ module ProcessOut {
             success:  (data: any)       => void, 
             error:    (err:  Exception) => void): void {
 
+            this.handleCardActions("POST", `invoices/${invoiceID}/capture`, invoiceID, 
+                cardID, options, success, error);
+        }
+
+        protected handleCardActions(method: string, endpoint: string, 
+            resourceID: string, cardID: string,
+            options: any,
+            success:  (data: any)       => void, 
+            error:    (err:  Exception) => void): void {
+
             if (!options) options = {};
 
             var source = cardID;
@@ -937,7 +924,11 @@ module ProcessOut {
                 "auto_capture_at": options.auto_capture_at,
                 "source":          source,
 
-                "enable_three_d_s_2": true
+                "enable_three_d_s_2": true,
+
+                "verify":          options.verify,
+                "verify_metadata": options.verify_metadata,
+                "set_default":     options.set_default
             };
             payload = this.injectDeviceData(payload);
 
@@ -949,20 +940,20 @@ module ProcessOut {
                 options.iterationNumber++;
             }
 
-            this.apiRequest("POST", `invoices/${invoiceID}/capture`, payload, function(data: any): void {
+            this.apiRequest(method, endpoint, payload, function(data: any): void {
                 if (!data.success) {
                     error(new Exception(data.error_type, data.message));
                     return;
                 }
 
                 if (!data.customer_action) {
-                    success(invoiceID);
+                    success(resourceID);
                     return;
                 }
 
                 var nextStep = function(data: any): void {
                     options.gatewayRequestSource = data;
-                    this.makeCardPayment(invoiceID, cardID, options, success, error);
+                    this.handleCardActions(method, endpoint, resourceID, cardID, options, success, error);
                 }.bind(this);
 
                 switch (data.customer_action.type) {
@@ -970,7 +961,7 @@ module ProcessOut {
                     // This is for 3DS1
                     this.handleAction(data.customer_action.value, function(data: any): void {
                         options.gatewayRequestSource = null;
-                        this.makeCardPayment(invoiceID, cardID, options, success, error);
+                        this.handleCardActions(method, endpoint, resourceID, cardID, options, success, error);
                     }.bind(this), error, new ActionHandlerOptions(ActionHandlerOptions.ThreeDSChallengeFlow));
                     break;
 
