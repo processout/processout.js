@@ -303,7 +303,7 @@ module ProcessOut {
                     try { newWindow.close(); } catch (err) { }
                     cancelf();
                 }
-            });
+            }, 500);
 
             this.listenEvents(newWindow, timer, refocus, 
                 function(data: any): void {
@@ -378,16 +378,16 @@ module ProcessOut {
             ret.topLayer.appendChild(topLayerMessage);
 
             topLayerMessage.addEventListener("click", function() {
-                // It's possible the window got closed but we had no
-                // notification of it
-                try {
-                    if (ret.newWindow.closed && !this.isCanceled()) {
-                        this.cancel();
-                    }
-                } catch(e) {
-                    //
-                }
                 ret.newWindow.focus();
+            }.bind(this), false);
+
+            var topLayerCancel = document.createElement("div");
+            topLayerCancel.setAttribute("style", "text-align: center; color: white; max-width: 350px; margin: 0 auto; margin-top: 3em; cursor: pointer; opacity: 0.9;");
+            topLayerCancel.innerHTML = Translator.translateMessage("label.cancel");
+            ret.topLayer.appendChild(topLayerCancel);
+
+            topLayerCancel.addEventListener("click", function() {
+                this.cancel();
             }.bind(this), false);
 
             document.body.appendChild(ret.topLayer);
