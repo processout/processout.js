@@ -19,6 +19,7 @@ module ProcessOut {
             "card.invalid-month":      "The card expiry month is invalid.",
             "card.invalid-year":       "The card expiry year is invalid.",
             "card.invalid-cvc":        "The card CVC is invalid.",
+            "card.missing-cvc":        "The card CVC is required.",
             "card.invalid-zip":        "The card's ZIP code is valid.",
             "card.failed-cvc-and-avs": "The CVC and AVS code were invalid.",
             "card.failed-three-d-s":   "The 3D-Secure authentication failed.",

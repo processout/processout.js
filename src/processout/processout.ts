@@ -362,24 +362,13 @@ module ProcessOut {
             if (!data)           data = {};
             if (!data.contact)   data.contact = {};
 
+            data = this.injectDeviceData(data);
+
             // fill up the request
             data.number    = card.getNumber();
             data.exp_month = card.getExpiry().getMonth().toString();
             data.exp_year  = card.getExpiry().getYear().toString();
             data.cvc2      = card.getCVC();
-
-            if (screen.colorDepth)
-                data.app_color_depth = Number(screen.colorDepth);
-            var language = navigator.language || (<any>navigator).userLanguage;
-            if (language)
-                data.app_language = language;
-            if (screen.height)
-                data.app_screen_height = screen.height;
-            if (screen.width)
-                data.app_screen_width = screen.width;
-            data.time_zone_offset = Number(new Date().getTimezoneOffset());
-            if (window.navigator)
-                data.app_java_enabled = window.navigator.javaEnabled();
 
             // and send it
             this.apiRequest("post", "cards", data, function(data: any,
@@ -394,6 +383,34 @@ module ProcessOut {
             }, function(req: XMLHttpRequest, e: Event): void {
                 error(new Exception("processout-js.network-issue"));
             });
+        }
+
+        protected injectDeviceData(data: any): any {
+            var device = {};
+            // Flag the device with appropriate data
+            device["request_origin"] = "web";
+
+            if (screen.colorDepth)
+                device["app_color_depth"] = Number(screen.colorDepth);
+            var language = navigator.language || (<any>navigator).userLanguage;
+            if (language)
+                device["app_language"] = language;
+            if (screen.height)
+                device["app_screen_height"] = screen.height;
+            if (screen.width)
+                device["app_screen_width"] = screen.width;
+            device["time_zone_offset"] = Number(new Date().getTimezoneOffset());
+            if (window.navigator)
+                device["app_java_enabled"] = window.navigator.javaEnabled();
+
+            data["device"] = device;
+
+            // Legacy: also inject at root level
+            Object.keys(device).forEach(function(key) {
+                data[key] = device[key];
+            });
+
+            return data;
         }
 
         /**
@@ -858,7 +875,7 @@ module ProcessOut {
             if ((val instanceof Card) || (val instanceof CardForm))
                 return this.tokenize(val, options, function(token: string): void {
                     return this.makeCardTokenFromCardID(token, customerID, customerTokenID, options, success, error);
-                }, error);
+                }.bind(this), error);
 
             return this.makeCardTokenFromCardID(<string>val, customerID, customerTokenID, options, success, error);
         }
@@ -867,31 +884,8 @@ module ProcessOut {
             success:  (data: any)       => void, 
             error:    (err:  Exception) => void): void {
 
-            if (!options) options = {};
-
-            var payload = {
-                source:          cardID,
-                verify:          options.verify,
-                verify_metadata: options.verify_metadata,
-                set_default:     options.set_default
-            }
-
-            this.apiRequest("PUT", `customers/${customerID}/tokens/${customerTokenID}`, payload, function(data: any): void {
-                if (!data.success) {
-                    error(new Exception(data.error_type, data.message));
-                    return;
-                }
-                if (data.customer_action) {
-                    //TODO: add support
-                    error(new Exception("processout-js.wrong-type-for-action", 
-                        `makeCardToken doesn't support customer actions yet.`));
-                    return;
-                }
-                success(customerTokenID);
-
-            }.bind(this), function(req: XMLHttpRequest, e: Event): void {
-                error(new Exception("processout-js.network-issue"));
-            });
+            this.handleCardActions("PUT", `customers/${customerID}/tokens/${customerTokenID}`, customerTokenID, 
+                cardID, options, success, error);
         }
 
         /**
@@ -908,6 +902,16 @@ module ProcessOut {
             success:  (data: any)       => void, 
             error:    (err:  Exception) => void): void {
 
+            this.handleCardActions("POST", `invoices/${invoiceID}/capture`, invoiceID, 
+                cardID, options, success, error);
+        }
+
+        protected handleCardActions(method: string, endpoint: string, 
+            resourceID: string, cardID: string,
+            options: any,
+            success:  (data: any)       => void, 
+            error:    (err:  Exception) => void): void {
+
             if (!options) options = {};
 
             var source = cardID;
@@ -920,8 +924,13 @@ module ProcessOut {
                 "auto_capture_at": options.auto_capture_at,
                 "source":          source,
 
-                "enable_three_d_s_2": true
+                "enable_three_d_s_2": true,
+
+                "verify":          options.verify,
+                "verify_metadata": options.verify_metadata,
+                "set_default":     options.set_default
             };
+            payload = this.injectDeviceData(payload);
 
             if (options.idempotency_key) {
                 // As we're executing this multiple times, we need to keep
@@ -931,20 +940,20 @@ module ProcessOut {
                 options.iterationNumber++;
             }
 
-            this.apiRequest("POST", `invoices/${invoiceID}/capture`, payload, function(data: any): void {
+            this.apiRequest(method, endpoint, payload, function(data: any): void {
                 if (!data.success) {
                     error(new Exception(data.error_type, data.message));
                     return;
                 }
 
                 if (!data.customer_action) {
-                    success(invoiceID);
+                    success(resourceID);
                     return;
                 }
 
                 var nextStep = function(data: any): void {
                     options.gatewayRequestSource = data;
-                    this.makeCardPayment(invoiceID, cardID, options, success, error);
+                    this.handleCardActions(method, endpoint, resourceID, cardID, options, success, error);
                 }.bind(this);
 
                 switch (data.customer_action.type) {
@@ -952,13 +961,26 @@ module ProcessOut {
                     // This is for 3DS1
                     this.handleAction(data.customer_action.value, function(data: any): void {
                         options.gatewayRequestSource = null;
-                        this.makeCardPayment(invoiceID, cardID, options, success, error);
+                        this.handleCardActions(method, endpoint, resourceID, cardID, options, success, error);
                     }.bind(this), error, new ActionHandlerOptions(ActionHandlerOptions.ThreeDSChallengeFlow));
                     break;
 
                 case "fingerprint":
-                    this.handleAction(data.customer_action.value, nextStep, error,
-                        new ActionHandlerOptions(ActionHandlerOptions.ThreeDSFingerprintFlow));
+                    this.handleAction(data.customer_action.value, nextStep, function(err) {
+                        var gReq = new GatewayRequest();
+                        gReq.url = data.customer_action.value;
+                        gReq.method = "POST";
+                        gReq.headers = {
+                            "Content-Type": "application/x-www-form-urlencoded"
+                        };
+                        // We're encoding the timeout in a custom field in the
+                        // body so that internal services can detect when
+                        // the fingerprinting has timed out. We're using
+                        // the camelCase convention for this field as it is
+                        // what drives the 3DS specs
+                        gReq.body = `threeDSMethodData={"threeDS2FingerprintTimeout":true}`;
+                        nextStep(gReq.token());
+                    }, new ActionHandlerOptions(ActionHandlerOptions.ThreeDSFingerprintFlow));
                     break;
 
                 case "redirect":

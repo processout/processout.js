@@ -18,6 +18,7 @@ module ProcessOut {
         public type:        string;
         public placeholder: string;
         public style:       CardFieldStyle;
+        public requireCVC:  boolean;
 
         public constructor(type: string) {
             this.type = type;

@@ -358,19 +358,6 @@ module ProcessOut {
             window.addEventListener("beforeunload", onunload, false);
             window.addEventListener("pagehide", onunload, false); // for iOS and new browsers
 
-            var sightTimer = setInterval(function() {
-                if (!ret.newWindow || ret.newWindow.closed) {
-                    clearInterval(sightTimer);
-                    return;
-                }
-
-                try {
-                    ret.newWindow.postMessage("processout.ping-ready", "*");
-                } catch (err) {
-                    //
-                }
-            }, 250);
-
             // Add a layer on top of the website to prevent other actions
             // from the user during checkout
             ret.topLayer = document.createElement("div");
@@ -382,7 +369,7 @@ module ProcessOut {
             topLayerMessage.setAttribute("style", "text-align: center; color: white; max-width: 350px; margin: 0 auto; margin-top: 10%; cursor: pointer;");
             if (this.options.gatewayLogo) {
                 var topLayerMessageImage = document.createElement("img");
-                topLayerMessageImage.setAttribute("style", "max-height: 70px; max-width: 230px; filter: brightness(0) invert(1); margin-bottom: 2em;");
+                topLayerMessageImage.setAttribute("style", "max-height: 70px; max-width: 230px; filter: saturate(0) grayscale(1) brightness(0.6) contrast(100000) invert(1); margin-bottom: 2em;");
                 topLayerMessageImage.setAttribute("src", this.options.gatewayLogo);
                 topLayerMessage.appendChild(topLayerMessageImage);
             }
@@ -392,8 +379,17 @@ module ProcessOut {
             ret.topLayer.appendChild(topLayerMessage);
 
             topLayerMessage.addEventListener("click", function() {
+                // It's possible the window got closed but we had no
+                // notification of it
+                try {
+                    if (ret.newWindow.closed && !this.isCanceled()) {
+                        this.cancel();
+                    }
+                } catch(e) {
+                    //
+                }
                 ret.newWindow.focus();
-            }, false);
+            }.bind(this), false);
 
             document.body.appendChild(ret.topLayer);
             return ret;
@@ -424,10 +420,7 @@ module ProcessOut {
             var cur = ActionHandler.listenerCount;
 
             var alreadyDone = false;
-
-            // To monitor the status, we will use event listeners for messages
-            // sent between the checkout and processout.js
-            window.addEventListener("message", function(event) {
+            var handler = function(event) {
                 var data = Message.parseEvent(event);
                 if (data.namespace != Message.checkoutNamespace)
                     return;
@@ -487,6 +480,17 @@ module ProcessOut {
                     refocus();
                     break;
                 }
+            };
+            window.addEventListener("message", handler);
+
+            new MessageHub(this.instance, null, function(k: string, v: string) {
+                var data = Message.parseEvent(<MessageEvent>{
+                    data: v,
+                });
+                data.namespace = k;
+                handler({
+                    data: JSON.stringify(data)
+                });
             });
         }
 
