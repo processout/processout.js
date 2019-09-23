@@ -378,8 +378,17 @@ module ProcessOut {
             ret.topLayer.appendChild(topLayerMessage);
 
             topLayerMessage.addEventListener("click", function() {
+                // It's possible the window got closed but we had no
+                // notification of it
+                try {
+                    if (ret.newWindow.closed && !this.isCanceled()) {
+                        this.cancel();
+                    }
+                } catch(e) {
+                    //
+                }
                 ret.newWindow.focus();
-            }, false);
+            }.bind(this), false);
 
             document.body.appendChild(ret.topLayer);
             return ret;
