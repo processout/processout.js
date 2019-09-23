@@ -25,8 +25,9 @@ module ProcessOut {
         }
 
         public apply(o: CardFieldOptions): CardFieldOptions {
-            if (o.placeholder)   this.placeholder   = o.placeholder;
-            if (o.style)         this.style         = o.style;
+            if (o.placeholder)        this.placeholder = o.placeholder;
+            if (o.style)              this.style       = o.style;
+            if (o.requireCVC != null) this.requireCVC  = o.requireCVC;
 
             return this;
         }
