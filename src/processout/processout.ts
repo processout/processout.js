@@ -65,6 +65,12 @@ module ProcessOut {
         protected processOutFieldEndpoint = "";
 
         /**
+         * Path to the ProcessOut message hub used to communicate between windows
+         * @type {string}
+         */
+        protected processOutMessageHubEndpoint = "";
+
+        /**
         * Version of the API used by ProcessOut.js
         * @type {string}
         */
@@ -166,12 +172,31 @@ module ProcessOut {
         }
 
         /**
+         * Return the ProcessOut field endpoint
+         * @return {string}
+         */
+        public getProcessOutMessageHubEndpoint(suffix: string): string {
+            var endpoint = this.endpoint("js", "/messagehub.html");
+            if (DEBUG && this.processOutMessageHubEndpoint) endpoint = this.processOutMessageHubEndpoint;
+            return `${endpoint}${suffix}`;
+        }
+
+        /**
          * Set a custom processout field endpoint
          * @return {string}
          */
         public setProcessOutFieldEndpoint(endpoint: string): void {
             if (!DEBUG) return;
             this.processOutFieldEndpoint = endpoint;
+        }
+
+        /**
+         * Set a custom processout message hub endpoint
+         * @return {string}
+         */
+        public setProcessOutMessageHubEndpoint(endpoint: string): void {
+            if (!DEBUG) return;
+            this.processOutMessageHubEndpoint = endpoint;
         }
 
         /**

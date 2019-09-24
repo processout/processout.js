@@ -9,8 +9,6 @@ module ProcessOut {
      * MessageHub class used to communicate cross domains
      */
     export class MessageHub {
-        protected hubPath = "/messagehub.html";
-
         protected instance:      ProcessOut;
         protected static iframe: HTMLIFrameElement;
         protected onnotify?:     (k: string, v: any) => void;
@@ -24,7 +22,8 @@ module ProcessOut {
         }
 
         protected load(onready: (hub: MessageHub) => void): void {
-            var src = this.instance.endpoint("js", this.hubPath);
+            var tmp = Math.random().toString(36).substring(7);
+            var src = this.instance.getProcessOutMessageHubEndpoint(`?r=${tmp}`);
 
             window.addEventListener("message", function (event) {
                 if (!this.active) return;
