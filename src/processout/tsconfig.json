@@ -1,7 +1,8 @@
 {
     "compilerOptions": {
         "removeComments": true,
-        "outFile": "../../scripts/processout.js"
+        "outFile": "../../scripts/processout.js",
+        "target": "es5"
     },
     "compileOnSave": false,
     "buildOnSave": false

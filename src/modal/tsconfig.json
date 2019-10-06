@@ -1,7 +1,8 @@
 {
     "compilerOptions": {
         "removeComments": true,
-        "outFile": "../../scripts/modal.js"
+        "outFile": "../../scripts/modal.js",
+        "target": "es5"
     },
     "compileOnSave": false,
     "buildOnSave": false
