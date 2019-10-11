@@ -7,10 +7,10 @@ build:
 	tsc -p src/processout/
 	tsc -p src/modal/
 	mv ${MODALJS} ${MODALJS}_tmp
-	cat ${BINS} ${MODALJS}_tmp | minify --js > ${MODALJS}
+	cat ${BINS} ${MODALJS}_tmp | uglifyjs --compress --keep-fnames --ie8 > ${MODALJS}
 	rm ${MODALJS}_tmp
 	mv ${PROCESSOUTJS} ${PROCESSOUTJS}_tmp
-	cat ${BINS} ${PROCESSOUTJS}_tmp | minify --js > ${PROCESSOUTJS}
+	cat ${BINS} ${PROCESSOUTJS}_tmp | uglifyjs --compress --keep-fnames --ie8 > ${PROCESSOUTJS}
 	rm ${PROCESSOUTJS}_tmp
 
 .PHONY: buildtest
@@ -18,11 +18,11 @@ buildtest:
 	tsc -p src/processout/
 	tsc -p src/modal/
 	mv ${MODALJS} ${MODALJS}_tmp
-	cat ${BINS} ${MODALJS}_tmp > ${MODALJS}
+	cat ${BINS} ${MODALJS}_tmp | uglifyjs --compress --keep-fnames --ie8 > ${MODALJS}
 	echo "\n;ProcessOut.DEBUG = true;" >> ${MODALJS}
 	rm ${MODALJS}_tmp
 	mv ${PROCESSOUTJS} ${PROCESSOUTJS}_tmp
-	cat ${BINS} ${PROCESSOUTJS}_tmp > ${PROCESSOUTJS}
+	cat ${BINS} ${PROCESSOUTJS}_tmp | uglifyjs --compress --keep-fnames --ie8 > ${PROCESSOUTJS}
 	echo "\n;ProcessOut.DEBUG = true;" >> ${PROCESSOUTJS}
 	rm ${PROCESSOUTJS}_tmp
 

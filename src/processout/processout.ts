@@ -663,9 +663,12 @@ module ProcessOut {
          * @return {string}
          */
         public getInvoiceActionURL(
-            invoiceID:   string,
-            gatewayConf: any
+            invoiceID:      string,
+            gatewayConf:    any,
+            additionalData: any
         ): string {
+            if (!additionalData) additionalData = {};
+
             var gatewayConfID = gatewayConf;
             if (gatewayConf && gatewayConf.id) {
                 gatewayConfID = gatewayConf.id;
@@ -675,7 +678,12 @@ module ProcessOut {
                 throw new Exception("processout-js.missing-resource-id", "An Invoice Action was requested, but the Invoice ID was missing. Make sure you didn't rather want to call `customerToken` helpers on the gateway configuration instead of `invoice` ones.")
             }
 
-            return this.endpoint("checkout", `/${this.getProjectID()}/${invoiceID}/redirect/${gatewayConfID}`);
+            var suffix = "?"
+            for (var key in additionalData) {
+                suffix += `additional_data[${key}]=${encodeURI(additionalData[key])}&`;
+            }
+
+            return this.endpoint("checkout", `/${this.getProjectID()}/${invoiceID}/redirect/${gatewayConfID}${suffix.substring(0, suffix.length - 1)}`);
         }
 
         /**
@@ -694,6 +702,29 @@ module ProcessOut {
             tokenized:   (token: string)    => void,
             tokenError:  (err:   Exception) => void
         ): ActionHandler {
+
+            return this.handleInvoiceActionAdditionalData(invoiceID, gatewayConf, {}, tokenized, tokenError);
+        }
+
+        /**
+         * HandleInvoiceActionAdditionalData behaves almost the same as
+         * handleInvoiceAction, except it also sends back some additional data
+         * that can be used to improve the APM experience. For example, it also
+         * for preselection of an issuing bank on iDeal on Adyen
+         * @param {string} invoiceID
+         * @param {any|string} gatewayConf
+         * @param {object}   additionalData
+         * @param {callback} tokenized 
+         * @param {callback} tokenError 
+         * @return {ActionHandler}
+         */
+        public handleInvoiceActionAdditionalData(
+            invoiceID:   string,
+            gatewayConf: any,
+            additionalData: any,
+            tokenized:   (token: string)    => void,
+            tokenError:  (err:   Exception) => void
+        ): ActionHandler {
             var gatewayName = null;
             var gatewayLogo = null;
             if (gatewayConf && gatewayConf.id && gatewayConf.gateway) {
@@ -702,7 +733,7 @@ module ProcessOut {
             }
 
             var options = new ActionHandlerOptions(gatewayName, gatewayLogo);
-            return this.handleAction(this.getInvoiceActionURL(invoiceID, gatewayConf), 
+            return this.handleAction(this.getInvoiceActionURL(invoiceID, gatewayConf, additionalData), 
                 tokenized, tokenError, options);
         }
 
