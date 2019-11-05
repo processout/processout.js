@@ -29,7 +29,7 @@ module ProcessOut {
                 if (!this.active) return;
 
                 var data = Message.parseEvent(event);
-                if (data.namespace != Message.messageHubNamespace)
+                if (!data || data.namespace != Message.messageHubNamespace)
                     return;
 
                 if (data.action != "value")
@@ -47,7 +47,7 @@ module ProcessOut {
                         return;
 
                     var data = Message.parseEvent(event);
-                    if (data.namespace != Message.messageHubNamespace)
+                    if (!data || data.namespace != Message.messageHubNamespace)
                         return;
                     if (data.action != "ready")
                         return;

@@ -202,6 +202,10 @@ module ProcessOut {
                 var iframe = document.createElement("iframe");
                 iframe.setAttribute("style", `margin: 1em auto; width: 440px; height: 480px; max-width: 100%; max-height: 100%; display: block; box-shadow: 0 15px 35px rgba(50, 50, 93, 0.1), 0 5px 15px rgba(0, 0, 0, 0.07); background-color: #ECEFF1; background-image: url("${this.instance.endpoint("js", "/images/loader.gif")}"); background-repeat: no-repeat; background-position: center;")`);
                 iframe.setAttribute("frameborder", "0");
+                iframe.onload = function() {
+                    // Remove the background loader once it is actually loaded
+                    iframe.style.backgroundImage = null;
+                };
 
                 // And create the cancel button
                 var buttonWrapper = document.createElement("div");
