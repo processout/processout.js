@@ -395,10 +395,7 @@ module ProcessOut {
          * @return {Exception}
          */
         public static validateCVC(cvc: string): Exception {
-            if (!cvc)
-                return null;
-
-            if (cvc.length < 3)
+            if (cvc && !cvc.match(/^\d{3,4}$/g))
                 return new Exception("card.invalid-cvc");
 
             return null;
