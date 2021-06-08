@@ -261,6 +261,8 @@ module ProcessOut {
                 // The fingerprint should always finish up after max 10s, so
                 // we'll auto timeout after that time
                 timeout = setTimeout(function() {
+                    clearInterval(timer); timer = null;
+                    newWindow.close()
                     error(new Exception("three-d-s-2.fingerprint-timed-out"));
                 }, 10000);
                 break;
