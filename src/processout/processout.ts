@@ -962,6 +962,54 @@ module ProcessOut {
                 cardID, options, success, error);
         }
 
+        /**
+         * makeIncrementalAuthorizationPayment requests an authorization against
+         * a specified invoice and marks it as an incremental invoice
+         * @param {string} invoiceID
+         * @param {string} cardID
+         * @param {any} options
+         * @param {callback} success
+         * @param {callback} error
+         */
+        public makeIncrementalAuthorizationPayment(invoiceID: string, cardID: string,
+            options: any,
+            success:  (data: any)       => void,
+            error:    (err:  Exception) => void): void {
+
+            if (!options) options = {};
+            options.incremental = true;
+            this.handleCardActions("POST", `invoices/${invoiceID}/authorize`, invoiceID,
+                cardID, options, success, error);
+        }
+
+        /**
+         * incrementAuthorizationAmount increments the authorization of an applicable
+         * invoice by a given amount
+         * @param {string} invoiceID
+         * @param {number} amount
+         * @param {callback} success
+         * @param {callback} error
+         */
+        public incrementAuthorizationAmount(invoiceID: string, amount: number,
+            success:  (data: any)       => void,
+            error:    (err:  Exception) => void): void {
+
+            this.apiRequest(
+                "POST",
+                `invoices/${invoiceID}/increment_authorization`,
+                { "amount": amount },
+                function(data: any, req: XMLHttpRequest, e: Event): void {
+                    if (!data.success) {
+                        error(new Exception("request.validation.error"));
+                        return
+                    }
+
+                    success(data);
+                }, function(req: XMLHttpRequest, e: Event): void {
+                    error(new Exception("processout-js.network-issue"));
+                });
+        }
+
         protected handleCardActions(method: string, endpoint: string, 
             resourceID: string, cardID: string,
             options: any,
@@ -984,7 +1032,8 @@ module ProcessOut {
 
                 "verify":          options.verify,
                 "verify_metadata": options.verify_metadata,
-                "set_default":     options.set_default
+                "set_default":     options.set_default,
+                "incremental":     options.incremental
             };
             payload = this.injectDeviceData(payload);
 
