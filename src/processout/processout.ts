@@ -361,7 +361,6 @@ module ProcessOut {
             if (val instanceof ApplePay)
                 return (<ApplePay>val).tokenize(data, success, error);
 
-
             throw new Exception("processout-js.invalid-type",
                 "The first parameter had an unknown type/instance. The value must be an instance of either Card, CardForm or ApplePay.");
         }
@@ -371,7 +370,7 @@ module ProcessOut {
          * and encodes in base64. Then it creates a ProcessOut
          * token that can be sent to your server and used to charge your
          * customer
-         * @param  {string} payload
+         * @param  {PaymentToken} token
          * @param  {callback} success
          * @param  {callback} error
          * @return {void}
@@ -381,17 +380,17 @@ module ProcessOut {
                                         error:   (err: Exception) => void): void {
 
             let data = {}
-            let tokenType = token.getTokenType();
+            const tokenType = token.getTokenType();
             
             switch(tokenType) {
                 case TokenType.GooglePay:
-                let encodedPayload = btoa(JSON.stringify(token.getPayload()));
+                    let encodedPayload = btoa(JSON.stringify(token.getPayload()));
 
-                data = {
-                    token_type: tokenType,
-                    payment_token: encodedPayload
-                };
-                break;
+                    data = {
+                        token_type: tokenType,
+                        payment_token: encodedPayload
+                    };
+                    break;
             }
             
             // and send it

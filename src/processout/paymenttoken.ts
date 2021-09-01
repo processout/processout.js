@@ -23,7 +23,7 @@
         /**
          * Payment token constructor
          * @param {TokenType} tokenType
-         * @param {string} payload
+         * @param {any} payload
          */
         public constructor(tokenType: TokenType, payload: any) {
             this.tokenType = tokenType;
