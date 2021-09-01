@@ -342,22 +342,22 @@ module ProcessOut {
          * customer
          * A CardForm may also be provided instead of a card if the fields
          * are hosted by ProcessOut
-         * @param  {Card | CardForm} card
+         * @param  {Card | CardForm | ApplePay | PaymentToken} card
          * @param  {any} data
          * @param  {callback} success
          * @param  {callback} error
          * @return {void}
          */
-        public tokenize(val: Card | CardForm | ApplePay | NetworkToken, data: any,
-            success: (token: string)  => void,
-            error:   (err: Exception) => void): void {
+        public tokenize(val: Card | CardForm | ApplePay | PaymentToken, data: any,
+                        success: (token: string)  => void,
+                        error:   (err: Exception) => void): void {
 
             if (val instanceof Card)
                 return this.tokenizeCard(<Card>val, data, success, error);
             if (val instanceof CardForm)
                 return this.tokenizeForm(<CardForm>val, data, success, error);
-            if (val instanceof NetworkToken)
-                return this.tokenizeNetworkToken(<NetworkToken>val, success, error);
+            if (val instanceof PaymentToken)
+                return this.tokenizePaymentToken(<PaymentToken>val, success, error);
             if (val instanceof ApplePay)
                 return (<ApplePay>val).tokenize(data, success, error);
 
@@ -367,7 +367,7 @@ module ProcessOut {
         }
 
         /**
-         * TokenizeNetworkToken takes the network token payload
+         * tokenizePaymentToken takes the payment token payload
          * and encodes in base64. Then it creates a ProcessOut
          * token that can be sent to your server and used to charge your
          * customer
@@ -376,9 +376,9 @@ module ProcessOut {
          * @param  {callback} error
          * @return {void}
          */
-         protected tokenizeNetworkToken(token: NetworkToken,
-            success: (token: string) => void,
-            error:   (err: Exception) => void): void {
+         protected tokenizePaymentToken(token: PaymentToken,
+                                        success: (token: string) => void,
+                                        error:   (err: Exception) => void): void {
 
             let data = {}
             let tokenType = token.getTokenType();

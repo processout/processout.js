@@ -14,4 +14,4 @@
 /// <reference path="modal.ts" />
 /// <reference path="messagehub.ts" />
 /// <reference path="message.ts" />
-/// <reference path="networktoken.ts" />
+/// <reference path="paymenttoken.ts" />

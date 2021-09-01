@@ -5,43 +5,43 @@
  */
  module ProcessOut {
     /**
-     * NetworkToken is the class handling a network token payload
+     * PaymentToken is the class handling a Payment token payload
      */
-    export class NetworkToken {
+    export class PaymentToken {
        /**
-         * Payload sent along when creating the ProcessOut network token payment.
+         * Payload sent along when creating the ProcessOut Payment token payment.
          * @type {any}
          */
         protected payload: any;
 
        /**
-         * tokenType is the type of the network token
+         * tokenType is the type of the Payment token
          * @type {TokenType}
          */
         protected tokenType: TokenType;
 
         /**
-         * Network token constructor
+         * Payment token constructor
          * @param {TokenType} tokenType
          * @param {string} payload
          */
         public constructor(tokenType: TokenType, payload: any) {
-           this.tokenType = tokenType;
-           this.payload = payload;
+            this.tokenType = tokenType;
+            this.payload = payload;
         }
 
         public getTokenType(): TokenType {
-           return this.tokenType;
+            return this.tokenType;
         }
 
         public getPayload(): any {
-         return this.payload;
-      }
+            return this.payload;
+        }
 
     }
 
     export enum TokenType {
-         GooglePay = "googlepay"  
+        GooglePay = "googlepay"
     }
 
 
