@@ -12,7 +12,7 @@
          * Payload sent along when creating the ProcessOut Payment token payment.
          * @type {any}
          */
-        protected payload: any;
+        protected payload: unknown;
 
        /**
          * tokenType is the type of the Payment token
@@ -25,24 +25,50 @@
          * @param {TokenType} tokenType
          * @param {any} payload
          */
-        public constructor(tokenType: TokenType, payload: any) {
+        public constructor(tokenType: TokenType, payload: unknown) {
             this.tokenType = tokenType;
             this.payload = payload;
         }
 
+        /**
+         * getTokenType returns payment token type
+         * @return {TokenType}
+         */
         public getTokenType(): TokenType {
             return this.tokenType;
         }
 
-        public getPayload(): any {
+        /**
+         * getPayload returns payment token payload
+         * @return {unknown}
+         */
+        public getPayload(): unknown {
             return this.payload;
         }
 
     }
 
+    /**
+     * TokenType represents the supported token types
+     * @return {string}
+     */
     export enum TokenType {
         GooglePay = "googlepay"
     }
 
-
+    /**
+     * GooglePayPayload models the expected JSON token payload the merchant will send
+     */
+    export type GooglePayPayload = {
+        signature: string,
+        intermediateSigningKey: {
+            signedKey: {
+                keyValue: string,
+                keyExpiration: number
+            },
+            signatures: Array<string>,
+        },
+        protocolVersion: string,
+        signedMessage: string
+    }
  }

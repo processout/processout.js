@@ -357,7 +357,7 @@ module ProcessOut {
             if (val instanceof CardForm)
                 return this.tokenizeForm(<CardForm>val, data, success, error);
             if (val instanceof PaymentToken)
-                return this.tokenizePaymentToken(<PaymentToken>val, success, error);
+                return this.tokenizePaymentToken(<PaymentToken>val, data, success, error);
             if (val instanceof ApplePay)
                 return (<ApplePay>val).tokenize(data, success, error);
 
@@ -375,25 +375,29 @@ module ProcessOut {
          * @param  {callback} error
          * @return {void}
          */
-         protected tokenizePaymentToken(token: PaymentToken,
+         protected tokenizePaymentToken(token: PaymentToken, 
+                                        data : any,
                                         success: (token: string) => void,
                                         error:   (err: Exception) => void): void {
 
-            let data = {}
+            if (!data)                  data = {};
+            if (!data.contact)          data.contact = {};
+
+            data = this.injectDeviceData(data);
+
             const tokenType = token.getTokenType();
-            
+
             switch(tokenType) {
                 case TokenType.GooglePay:
-                    let encodedPayload = btoa(JSON.stringify(token.getPayload()));
-
-                    data = {
-                        token_type: tokenType,
-                        payment_token: encodedPayload
-                    };
+                    const payload = token.getPayload() as GooglePayPayload
+                    let encodedPayload = btoa(JSON.stringify(payload));
+                    data.token_type = tokenType;
+                    data.payment_token = encodedPayload;
                     break;
+                default:
+                    throw new Exception("processout-js.invalid-field", `This token type is not valid or not supported yet!.`);
             }
-            
-            // and send it
+
             this.apiRequest("post", "cards", data, function(data: any,
                 req: XMLHttpRequest, e: Event): void {
 
