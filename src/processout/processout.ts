@@ -249,7 +249,7 @@ module ProcessOut {
             // ProcessOut's load-balancers and routers can route the request
             // to the project's region
             path += `?legacyrequest=true&project_id=${this.projectID}`
-
+            
             // We also need to hack our request headers for legacy browsers to 
             // work, but also for modern browsers with extensions playing with 
             // headers (such as antiviruses)
@@ -342,26 +342,75 @@ module ProcessOut {
          * customer
          * A CardForm may also be provided instead of a card if the fields
          * are hosted by ProcessOut
-         * @param  {Card | CardForm} card
+         * @param  {Card | CardForm | ApplePay | PaymentToken} card
          * @param  {any} data
          * @param  {callback} success
          * @param  {callback} error
          * @return {void}
          */
-        public tokenize(val: Card | CardForm | ApplePay, data: any,
-            success: (token: string)  => void,
-            error:   (err: Exception) => void): void {
+        public tokenize(val: Card | CardForm | ApplePay | PaymentToken, data: any,
+                        success: (token: string)  => void,
+                        error:   (err: Exception) => void): void {
 
             if (val instanceof Card)
                 return this.tokenizeCard(<Card>val, data, success, error);
             if (val instanceof CardForm)
                 return this.tokenizeForm(<CardForm>val, data, success, error);
+            if (val instanceof PaymentToken)
+                return this.tokenizePaymentToken(<PaymentToken>val, data, success, error);
             if (val instanceof ApplePay)
                 return (<ApplePay>val).tokenize(data, success, error);
 
             throw new Exception("processout-js.invalid-type",
                 "The first parameter had an unknown type/instance. The value must be an instance of either Card, CardForm or ApplePay.");
         }
+
+        /**
+         * tokenizePaymentToken takes the payment token payload
+         * and encodes in base64. Then it creates a ProcessOut
+         * token that can be sent to your server and used to charge your
+         * customer
+         * @param  {PaymentToken} token
+         * @param  {callback} success
+         * @param  {callback} error
+         * @return {void}
+         */
+         protected tokenizePaymentToken(token: PaymentToken, 
+                                        data : any,
+                                        success: (token: string) => void,
+                                        error:   (err: Exception) => void): void {
+
+            if (!data)                  data = {};
+            if (!data.contact)          data.contact = {};
+
+            data = this.injectDeviceData(data);
+
+            const tokenType = token.getTokenType();
+
+            switch(tokenType) {
+                case TokenType.GooglePay:
+                    const payload = token.getPayload() as GooglePayPayload
+                    let encodedPayload = btoa(JSON.stringify(payload));
+                    data.token_type = tokenType;
+                    data.payment_token = encodedPayload;
+                    break;
+                default:
+                    throw new Exception("processout-js.invalid-field", `This token type is not valid or not supported yet!.`);
+            }
+
+            this.apiRequest("post", "cards", data, function(data: any,
+                req: XMLHttpRequest, e: Event): void {
+
+                if (!data.success) {
+                    error(new Exception(data.error_type, data.message));
+                    return
+                }
+
+                success(data.card.id);
+            }, function(req: XMLHttpRequest, e: Event): void {
+                error(new Exception("processout-js.network-issue"));
+            });
+        }    
 
         /**
          * TokenizeCard takes the credit card object and creates a ProcessOut
