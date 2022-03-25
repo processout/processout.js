@@ -861,6 +861,38 @@ module ProcessOut {
         }
 
         /**
+         * getCustomerTokenActionURLAdditionalData returns the customer token action URL
+         * it also appends Additional data.
+         * @param {string} customerID
+         * @param {string} tokenID
+         * @param {object}   additionalData
+         * @param {any|string} gatewayConf
+         * @return {string}
+         */
+        public getCustomerTokenActionURLAdditionalData(
+            customerID:  string,
+            tokenID:     string,
+            additionalData: any,
+            gatewayConf: any
+        ): string {
+            var gatewayConfID = gatewayConf;
+            if (gatewayConf && gatewayConf.id) {
+                gatewayConfID = gatewayConf.id;
+            }
+
+            if (!customerID || !tokenID) {
+                throw new Exception("processout-js.missing-resource-id", "A Customer Token Action was requested, but a customer ID or a token ID was missing. Make sure you didn't rather want to call `invoice` helpers on the gateway configuration instead of `customerToken` ones.")
+            }
+
+            var suffix = "?"
+            for (var key in additionalData) {
+                suffix += `additional_data[${key}]=${encodeURI(additionalData[key])}&`;
+            }
+
+            return this.endpoint("checkout", `/${this.getProjectID()}/${customerID}/${tokenID}/redirect/${gatewayConfID}${suffix.substring(0, suffix.length - 1)}`);
+        }
+
+        /**
          * HandleCustomerTokenAction handles the tokenization action for the 
          * given customer token ID and gateway configuration. This creates a new 
          * tab, iFrame or window depending on the gateway used
@@ -887,6 +919,38 @@ module ProcessOut {
 
             var options = new ActionHandlerOptions(gatewayName, gatewayLogo);
             return this.handleAction(this.getCustomerTokenActionURL(customerID, tokenID, gatewayConf), 
+                tokenized, tokenError, options);
+        }
+
+        /**
+         * HandleCustomerTokenAction handles the tokenization action for the
+         * given customer token ID and gateway configuration and also handles any additional data.
+         * This creates a new tab, iFrame or window depending on the gateway used.
+         * @param {string} customerID
+         * @param {string} tokenID
+         * @param {any|string} gatewayConf
+         * @param {object}   additionalData
+         * @param {callback} tokenized
+         * @param {callback} tokenError
+         * @return {ActionHandler}
+         */
+        public handleCustomerTokenActionAdditionalData(
+            customerID:  string,
+            tokenID:     string,
+            gatewayConf: any,
+            additionalData: any,
+            tokenized:   (token: string)    => void,
+            tokenError:  (err:   Exception) => void
+        ): ActionHandler {
+            var gatewayName = null;
+            var gatewayLogo = null;
+            if (gatewayConf && gatewayConf.id && gatewayConf.gateway) {
+                gatewayName = gatewayConf.gateway.name;
+                gatewayLogo = gatewayConf.gateway.logo_url;
+            }
+
+            var options = new ActionHandlerOptions(gatewayName, gatewayLogo);
+            return this.handleAction(this.getCustomerTokenActionURLAdditionalData(customerID, tokenID, additionalData, gatewayConf),
                 tokenized, tokenError, options);
         }
 
