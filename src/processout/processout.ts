@@ -11,7 +11,7 @@ interface Window {
  */
 module ProcessOut {
 
-    export const DEBUG = true;
+    export const DEBUG = false;
     export const TestModePrefix = "test-";
 
     /**
@@ -121,7 +121,7 @@ module ProcessOut {
             } else if (/^https?:\/\/.*\.processout\.dev\//.test(jsHost)) {
                 this.host = "processout.dev";
             } else {
-                this.host = "processout.ninja";
+                this.host = "processout.com";
             }
 
             if (!projectID)
