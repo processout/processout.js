@@ -13,7 +13,7 @@ interface ApplePayPaymentRequest {
   shippingType?: any;
   requiredBillingContactFields?: any;
   requiredShippingContactFields?: any;
-  certificateId: string;
+  alternativeCertificateId: string;
 }
 declare enum ApplePayStatusCodes {
 // The requested action succeeded.
