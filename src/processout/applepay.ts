@@ -100,7 +100,6 @@ module ProcessOut {
             // Hook the session events we need
             var t = this;
             this.session.onvalidatemerchant = function(event: any): void {
-                console.log(t.request)
                 t.instance.apiRequest("post", t.instance.endpoint("api", "/applepay/sessions"), {
                     "session_url": event.validationURL,
                     "domain_name": window.location.hostname,
