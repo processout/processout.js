@@ -103,7 +103,7 @@ module ProcessOut {
                 t.instance.apiRequest("post", t.instance.endpoint("api", "/applepay/sessions"), {
                     "session_url": event.validationURL,
                     "domain_name": window.location.hostname,
-                    "merchant_certificate_id": this.merchant_certificate_id
+                    "merchant_certificate_id": t.request.merchantCertificateId
                 }, function(data: any, req: XMLHttpRequest, e: Event): void {
                     if (!data.success) {
                         t.onerror(new Exception(data.error_code, data.message));
