@@ -49,6 +49,7 @@ module ProcessOut {
         public textTransform:        string;
         public textDecoration:       string;
         public transition:           string;
+        public height:               string;
 
         // pseudo class/elements:
         // :hover
@@ -339,7 +340,11 @@ module ProcessOut {
                 }
                 break;
             case "resize":
-                this.iframe.height = data.data;
+                if (this.options.style.height) {
+                    this.iframe.height = this.options.style.height;
+                } else { 
+                    this.iframe.height = data.data; 
+                }
                 break;
             }
         }
