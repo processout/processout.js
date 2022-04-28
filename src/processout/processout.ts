@@ -473,7 +473,7 @@ module ProcessOut {
                 device["app_screen_height"] = screen.height;
             if (screen.width)
                 device["app_screen_width"] = screen.width;
-            device["time_zone_offset"] = Number(new Date().getTimezoneOffset());
+            device["app_timezone_offset"] = Number(new Date().getTimezoneOffset());
             if (window.navigator)
                 device["app_java_enabled"] = window.navigator.javaEnabled();
 
