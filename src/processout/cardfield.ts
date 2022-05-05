@@ -230,7 +230,7 @@ module ProcessOut {
                     // We want to reset the iframe src to prevent
                     // Firefox & IE/Edge from (wrongfully) caching the iframe
                     // content
-                    this.iframe.contentWindow.location.replace(endpoint)
+                    this.iframe.contentWindow.location.replace(endpoint);
                 } catch(e) { /* ... */ }
             }.bind(this);
 
