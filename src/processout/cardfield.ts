@@ -217,7 +217,7 @@ module ProcessOut {
             // Hide the field until it's ready
             this.iframe.style.display = "none";
             this.iframe.height = "14px"; // Default height
-
+                        
             var errored = false;
             var iframeError = setTimeout(function() {
                 errored = true;
@@ -230,7 +230,7 @@ module ProcessOut {
                     // We want to reset the iframe src to prevent
                     // Firefox & IE/Edge from (wrongfully) caching the iframe
                     // content
-                    this.iframe.src = endpoint;
+                    this.iframe.contentWindow.location.replace(endpoint)
                 } catch(e) { /* ... */ }
             }.bind(this);
 
