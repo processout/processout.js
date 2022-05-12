@@ -1147,7 +1147,7 @@ module ProcessOut {
                 "verify_metadata": options.verify_metadata,
                 "set_default":     options.set_default,
                 "incremental":     options.incremental,
-                "preferred_scheme":options.preferred_scheme,
+                "preferred_scheme":options.preferred_scheme
             };
             payload = this.injectDeviceData(payload);
 
