@@ -92,6 +92,7 @@ module ProcessOut {
             // the payment page to emulate the "in-context" flow
             case "paypal":
             case "paypalexpresscheckout":
+            case "paypal-rest":
                 this.flow = ActionFlow.NewWindow;
                 this.newWindowHeight = 645;
                 this.newWindowWidth  = 450;
@@ -170,7 +171,7 @@ module ProcessOut {
         protected static listenerCount = 0;
 
         /**
-         * newWindowName is the name of the new windows created by the 
+         * newWindowName is the name of the new windows created by the
          * ActionHandler
          * @type {string}
          */
@@ -312,7 +313,7 @@ module ProcessOut {
                 }
             }, 500);
 
-            this.listenEvents(newWindow, timer, refocus, 
+            this.listenEvents(newWindow, timer, refocus,
                 function(data: any): void {
                     if (timeout) clearTimeout(timeout);
                     success(data);
