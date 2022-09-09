@@ -220,7 +220,7 @@ module ProcessOut {
          */
         public apiRequest(method: string, path: string, data,
             success: (data: any, req: XMLHttpRequest, e: Event) => void,
-            error:   (req: XMLHttpRequest, e: Event) => void,
+            error:   (req: XMLHttpRequest, e: Event, errorCode: ApiRequestError) => void,
             retry?:   number): void {
 
             if (!retry) retry = 0;
@@ -297,18 +297,46 @@ module ProcessOut {
 
                     request.onload(<ProgressEvent>e);
                 else
-                    error(request, e);
-            };
+                    error(request, e, this.getApiRequestErrorCode(request.status));
+            }.bind(this);
             request.ontimeout  = function() {}; // Prevent IE from aborting
             request.onprogress = function() {}; // ''
             request.onabort = function() {
                 // We want to retry the call: in some cases IE fails
                 // to finish requests
-                if (retry > 3) error(request, null);
+                if (retry > 3) error(request, null, "processout-js.aborted-retries-exceeded");
                 else           this.request(method, path, data, success, error, retry + 1);
             }.bind(this);
 
             request.send(JSON.stringify(data));
+        }
+
+        /**
+         * Takes an HTTP Status code and returns an ApiRequestError
+         * @param {XMLHttpRequest['status']} httpStatusCode
+         * @return {ApiRequestError}
+         */
+        protected getApiRequestErrorCode(httpStatusCode: XMLHttpRequest['status']): ApiRequestError {
+            switch (httpStatusCode) {
+                // case 0:
+                //     return "processout-js.network-issue"
+                case 501:
+                    return "processout-js.not-implemented"
+                case 502:
+                    return "processout-js.invalid-response"
+                case 503:
+                    return "processout-js.service-unavailable"
+                case 504:
+                    return "processout-js.response-timeout"
+                case 505:
+                    return "processout-js.http-version-not-supported"
+                case 511:
+                    return "processout-js.network-auth-required"
+
+                case 500:
+                default:
+                    return "processout-js.internal-server-error"
+            }
         }
 
         /**
@@ -407,10 +435,10 @@ module ProcessOut {
                 }
 
                 success(data.card.id);
-            }, function(req: XMLHttpRequest, e: Event): void {
-                error(new Exception("processout-js.network-issue"));
+            }, function(req: XMLHttpRequest, e: Event, errorCode: ApiRequestError): void {
+                error(new Exception(errorCode));
             });
-        }    
+        }
 
         /**
          * TokenizeCard takes the credit card object and creates a ProcessOut
@@ -454,8 +482,8 @@ module ProcessOut {
                 }
 
                 success(data.card.id);
-            }, function(req: XMLHttpRequest, e: Event): void {
-                error(new Exception("processout-js.network-issue"));
+            }, function(req: XMLHttpRequest, e: Event, errorCode: ApiRequestError): void {
+                error(new Exception(errorCode));
             });
         }
 
@@ -592,8 +620,8 @@ module ProcessOut {
                 }
 
                 success(data.card.id);
-            }, function(req: XMLHttpRequest, e: Event): void {
-                error(new Exception("processout-js.network-issue"));
+            }, function(req: XMLHttpRequest, e: Event, errorCode: ApiRequestError): void {
+                error(new Exception(errorCode));
             });
         }
 
@@ -700,8 +728,8 @@ module ProcessOut {
                         confs.push(conf);
                     }
                     success(confs);
-                }.bind(this), function(req: XMLHttpRequest, e: Event): void {
-                    error(new Exception("processout-js.network-issue"));
+                }.bind(this), function(req: XMLHttpRequest, e: Event, errorCode: ApiRequestError): void {
+                    error(new Exception(errorCode));
                 });
         }
 
@@ -1118,8 +1146,8 @@ module ProcessOut {
                     }
 
                     success(data);
-                }, function(req: XMLHttpRequest, e: Event): void {
-                    error(new Exception("processout-js.network-issue"));
+                }, function(req: XMLHttpRequest, e: Event, errorCode: ApiRequestError): void {
+                    error(new Exception(errorCode));
                 });
         }
 
@@ -1213,8 +1241,8 @@ module ProcessOut {
                         `The customer action type ${data.customer_action.type} is not supported.`));
                     break;
                 }
-            }.bind(this), function(req: XMLHttpRequest, e: Event): void {
-                error(new Exception("processout-js.network-issue"));
+            }.bind(this), function(req: XMLHttpRequest, e: Event, errorCode: ApiRequestError): void {
+                error(new Exception(errorCode));
             });
         }
     }

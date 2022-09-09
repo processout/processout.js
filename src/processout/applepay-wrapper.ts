@@ -43,8 +43,8 @@ module ProcessOut {
                         callback(null);
                     else
                         callback(new Exception("applepay.not-available", data.message));
-                }.bind(this), function(req: XMLHttpRequest, e: Event): void {
-                    callback(new Exception("processout-js.network-issue"));
+                }.bind(this), function(req: XMLHttpRequest, e: Event, errorCode: ApiRequestError): void {
+                    callback(new Exception(errorCode));
                 });
         }
 
