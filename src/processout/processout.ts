@@ -318,8 +318,8 @@ module ProcessOut {
          */
         protected getApiRequestErrorCode(httpStatusCode: XMLHttpRequest['status']): ApiRequestError {
             switch (httpStatusCode) {
-                // case 0:
-                //     return "processout-js.network-issue"
+                case 0:
+                    return "processout-js.network-issue"
                 case 501:
                     return "processout-js.not-implemented"
                 case 502:
