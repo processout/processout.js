@@ -5,7 +5,18 @@
  */
 module ProcessOut {
 
-    const errors: {[locale: string]: {[name:string]: string}} = {
+    export type ApiRequestError =
+      | "processout-js.internal-server-error"
+      | "processout-js.not-implemented"
+      | "processout-js.invalid-response"
+      | "processout-js.service-unavailable"
+      | "processout-js.response-timeout"
+      | "processout-js.http-version-not-supported"
+      | "processout-js.network-auth-required"
+      | "processout-js.network-issue"
+      | "processout-js.aborted-retries-exceeded"
+
+    const errors: {[locale: string]: {[ name: string | ApiRequestError ]: string}} = {
         "en": {
             "default":                 "An error occured: your payment was declined.",
             "card.declined":           "The credit card has been declined.",
@@ -64,12 +75,21 @@ module ProcessOut {
             "processout-js.invalid-field":                 "The given HTML element may not be used by ProcessOut.js: it is an input. Please only use divs when creating a ProcessOut.js credit card field.",
             "processout-js.undefined-field":               "The given HTML element was undefined.",
             "processout-js.invalid-field-type":            "The given field type was incorrect. It must either be number, expiry, expiryMonth, expiryYear or CVC.",
-            "processout-js.network-issue":                 "There seems to be some connectivity issue preventing the payment from making it through. Please switch to another network or try again in a few minutes.",
             "processout-js.invalid-type":                  "The specified parameter had an unknown type.",
             "processout-js.missing-source":                "A source must be specified.",
             "processout-js.wrong-type-for-action":         "The requested action could not be performed on the given field because its type is invalid.",
             "processout-js.missing-invoice-id":            "An invoice ID must be specified.",
             "processout-js.missing-resource-id":           "A resource ID must be specified.",
+
+            "processout-js.internal-server-error":         "There seems to be some issue preventing the payment from making it through. Please try again in a few minutes.",
+            "processout-js.not-implemented":               "There seems to be some issue preventing the payment from making it through. Please try again in a few minutes.",
+            "processout-js.invalid-response":              "There seems to be some issue preventing the payment from making it through. Please try again in a few minutes.",
+            "processout-js.service-unavailable":           "There seems to be some issue preventing the payment from making it through. Please try again in a few minutes.",
+            "processout-js.response-timeout":              "There seems to be some issue preventing the payment from making it through. Please try again in a few minutes.",
+            "processout-js.http-version-not-supported":    "There seems to be some issue preventing the payment from making it through. Please try again in a few minutes.",
+            "processout-js.network-auth-required":         "There seems to be some issue preventing the payment from making it through. Please try again in a few minutes.",
+            "processout-js.aborted-retries-exceeded":      "There seems to be some issue preventing the payment from making it through. Please try again in a few minutes.",
+            "processout-js.network-issue":                 "There seems to be some connectivity issue preventing the payment from making it through. Please switch to another network or try again in a few minutes.",
 
             "resource.invalid-type": "The provided resource was invalid. It must be an invoice, a subscription or an authorization request.",
 

@@ -111,8 +111,8 @@ module ProcessOut {
                     } else
                         t.session.completeMerchantValidation(data.session_payload);
 
-                }, function(req: XMLHttpRequest, e: Event): void {
-                    t.onerror(new Exception("processout-js.network-issue"));
+                }, function(req: XMLHttpRequest, e: Event, errorCode: ApiRequestError): void {
+                    t.onerror(new Exception(errorCode));
                     t.session.abort();
                 });
             };
@@ -129,8 +129,8 @@ module ProcessOut {
                         } else
                             t.onsuccess(data.card);
 
-                }, function(req: XMLHttpRequest, e: Event): void {
-                    t.onerror(new Exception("processout-js.network-issue"));
+                }, function(req: XMLHttpRequest, e: Event, errorCode: ApiRequestError): void {
+                    t.onerror(new Exception(errorCode));
                     t.session.abort();
                 });
             };
