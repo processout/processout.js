@@ -13,7 +13,7 @@ brew install node
 node -v
 npm -v
 
-sudo npm install typescript uglify-js -g
+sudo npm install typescript@3.2.4 uglify-js@3.8.0 -g
 tsc -v
 ```
 

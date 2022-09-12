@@ -16,7 +16,7 @@ module ProcessOut {
       | "processout-js.network-issue"
       | "processout-js.aborted-retries-exceeded"
 
-    const errors: {[locale: string]: {[ name: string | ApiRequestError ]: string}} = {
+    const errors: {[locale: string]: {[ name: string ]: string}} = {
         "en": {
             "default":                 "An error occured: your payment was declined.",
             "card.declined":           "The credit card has been declined.",
