@@ -104,17 +104,6 @@ module ProcessOut {
             // we received all of them
             var ev = function() {
                 if (numberReady && cvcReady && expMonthReady && expYearReady) {
-                    // Let's put our auto formatting in place
-                    this.number.setNext(function() {
-                        if (this.exp)       this.exp.focus();
-                        if (this.expMonth)  this.expMonth.focus();
-                    }.bind(this));
-                    if (this.exp) {
-                        this.exp.setNext(function() {
-                            if (this.cvc) this.cvc.focus();
-                        }.bind(this));
-                    }
-
                     // All values are fetched
                     success(this);
                     return;
