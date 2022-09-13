@@ -169,22 +169,43 @@ module ProcessOut {
          * @return {string}
          */
         public static format(exp: string): string {
-            // First validate the string
-            var allowed = "1234567890 /";
-            var str = "";
-            for (var i = 0; i < exp.length; i++) {
-                if (allowed.indexOf(exp[i]) === -1)
-                    continue;
-                str += exp[i];
-            }
-
-            if (str.length == 2)
-                return str + " / ";
-
-            if (str.length == 4)
-                return str.slice(0, -3);
-
-            return str;
+            return exp
+              .replace(
+                /\s/g,
+                "" // remove whitespace
+              )
+              .replace(
+                /^([1-9]\/|[2-9])$/g,
+                "0$1/" // add 0 for digits with invalid months e.g. 3 -> 03/
+              )
+              .replace(
+                /^(0[1-9]|1[0-2])$/g,
+                "$1/" // add / automatically e.g. 11 -> 11/
+              )
+              .replace(
+                /^1([3-9])$/g,
+                "01/$1" // format month/year if input would be invalid month e.g. 13 -> 01/3
+              )
+              .replace(
+                /^(0[1-9]|1[0-2])([0-9][0-9])$/,
+                "$1/$2" // format valid 4 digit numbers to MM/YY e.g. 0535 -> 05/35
+              )
+              .replace(
+                /^0\/|0+$/g,
+                "0" // prevent 0/ and double 00 e.g. 0/ -> 0 and 00 -> 0
+              )
+              .replace(
+                /[^\d|^\/]*/g,
+                "" // remove any characters that are not digits or `/`
+              )
+              .replace(
+                /\/\//g,
+                "/" // prevent entering more than 1 `/`
+              )
+              .replace(
+                /\//g,
+                " / " // add spaces either side of `/` i.e. `/` -> ` / `
+              );
         }
 
         /**
@@ -467,13 +488,24 @@ module ProcessOut {
          */
         public static autoFormatExpiry(exp: HTMLInputElement, next?: () => void): void {
             var lastLen = 0;
-            exp.addEventListener("input", function(e) {
-                var field = <HTMLInputElement>this;
+            exp.addEventListener("keyup", function(e) {
+                const field = <HTMLInputElement>this;
                 // We want to keep the cursor position when possible
-                var cursor = field.selectionStart; var l = field.value.length;
-                var formatted = Expiry.format(field.value);
+                const cursor = field.selectionStart;
+                const l = field.value.length;
+
+                // if user presses backspace (keyCode = 8) when format is "MM / ", reduce to M
+                // length is 4 because the backspace has already occurred at this point in the keyup, so the current
+                // format is "MM /"
+                let formatted = field.value
+                if (e.keyCode === 8 && formatted.length === 4) {
+                    formatted = formatted.slice(0, -3)
+                }
+                formatted = Expiry.format(formatted);
+
                 if (formatted.length > 7)
                     return;
+
                 field.value = formatted;
                 if (cursor && cursor < l) {
                     field.setSelectionRange(cursor, cursor);
