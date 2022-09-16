@@ -498,7 +498,7 @@ module ProcessOut {
                 // length is 4 because the backspace has already occurred at this point in the keyup, so the current
                 // format is "MM /"
                 let formatted = field.value
-                if (e.keyCode === 8 && formatted.length === 4) {
+                if (e.key === "Backspace" && formatted.length === 4) {
                     formatted = formatted.slice(0, -3)
                 }
                 formatted = Expiry.format(formatted);
