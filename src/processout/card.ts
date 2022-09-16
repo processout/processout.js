@@ -498,7 +498,7 @@ module ProcessOut {
                 // length is 4 because the backspace has already occurred at this point in the keyup, so the current
                 // format is "MM /"
                 let formatted = field.value
-                if (e.keyCode === 8 && formatted.length === 4) {
+                if (e.key === "Backspace" && formatted.length === 4) {
                     formatted = formatted.slice(0, -3)
                 }
                 formatted = Expiry.format(formatted);
@@ -518,6 +518,25 @@ module ProcessOut {
 
                 lastLen = l;
             });
+        }
+
+        public static autoFormatCvc(cvc: HTMLInputElement): void {
+            cvc.addEventListener("keydown", function (e) {
+                const field = <HTMLInputElement>this;
+
+                const isNumericInput = /\d/.test(e.key)
+
+                // only allow numerics - and backspace, delete, arrows etc.
+                if (e.key.length === 1 && !isNumericInput && !e.ctrlKey && !e.metaKey) {
+                    e.preventDefault();
+                    return
+                }
+
+                // limit length to 4 - check is numeric input to allow backspace/delete/arrows etc. to pass through
+                if (isNumericInput && field.value.length > 3) {
+                    e.preventDefault()
+                }
+            })
         }
 
         /**
