@@ -169,7 +169,15 @@ module ProcessOut {
          * @return {string}
          */
         public static format(exp: string): string {
-            return exp
+            let res = exp
+
+            // only way to have length 4 is if user pressed backspace when at "MM / ". The key event will have taken
+            // place by this event being raised, so the current format is "MM /"
+            if (res.length === 4) {
+                res = res.slice(0, -3) // slice format to just be "M"
+            }
+
+            return res
               .replace(
                 /\s/g,
                 "" // remove whitespace
@@ -199,8 +207,8 @@ module ProcessOut {
                 "" // remove any characters that are not digits or `/`
               )
               .replace(
-                /\/\//g,
-                "/" // prevent entering more than 1 `/`
+                /(\/.*)\//g,
+                "$1" // prevent entering more than 1 `/`
               )
               .replace(
                 /\//g,
@@ -487,31 +495,12 @@ module ProcessOut {
          * @return {void}
          */
         public static autoFormatExpiry(exp: HTMLInputElement, next?: () => void): void {
-            var lastLen = 0;
-            exp.addEventListener("keyup", function(e) {
+            let lastLen = 0;
+            exp.addEventListener("input", function(e) {
                 const field = <HTMLInputElement>this;
-                // We want to keep the cursor position when possible
-                const cursor = field.selectionStart;
                 const l = field.value.length;
 
-                // if user presses backspace (keyCode = 8) when format is "MM / ", reduce to M
-                // length is 4 because the backspace has already occurred at this point in the keyup, so the current
-                // format is "MM /"
-                let formatted = field.value
-                if (e.key === "Backspace" && formatted.length === 4) {
-                    formatted = formatted.slice(0, -3)
-                }
-                formatted = Expiry.format(formatted);
-
-                if (formatted.length > 7)
-                    return;
-
-                field.value = formatted;
-                if (cursor && cursor < l) {
-                    field.setSelectionRange(cursor, cursor);
-                    if (cursor > 0 && field.value[cursor - 1] == " " && l > lastLen)
-                        field.setSelectionRange(cursor+1, cursor+1);
-                }
+                field.value = Expiry.format(field.value);
 
                 if (next && l > lastLen && field.value.length == 7)
                     next();
