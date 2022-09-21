@@ -169,22 +169,51 @@ module ProcessOut {
          * @return {string}
          */
         public static format(exp: string): string {
-            // First validate the string
-            var allowed = "1234567890 /";
-            var str = "";
-            for (var i = 0; i < exp.length; i++) {
-                if (allowed.indexOf(exp[i]) === -1)
-                    continue;
-                str += exp[i];
+            let res = exp
+
+            // only way to have length 4 is if user pressed backspace when at "MM / ". The key event will have taken
+            // place by this event being raised, so the current format is "MM /"
+            if (res.length === 4) {
+                res = res.slice(0, -3) // slice format to just be "M"
             }
 
-            if (str.length == 2)
-                return str + " / ";
-
-            if (str.length == 4)
-                return str.slice(0, -3);
-
-            return str;
+            return res
+              .replace(
+                /\s/g,
+                "" // remove whitespace
+              )
+              .replace(
+                /^([1-9]\/|[2-9])$/g,
+                "0$1/" // add 0 for digits with invalid months e.g. 3 -> 03/
+              )
+              .replace(
+                /^(0[1-9]|1[0-2])$/g,
+                "$1/" // add / automatically e.g. 11 -> 11/
+              )
+              .replace(
+                /^1([3-9])$/g,
+                "01/$1" // format month/year if input would be invalid month e.g. 13 -> 01/3
+              )
+              .replace(
+                /^(0[1-9]|1[0-2])([0-9][0-9])$/,
+                "$1/$2" // format valid 4 digit numbers to MM/YY e.g. 0535 -> 05/35
+              )
+              .replace(
+                /^0\/|0+$/g,
+                "0" // prevent 0/ and double 00 e.g. 0/ -> 0 and 00 -> 0
+              )
+              .replace(
+                /[^\d|^\/]*/g,
+                "" // remove any characters that are not digits or `/`
+              )
+              .replace(
+                /(\/.*)\//g,
+                "$1" // prevent entering more than 1 `/`
+              )
+              .replace(
+                /\//g,
+                " / " // add spaces either side of `/` i.e. `/` -> ` / `
+              );
         }
 
         /**
@@ -466,26 +495,37 @@ module ProcessOut {
          * @return {void}
          */
         public static autoFormatExpiry(exp: HTMLInputElement, next?: () => void): void {
-            var lastLen = 0;
+            let lastLen = 0;
             exp.addEventListener("input", function(e) {
-                var field = <HTMLInputElement>this;
-                // We want to keep the cursor position when possible
-                var cursor = field.selectionStart; var l = field.value.length;
-                var formatted = Expiry.format(field.value);
-                if (formatted.length > 7)
-                    return;
-                field.value = formatted;
-                if (cursor && cursor < l) {
-                    field.setSelectionRange(cursor, cursor);
-                    if (cursor > 0 && field.value[cursor - 1] == " " && l > lastLen)
-                        field.setSelectionRange(cursor+1, cursor+1);
-                }
+                const field = <HTMLInputElement>this;
+                const l = field.value.length;
+
+                field.value = Expiry.format(field.value);
 
                 if (next && l > lastLen && field.value.length == 7)
                     next();
 
                 lastLen = l;
             });
+        }
+
+        public static autoFormatCvc(cvc: HTMLInputElement): void {
+            cvc.addEventListener("keydown", function (e) {
+                const field = <HTMLInputElement>this;
+
+                const isNumericInput = /\d/.test(e.key)
+
+                // only allow numerics - and backspace, delete, arrows etc.
+                if (e.key.length === 1 && !isNumericInput && !e.ctrlKey && !e.metaKey) {
+                    e.preventDefault();
+                    return
+                }
+
+                // limit length to 4 - check is numeric input to allow backspace/delete/arrows etc. to pass through
+                if (isNumericInput && field.value.length > 3) {
+                    e.preventDefault()
+                }
+            })
         }
 
         /**
