@@ -500,7 +500,7 @@ module ProcessOut {
                 const field = <HTMLInputElement>this;
                 const l = field.value.length;
 
-                field.value = Expiry.format(field.value);
+                field.value = Expiry.format(field.value.substring(0, 7));
 
                 if (next && l > lastLen && field.value.length == 7)
                     next();
