@@ -338,7 +338,8 @@ module ProcessOut {
             if (err)
                 return err;
 
-            return Card.validateCVC(this.cvc);
+            const scheme = Card.getPossibleSchemes(this.getIIN())[0];
+            return Card.validateCVC(this.cvc, scheme);
         }
 
         /**
@@ -423,9 +424,22 @@ module ProcessOut {
          * @param {string} cvc
          * @return {Exception}
          */
-        public static validateCVC(cvc: string): Exception {
-            if (cvc && !cvc.match(/^\d{3,4}$/g))
-                return new Exception("card.invalid-cvc");
+        public static validateCVC(cvc: string, scheme?: string): Exception {
+            if(!scheme) {
+                if (cvc && !cvc.match(/^\d{3,4}$/g)) {
+                    return new Exception("card.invalid-cvc");
+                }
+            } else {
+                if (scheme === 'american-express') {
+                    if (cvc && !cvc.match(/^\d{4}$/g)) {
+                        return new Exception("card.invalid-cvc");
+                    }
+                } else {
+                    if (cvc && !cvc.match(/^\d{3}$/g)) {
+                        return new Exception("card.invalid-cvc");
+                    }
+                }
+            }
 
             return null;
         }
