@@ -327,7 +327,10 @@ module ProcessOut {
          * @return {Exception}
          */
         public validate(): Exception {
-            var err = Card.validateNumber(this.number);
+            const iin = this.getIIN();
+            const scheme = Card.getPossibleSchemes(iin)[0];
+            const lengths = Card.getPossibleCardLength(iin)
+            var err = Card.validateNumber(this.number, lengths);
             if (err)
                 return err;
 
@@ -338,7 +341,6 @@ module ProcessOut {
             if (err)
                 return err;
 
-            const scheme = Card.getPossibleSchemes(this.getIIN())[0];
             return Card.validateCVC(this.cvc, scheme);
         }
 
@@ -407,10 +409,10 @@ module ProcessOut {
          * @param {string} number
          * @return {Exception}
          */
-        public static validateNumber(number: string): Exception {
+        public static validateNumber(number: string, limit: number[]): Exception {
             number = Card.parseNumber(number); // Remove potential spaces
 
-            if (number.length < 12)
+            if (number.length < limit[0] || number.length > limit[1])
                 return new Exception("card.invalid-number");
 
             if (!Card.luhn(number))
@@ -570,7 +572,7 @@ module ProcessOut {
             for (var i = 0; i < schemes.length; i++) {
                 switch (schemes[i]) {
                 case "visa":
-                    minLength = Math.min(minLength, 13);
+                    minLength = Math.min(minLength, 16);
                     maxLength = Math.max(maxLength, 19);
                     break;
                 case "mastercard":
