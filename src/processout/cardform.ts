@@ -102,8 +102,13 @@ module ProcessOut {
 
             // Our handler to check if, everytime we receive a ready state,
             // we received all of them
-            var ev = function() {
+            var ev = function(opts: CardFieldOptions) {
                 if (numberReady && cvcReady && expMonthReady && expYearReady) {
+                    if (this.exp && opts.expiryAutoNext) {
+                        this.exp.setNext(function() {
+                            if (this.cvc) this.cvc.focus();
+                        }.bind(this));
+                    }
                     // All values are fetched
                     success(this);
                     return;
@@ -117,31 +122,35 @@ module ProcessOut {
                 }, error);
             var cvcEl = this.element.querySelector("[data-processout-input=cc-cvc]");
             if (cvcEl) {
-                this.cvc = new CardField(this.instance, this, new CardFieldOptions(CardField.cvc).apply(options),
+                const opts = new CardFieldOptions(CardField.cvc).apply(options);
+                this.cvc = new CardField(this.instance, this, opts,
                 <HTMLInputElement>cvcEl,
                 function() {
-                    cvcReady = true; ev();
+                    cvcReady = true; ev(opts);
                 }, error);
             } else {
                 cvcReady = true;
             }
             var expEl = this.element.querySelector("[data-processout-input=cc-exp]");
             if (expEl) {
-                this.exp = new CardField(this.instance, this, new CardFieldOptions(CardField.expiry).apply(options),
+                const opts = new CardFieldOptions(CardField.expiry).apply(options);
+                this.exp = new CardField(this.instance, this, opts,
                     <HTMLInputElement>expEl,
                 function() {
-                    expMonthReady = true; expYearReady = true; ev();
+                    expMonthReady = true; expYearReady = true; ev(opts);
                 }, error);
             } else {
-                this.expMonth = new CardField(this.instance, this, new CardFieldOptions(CardField.expiryMonth).apply(options),
+                const expiryMonthOpts = new CardFieldOptions(CardField.expiryMonth).apply(options);
+                this.expMonth = new CardField(this.instance, this, expiryMonthOpts,
                     <HTMLInputElement>this.element.querySelector("[data-processout-input=cc-exp-month]"),
                 function() {
-                    expMonthReady = true; ev();
+                    expMonthReady = true; ev(expiryMonthOpts);
                 }, error);
-                this.expYear = new CardField(this.instance, this, new CardFieldOptions(CardField.expiryYear).apply(options),
+                const expiryYearOpts = new CardFieldOptions(CardField.expiryYear).apply(options);
+                this.expYear = new CardField(this.instance, this, expiryYearOpts,
                     <HTMLInputElement>this.element.querySelector("[data-processout-input=cc-exp-year]"),
                 function() {
-                    expYearReady = true; ev();
+                    expYearReady = true; ev(expiryYearOpts);
                 }, error);
             }
 

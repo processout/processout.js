@@ -19,6 +19,7 @@ module ProcessOut {
         public placeholder: string;
         public style:       CardFieldStyle;
         public requireCVC:  boolean;
+        public expiryAutoNext: boolean = true;
 
         public constructor(type: string) {
             this.type = type;
@@ -28,6 +29,7 @@ module ProcessOut {
             if (o.placeholder)        this.placeholder = o.placeholder;
             if (o.style)              this.style       = o.style;
             if (o.requireCVC != null) this.requireCVC  = o.requireCVC;
+            if (o.expiryAutoNext !== undefined && o.expiryAutoNext !== null) this.expiryAutoNext = o.expiryAutoNext; 
 
             return this;
         }
