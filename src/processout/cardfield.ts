@@ -20,6 +20,7 @@ module ProcessOut {
         public style:       CardFieldStyle;
         public requireCVC:  boolean;
         public expiryAutoNext: boolean = true;
+        public cardNumberAutoNext: boolean = true;
 
         public constructor(type: string) {
             this.type = type;
@@ -30,6 +31,7 @@ module ProcessOut {
             if (o.style)              this.style       = o.style;
             if (o.requireCVC != null) this.requireCVC  = o.requireCVC;
             if (o.expiryAutoNext !== undefined && o.expiryAutoNext !== null) this.expiryAutoNext = o.expiryAutoNext; 
+            if (o.cardNumberAutoNext !== undefined && o.cardNumberAutoNext !== null) this.cardNumberAutoNext = o.cardNumberAutoNext; 
 
             return this;
         }
