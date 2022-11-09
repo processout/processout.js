@@ -104,13 +104,13 @@ module ProcessOut {
             // we received all of them
             var ev = function(opts: CardFieldOptions) {
                 if (numberReady && cvcReady && expMonthReady && expYearReady) {
-                    if(opts.cardNumberAutoNext) {
+                    if(opts && opts.cardNumberAutoNext) {
                         this.number.setNext(function() {
                             if (this.exp)       this.exp.focus();
                             if (this.expMonth)  this.expMonth.focus();
                         }.bind(this));
                     }
-                    if (this.exp && opts.expiryAutoNext) {
+                    if (this.exp && opts && opts.expiryAutoNext) {
                         this.exp.setNext(function() {
                             if (this.cvc) this.cvc.focus();
                         }.bind(this));
