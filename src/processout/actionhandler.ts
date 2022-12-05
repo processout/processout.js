@@ -57,6 +57,11 @@ module ProcessOut {
         IFrame,
         FingerprintIframe,
     }
+    
+    export type IframeOverride = {
+        width: number,
+        height: number
+    }
 
     export class ActionHandlerOptions {
         public flow: ActionFlow;
@@ -66,13 +71,23 @@ module ProcessOut {
         public newWindowHeight?: number;
         public newWindowWidth?: number;
 
+        // Specifies how big the iframe is, it can be overridden by IframeOverride
+        public iframeWidth: number = 440;
+        public iframeHeight: number = 480;
+
         // gatewayLogo is shown when the action is done on another tab or window
         public gatewayLogo?: string;
 
         public static ThreeDSChallengeFlow = "three-d-s-challenge-flow";
         public static ThreeDSFingerprintFlow = "three-d-s-fingerprint-flow";
 
-        constructor(actionType?: string, gatewayLogo?: string) {
+        /**
+         * 
+         * @param actionType gateway string
+         * @param gatewayLogo gateway logo url
+         * @param override If specified, the flow will use iframe with width and height override setting. 
+         */
+        constructor(actionType?: string, gatewayLogo?: string, override?: IframeOverride) {
             this.gatewayLogo = gatewayLogo;
 
             switch (actionType) {
@@ -117,6 +132,12 @@ module ProcessOut {
                 if(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
                     this.flow = ActionFlow.NewTab;
                 }
+            }
+
+            if(override) {
+                this.flow = ActionFlow.IFrame;
+                this.iframeWidth = override.width;
+                this.iframeHeight = override.height;
             }
         }
     }
@@ -201,7 +222,7 @@ module ProcessOut {
 
                 // Create the iframe to be used later
                 var iframe = document.createElement("iframe");
-                iframe.setAttribute("style", `margin: 1em auto; width: 440px; height: 480px; max-width: 100%; max-height: 100%; display: block; box-shadow: 0 15px 35px rgba(50, 50, 93, 0.1), 0 5px 15px rgba(0, 0, 0, 0.07); background-color: #ECEFF1; background-image: url("${this.instance.endpoint("js", "/images/loader.gif")}"); background-repeat: no-repeat; background-position: center;")`);
+                iframe.setAttribute("style", `margin: 1em auto; width: ${this.options.iframeWidth}px; height: ${this.options.iframeHeight}px; max-width: 100%; max-height: 100%; display: block; box-shadow: 0 15px 35px rgba(50, 50, 93, 0.1), 0 5px 15px rgba(0, 0, 0, 0.07); background-color: #ECEFF1; background-image: url("${this.instance.endpoint("js", "/images/loader.gif")}"); background-repeat: no-repeat; background-position: center;")`);
                 iframe.setAttribute("frameborder", "0");
                 iframe.onload = function() {
                     // Remove the background loader once it is actually loaded

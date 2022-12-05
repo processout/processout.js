@@ -771,16 +771,17 @@ module ProcessOut {
          * @param {any|string} gatewayConf
          * @param {callback} tokenized 
          * @param {callback} tokenError 
+         * @param {object} iframeOverride <optional> If specified, it will force flow to be iframe with the width and height specified. 
          * @return {ActionHandler}
          */
         public handleInvoiceAction(
             invoiceID:   string,
             gatewayConf: any,
             tokenized:   (token: string)    => void,
-            tokenError:  (err:   Exception) => void
+            tokenError:  (err:   Exception) => void,
+            iframeOverride?: IframeOverride
         ): ActionHandler {
-
-            return this.handleInvoiceActionAdditionalData(invoiceID, gatewayConf, {}, tokenized, tokenError);
+            return this.handleInvoiceActionAdditionalData(invoiceID, gatewayConf, {}, tokenized, tokenError, iframeOverride);
         }
 
         /**
@@ -800,7 +801,8 @@ module ProcessOut {
             gatewayConf: any,
             additionalData: any,
             tokenized:   (token: string)    => void,
-            tokenError:  (err:   Exception) => void
+            tokenError:  (err:   Exception) => void,
+            iframeOverride?: IframeOverride
         ): ActionHandler {
             var gatewayName = null;
             var gatewayLogo = null;
@@ -809,7 +811,7 @@ module ProcessOut {
                 gatewayLogo = gatewayConf.gateway.logo_url;
             }
 
-            var options = new ActionHandlerOptions(gatewayName, gatewayLogo);
+            var options = new ActionHandlerOptions(gatewayName, gatewayLogo, iframeOverride);
             return this.handleAction(this.getInvoiceActionURL(invoiceID, gatewayConf, additionalData), 
                 tokenized, tokenError, options);
         }
@@ -826,7 +828,7 @@ module ProcessOut {
 
         protected buildHandleInvoiceAction(
             invoiceID:   string, 
-            gatewayConf: any
+            gatewayConf: any,
         ): (
             tokenized:   (token: string)    => void,
             tokenError:  (err:   Exception) => void
@@ -834,10 +836,10 @@ module ProcessOut {
 
             return function(
                 tokenized:   (token: string)    => void,
-                tokenError:  (err:   Exception) => void
+                tokenError:  (err:   Exception) => void,
+                iframeOverride?: IframeOverride
             ): ActionHandler {
-
-                return this.handleInvoiceAction(invoiceID, gatewayConf, tokenized, tokenError);
+                return this.handleInvoiceAction(invoiceID, gatewayConf, tokenized, tokenError, iframeOverride);
             }.bind(this);
         }
 
