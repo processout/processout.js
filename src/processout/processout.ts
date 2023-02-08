@@ -50,9 +50,9 @@ module ProcessOut {
         * @type {boolean}
         */
         public sandbox = false;
-        
+
         /**
-        * Host of ProcessOut. Is automatically updated to the correct one 
+        * Host of ProcessOut. Is automatically updated to the correct one
         * when the library loads
         * @type {string}
         */
@@ -249,7 +249,7 @@ module ProcessOut {
             // ProcessOut's load-balancers and routers can route the request
             // to the project's region
             path += `?legacyrequest=true&project_id=${this.projectID}`
-            
+
             // We also need to hack our request headers for legacy browsers to 
             // work, but also for modern browsers with extensions playing with 
             // headers (such as antiviruses)
@@ -268,7 +268,7 @@ module ProcessOut {
 
             // We still want to push the headers when we can
             if (!window.XDomainRequest) {
-                for (var k in headers)	
+                for (var k in headers)
                     request.setRequestHeader(k, headers[k]);
             }
 
@@ -292,7 +292,7 @@ module ProcessOut {
                 return;
             };
             request.onerror = function(e: ProgressEvent) {
-                if (request.status && request.status >= 200 && 
+                if (request.status && request.status >= 200 &&
                     request.status < 500 && request.responseText)
 
                     request.onload(<ProgressEvent>e);
@@ -403,7 +403,7 @@ module ProcessOut {
          * @param  {callback} error
          * @return {void}
          */
-         protected tokenizePaymentToken(token: PaymentToken, 
+         protected tokenizePaymentToken(token: PaymentToken,
                                         data : any,
                                         success: (token: string) => void,
                                         error:   (err: Exception) => void): void {
@@ -568,14 +568,14 @@ module ProcessOut {
             error:   (err: Exception) => void): void {
 
             if (val instanceof CardForm)
-                return this.refreshCVCForm(cardUID, <CardForm>val, 
+                return this.refreshCVCForm(cardUID, <CardForm>val,
                     success, error);
 
             return this.refreshCVCString(cardUID, <string>val, success, error);
         }
 
         /**
-         * refreshCVCForm refreshes the card CVC using the given form to 
+         * refreshCVCForm refreshes the card CVC using the given form to
          * fetch the CVC value
          * @param  {string}   cardUID
          * @param  {CardForm} form
@@ -632,7 +632,7 @@ module ProcessOut {
          * @param  {callback} onError
          * @return {void}
          */
-        public newModal(options: string|any, 
+        public newModal(options: string|any,
             onReady?: (modal: Modal)     => void,
             onError?: (err:   Exception) => void): void {
 
@@ -692,8 +692,8 @@ module ProcessOut {
          * - {bool} alternativePaymentMethods: matches APMs
          * - {bool} tokenization:              matches gateways supporting tokenization
          * @param {any} config
-         * @param {callback} success 
-         * @param {callback} error 
+         * @param {callback} success
+         * @param {callback} error
          */
         public fetchGatewayConfigurations(
             config:  any,
@@ -736,7 +736,7 @@ module ProcessOut {
         /**
          * BuildGetInvoiceActionURL returns the invoice action URL
          * @param {string} invoiceID
-         * @param {any|string} gatewayConf 
+         * @param {any|string} gatewayConf
          * @return {string}
          */
         public getInvoiceActionURL(
@@ -769,9 +769,9 @@ module ProcessOut {
          * window depending on the gateway used
          * @param {string} invoiceID
          * @param {any|string} gatewayConf
-         * @param {callback} tokenized 
-         * @param {callback} tokenError 
-         * @param {object} iframeOverride <optional> If specified, it will force flow to be iframe with the width and height specified. 
+         * @param {callback} tokenized
+         * @param {callback} tokenError
+         * @param {object} iframeOverride <optional> If specified, it will force flow to be iframe with the width and height specified.
          * @return {ActionHandler}
          */
         public handleInvoiceAction(
@@ -792,8 +792,8 @@ module ProcessOut {
          * @param {string} invoiceID
          * @param {any|string} gatewayConf
          * @param {object}   additionalData
-         * @param {callback} tokenized 
-         * @param {callback} tokenError 
+         * @param {callback} tokenized
+         * @param {callback} tokenError
          * @return {ActionHandler}
          */
         public handleInvoiceActionAdditionalData(
@@ -812,12 +812,12 @@ module ProcessOut {
             }
 
             var options = new ActionHandlerOptions(gatewayName, gatewayLogo, iframeOverride);
-            return this.handleAction(this.getInvoiceActionURL(invoiceID, gatewayConf, additionalData), 
+            return this.handleAction(this.getInvoiceActionURL(invoiceID, gatewayConf, additionalData),
                 tokenized, tokenError, options);
         }
 
         protected buildGetInvoiceActionURL(
-            invoiceID:   string, 
+            invoiceID:   string,
             gatewayConf: any
         ): () => string {
 
@@ -827,7 +827,7 @@ module ProcessOut {
         }
 
         protected buildHandleInvoiceAction(
-            invoiceID:   string, 
+            invoiceID:   string,
             gatewayConf: any,
         ): (
             tokenized:   (token: string)    => void,
@@ -846,8 +846,8 @@ module ProcessOut {
         protected buildConfHookForInvoice(
             gatewayConf: any
         ): (
-            el:      HTMLElement, 
-            success: (token: string)    => void, 
+            el:      HTMLElement,
+            success: (token: string)    => void,
             error:   (err:   Exception) => void
         ) => void {
 
@@ -870,7 +870,7 @@ module ProcessOut {
          * getCustomerTokenActionURL returns the customer token action URL
          * @param {string} customerID
          * @param {string} tokenID
-         * @param {any|string} gatewayConf 
+         * @param {any|string} gatewayConf
          * @return {string}
          */
         public getCustomerTokenActionURL(
@@ -923,14 +923,14 @@ module ProcessOut {
         }
 
         /**
-         * HandleCustomerTokenAction handles the tokenization action for the 
-         * given customer token ID and gateway configuration. This creates a new 
+         * HandleCustomerTokenAction handles the tokenization action for the
+         * given customer token ID and gateway configuration. This creates a new
          * tab, iFrame or window depending on the gateway used
          * @param {string} customerID
          * @param {string} tokenID
          * @param {any|string} gatewayConf
-         * @param {callback} tokenized 
-         * @param {callback} tokenError 
+         * @param {callback} tokenized
+         * @param {callback} tokenError
          * @return {ActionHandler}
          */
         public handleCustomerTokenAction(
@@ -948,7 +948,7 @@ module ProcessOut {
             }
 
             var options = new ActionHandlerOptions(gatewayName, gatewayLogo);
-            return this.handleAction(this.getCustomerTokenActionURL(customerID, tokenID, gatewayConf), 
+            return this.handleAction(this.getCustomerTokenActionURL(customerID, tokenID, gatewayConf),
                 tokenized, tokenError, options);
         }
 
@@ -985,7 +985,7 @@ module ProcessOut {
         }
 
         protected buildGetCustomerTokenActionURL(
-            customerID:  string, 
+            customerID:  string,
             tokenID:     string,
             gatewayConf: any
         ): () => string {
@@ -1016,8 +1016,8 @@ module ProcessOut {
         protected buildConfHookForCustomerToken(
             gatewayConf: any
         ): (
-            el:      HTMLElement, 
-            success: (token: string)    => void, 
+            el:      HTMLElement,
+            success: (token: string)    => void,
             error:   (err:   Exception) => void
         ) => void {
 
@@ -1061,14 +1061,14 @@ module ProcessOut {
          * makeCardToken handles them automatically, such as authentication for SCA
          * @param {string|Card|CardForm} val
          * @param {string} customerID
-         * @param {string} customerTokenID 
-         * @param {any} options 
-         * @param {callback} success 
+         * @param {string} customerTokenID
+         * @param {any} options
+         * @param {callback} success
          * @param {callback} error
          */
         public makeCardToken(val: string|Card|CardForm, customerID: string, customerTokenID: string,
-            options: any, 
-            success:  (data: any)       => void, 
+            options: any,
+            success:  (data: any)       => void,
             error:    (err:  Exception) => void): void {
 
             if ((val instanceof Card) || (val instanceof CardForm))
@@ -1079,11 +1079,11 @@ module ProcessOut {
             return this.makeCardTokenFromCardID(<string>val, customerID, customerTokenID, options, success, error);
         }
 
-        protected makeCardTokenFromCardID(cardID: string, customerID: string, customerTokenID: string, options: any, 
-            success:  (data: any)       => void, 
+        protected makeCardTokenFromCardID(cardID: string, customerID: string, customerTokenID: string, options: any,
+            success:  (data: any)       => void,
             error:    (err:  Exception) => void): void {
 
-            this.handleCardActions("PUT", `customers/${customerID}/tokens/${customerTokenID}`, customerTokenID, 
+            this.handleCardActions("PUT", `customers/${customerID}/tokens/${customerTokenID}`, customerTokenID,
                 cardID, options, success, error);
         }
 
@@ -1091,17 +1091,17 @@ module ProcessOut {
          * MakeCardPayment makes a full card payment, handling any required
          * customer action such as authentication for SCA (like 3DS 1 or 2)
          * @param {string} invoiceID
-         * @param {string} cardID 
-         * @param {any} options 
-         * @param {callback} success 
+         * @param {string} cardID
+         * @param {any} options
+         * @param {callback} success
          * @param {callback} error
          */
         public makeCardPayment(invoiceID: string, cardID: string,
             options: any,
-            success:  (data: any)       => void, 
+            success:  (data: any)       => void,
             error:    (err:  Exception) => void): void {
 
-            this.handleCardActions("POST", `invoices/${invoiceID}/capture`, invoiceID, 
+            this.handleCardActions("POST", `invoices/${invoiceID}/capture`, invoiceID,
                 cardID, options, success, error);
         }
 
@@ -1153,10 +1153,10 @@ module ProcessOut {
                 });
         }
 
-        protected handleCardActions(method: string, endpoint: string, 
+        protected handleCardActions(method: string, endpoint: string,
             resourceID: string, cardID: string,
             options: any,
-            success:  (data: any)       => void, 
+            success:  (data: any)       => void,
             error:    (err:  Exception) => void): void {
 
             if (!options) options = {};
@@ -1167,6 +1167,7 @@ module ProcessOut {
 
             var payload = <any>{
                 "authorize_only":  options.authorize_only,
+                "allow_fallback_to_sale":  options.allow_fallback_to_sale,
                 "capture_amount":  options.capture_amount,
                 "auto_capture_at": options.auto_capture_at,
                 "source":          source,
@@ -1234,12 +1235,12 @@ module ProcessOut {
 
                 case "redirect":
                     // This is for 3DS2
-                    this.handleAction(data.customer_action.value, nextStep, error, 
+                    this.handleAction(data.customer_action.value, nextStep, error,
                         new ActionHandlerOptions(ActionHandlerOptions.ThreeDSChallengeFlow));
                     break;
 
                 default:
-                    error(new Exception("processout-js.wrong-type-for-action", 
+                    error(new Exception("processout-js.wrong-type-for-action",
                         `The customer action type ${data.customer_action.type} is not supported.`));
                     break;
                 }
