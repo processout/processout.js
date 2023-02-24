@@ -1215,6 +1215,14 @@ module ProcessOut {
                     }.bind(this), error, new ActionHandlerOptions(ActionHandlerOptions.ThreeDSChallengeFlow));
                     break;
 
+                case "url_no_iframe":
+                    // This is similar to "url" case, but the provider does not support iframe
+                    this.handleAction(data.customer_action.value, function(data: any): void {
+                        options.gatewayRequestSource = null;
+                        this.handleCardActions(method, endpoint, resourceID, cardID, options, success, error);
+                    }.bind(this), error, new ActionHandlerOptions(ActionHandlerOptions.ThreeDSChallengeFlowNoIframe));
+                    break;
+
                 case "fingerprint":
                     this.handleAction(data.customer_action.value, nextStep, function(err) {
                         var gReq = new GatewayRequest();
