@@ -79,6 +79,7 @@ module ProcessOut {
         public gatewayLogo?: string;
 
         public static ThreeDSChallengeFlow = "three-d-s-challenge-flow";
+        public static ThreeDSChallengeFlowNoIframe = "three-d-s-challenge-flow-no-iframe";
         public static ThreeDSFingerprintFlow = "three-d-s-fingerprint-flow";
 
         /**
@@ -92,9 +93,16 @@ module ProcessOut {
 
             switch (actionType) {
             // The 3DS flow is a special one where we always want to load it
-            // in an iframe
+            // in an iframe (if it is supported)
             case ActionHandlerOptions.ThreeDSChallengeFlow:
                 this.flow = ActionFlow.IFrame;
+                break;
+
+            // The 3DS flow where iframe is not supported
+            case ActionHandlerOptions.ThreeDSChallengeFlowNoIframe:
+                this.flow = ActionFlow.NewWindow;
+                this.newWindowHeight = 645;
+                this.newWindowWidth  = 450;
                 break;
 
             // The 3DS Fingerprint flow is another special one where we

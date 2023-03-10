@@ -1208,11 +1208,15 @@ module ProcessOut {
 
                 switch (data.customer_action.type) {
                 case "url":
+                    var opts = ActionHandlerOptions.ThreeDSChallengeFlow;
+                    if (data.customer_action.metadata && data.customer_action.metadata.no_iframe === "true") {
+                        opts = ActionHandlerOptions.ThreeDSChallengeFlowNoIframe;
+                    }
                     // This is for 3DS1
                     this.handleAction(data.customer_action.value, function(data: any): void {
                         options.gatewayRequestSource = null;
                         this.handleCardActions(method, endpoint, resourceID, cardID, options, success, error);
-                    }.bind(this), error, new ActionHandlerOptions(ActionHandlerOptions.ThreeDSChallengeFlow));
+                    }.bind(this), error, new ActionHandlerOptions(opts));
                     break;
 
                 case "fingerprint":
