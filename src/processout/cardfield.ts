@@ -54,6 +54,7 @@ module ProcessOut {
         public textDecoration:       string;
         public transition:           string;
         public height:               string;
+        public direction:            string;
 
         // pseudo class/elements:
         // :hover
