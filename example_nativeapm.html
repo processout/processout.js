@@ -1,0 +1,25 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+  <title>Native APM Example Page</title>
+</head>
+
+<body>
+  <div id="nativeapm-container"></div>
+  <script src="./scripts/processout.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      var client = new ProcessOut.ProcessOut("proj_QHeiFsmPiaadVizlKTuJrTavLkqVImQ3");
+      var nativeApm = client.setupNativeApm({ invoiceId: '123', gatewayConfigurationId: '123' });
+      nativeApm.setTheme({
+        backgroundColor: 'coral',
+        textColor: 'white',
+      })
+      nativeApm.mount('#nativeapm-container');
+    });
+  </script>
+</body>
+
+</html>
