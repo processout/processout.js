@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { AvailableConfigTypes, useConfig } from '../../config';
 
 type PaymentDataType = {
   invoiceId?: string;
@@ -18,16 +19,10 @@ type PropsType = {
 };
 
 const PaymentDataProvider = ({ children }: PropsType) => {
-  const [paymentData, setPaymentData] =
-    React.useState<PaymentDataType>(defaultPaymentData);
-
-  React.useEffect(() => {
-    window.addEventListener('message', (event) => {
-      if (event.data.payment) {
-        setPaymentData(event.data.payment);
-      }
-    });
-  }, []);
+  const paymentData = useConfig<PaymentDataType>({
+    configType: AvailableConfigTypes.Payment,
+    initialConfig: defaultPaymentData,
+  });
 
   return (
     <PaymentDataContext.Provider value={paymentData}>
