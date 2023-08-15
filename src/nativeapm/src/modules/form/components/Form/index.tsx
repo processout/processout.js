@@ -1,29 +1,10 @@
 import { styled } from 'styled-components';
 import { Button } from '../../../../components';
 import Input from '../Input';
-
-export type FormDataType = {
-  gateway: {
-    name: string;
-    message: string;
-    logo: string;
-  };
-  inputs: Array<{
-    key: string;
-    name: string;
-    type: string;
-    validation: {
-      required: boolean;
-      length: number | null;
-    };
-  }>;
-  button: {
-    text: string;
-  };
-};
+import { GatewayUiDataType } from '../../../payments';
 
 type PropsType = {
-  data: FormDataType;
+  data: GatewayUiDataType;
 };
 
 const StyledForm = styled.form`

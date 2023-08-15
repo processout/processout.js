@@ -1,15 +1,12 @@
-import { ResponseType } from '../../../payments';
+import { GatewayUiDataType } from '../../../payments';
 import Form from '../../components/Form';
-import { uiMapper } from '../../mappers';
 
 type PropsType = {
-  gatewayConfiguration: ResponseType;
+  gatewayConfiguration: GatewayUiDataType;
 };
 
 const FormContainer = ({ gatewayConfiguration }: PropsType) => {
-  const formData = uiMapper.mapToUI(gatewayConfiguration);
-
-  return <Form data={formData} />;
+  return <Form data={gatewayConfiguration} />;
 };
 
 export default FormContainer;

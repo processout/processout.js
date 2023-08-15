@@ -1,7 +1,26 @@
 import { ResponseType } from '../../payments';
-import { FormDataType } from '../components/Form';
 
-const mapToUI = (response: ResponseType): FormDataType => ({
+export type GatewayUiDataType = {
+  gateway: {
+    name: string;
+    message: string;
+    logo: string;
+  };
+  inputs: Array<{
+    key: string;
+    name: string;
+    type: string;
+    validation: {
+      required: boolean;
+      length: number | null;
+    };
+  }>;
+  button: {
+    text: string;
+  };
+};
+
+const mapToUI = (response: ResponseType): GatewayUiDataType => ({
   gateway: {
     name: response.native_apm.gateway.display_name,
     message: response.native_apm.gateway.customer_action_message,
