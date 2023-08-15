@@ -1,10 +1,10 @@
 import AppProviders from './providers';
-import { FormView } from './views';
+import AppView from './modules/views-manager';
 
 function App() {
   return (
     <AppProviders>
-      <FormView />
+      <AppView />
     </AppProviders>
   );
 }

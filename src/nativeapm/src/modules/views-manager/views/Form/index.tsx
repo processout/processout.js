@@ -1,14 +1,13 @@
-import { Container } from '../../components';
-import { FormContainer } from '../../modules/form';
-import { useGatewayConfiguration } from '../../modules/payments';
+import { FormContainer } from '../../../form';
+import { useGatewayConfiguration } from '../../../payments';
 
 const FormView = () => {
   const gatewayConfiguration = useGatewayConfiguration();
 
   return (
-    <Container>
+    <>
       <FormContainer gatewayConfiguration={gatewayConfiguration} />
-    </Container>
+    </>
   );
 };
 
