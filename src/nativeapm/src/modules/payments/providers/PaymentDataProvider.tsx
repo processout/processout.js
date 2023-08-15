@@ -2,16 +2,16 @@ import * as React from 'react';
 import { AvailableConfigTypes, useConfig } from '../../config';
 
 type PaymentDataType = {
-  invoiceId?: string;
-  gatewayConfigurationId?: string;
+  invoiceId: string;
+  gatewayConfigurationId: string;
 };
 
 const defaultPaymentData = {
-  invoiceId: undefined,
-  gatewayConfigurationId: undefined,
+  invoiceId: '123',
+  gatewayConfigurationId: '321',
 };
 
-const PaymentDataContext =
+export const PaymentDataContext =
   React.createContext<PaymentDataType>(defaultPaymentData);
 
 type PropsType = {

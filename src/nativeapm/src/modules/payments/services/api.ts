@@ -46,7 +46,21 @@ const response: ResponseType = {
   },
 };
 
-const getGatewayConfiguration = () => response;
+type GetGatewayConfigurationArgsType = {
+  invoiceId: string;
+  gatewayConfigurationId: string;
+};
+const getGatewayConfiguration = ({
+  invoiceId,
+  gatewayConfigurationId,
+}: GetGatewayConfigurationArgsType) => {
+  console.log(
+    'getGatewayConfiguration args',
+    invoiceId,
+    gatewayConfigurationId
+  );
+  return response;
+};
 
 export default {
   getGatewayConfiguration,
