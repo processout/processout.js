@@ -1,13 +1,12 @@
-import React from 'react';
+import AppProviders from './providers';
+import { FormView } from './views';
 
 function App() {
-  React.useEffect(() => {
-    console.log('NativeAPM Mounted');
-    window.addEventListener('message', (event) => {
-      console.log('Event', event.data);
-    });
-  }, []);
-  return <div>Native APM Widget</div>;
+  return (
+    <AppProviders>
+      <FormView />
+    </AppProviders>
+  );
 }
 
 export default App;
