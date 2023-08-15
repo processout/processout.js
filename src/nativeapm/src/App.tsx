@@ -1,10 +1,10 @@
 import AppProviders from './providers';
-import { ErrorView } from './views';
+import { FormView } from './views';
 
 function App() {
   return (
     <AppProviders>
-      <ErrorView />
+      <FormView />
     </AppProviders>
   );
 }
