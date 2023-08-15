@@ -23,7 +23,6 @@ const PaymentDataProvider = ({ children }: PropsType) => {
 
   React.useEffect(() => {
     window.addEventListener('message', (event) => {
-      console.log('message from payment data provider');
       if (event.data.payment) {
         setPaymentData(event.data.payment);
       }

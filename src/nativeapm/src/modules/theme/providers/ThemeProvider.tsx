@@ -13,7 +13,6 @@ const ThemeProvider = ({ children }: PropsType) => {
 
   React.useEffect(() => {
     window.addEventListener('message', (event) => {
-      console.log('message from theme provider');
       if (event.data.theme) {
         setTheme(event.data.theme);
       }
