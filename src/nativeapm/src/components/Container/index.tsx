@@ -1,7 +1,7 @@
 import { styled } from 'styled-components';
 
 type PropsType = {
-  children: React.ReactElement;
+  children: React.ReactElement | React.ReactElement[];
 };
 
 const StyledContainer = styled.div`

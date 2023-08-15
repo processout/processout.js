@@ -15,8 +15,12 @@ const StyledButton = styled.button`
   }
 `;
 
-const Button = () => {
-  return <StyledButton>Button</StyledButton>;
+type PropsType = {
+  text: string;
+};
+
+const Button = ({ text }: PropsType) => {
+  return <StyledButton>{text}</StyledButton>;
 };
 
 export default Button;

@@ -23,7 +23,7 @@ const Form = ({ data }: PropsType) => {
         <Input {...input} />
       ))}
       <StyledButtonWrapper>
-        <Button />
+        <Button text={data.button.text} />
       </StyledButtonWrapper>
     </StyledForm>
   );
