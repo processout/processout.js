@@ -7,7 +7,7 @@
 </head>
 
 <body>
-  <div id="nativeapm-container"></div>
+  <div id="nativeapm-container" style="width: 350px"></div>
   <script src="./scripts/processout.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -15,7 +15,7 @@
       var nativeApm = client.setupNativeApm({ invoiceId: '123', gatewayConfigurationId: '123' });
       nativeApm.setTheme({
         colors: {
-          primaryColor: 'green',
+          primaryColor: 'orange',
           secondaryColor: 'white',
         }
       })

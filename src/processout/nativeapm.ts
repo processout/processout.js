@@ -66,6 +66,7 @@ module ProcessOut {
       this.iframe = document.createElement('iframe');
       this.iframe.setAttribute('src', '../scripts/nativeapm/index.html');
       this.iframe.setAttribute('frameborder', '0');
+      this.iframe.style.width = 'inherit';
       this.iframe.onload = () => {
         setTimeout(() => {
           this.iframe.contentWindow.postMessage(this.config.get(), '*');
