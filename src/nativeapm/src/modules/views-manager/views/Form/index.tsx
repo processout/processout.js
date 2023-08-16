@@ -1,14 +1,7 @@
 import { FormContainer } from '../../../form';
-import { useGatewayConfiguration } from '../../../payments';
 
 const FormView = () => {
-  const gatewayConfiguration = useGatewayConfiguration();
-
-  return (
-    <>
-      <FormContainer gatewayConfiguration={gatewayConfiguration} />
-    </>
-  );
+  return <FormContainer />;
 };
 
 export default FormView;

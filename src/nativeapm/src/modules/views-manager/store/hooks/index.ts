@@ -1,1 +1,1 @@
-export { default as useViewsMachine } from './useViewsMachine';
+export { default as useViewsStore } from './useViewsStore';

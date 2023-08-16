@@ -5,6 +5,7 @@ import { GatewayUiDataType } from '../../../payments';
 
 type PropsType = {
   data: GatewayUiDataType;
+  onSubmit(e: React.FormEvent): void;
 };
 
 const StyledForm = styled.form`
@@ -16,9 +17,9 @@ const StyledButtonWrapper = styled.div`
   margin: 30px auto 0 auto;
 `;
 
-const Form = ({ data }: PropsType) => {
+const Form = ({ data, onSubmit }: PropsType) => {
   return (
-    <StyledForm>
+    <StyledForm onSubmit={onSubmit}>
       {data.inputs.map((input) => (
         <Input {...input} />
       ))}

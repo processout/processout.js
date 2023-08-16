@@ -1,12 +1,17 @@
-import { GatewayUiDataType } from '../../../payments';
+import { useGatewayConfiguration } from '../../../payments';
+import { useViewsStore } from '../../../views-manager';
 import Form from '../../components/Form';
 
-type PropsType = {
-  gatewayConfiguration: GatewayUiDataType;
-};
+const FormContainer = () => {
+  const gatewayConfiguration = useGatewayConfiguration();
+  const { goToPendingState } = useViewsStore();
 
-const FormContainer = ({ gatewayConfiguration }: PropsType) => {
-  return <Form data={gatewayConfiguration} />;
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    goToPendingState();
+  };
+
+  return <Form data={gatewayConfiguration} onSubmit={handleSubmit} />;
 };
 
 export default FormContainer;

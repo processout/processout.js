@@ -1,3 +1,4 @@
+import { useViewsStore } from '../..';
 import { Button, Logo, Message } from '../../../../components';
 import { useGatewayConfiguration } from '../../../payments';
 import styled from 'styled-components';
@@ -8,6 +9,7 @@ const StyledMessageWrapper = styled.div`
 
 const PendingView = () => {
   const gatewayConfiguration = useGatewayConfiguration();
+  const { goBackToFormView } = useViewsStore();
 
   return (
     <>
@@ -15,7 +17,7 @@ const PendingView = () => {
       <StyledMessageWrapper>
         <Message text={gatewayConfiguration.gateway.message} />
       </StyledMessageWrapper>
-      <Button text="Cancel" />
+      <Button text="Cancel" onClick={goBackToFormView} />
     </>
   );
 };

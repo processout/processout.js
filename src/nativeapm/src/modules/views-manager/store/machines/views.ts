@@ -7,28 +7,37 @@ export enum AvailableViews {
   ErrorView = 'ErrorView',
 }
 
+export enum AvailableEvents {
+  Submit = 'SUBMIT',
+  Success = 'SUCCESS',
+  Error = 'ERROR',
+  Retry = 'RETRY',
+  GoBack = 'GO_BACK',
+}
+
 export const viewsMachine = createMachine({
-  initial: 'FormView',
+  initial: AvailableViews.FormView,
   states: {
     [AvailableViews.FormView]: {
       on: {
-        SUBMIT: AvailableViews.PendingView,
+        [AvailableEvents.Submit]: AvailableViews.PendingView,
       },
     },
     [AvailableViews.PendingView]: {
       on: {
-        SUCCESS: AvailableViews.SuccessView,
-        ERROR: AvailableViews.ErrorView,
+        [AvailableEvents.Success]: AvailableViews.SuccessView,
+        [AvailableEvents.Error]: AvailableViews.ErrorView,
+        [AvailableEvents.GoBack]: AvailableViews.FormView,
       },
     },
     [AvailableViews.SuccessView]: {
       on: {
-        GO_BACK: AvailableViews.FormView,
+        [AvailableEvents.GoBack]: AvailableViews.FormView,
       },
     },
     [AvailableViews.ErrorView]: {
       on: {
-        RETRY: AvailableViews.FormView,
+        [AvailableEvents.Retry]: AvailableViews.FormView,
       },
     },
   },
