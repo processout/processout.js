@@ -2,10 +2,16 @@ import { styled } from 'styled-components';
 import { Button } from '../../../../components';
 import Input from '../Input';
 import { GatewayUiDataType } from '../../../payments';
+import {
+  Controller,
+  FieldValues,
+  SubmitHandler,
+  useForm,
+} from 'react-hook-form';
 
 type PropsType = {
   data: GatewayUiDataType;
-  onSubmit(e: React.FormEvent): void;
+  onSubmit: SubmitHandler<FieldValues>;
 };
 
 const StyledForm = styled.form`
@@ -18,10 +24,21 @@ const StyledButtonWrapper = styled.div`
 `;
 
 const Form = ({ data, onSubmit }: PropsType) => {
+  const { control, handleSubmit } = useForm();
+
   return (
-    <StyledForm onSubmit={onSubmit}>
+    <StyledForm onSubmit={handleSubmit(onSubmit)}>
       {data.inputs.map((input) => (
-        <Input {...input} />
+        <Controller
+          key={input.key}
+          name={input.key}
+          control={control}
+          render={({ field }) => <Input label={input.name} {...field} />}
+          rules={{
+            required: input.validation.required,
+            maxLength: input.validation.length ?? undefined,
+          }}
+        />
       ))}
       <StyledButtonWrapper>
         <Button text={data.button.text} />

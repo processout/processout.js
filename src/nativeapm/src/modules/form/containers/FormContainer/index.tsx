@@ -6,12 +6,11 @@ const FormContainer = () => {
   const gatewayConfiguration = useGatewayConfiguration();
   const { goToPendingState } = useViewsStore();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = () => {
     goToPendingState();
   };
 
-  return <Form data={gatewayConfiguration} onSubmit={handleSubmit} />;
+  return <Form data={gatewayConfiguration} onSubmit={onSubmit} />;
 };
 
 export default FormContainer;

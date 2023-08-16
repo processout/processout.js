@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { styled } from 'styled-components';
 
 const StyledInputWrapper = styled.div`
@@ -16,20 +17,20 @@ const StyledInput = styled.input`
 `;
 
 type PropsType = {
-  name: string;
-  validation: {
-    required: boolean;
-    length: number | null;
-  };
+  label: string;
 };
 
-const Input = ({ name, validation }: PropsType) => {
-  return (
-    <StyledInputWrapper>
-      <StyledInputLabel>{name}</StyledInputLabel>
-      <StyledInput required={validation.required} />
-    </StyledInputWrapper>
-  );
-};
+const Input = React.forwardRef<HTMLInputElement, PropsType>(
+  (props: PropsType, ref) => {
+    const { label, ...field } = props;
+
+    return (
+      <StyledInputWrapper>
+        <StyledInputLabel>{label}</StyledInputLabel>
+        <StyledInput ref={ref} {...field} />
+      </StyledInputWrapper>
+    );
+  }
+);
 
 export default Input;
