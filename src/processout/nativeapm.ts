@@ -47,7 +47,7 @@ module ProcessOut {
      * @param {any} config
      */
     public setTheme(theme: any) {
-      this.config.setTheme({ theme });
+      this.config.setTheme(theme);
     }
 
     /**
@@ -67,7 +67,9 @@ module ProcessOut {
       this.iframe.setAttribute('src', '../scripts/nativeapm/index.html');
       this.iframe.setAttribute('frameborder', '0');
       this.iframe.onload = () => {
-        this.iframe.contentWindow.postMessage(this.config.get(), '*');
+        setTimeout(() => {
+          this.iframe.contentWindow.postMessage(this.config.get(), '*');
+        }, 0);
       };
       document.querySelector(containerSelector).appendChild(this.iframe);
     }

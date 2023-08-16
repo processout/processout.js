@@ -1,11 +1,15 @@
-import styled from 'styled-components';
+import styled, { useTheme } from 'styled-components';
 
-const StyledButton = styled.button`
+type StyledButtonProps = {
+  background: string;
+};
+
+const StyledButton = styled.button<StyledButtonProps>`
   width: 200px;
   padding: 10px;
   border-radius: 5px;
   border: none;
-  background-color: coral;
+  background-color: ${(props) => props.background};
   font-size: 1rem;
   cursor: pointer;
   transition: all 0.4s;
@@ -20,7 +24,11 @@ type PropsType = {
 };
 
 const Button = ({ text }: PropsType) => {
-  return <StyledButton>{text}</StyledButton>;
+  const theme = useTheme();
+
+  return (
+    <StyledButton background={theme.colors.primaryColor}>{text}</StyledButton>
+  );
 };
 
 export default Button;

@@ -24,8 +24,10 @@ module ProcessOut {
      * @type {string}
      */
     protected theme: {
-      primaryColor: string;
-      secondaryColor: string;
+      colors: {
+        primaryColor: string;
+        secondaryColor: string;
+      };
     };
 
     /**
@@ -54,7 +56,7 @@ module ProcessOut {
      * Sets theme of NativeAPM
      * @param {any} theme
      */
-    public setTheme({ theme }): void {
+    public setTheme(theme): void {
       this.theme = theme;
     }
   }

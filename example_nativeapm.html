@@ -14,8 +14,10 @@
       var client = new ProcessOut.ProcessOut("proj_QHeiFsmPiaadVizlKTuJrTavLkqVImQ3");
       var nativeApm = client.setupNativeApm({ invoiceId: '123', gatewayConfigurationId: '123' });
       nativeApm.setTheme({
-        backgroundColor: 'coral',
-        textColor: 'white',
+        colors: {
+          primaryColor: 'green',
+          secondaryColor: 'white',
+        }
       })
       nativeApm.mount('#nativeapm-container');
     });

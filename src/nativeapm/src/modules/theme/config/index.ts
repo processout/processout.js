@@ -1,15 +1,13 @@
 export type ThemeType = {
   colors: {
-    primary: string;
-    secondary: string;
-    tertiary: string;
+    primaryColor: string;
+    secondaryColor: string;
   };
 };
 
 export const defaultTheme: ThemeType = {
   colors: {
-    primary: '#000',
-    secondary: '#fff',
-    tertiary: '#f0f0f0',
+    primaryColor: 'coral',
+    secondaryColor: '#fff',
   },
 };
