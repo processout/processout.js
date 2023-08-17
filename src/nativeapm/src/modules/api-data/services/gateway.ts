@@ -1,4 +1,6 @@
-export type ResponseType = {
+import { apiClient } from '../clients';
+
+export type GetGatewayConfigurationResponseType = {
   native_apm: {
     gateway: {
       customer_action_image_url: string;
@@ -20,46 +22,18 @@ export type ResponseType = {
   };
 };
 
-const response: ResponseType = {
-  native_apm: {
-    gateway: {
-      customer_action_image_url:
-        'https://js.processout.com/images/native-apm-assets/blik_customer_action_image.png',
-      customer_action_message:
-        'To complete the payment please confirm it from your banking app.',
-      display_name: 'ProcessOut test gateway',
-      logo_url: 'https://www.processout.com/images/logo.png',
-    },
-    invoice: {
-      amount: '13',
-      currency_code: 'PLN',
-    },
-    parameters: [
-      {
-        key: 'email',
-        type: 'email',
-        required: true,
-        length: null,
-        display_name: 'Email',
-      },
-    ],
-  },
-};
-
 type GetGatewayConfigurationArgsType = {
   invoiceId: string;
   gatewayConfigurationId: string;
 };
+
 const getGatewayConfiguration = ({
   invoiceId,
   gatewayConfigurationId,
 }: GetGatewayConfigurationArgsType) => {
-  console.log(
-    'getGatewayConfiguration args',
-    invoiceId,
-    gatewayConfigurationId
+  return apiClient.get<GetGatewayConfigurationResponseType>(
+    `/invoices/${invoiceId}/native-payment/${gatewayConfigurationId}`
   );
-  return response;
 };
 
 export default {

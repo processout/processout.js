@@ -1,16 +1,25 @@
-import { usePaymentData } from '.';
+import { useQuery } from 'react-query';
+import { usePaymentData } from '../../payment-data';
 import { gatewayMapper } from '../mappers';
 import { gatewayService } from '../services';
 
+export const GATEWAY_CONFIGURATION_QUERY_KEY = 'gatewayConfiguration';
+
 const useGatewayConfiguration = () => {
-  const paymentData = usePaymentData();
+  const { invoiceId, gatewayConfigurationId } = usePaymentData();
 
-  const apiResponse = gatewayService.getGatewayConfiguration({
-    invoiceId: paymentData.invoiceId,
-    gatewayConfigurationId: paymentData.gatewayConfigurationId,
-  });
+  const { data, isLoading } = useQuery(GATEWAY_CONFIGURATION_QUERY_KEY, () =>
+    gatewayService.getGatewayConfiguration({
+      invoiceId,
+      gatewayConfigurationId,
+    })
+  );
 
-  return gatewayMapper.mapToUI(apiResponse);
+  return {
+    gatewayConfiguration:
+      !isLoading && data?.data ? gatewayMapper.mapToUI(data.data) : {},
+    isLoading,
+  };
 };
 
 export default useGatewayConfiguration;

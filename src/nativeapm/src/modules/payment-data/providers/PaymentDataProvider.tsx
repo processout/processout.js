@@ -7,8 +7,8 @@ type PaymentDataType = {
 };
 
 const defaultPaymentData = {
-  invoiceId: '',
-  gatewayConfigurationId: '',
+  invoiceId: 'iv_MoGID2FQe0YO7M1xwFwnn2Y36IPN8bHF',
+  gatewayConfigurationId: 'gway_conf_2puMFv3iwrPSLqslIfVcvzhFWZzmTHTy',
 };
 
 export const PaymentDataContext =
@@ -23,6 +23,15 @@ const PaymentDataProvider = ({ children }: PropsType) => {
     configType: AvailableConfigTypes.Payment,
     initialConfig: defaultPaymentData,
   });
+
+  if (
+    !paymentData.gatewayConfigurationId.length ||
+    !paymentData.invoiceId.length
+  ) {
+    throw new Error(
+      'You need to provide a valid gatewayConfigurationId and invoiceId'
+    );
+  }
 
   return (
     <PaymentDataContext.Provider value={paymentData}>

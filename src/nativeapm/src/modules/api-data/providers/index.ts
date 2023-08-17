@@ -1,2 +1,1 @@
-export { default as PaymentDataProvider } from './PaymentDataProvider';
-export { PaymentDataContext } from './PaymentDataProvider';
+export { default as ApiDataProvider } from './ApiDataProvider';

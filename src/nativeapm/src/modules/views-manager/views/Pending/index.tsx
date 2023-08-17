@@ -1,6 +1,6 @@
 import { useViewsStore } from '../..';
 import { Button, Logo, Message } from '../../../../components';
-import { useGatewayConfiguration } from '../../../api-data';
+import { GatewayUiDataType, useGatewayConfiguration } from '../../../api-data';
 import styled from 'styled-components';
 
 const StyledMessageWrapper = styled.div`
@@ -8,14 +8,24 @@ const StyledMessageWrapper = styled.div`
 `;
 
 const PendingView = () => {
-  const gatewayConfiguration = useGatewayConfiguration();
+  const { gatewayConfiguration, isLoading } = useGatewayConfiguration();
   const { goBackToFormView } = useViewsStore();
+
+  if (isLoading) {
+    return 'Loading...';
+  }
+
+  if (Object.keys(gatewayConfiguration).length === 0) {
+    return null;
+  }
+
+  const configuration = gatewayConfiguration as GatewayUiDataType;
 
   return (
     <>
-      <Logo src={gatewayConfiguration.gateway.logo} />
+      <Logo src={configuration.gateway.logo} />
       <StyledMessageWrapper>
-        <Message text={gatewayConfiguration.gateway.message} />
+        <Message text={configuration.gateway.message} />
       </StyledMessageWrapper>
       <Button text="Cancel" onClick={goBackToFormView} />
     </>

@@ -28,7 +28,7 @@ const StyledButtonWrapper = styled.div`
 
 const Form = ({ data, prefilledData, onSubmit }: PropsType) => {
   const { control, handleSubmit, formState } = useForm<Record<string, string>>({
-    defaultValues: data.inputs.reduce(
+    defaultValues: data.inputs?.reduce(
       (acc, input) => ({
         ...acc,
         [input.key]: prefilledData[input.key] ?? '',
@@ -39,7 +39,7 @@ const Form = ({ data, prefilledData, onSubmit }: PropsType) => {
 
   return (
     <StyledForm onSubmit={handleSubmit(onSubmit)}>
-      {data.inputs.map((input) => (
+      {data.inputs?.map((input) => (
         <Controller
           key={input.key}
           name={input.key}
@@ -58,7 +58,7 @@ const Form = ({ data, prefilledData, onSubmit }: PropsType) => {
         />
       ))}
       <StyledButtonWrapper>
-        <Button text={data.button.text} />
+        <Button text={data.button?.text} />
       </StyledButtonWrapper>
     </StyledForm>
   );
