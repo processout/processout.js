@@ -3,6 +3,7 @@ import * as React from 'react';
 export enum AvailableConfigTypes {
   Payment = 'payment',
   Theme = 'theme',
+  PrefilledData = 'prefilledData',
 }
 
 type UseConfigArgs = {

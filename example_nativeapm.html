@@ -11,14 +11,26 @@
   <script src="./scripts/processout.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
+      // Create a new ProcessOut client
       var client = new ProcessOut.ProcessOut("proj_QHeiFsmPiaadVizlKTuJrTavLkqVImQ3");
+
+      // Create a new NativeAPM instance
       var nativeApm = client.setupNativeApm({ invoiceId: '123', gatewayConfigurationId: '123' });
+
+      // Set the theme of the widget. This is optional since we have a default theme
       nativeApm.setTheme({
         colors: {
           primaryColor: 'orange',
           secondaryColor: 'white',
         }
       })
+
+      // Prefill data if you want e.g. input data. It's useful for some kind of autocompletion
+      nativeApm.prefillData({
+        email: 'john.doe@gmail.com'
+      })
+
+      // Mount the widget on the page passing selector of the container where you want to mount it
       nativeApm.mount('#nativeapm-container');
     });
   </script>

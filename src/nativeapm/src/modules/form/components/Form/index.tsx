@@ -8,9 +8,12 @@ import {
   SubmitHandler,
   useForm,
 } from 'react-hook-form';
+import { getErrorMessage } from '../../utils';
+import { PrefilledDataType } from '../../../prefilled-data';
 
 type PropsType = {
   data: GatewayUiDataType;
+  prefilledData: PrefilledDataType;
   onSubmit: SubmitHandler<FieldValues>;
 };
 
@@ -23,8 +26,16 @@ const StyledButtonWrapper = styled.div`
   margin: 20px auto 0 auto;
 `;
 
-const Form = ({ data, onSubmit }: PropsType) => {
-  const { control, handleSubmit, formState } = useForm();
+const Form = ({ data, prefilledData, onSubmit }: PropsType) => {
+  const { control, handleSubmit, formState } = useForm<Record<string, string>>({
+    defaultValues: data.inputs.reduce(
+      (acc, input) => ({
+        ...acc,
+        [input.key]: prefilledData[input.key] ?? '',
+      }),
+      {}
+    ),
+  });
 
   return (
     <StyledForm onSubmit={handleSubmit(onSubmit)}>
@@ -35,7 +46,7 @@ const Form = ({ data, onSubmit }: PropsType) => {
           control={control}
           render={({ field }) => (
             <Input
-              error={formState.errors[input.key] && 'You must enter the e-mail'}
+              error={getErrorMessage(formState.errors[input.key])}
               label={input.name}
               {...field}
             />

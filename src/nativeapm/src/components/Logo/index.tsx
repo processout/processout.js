@@ -6,6 +6,7 @@ type PropsType = {
 
 const StyledLogo = styled.img`
   width: 150px;
+  height: 30px;
 `;
 
 const Logo = ({ src, ...props }: PropsType) => {

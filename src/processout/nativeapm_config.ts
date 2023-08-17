@@ -31,6 +31,10 @@ module ProcessOut {
       };
     };
 
+    protected prefilledData: {
+      email?: string;
+    };
+
     /**
      * Gets config of NativeAPm
      */
@@ -38,6 +42,7 @@ module ProcessOut {
       return {
         payment: this.payment,
         theme: this.theme,
+        prefilledData: this.prefilledData,
       };
     }
 
@@ -59,6 +64,9 @@ module ProcessOut {
      */
     public setTheme(theme): void {
       this.theme = theme;
+    }
+    public prefillData(data): void {
+      this.prefilledData = data;
     }
   }
 }

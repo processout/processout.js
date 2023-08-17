@@ -1,7 +1,12 @@
 import { FormContainer } from '../../../form';
+import { PrefilledDataProvider } from '../../../prefilled-data';
 
 const FormView = () => {
-  return <FormContainer />;
+  return (
+    <PrefilledDataProvider>
+      <FormContainer />
+    </PrefilledDataProvider>
+  );
 };
 
 export default FormView;
