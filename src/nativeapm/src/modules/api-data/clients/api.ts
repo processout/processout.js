@@ -1,7 +1,6 @@
 import axios from 'axios';
 
 const authorizationHeader = '';
-
 const apiUrl = 'https://api.processout.ninja';
 
 const apiClient = axios.create({
