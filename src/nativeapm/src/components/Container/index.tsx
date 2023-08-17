@@ -17,11 +17,11 @@ const StyledContainer = styled.div<StyledContainerProps>`
   background-color: ${(props) => props.background};
 `;
 
-const Container = ({ children }: PropsType) => {
+const Container = ({ children, ...props }: PropsType) => {
   const theme = useTheme();
 
   return (
-    <StyledContainer background={theme.colors.backgroundColor}>
+    <StyledContainer background={theme.colors.backgroundColor} {...props}>
       {children}
     </StyledContainer>
   );

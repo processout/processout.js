@@ -1,2 +1,2 @@
-export { default as apiService } from './api';
-export type { ResponseType } from './api';
+export { default as gatewayService } from './gateway';
+export type { ResponseType } from './gateway';

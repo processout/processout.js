@@ -1,2 +1,2 @@
-export { default as uiMapper } from './ui';
-export type { GatewayUiDataType } from './ui';
+export { default as gatewayMapper } from './gateway';
+export type { GatewayUiDataType } from './gateway';

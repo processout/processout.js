@@ -24,6 +24,7 @@ module ProcessOut {
      * @type {string}
      */
     protected theme: {
+      // TODO: reuse it with Native APM React app
       colors: {
         primaryColor: string;
         secondaryColor: string;

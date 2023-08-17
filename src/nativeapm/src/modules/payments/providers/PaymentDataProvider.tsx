@@ -7,8 +7,8 @@ type PaymentDataType = {
 };
 
 const defaultPaymentData = {
-  invoiceId: '123',
-  gatewayConfigurationId: '321',
+  invoiceId: '',
+  gatewayConfigurationId: '',
 };
 
 export const PaymentDataContext =

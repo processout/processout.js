@@ -8,8 +8,8 @@ const StyledLogo = styled.img`
   width: 150px;
 `;
 
-const Logo = ({ src }: PropsType) => {
-  return <StyledLogo src={src} />;
+const Logo = ({ src, ...props }: PropsType) => {
+  return <StyledLogo src={src} {...props} />;
 };
 
 export default Logo;

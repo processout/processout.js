@@ -24,11 +24,15 @@ type PropsType = {
   onClick?(): void;
 };
 
-const Button = ({ text, onClick }: PropsType) => {
+const Button = ({ text, onClick, ...props }: PropsType) => {
   const theme = useTheme();
 
   return (
-    <StyledButton onClick={onClick} background={theme.colors.primaryColor}>
+    <StyledButton
+      onClick={onClick}
+      background={theme.colors.primaryColor}
+      {...props}
+    >
       {text}
     </StyledButton>
   );

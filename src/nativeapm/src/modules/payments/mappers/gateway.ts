@@ -1,4 +1,4 @@
-import { ResponseType } from '../../payments';
+import { ResponseType } from '..';
 
 export type GatewayUiDataType = {
   gateway: {
