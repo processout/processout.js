@@ -1,4 +1,4 @@
-import AppProviders from './providers';
+import { AppProviders } from './providers';
 import { AppView } from './modules/views-manager';
 
 function App() {

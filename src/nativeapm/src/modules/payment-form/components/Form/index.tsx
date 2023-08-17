@@ -1,7 +1,7 @@
 import { styled } from 'styled-components';
 import { Button } from '../../../../components';
 import Input from '../Input';
-import { GatewayUiDataType } from '../../../payments';
+import { GatewayUiDataType } from '../../../api-data';
 import {
   Controller,
   FieldValues,

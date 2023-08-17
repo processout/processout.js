@@ -1,4 +1,4 @@
-import { FormContainer } from '../../../form';
+import { FormContainer } from '../../../payment-form';
 import { PrefilledDataProvider } from '../../../prefilled-data';
 
 const FormView = () => {

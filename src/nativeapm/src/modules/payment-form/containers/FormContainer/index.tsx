@@ -1,12 +1,12 @@
-import { useGatewayConfiguration } from '../../../payments';
+import Form from '../../components/Form';
+import { useGatewayConfiguration } from '../../../api-data';
 import { usePrefilledData } from '../../../prefilled-data';
 import { useViewsStore } from '../../../views-manager';
-import Form from '../../components/Form';
 
 const FormContainer = () => {
   const gatewayConfiguration = useGatewayConfiguration();
-  const { goToPendingState } = useViewsStore();
   const prefilledData = usePrefilledData();
+  const { goToPendingState } = useViewsStore();
 
   const onSubmit = () => {
     goToPendingState();

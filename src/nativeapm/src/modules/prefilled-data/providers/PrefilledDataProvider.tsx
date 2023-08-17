@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { AvailableConfigTypes, useConfig } from '../../config';
+import { AvailableConfigTypes, useConfig } from '../../widget-config';
 
 type PrefilledDataProviderPropsType = {
   children: React.ReactElement | React.ReactElement[];

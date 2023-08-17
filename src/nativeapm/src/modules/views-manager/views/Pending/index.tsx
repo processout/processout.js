@@ -1,6 +1,6 @@
 import { useViewsStore } from '../..';
 import { Button, Logo, Message } from '../../../../components';
-import { useGatewayConfiguration } from '../../../payments';
+import { useGatewayConfiguration } from '../../../api-data';
 import styled from 'styled-components';
 
 const StyledMessageWrapper = styled.div`

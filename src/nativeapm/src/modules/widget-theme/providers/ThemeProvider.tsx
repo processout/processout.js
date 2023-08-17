@@ -1,7 +1,7 @@
 import { ThemeProvider as StyledThemeProvider } from 'styled-components';
 import { ThemeType, defaultTheme } from '../config';
 import { mergeTheme } from '../utils';
-import { AvailableConfigTypes, useConfig } from '../../config';
+import { AvailableConfigTypes, useConfig } from '../../widget-config';
 
 type PropsType = {
   children: React.ReactElement;
