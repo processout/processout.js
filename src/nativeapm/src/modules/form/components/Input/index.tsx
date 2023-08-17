@@ -16,18 +16,25 @@ const StyledInput = styled.input`
   border-radius: 5px;
 `;
 
+const StyledErrorMessage = styled.span`
+  color: red;
+  height: 1rem;
+`;
+
 type PropsType = {
   label: string;
+  error?: string;
 };
 
 const Input = React.forwardRef<HTMLInputElement, PropsType>(
   (props: PropsType, ref) => {
-    const { label, ...field } = props;
+    const { label, error, ...field } = props;
 
     return (
       <StyledInputWrapper>
         <StyledInputLabel>{label}</StyledInputLabel>
         <StyledInput ref={ref} {...field} />
+        <StyledErrorMessage>{error}</StyledErrorMessage>
       </StyledInputWrapper>
     );
   }

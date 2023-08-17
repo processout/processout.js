@@ -20,11 +20,11 @@ const StyledForm = styled.form`
 `;
 
 const StyledButtonWrapper = styled.div`
-  margin: 30px auto 0 auto;
+  margin: 20px auto 0 auto;
 `;
 
 const Form = ({ data, onSubmit }: PropsType) => {
-  const { control, handleSubmit } = useForm();
+  const { control, handleSubmit, formState } = useForm();
 
   return (
     <StyledForm onSubmit={handleSubmit(onSubmit)}>
@@ -33,7 +33,13 @@ const Form = ({ data, onSubmit }: PropsType) => {
           key={input.key}
           name={input.key}
           control={control}
-          render={({ field }) => <Input label={input.name} {...field} />}
+          render={({ field }) => (
+            <Input
+              error={formState.errors[input.key] && 'You must enter the e-mail'}
+              label={input.name}
+              {...field}
+            />
+          )}
           rules={{
             required: input.validation.required,
             maxLength: input.validation.length ?? undefined,
