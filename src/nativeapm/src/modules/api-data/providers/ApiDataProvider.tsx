@@ -1,12 +1,5 @@
-import { QueryClient, QueryClientProvider } from 'react-query';
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-    },
-  },
-});
+import { QueryClientProvider } from 'react-query';
+import { queryClient } from '../clients';
 
 type ApiDataProviderPropsType = {
   children: React.ReactElement | React.ReactElement[];

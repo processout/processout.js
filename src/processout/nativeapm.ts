@@ -58,6 +58,10 @@ module ProcessOut {
       this.config.setPaymentData({ invoiceId, gatewayConfigurationId });
     }
 
+    public prefillData(prefilledData: any) {
+      this.config.setPrefilledData(prefilledData);
+    }
+
     /**
      * Mounts NativeAPM widget on the page
      * @param {string} containerSelector

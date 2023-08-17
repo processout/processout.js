@@ -65,7 +65,7 @@ module ProcessOut {
     public setTheme(theme): void {
       this.theme = theme;
     }
-    public prefillData(data): void {
+    public setPrefilledData(data): void {
       this.prefilledData = data;
     }
   }
