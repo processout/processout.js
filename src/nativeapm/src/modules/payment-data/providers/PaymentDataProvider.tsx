@@ -7,8 +7,8 @@ type PaymentDataType = {
 };
 
 const defaultPaymentData = {
-  invoiceId: 'iv_MoGID2FQe0YO7M1xwFwnn2Y36IPN8bHF',
-  gatewayConfigurationId: 'gway_conf_2puMFv3iwrPSLqslIfVcvzhFWZzmTHTy',
+  invoiceId: '',
+  gatewayConfigurationId: '',
 };
 
 export const PaymentDataContext =
