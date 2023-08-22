@@ -1,2 +1,1 @@
-export { default as apiClient } from './api';
-export { default as queryClient } from './query';
+export { default as apiClient, apiClientFetcher } from './api';

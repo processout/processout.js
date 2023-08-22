@@ -1,4 +1,4 @@
-import { GetGatewayConfigurationResponseType } from '../services';
+import { GatewayConfigurationResponseType } from '../hooks';
 
 export type GatewayUiDataType = {
   gateway: {
@@ -21,7 +21,7 @@ export type GatewayUiDataType = {
 };
 
 const mapToUI = (
-  response: GetGatewayConfigurationResponseType
+  response: GatewayConfigurationResponseType
 ): GatewayUiDataType => ({
   gateway: {
     name: response.native_apm.gateway.display_name,

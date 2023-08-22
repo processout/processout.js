@@ -1,6 +1,5 @@
 import { ThemeProvider } from '../modules/widget-theme';
 import { PaymentDataProvider } from '../modules/payment-data';
-import { ApiDataProvider } from '../modules/api-data';
 import { PrefilledDataProvider } from '../modules/prefilled-data';
 
 type AppProvidersPropsType = {
@@ -10,9 +9,7 @@ type AppProvidersPropsType = {
 const AppProviders = ({ children }: AppProvidersPropsType) => (
   <ThemeProvider>
     <PrefilledDataProvider>
-      <PaymentDataProvider>
-        <ApiDataProvider>{children}</ApiDataProvider>
-      </PaymentDataProvider>
+      <PaymentDataProvider>{children}</PaymentDataProvider>
     </PrefilledDataProvider>
   </ThemeProvider>
 );
