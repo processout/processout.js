@@ -15,3 +15,5 @@
 /// <reference path="messagehub.ts" />
 /// <reference path="message.ts" />
 /// <reference path="paymenttoken.ts" />
+/// <reference path="nativeapm.ts" />
+/// <reference path="nativeapm_config.ts" />

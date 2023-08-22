@@ -12,6 +12,8 @@ build:
 	mv ${PROCESSOUTJS} ${PROCESSOUTJS}_tmp
 	cat ${BINS} ${PROCESSOUTJS}_tmp | uglifyjs --compress --keep-fnames --ie8 > ${PROCESSOUTJS}
 	rm ${PROCESSOUTJS}_tmp
+	cd src/nativeapm && npm run build
+	cd ../..
 
 .PHONY: buildtest
 buildtest:

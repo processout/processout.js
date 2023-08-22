@@ -1,0 +1,39 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+  <title>Native APM Example Page</title>
+</head>
+
+<body>
+  <div id="nativeapm-container" style="width: 350px"></div>
+  <script src="./scripts/processout.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // Create a new ProcessOut client
+      var client = new ProcessOut.ProcessOut("proj_QHeiFsmPiaadVizlKTuJrTavLkqVImQ3");
+
+      // Create a new NativeAPM instance
+      var nativeApm = client.setupNativeApm({ invoiceId: '', gatewayConfigurationId: '' });
+
+      // Set the theme of the widget. This is optional since we have a default theme
+      nativeApm.setTheme({
+        colors: {
+          primaryColor: 'orange',
+          secondaryColor: 'white',
+        }
+      })
+
+      // Prefill data if you want e.g. input data. It's useful for some kind of autocompletion
+      nativeApm.prefillData({
+        email: 'john.doe@gmail.com'
+      })
+
+      // Mount the widget on the page passing selector of the container where you want to mount it
+      nativeApm.mount('#nativeapm-container');
+    });
+  </script>
+</body>
+
+</html>
