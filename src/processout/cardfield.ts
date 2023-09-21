@@ -233,9 +233,11 @@ module ProcessOut {
             this.iframe.onload = function() {
                 try {
                     // We want to reset the iframe src to prevent
-                    // Firefox & IE/Edge from (wrongfully) caching the iframe
-                    // content
-                    this.iframe.contentWindow.location.replace(endpoint);
+                    // Firefox from (wrongfully) caching the iframe
+                    // content: https://bugzilla.mozilla.org/show_bug.cgi?id=354176          
+                    if(navigator.userAgent.match(/firefox|fxios/i)) {
+                        this.iframe.contentWindow.location.replace(endpoint);
+                    }                                 
                 } catch(e) { /* ... */ }
             }.bind(this);
 
