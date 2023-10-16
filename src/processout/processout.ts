@@ -477,7 +477,7 @@ module ProcessOut {
          * @return {void}
          */
         protected tokenizeCard(card: Card, data: any,
-                               success: (token: string, card?: Card) => void,
+                               success: (token: string, card: Card) => void,
                                error: (err: Exception) => void): void {
             // Let's first validate the card
             var err = card.validate();
