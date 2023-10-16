@@ -2,9 +2,11 @@
 
 // declare the IE specific XDomainRequest object
 declare var XDomainRequest: any;
+
 interface Window {
     XDomainRequest?: any;
 }
+
 
 /**
  * ProcessOut module/namespace
@@ -45,17 +47,17 @@ module ProcessOut {
         public timeout = 10000;
 
         /**
-        * Sandbox mode. Is set to true if a project ID prefixed with `test-`
-        * (cf TestModePrefix) is used
-        * @type {boolean}
-        */
+         * Sandbox mode. Is set to true if a project ID prefixed with `test-`
+         * (cf TestModePrefix) is used
+         * @type {boolean}
+         */
         public sandbox = false;
 
         /**
-        * Host of ProcessOut. Is automatically updated to the correct one
-        * when the library loads
-        * @type {string}
-        */
+         * Host of ProcessOut. Is automatically updated to the correct one
+         * when the library loads
+         * @type {string}
+         */
         protected host = "processout.com";
 
         /**
@@ -71,9 +73,9 @@ module ProcessOut {
         protected processOutMessageHubEndpoint = "";
 
         /**
-        * Version of the API used by ProcessOut.js
-        * @type {string}
-        */
+         * Version of the API used by ProcessOut.js
+         * @type {string}
+         */
         public apiVersion = "1.3.0.0";
 
         /**
@@ -219,23 +221,23 @@ module ProcessOut {
          * @return {void}
          */
         public apiRequest(method: string, path: string, data,
-            success: (data: any, req: XMLHttpRequest, e: Event) => void,
-            error:   (req: XMLHttpRequest, e: Event, errorCode: ApiRequestError) => void,
-            retry?:   number): void {
+                          success: (data: any, req: XMLHttpRequest, e: Event) => void,
+                          error: (req: XMLHttpRequest, e: Event, errorCode: ApiRequestError) => void,
+                          retry?: number): void {
 
             if (!retry) retry = 0;
 
             method = method.toLowerCase();
 
             if (path.substring(0, 4) != "http" && path[0] != "/")
-                path = this.endpoint("api", "/"+path);
+                path = this.endpoint("api", "/" + path);
 
             var headers = {
                 "Content-Type": "application/json",
-                "API-Version":  this.apiVersion
+                "API-Version": this.apiVersion
             };
             if (this.projectID)
-                headers["Authorization"] = `Basic ${btoa(this.projectID+":")}`;
+                headers["Authorization"] = `Basic ${btoa(this.projectID + ":")}`;
 
             // We need the data to at least be an empty object
             if (!data) data = {};
@@ -273,7 +275,7 @@ module ProcessOut {
             }
 
             request.timeout = 0;
-            request.onload = function(e: any) {
+            request.onload = function (e: any) {
                 // Parse the response in a try catch so we can properly
                 // handle bad connectivity/proxy error cases
                 var parsed: any;
@@ -291,7 +293,7 @@ module ProcessOut {
                     success(parsed, request, e);
                 return;
             };
-            request.onerror = function(e: ProgressEvent) {
+            request.onerror = function (e: ProgressEvent) {
                 if (request.status && request.status >= 200 &&
                     request.status < 500 && request.responseText)
 
@@ -299,13 +301,15 @@ module ProcessOut {
                 else
                     error(request, e, this.getApiRequestErrorCode(request.status));
             }.bind(this);
-            request.ontimeout  = function() {}; // Prevent IE from aborting
-            request.onprogress = function() {}; // ''
-            request.onabort = function() {
+            request.ontimeout = function () {
+            }; // Prevent IE from aborting
+            request.onprogress = function () {
+            }; // ''
+            request.onabort = function () {
                 // We want to retry the call: in some cases IE fails
                 // to finish requests
                 if (retry > 3) error(request, null, "processout-js.aborted-retries-exceeded");
-                else           this.request(method, path, data, success, error, retry + 1);
+                else this.request(method, path, data, success, error, retry + 1);
             }.bind(this);
 
             request.send(JSON.stringify(data));
@@ -348,8 +352,8 @@ module ProcessOut {
          * @return {CardForm}
          */
         public setupForm(form: HTMLElement, options: CardFieldOptions | ((form: CardForm) => void),
-            success: ((form: CardForm) => void) | ((err: Exception) => void),
-            error?:   (err: Exception) => void): CardForm {
+                         success: ((form: CardForm) => void) | ((err: Exception) => void),
+                         error?: (err: Exception) => void): CardForm {
 
             if (!this.projectID)
                 throw new Exception("default", "You must instanciate ProcessOut.js with a valid project ID in order to use ProcessOut's hosted forms.");
@@ -368,16 +372,21 @@ module ProcessOut {
          * SetupNativeApm creates a Native APM instance
          * @param {NativeApmConfigType} config
          * @return {NativeApm}
-        */
+         */
         public setupNativeApm(config: NativeApmConfigType): NativeApm {
             if (!this.projectID)
-            throw new Exception(
-                'default',
-                "You must instantiate ProcessOut.js with a valid project ID in order to use ProcessOut's Native APM"
-            );
-  
+                throw new Exception(
+                    'default',
+                    "You must instantiate ProcessOut.js with a valid project ID in order to use ProcessOut's Native APM"
+                );
+
             return new NativeApm(this, config);
         }
+
+
+        public tokenize(val: Card | CardForm, data: any,
+                        success: (token: string, card: Card) => void,
+                        error: (err: Exception) => void): void;
 
         /**
          * Tokenize takes the credit card object and creates a ProcessOut
@@ -392,11 +401,11 @@ module ProcessOut {
          * @return {void}
          */
         public tokenize(val: Card | CardForm | ApplePay | PaymentToken, data: any,
-                        success: (token: string)  => void,
-                        error:   (err: Exception) => void): void {
+                        success: (token: string, card?: Card) => void,
+                        error: (err: Exception) => void): void {
 
             if (val instanceof Card)
-                return this.tokenizeCard(<Card>val, data, success, error);
+                return this.tokenizeCard(<Card>val, data, succesfeas, error);
             if (val instanceof CardForm)
                 return this.tokenizeForm(<CardForm>val, data, success, error);
             if (val instanceof PaymentToken)
@@ -408,6 +417,7 @@ module ProcessOut {
                 "The first parameter had an unknown type/instance. The value must be an instance of either Card, CardForm or ApplePay.");
         }
 
+
         /**
          * tokenizePaymentToken takes the payment token payload
          * and encodes in base64. Then it creates a ProcessOut
@@ -418,19 +428,20 @@ module ProcessOut {
          * @param  {callback} error
          * @return {void}
          */
-         protected tokenizePaymentToken(token: PaymentToken,
-                                        data : any,
-                                        success: (token: string) => void,
-                                        error:   (err: Exception) => void): void {
+        protected tokenizePaymentToken(token: PaymentToken,
+                                       data: any,
+                                       success: (token: string) => void,
+                                       error: (err: Exception) => void): void {
 
-            if (!data)                  data = {};
-            if (!data.contact)          data.contact = {};
+            console.log("tokenizePaymentToken 454")
+            if (!data) data = {};
+            if (!data.contact) data.contact = {};
 
             data = this.injectDeviceData(data);
 
             const tokenType = token.getTokenType();
 
-            switch(tokenType) {
+            switch (tokenType) {
                 case TokenType.GooglePay:
                     const payload = token.getPayload() as GooglePayPayload
                     let encodedPayload = btoa(JSON.stringify(payload));
@@ -441,8 +452,9 @@ module ProcessOut {
                     throw new Exception("processout-js.invalid-field", `This token type is not valid or not supported yet!.`);
             }
 
-            this.apiRequest("post", "cards", data, function(data: any,
-                req: XMLHttpRequest, e: Event): void {
+
+            this.apiRequest("post", "cards", data, function (data: any,
+                                                             req: XMLHttpRequest, e: Event): void {
 
                 if (!data.success) {
                     error(new Exception(data.error_type, data.message));
@@ -450,7 +462,7 @@ module ProcessOut {
                 }
 
                 success(data.card.id);
-            }, function(req: XMLHttpRequest, e: Event, errorCode: ApiRequestError): void {
+            }, function (req: XMLHttpRequest, e: Event, errorCode: ApiRequestError): void {
                 error(new Exception(errorCode));
             });
         }
@@ -466,9 +478,9 @@ module ProcessOut {
          * @return {void}
          */
         protected tokenizeCard(card: Card, data: any,
-            success: (token: string) => void,
-            error:   (err: Exception) => void): void {
-
+                               success: (token: string, card?: Card) => void,
+                               error: (err: Exception) => void): void {
+            console.log("tokenizeCard 501")
             // Let's first validate the card
             var err = card.validate();
             if (err) {
@@ -476,28 +488,29 @@ module ProcessOut {
                 return;
             }
 
-            if (!data)           data = {};
-            if (!data.contact)   data.contact = {};
+            if (!data) data = {};
+            if (!data.contact) data.contact = {};
 
             data = this.injectDeviceData(data);
 
             // fill up the request
-            data.number    = card.getNumber();
+            data.number = card.getNumber();
             data.exp_month = card.getExpiry().getMonth().toString();
-            data.exp_year  = card.getExpiry().getYear().toString();
-            data.cvc2      = card.getCVC();
+            data.exp_year = card.getExpiry().getYear().toString();
+            data.cvc2 = card.getCVC();
 
             // and send it
-            this.apiRequest("post", "cards", data, function(data: any,
-                req: XMLHttpRequest, e: Event): void {
+
+            this.apiRequest("post", "cards", data, function (data: any,
+                                                             req: XMLHttpRequest, e: Event): void {
 
                 if (!data.success) {
                     error(new Exception(data.error_type, data.message));
                     return
                 }
 
-                success(data.card.id);
-            }, function(req: XMLHttpRequest, e: Event, errorCode: ApiRequestError): void {
+                success(data.card.id, data.card);
+            }, function (req: XMLHttpRequest, e: Event, errorCode: ApiRequestError): void {
                 error(new Exception(errorCode));
             });
         }
@@ -523,7 +536,7 @@ module ProcessOut {
             data["device"] = device;
 
             // Legacy: also inject at root level
-            Object.keys(device).forEach(function(key) {
+            Object.keys(device).forEach(function (key) {
                 data[key] = device[key];
             });
 
@@ -539,10 +552,10 @@ module ProcessOut {
          * @return {void}
          */
         protected tokenizeForm(form: CardForm, data: any,
-            success: (token: string)  => void,
-            error:   (err: Exception) => void): void {
+                               success: (token: string, card: Card) => void,
+                               error: (err: Exception) => void): void {
 
-            form.validate(function() {
+            form.validate(function () {
                 form.tokenize(data, success, error);
             }.bind(this), error);
         }
@@ -557,8 +570,8 @@ module ProcessOut {
          * @return {CardForm}
          */
         public setupFormCVC(form: HTMLElement, options: CardFieldOptions | ((form: CardForm) => void),
-            success: ((form: CardForm) => void) | ((err: Exception) => void),
-            error?:   (err: Exception) => void): CardForm {
+                            success: ((form: CardForm) => void) | ((err: Exception) => void),
+                            error?: (err: Exception) => void): CardForm {
 
             if (typeof options == "function")
                 return new CardForm(this, form).setupCVC(
@@ -579,8 +592,8 @@ module ProcessOut {
          * @return {void}
          */
         public refreshCVC(cardUID: string, val: string | CardForm,
-            success: (token: string)  => void,
-            error:   (err: Exception) => void): void {
+                          success: (token: string) => void,
+                          error: (err: Exception) => void): void {
 
             if (val instanceof CardForm)
                 return this.refreshCVCForm(cardUID, <CardForm>val,
@@ -599,10 +612,10 @@ module ProcessOut {
          * @return {void}
          */
         protected refreshCVCForm(cardUID: string, form: CardForm,
-            success: (token: string)  => void,
-            error:   (err: Exception) => void): void {
+                                 success: (token: string) => void,
+                                 error: (err: Exception) => void): void {
 
-            form.validate(function() {
+            form.validate(function () {
                 form.refreshCVC(cardUID, success, error);
             }.bind(this), error);
         }
@@ -616,8 +629,8 @@ module ProcessOut {
          * @return {void}
          */
         protected refreshCVCString(cardUID: string, cvc: string,
-            success: (token: string) => void,
-            error:   (err: Exception) => void): void {
+                                   success: (token: string) => void,
+                                   error: (err: Exception) => void): void {
 
             // Let's first validate the CVC
             var err = Card.validateCVC(cvc);
@@ -625,17 +638,16 @@ module ProcessOut {
                 error(err);
                 return;
             }
-
             this.apiRequest("put", `cards/${cardUID}`, {
                 "cvc": cvc
-            }, function(data: any, req: XMLHttpRequest, e: Event): void {
+            }, function (data: any, req: XMLHttpRequest, e: Event): void {
                 if (!data.success) {
                     error(new Exception("card.invalid"));
                     return
                 }
 
                 success(data.card.id);
-            }, function(req: XMLHttpRequest, e: Event, errorCode: ApiRequestError): void {
+            }, function (req: XMLHttpRequest, e: Event, errorCode: ApiRequestError): void {
                 error(new Exception(errorCode));
             });
         }
@@ -647,21 +659,21 @@ module ProcessOut {
          * @param  {callback} onError
          * @return {void}
          */
-        public newModal(options: string|any,
-            onReady?: (modal: Modal)     => void,
-            onError?: (err:   Exception) => void): void {
+        public newModal(options: string | any,
+                        onReady?: (modal: Modal) => void,
+                        onError?: (err: Exception) => void): void {
 
             var url = '';
-            if (typeof(options) == 'object') {
+            if (typeof (options) == 'object') {
                 url = options.url;
                 onReady = options.onReady;
                 onError = options.onError;
 
                 // Let's try to build the URL ourselves
                 if (!url) {
-                    url = this.endpoint("checkout", `/${this.getProjectID()}/oneoff`+
-                        `?amount=${encodeURIComponent(options.amount)}`+
-                        `&currency=${encodeURIComponent(options.currency)}`+
+                    url = this.endpoint("checkout", `/${this.getProjectID()}/oneoff` +
+                        `?amount=${encodeURIComponent(options.amount)}` +
+                        `&currency=${encodeURIComponent(options.currency)}` +
                         `&name=${encodeURIComponent(options.name)}`);
 
                     if (options.metadata && typeof options.metadata == 'object') {
@@ -687,13 +699,13 @@ module ProcessOut {
             // Hide and add our iframe to the DOM
             iframe.style.display = "none";
 
-            var iframeError = setTimeout(function() {
-                if (typeof(onError) === typeof(Function))
+            var iframeError = setTimeout(function () {
+                if (typeof (onError) === typeof (Function))
                     onError(new Exception("processout-js.modal.unavailable"));
             }, this.timeout);
-            iframe.onload = function() {
+            iframe.onload = function () {
                 clearTimeout(iframeError);
-                if (typeof(onReady) === typeof(Function))
+                if (typeof (onReady) === typeof (Function))
                     onReady(new Modal(this, iframe, uniqId));
             }.bind(this);
 
@@ -711,9 +723,9 @@ module ProcessOut {
          * @param {callback} error
          */
         public fetchGatewayConfigurations(
-            config:  any,
-            success: (confs: any[])     => void,
-            error:   (err:   Exception) => void): void {
+            config: any,
+            success: (confs: any[]) => void,
+            error: (err: Exception) => void): void {
 
             if (!config) config = {};
 
@@ -721,10 +733,10 @@ module ProcessOut {
                 throw new Exception("processout-js.missing-resource-id");
 
             this.apiRequest("GET", "gateway-configurations", {
-                "filter":                   config.filter,
-                "expand_merchant_accounts": "true"
-            },
-                function(data: any): void {
+                    "filter": config.filter,
+                    "expand_merchant_accounts": "true"
+                },
+                function (data: any): void {
                     if (!data.success) {
                         error(new Exception(data.error_type, data.message));
                         return;
@@ -743,7 +755,7 @@ module ProcessOut {
                         confs.push(conf);
                     }
                     success(confs);
-                }.bind(this), function(req: XMLHttpRequest, e: Event, errorCode: ApiRequestError): void {
+                }.bind(this), function (req: XMLHttpRequest, e: Event, errorCode: ApiRequestError): void {
                     error(new Exception(errorCode));
                 });
         }
@@ -755,8 +767,8 @@ module ProcessOut {
          * @return {string}
          */
         public getInvoiceActionURL(
-            invoiceID:      string,
-            gatewayConf:    any,
+            invoiceID: string,
+            gatewayConf: any,
             additionalData: any
         ): string {
             if (!additionalData) additionalData = {};
@@ -790,10 +802,10 @@ module ProcessOut {
          * @return {ActionHandler}
          */
         public handleInvoiceAction(
-            invoiceID:   string,
+            invoiceID: string,
             gatewayConf: any,
-            tokenized:   (token: string)    => void,
-            tokenError:  (err:   Exception) => void,
+            tokenized: (token: string) => void,
+            tokenError: (err: Exception) => void,
             iframeOverride?: IframeOverride
         ): ActionHandler {
             return this.handleInvoiceActionAdditionalData(invoiceID, gatewayConf, {}, tokenized, tokenError, iframeOverride);
@@ -812,11 +824,11 @@ module ProcessOut {
          * @return {ActionHandler}
          */
         public handleInvoiceActionAdditionalData(
-            invoiceID:   string,
+            invoiceID: string,
             gatewayConf: any,
             additionalData: any,
-            tokenized:   (token: string)    => void,
-            tokenError:  (err:   Exception) => void,
+            tokenized: (token: string) => void,
+            tokenError: (err: Exception) => void,
             iframeOverride?: IframeOverride
         ): ActionHandler {
             var gatewayName = null;
@@ -832,26 +844,26 @@ module ProcessOut {
         }
 
         protected buildGetInvoiceActionURL(
-            invoiceID:   string,
+            invoiceID: string,
             gatewayConf: any
         ): () => string {
 
-            return function(): string {
+            return function (): string {
                 return this.getInvoiceActionURL(invoiceID, gatewayConf);
             }.bind(this);
         }
 
         protected buildHandleInvoiceAction(
-            invoiceID:   string,
+            invoiceID: string,
             gatewayConf: any,
         ): (
-            tokenized:   (token: string)    => void,
-            tokenError:  (err:   Exception) => void
+            tokenized: (token: string) => void,
+            tokenError: (err: Exception) => void
         ) => ActionHandler {
 
-            return function(
-                tokenized:   (token: string)    => void,
-                tokenError:  (err:   Exception) => void,
+            return function (
+                tokenized: (token: string) => void,
+                tokenError: (err: Exception) => void,
                 iframeOverride?: IframeOverride
             ): ActionHandler {
                 return this.handleInvoiceAction(invoiceID, gatewayConf, tokenized, tokenError, iframeOverride);
@@ -861,17 +873,17 @@ module ProcessOut {
         protected buildConfHookForInvoice(
             gatewayConf: any
         ): (
-            el:      HTMLElement,
-            success: (token: string)    => void,
-            error:   (err:   Exception) => void
+            el: HTMLElement,
+            success: (token: string) => void,
+            error: (err: Exception) => void
         ) => void {
 
-            return function(
-                el:         HTMLElement,
-                tokenized:  (token: string) => void,
+            return function (
+                el: HTMLElement,
+                tokenized: (token: string) => void,
                 tokenError: (err: Exception) => void) {
 
-                el.addEventListener("click", function(e) {
+                el.addEventListener("click", function (e) {
                     // Prevent from doing the default redirection
                     e.preventDefault();
 
@@ -889,8 +901,8 @@ module ProcessOut {
          * @return {string}
          */
         public getCustomerTokenActionURL(
-            customerID:  string,
-            tokenID:     string,
+            customerID: string,
+            tokenID: string,
             gatewayConf: any
         ): string {
             var gatewayConfID = gatewayConf;
@@ -915,8 +927,8 @@ module ProcessOut {
          * @return {string}
          */
         public getCustomerTokenActionURLAdditionalData(
-            customerID:  string,
-            tokenID:     string,
+            customerID: string,
+            tokenID: string,
             additionalData: any,
             gatewayConf: any
         ): string {
@@ -949,11 +961,11 @@ module ProcessOut {
          * @return {ActionHandler}
          */
         public handleCustomerTokenAction(
-            customerID:  string,
-            tokenID:     string,
+            customerID: string,
+            tokenID: string,
             gatewayConf: any,
-            tokenized:   (token: string)    => void,
-            tokenError:  (err:   Exception) => void
+            tokenized: (token: string) => void,
+            tokenError: (err: Exception) => void
         ): ActionHandler {
             var gatewayName = null;
             var gatewayLogo = null;
@@ -980,12 +992,12 @@ module ProcessOut {
          * @return {ActionHandler}
          */
         public handleCustomerTokenActionAdditionalData(
-            customerID:  string,
-            tokenID:     string,
+            customerID: string,
+            tokenID: string,
             gatewayConf: any,
             additionalData: any,
-            tokenized:   (token: string)    => void,
-            tokenError:  (err:   Exception) => void
+            tokenized: (token: string) => void,
+            tokenError: (err: Exception) => void
         ): ActionHandler {
             var gatewayName = null;
             var gatewayLogo = null;
@@ -1000,28 +1012,28 @@ module ProcessOut {
         }
 
         protected buildGetCustomerTokenActionURL(
-            customerID:  string,
-            tokenID:     string,
+            customerID: string,
+            tokenID: string,
             gatewayConf: any
         ): () => string {
 
-            return function(): string {
+            return function (): string {
                 return this.getCustomerTokenActionURL(customerID, tokenID, gatewayConf);
             }.bind(this);
         }
 
         protected buildHandleCustomerTokenAction(
-            customerID:  string,
-            tokenID:     string,
+            customerID: string,
+            tokenID: string,
             gatewayConf: any
         ): (
-            tokenized:   (token: string)    => void,
-            tokenError:  (err:   Exception) => void
+            tokenized: (token: string) => void,
+            tokenError: (err: Exception) => void
         ) => ActionHandler {
 
-            return function(
-                tokenized:   (token: string)    => void,
-                tokenError:  (err:   Exception) => void
+            return function (
+                tokenized: (token: string) => void,
+                tokenError: (err: Exception) => void
             ): ActionHandler {
 
                 return this.handleCustomerTokenAction(customerID, tokenID, gatewayConf, tokenized, tokenError);
@@ -1031,17 +1043,17 @@ module ProcessOut {
         protected buildConfHookForCustomerToken(
             gatewayConf: any
         ): (
-            el:      HTMLElement,
-            success: (token: string)    => void,
-            error:   (err:   Exception) => void
+            el: HTMLElement,
+            success: (token: string) => void,
+            error: (err: Exception) => void
         ) => void {
 
-            return function(
-                el:         HTMLElement,
-                tokenized:  (token: string) => void,
+            return function (
+                el: HTMLElement,
+                tokenized: (token: string) => void,
                 tokenError: (err: Exception) => void) {
 
-                el.addEventListener("click", function(e) {
+                el.addEventListener("click", function (e) {
                     // Prevent from doing the default redirection
                     e.preventDefault();
 
@@ -1061,9 +1073,9 @@ module ProcessOut {
          * @return {ActionHandler}
          */
         public handleAction(
-            url:     string,
-            success: (data:  any)       => void,
-            error:   (err:   Exception) => void,
+            url: string,
+            success: (data: any) => void,
+            error: (err: Exception) => void,
             options?: ActionHandlerOptions): ActionHandler {
 
             var handler = new ActionHandler(this, options);
@@ -1081,13 +1093,13 @@ module ProcessOut {
          * @param {callback} success
          * @param {callback} error
          */
-        public makeCardToken(val: string|Card|CardForm, customerID: string, customerTokenID: string,
-            options: any,
-            success:  (data: any)       => void,
-            error:    (err:  Exception) => void): void {
+        public makeCardToken(val: string | Card | CardForm, customerID: string, customerTokenID: string,
+                             options: any,
+                             success: (data: any) => void,
+                             error: (err: Exception) => void): void {
 
             if ((val instanceof Card) || (val instanceof CardForm))
-                return this.tokenize(val, options, function(token: string): void {
+                return this.tokenize(val, options, function (token: string): void {
                     return this.makeCardTokenFromCardID(token, customerID, customerTokenID, options, success, error);
                 }.bind(this), error);
 
@@ -1095,8 +1107,8 @@ module ProcessOut {
         }
 
         protected makeCardTokenFromCardID(cardID: string, customerID: string, customerTokenID: string, options: any,
-            success:  (data: any)       => void,
-            error:    (err:  Exception) => void): void {
+                                          success: (data: any) => void,
+                                          error: (err: Exception) => void): void {
 
             this.handleCardActions("PUT", `customers/${customerID}/tokens/${customerTokenID}`, customerTokenID,
                 cardID, options, success, error);
@@ -1112,9 +1124,9 @@ module ProcessOut {
          * @param {callback} error
          */
         public makeCardPayment(invoiceID: string, cardID: string,
-            options: any,
-            success:  (data: any)       => void,
-            error:    (err:  Exception) => void): void {
+                               options: any,
+                               success: (data: any) => void,
+                               error: (err: Exception) => void): void {
 
             this.handleCardActions("POST", `invoices/${invoiceID}/capture`, invoiceID,
                 cardID, options, success, error);
@@ -1130,9 +1142,9 @@ module ProcessOut {
          * @param {callback} error
          */
         public makeIncrementalAuthorizationPayment(invoiceID: string, cardID: string,
-            options: any,
-            success:  (data: any)       => void,
-            error:    (err:  Exception) => void): void {
+                                                   options: any,
+                                                   success: (data: any) => void,
+                                                   error: (err: Exception) => void): void {
 
             if (!options) options = {};
             options.incremental = true;
@@ -1149,51 +1161,51 @@ module ProcessOut {
          * @param {callback} error
          */
         public incrementAuthorizationAmount(invoiceID: string, amount: number,
-            success:  (data: any)       => void,
-            error:    (err:  Exception) => void): void {
+                                            success: (data: any) => void,
+                                            error: (err: Exception) => void): void {
 
             this.apiRequest(
                 "POST",
                 `invoices/${invoiceID}/increment_authorization`,
-                { "amount": amount },
-                function(data: any, req: XMLHttpRequest, e: Event): void {
+                {"amount": amount},
+                function (data: any, req: XMLHttpRequest, e: Event): void {
                     if (!data.success) {
                         error(new Exception("request.validation.error"));
                         return
                     }
 
                     success(data);
-                }, function(req: XMLHttpRequest, e: Event, errorCode: ApiRequestError): void {
+                }, function (req: XMLHttpRequest, e: Event, errorCode: ApiRequestError): void {
                     error(new Exception(errorCode));
                 });
         }
 
         protected handleCardActions(method: string, endpoint: string,
-            resourceID: string, cardID: string,
-            options: any,
-            success:  (data: any)       => void,
-            error:    (err:  Exception) => void): void {
+                                    resourceID: string, cardID: string,
+                                    options: any,
+                                    success: (data: any) => void,
+                                    error: (err: Exception) => void): void {
 
             if (!options) options = {};
-
+            console.log("handleCardActions");
             var source = cardID;
             if (options.gatewayRequestSource)
                 source = options.gatewayRequestSource;
 
             var payload = <any>{
-                "authorize_only":  options.authorize_only,
-                "allow_fallback_to_sale":  options.allow_fallback_to_sale,
-                "capture_amount":  options.capture_amount,
+                "authorize_only": options.authorize_only,
+                "allow_fallback_to_sale": options.allow_fallback_to_sale,
+                "capture_amount": options.capture_amount,
                 "auto_capture_at": options.auto_capture_at,
-                "source":          source,
+                "source": source,
 
                 "enable_three_d_s_2": true,
 
-                "verify":          options.verify,
+                "verify": options.verify,
                 "verify_metadata": options.verify_metadata,
-                "set_default":     options.set_default,
-                "incremental":     options.incremental,
-                "preferred_scheme":options.preferred_scheme
+                "set_default": options.set_default,
+                "incremental": options.incremental,
+                "preferred_scheme": options.preferred_scheme
             };
             payload = this.injectDeviceData(payload);
 
@@ -1205,7 +1217,7 @@ module ProcessOut {
                 options.iterationNumber++;
             }
 
-            this.apiRequest(method, endpoint, payload, function(data: any): void {
+            this.apiRequest(method, endpoint, payload, function (data: any): void {
                 if (!data.success) {
                     error(new Exception(data.error_type, data.message));
                     return;
@@ -1216,54 +1228,54 @@ module ProcessOut {
                     return;
                 }
 
-                var nextStep = function(data: any): void {
+                var nextStep = function (data: any): void {
                     options.gatewayRequestSource = data;
                     this.handleCardActions(method, endpoint, resourceID, cardID, options, success, error);
                 }.bind(this);
 
                 switch (data.customer_action.type) {
-                case "url":
-                    var opts = ActionHandlerOptions.ThreeDSChallengeFlow;
-                    if (data.customer_action.metadata && data.customer_action.metadata.no_iframe === "true") {
-                        opts = ActionHandlerOptions.ThreeDSChallengeFlowNoIframe;
-                    }
-                    // This is for 3DS1
-                    this.handleAction(data.customer_action.value, function(data: any): void {
-                        options.gatewayRequestSource = null;
-                        this.handleCardActions(method, endpoint, resourceID, cardID, options, success, error);
-                    }.bind(this), error, new ActionHandlerOptions(opts));
-                    break;
+                    case "url":
+                        var opts = ActionHandlerOptions.ThreeDSChallengeFlow;
+                        if (data.customer_action.metadata && data.customer_action.metadata.no_iframe === "true") {
+                            opts = ActionHandlerOptions.ThreeDSChallengeFlowNoIframe;
+                        }
+                        // This is for 3DS1
+                        this.handleAction(data.customer_action.value, function (data: any): void {
+                            options.gatewayRequestSource = null;
+                            this.handleCardActions(method, endpoint, resourceID, cardID, options, success, error);
+                        }.bind(this), error, new ActionHandlerOptions(opts));
+                        break;
 
-                case "fingerprint":
-                    this.handleAction(data.customer_action.value, nextStep, function(err) {
-                        var gReq = new GatewayRequest();
-                        gReq.url = data.customer_action.value;
-                        gReq.method = "POST";
-                        gReq.headers = {
-                            "Content-Type": "application/x-www-form-urlencoded"
-                        };
-                        // We're encoding the timeout in a custom field in the
-                        // body so that internal services can detect when
-                        // the fingerprinting has timed out. We're using
-                        // the camelCase convention for this field as it is
-                        // what drives the 3DS specs
-                        gReq.body = `threeDSMethodData={"threeDS2FingerprintTimeout":true}`;
-                        nextStep(gReq.token());
-                    }, new ActionHandlerOptions(ActionHandlerOptions.ThreeDSFingerprintFlow));
-                    break;
+                    case "fingerprint":
+                        this.handleAction(data.customer_action.value, nextStep, function (err) {
+                            var gReq = new GatewayRequest();
+                            gReq.url = data.customer_action.value;
+                            gReq.method = "POST";
+                            gReq.headers = {
+                                "Content-Type": "application/x-www-form-urlencoded"
+                            };
+                            // We're encoding the timeout in a custom field in the
+                            // body so that internal services can detect when
+                            // the fingerprinting has timed out. We're using
+                            // the camelCase convention for this field as it is
+                            // what drives the 3DS specs
+                            gReq.body = `threeDSMethodData={"threeDS2FingerprintTimeout":true}`;
+                            nextStep(gReq.token());
+                        }, new ActionHandlerOptions(ActionHandlerOptions.ThreeDSFingerprintFlow));
+                        break;
 
-                case "redirect":
-                    // This is for 3DS2
-                    this.handleAction(data.customer_action.value, nextStep, error,
-                        new ActionHandlerOptions(ActionHandlerOptions.ThreeDSChallengeFlow));
-                    break;
+                    case "redirect":
+                        // This is for 3DS2
+                        this.handleAction(data.customer_action.value, nextStep, error,
+                            new ActionHandlerOptions(ActionHandlerOptions.ThreeDSChallengeFlow));
+                        break;
 
-                default:
-                    error(new Exception("processout-js.wrong-type-for-action",
-                        `The customer action type ${data.customer_action.type} is not supported.`));
-                    break;
+                    default:
+                        error(new Exception("processout-js.wrong-type-for-action",
+                            `The customer action type ${data.customer_action.type} is not supported.`));
+                        break;
                 }
-            }.bind(this), function(req: XMLHttpRequest, e: Event, errorCode: ApiRequestError): void {
+            }.bind(this), function (req: XMLHttpRequest, e: Event, errorCode: ApiRequestError): void {
                 error(new Exception(errorCode));
             });
         }
