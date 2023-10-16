@@ -116,8 +116,8 @@ module ProcessOut {
         const backspaceClicked =
           (e as KeyboardEvent).key === 'Backspace' &&
           e.target instanceof HTMLInputElement &&
-          e.target.previousElementSibling &&
-          e.target.value === '';
+          (e.target as HTMLInputElement).previousElementSibling &&
+          (e.target as HTMLInputElement).value === '';
 
         if (backspaceClicked) {
           (e.target.previousElementSibling as HTMLInputElement).focus();
