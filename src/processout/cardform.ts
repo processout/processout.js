@@ -324,7 +324,7 @@ module ProcessOut {
          * @param {Callback} error
          * @return {void}
          */
-        public tokenize(data: any,  success: (token: string)  => void,
+        public tokenize(data: any,  success: (token: string, card?: Card)  => void,
                                     error:   (err: Exception) => void): void {
 
             // Fields are the fields the leader should wait for to tokenize
