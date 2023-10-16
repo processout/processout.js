@@ -405,7 +405,7 @@ module ProcessOut {
                         error: (err: Exception) => void): void {
 
             if (val instanceof Card)
-                return this.tokenizeCard(<Card>val, data, succesfeas, error);
+                return this.tokenizeCard(<Card>val, data, success, error);
             if (val instanceof CardForm)
                 return this.tokenizeForm(<CardForm>val, data, success, error);
             if (val instanceof PaymentToken)
