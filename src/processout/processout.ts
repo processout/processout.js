@@ -433,7 +433,6 @@ module ProcessOut {
                                        success: (token: string) => void,
                                        error: (err: Exception) => void): void {
 
-            console.log("tokenizePaymentToken 454")
             if (!data) data = {};
             if (!data.contact) data.contact = {};
 
@@ -480,7 +479,6 @@ module ProcessOut {
         protected tokenizeCard(card: Card, data: any,
                                success: (token: string, card?: Card) => void,
                                error: (err: Exception) => void): void {
-            console.log("tokenizeCard 501")
             // Let's first validate the card
             var err = card.validate();
             if (err) {
@@ -1187,7 +1185,6 @@ module ProcessOut {
                                     error: (err: Exception) => void): void {
 
             if (!options) options = {};
-            console.log("handleCardActions");
             var source = cardID;
             if (options.gatewayRequestSource)
                 source = options.gatewayRequestSource;
