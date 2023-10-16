@@ -365,6 +365,21 @@ module ProcessOut {
         }
 
         /**
+         * SetupNativeApm creates a Native APM instance
+         * @param {NativeApmConfigType} config
+         * @return {NativeApm}
+        */
+        public setupNativeApm(config: NativeApmConfigType): NativeApm {
+            if (!this.projectID)
+            throw new Exception(
+                'default',
+                "You must instantiate ProcessOut.js with a valid project ID in order to use ProcessOut's Native APM"
+            );
+  
+            return new NativeApm(this, config);
+        }
+
+        /**
          * Tokenize takes the credit card object and creates a ProcessOut
          * token that can be sent to your server and used to charge your
          * customer
