@@ -120,7 +120,10 @@ module ProcessOut {
           (e.target as HTMLInputElement).value === '';
 
         if (backspaceClicked) {
-          (e.target.previousElementSibling as HTMLInputElement).focus();
+          (
+            (e.target as HTMLInputElement)
+              .previousElementSibling as HTMLInputElement
+          ).focus();
         }
       };
 
