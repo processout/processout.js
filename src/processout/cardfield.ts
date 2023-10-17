@@ -495,7 +495,7 @@ module ProcessOut {
          * @param {callback} error
          * @return {void}
          */
-        public tokenize(fields: any[], data: any,  success: (token: string)  => void,
+        public tokenize(fields: any[], data: any,  success: (token: string, card: Card)  => void,
                                                    error:   (err: Exception) => void): void {
 
             // Tell our field it should start the tokenization process and
@@ -528,7 +528,7 @@ module ProcessOut {
                 clearTimeout(fetchingTimeout);
 
                 // We successfully tokenized: let's return the data
-                if (data.data.token)      success(data.data.token);
+                if (data.data.token)      success(data.data.token, data.data.card);
                 else if (data.data.error) error(new Exception(data.data.error.code, data.data.error.message));
                 else                      error(new Exception("default"));
             }.bind(this));
