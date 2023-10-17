@@ -396,7 +396,7 @@ module ProcessOut {
          * @return {void}
          */
         public tokenize(val: Card | CardForm | ApplePay | PaymentToken, data: any,
-                        success: (token: string, card?: Card) => void,
+                        success: (token: string, card: Card) => void,
                         error: (err: Exception) => void): void {
 
             if (val instanceof Card)
@@ -406,6 +406,7 @@ module ProcessOut {
             if (val instanceof PaymentToken)
                 return this.tokenizePaymentToken(<PaymentToken>val, data, success, error);
             if (val instanceof ApplePay)
+                //confusingly, ApplePay puts whole card in callback (instead of token)
                 return (<ApplePay>val).tokenize(data, success, error);
 
             throw new Exception("processout-js.invalid-type",
@@ -425,7 +426,7 @@ module ProcessOut {
          */
         protected tokenizePaymentToken(token: PaymentToken,
                                        data: any,
-                                       success: (token: string) => void,
+                                       success: (token: string, card: Card) => void,
                                        error: (err: Exception) => void): void {
 
             if (!data) data = {};
@@ -455,7 +456,7 @@ module ProcessOut {
                     return
                 }
 
-                success(data.card.id);
+                success(data.card.id, data.card);
             }, function (req: XMLHttpRequest, e: Event, errorCode: ApiRequestError): void {
                 error(new Exception(errorCode));
             });
