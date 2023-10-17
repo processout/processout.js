@@ -383,11 +383,6 @@ module ProcessOut {
             return new NativeApm(this, config);
         }
 
-
-        public tokenize(val: Card | CardForm, data: any,
-                        success: (token: string, card: Card) => void,
-                        error: (err: Exception) => void): void;
-
         /**
          * Tokenize takes the credit card object and creates a ProcessOut
          * token that can be sent to your server and used to charge your
