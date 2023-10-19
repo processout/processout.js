@@ -486,9 +486,10 @@ module ProcessOut {
       markdownScript.src =
         'https://js.processout.ninja/js/libraries/showdown.min.js';
       markdownScript.onload = () => {
-        this.markdownLibraryInstance = window.globalThis.showdown
-          ? new window.globalThis.showdown.Converter()
-          : null;
+        this.markdownLibraryInstance =
+          window.globalThis && window.globalThis.showdown
+            ? new window.globalThis.showdown.Converter()
+            : null;
       };
       document.head.appendChild(markdownScript);
     }
