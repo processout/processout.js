@@ -20,45 +20,60 @@ module ProcessOut {
    */
   export class EventsUtils {
     static dispatchGatewayConfigurationErrorEvent(errorData: any) {
-      const event = new CustomEvent(
+      const event = EventsUtils.createEvent(
         NATIVE_APM_EVENTS.GATEWAY_CONFIGURATION_ERROR,
-        {
-          detail: errorData,
-        }
+        errorData
       );
+
       return window.dispatchEvent(event);
     }
 
     static dispatchPaymentInitEvent() {
-      const event = new CustomEvent(NATIVE_APM_EVENTS.PAYMENT_INIT);
+      const event = EventsUtils.createEvent(NATIVE_APM_EVENTS.PAYMENT_INIT);
       return window.dispatchEvent(event);
     }
 
     static dispatchWidgetLoadingEvent() {
-      const event = new CustomEvent(NATIVE_APM_EVENTS.WIDGET_LOADING);
+      const event = EventsUtils.createEvent(NATIVE_APM_EVENTS.WIDGET_LOADING);
       return window.dispatchEvent(event);
     }
 
     static dispatchWidgetReadyEvent() {
-      const event = new CustomEvent(NATIVE_APM_EVENTS.WIDGET_READY);
+      const event = EventsUtils.createEvent(NATIVE_APM_EVENTS.WIDGET_READY);
       return window.dispatchEvent(event);
     }
 
     static dispatchPaymentAdditionalInputEvent() {
-      const event = new CustomEvent(NATIVE_APM_EVENTS.PAYMENT_ADDITIONAL_INPUT);
+      const event = EventsUtils.createEvent(
+        NATIVE_APM_EVENTS.PAYMENT_ADDITIONAL_INPUT
+      );
       return window.dispatchEvent(event);
     }
 
     static dispatchPaymentSuccessEvent() {
-      const event = new CustomEvent(NATIVE_APM_EVENTS.PAYMENT_SUCCESS);
+      const event = EventsUtils.createEvent(NATIVE_APM_EVENTS.PAYMENT_SUCCESS);
       return window.dispatchEvent(event);
     }
 
     static dispatchPaymentErrorEvent(errorData: any) {
-      const event = new CustomEvent(NATIVE_APM_EVENTS.PAYMENT_ERROR, {
-        detail: errorData,
-      });
+      const event = EventsUtils.createEvent(
+        NATIVE_APM_EVENTS.PAYMENT_ERROR,
+        errorData
+      );
       return window.dispatchEvent(event);
+    }
+    // IE 11 polyfill
+    static createEvent(eventName: string, data?: any) {
+      if (typeof window.CustomEvent === 'function') {
+        return new CustomEvent(eventName, {
+          bubbles: true,
+          detail: data,
+        });
+      } else {
+        const event = document.createEvent('CustomEvent');
+        event.initCustomEvent(eventName, true, false, data);
+        return event;
+      }
     }
   }
 }

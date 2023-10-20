@@ -30,13 +30,13 @@
       // here you need to enter your data to test Native APM
       var projectId = ''
       var gatewayConfigurationId = ''
-      var invoiceId = ' '
+      var invoiceId = ''
 
       var client = new ProcessOut.ProcessOut(projectId);
 
       var nativeApm = client.setupNativeApm({
-        gatewayConfigurationId,
-        invoiceId
+        gatewayConfigurationId: gatewayConfigurationId,
+        invoiceId: invoiceId
       });
 
       nativeApm.mount('#napm-container');
@@ -56,31 +56,31 @@
       // })
 
       // Native APM widget dispatches event on every major action. Here are event handlers to test them
-      window.addEventListener('processout_native_apm_loading', () => {
+      window.addEventListener('processout_native_apm_loading', function(e) {
         console.log('Payment Status (outside widget): Widget loading');
       })
 
-      window.addEventListener('processout_native_apm_ready', () => {
+      window.addEventListener('processout_native_apm_ready', function(e) {
         console.log('Payment Status (outside widget): Widget ready')
       })
 
-      window.addEventListener('processout_native_apm_payment_init', () => {
+      window.addEventListener('processout_native_apm_payment_init', function(e) {
         console.log('Payment Status (outside widget): Payment initialized')
       })
 
-      window.addEventListener('processout_native_apm_payment_additional_input', () => {
+      window.addEventListener('processout_native_apm_payment_additional_input', function(e) {
         console.log('Payment Status (outside widget): Additional input needed')
       })
 
-      window.addEventListener('processout_native_apm_payment_success', () => {
+      window.addEventListener('processout_native_apm_payment_success', function(e) {
         console.log('Payment Status (outside widget): Payment success')
       })
 
-      window.addEventListener('processout_native_apm_payment_error', (e) => {
+      window.addEventListener('processout_native_apm_payment_error', function(e) {
         console.log('Payment Status (outside widget): Payment error')
       })
 
-      window.addEventListener('processout_native_apm_gateway_configuration_error', (e) => {
+      window.addEventListener('processout_native_apm_gateway_configuration_error', function(e) {
         console.log('Payment Status (outside widget): Gateway configuration error')
       })
     });
