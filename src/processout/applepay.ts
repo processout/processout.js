@@ -191,6 +191,7 @@ module ProcessOut {
       onerror?: (err: Exception) => void
     ): void {
       this.setHandlers(onsuccess, onerror);
+      this.data = data;
       this.session.begin();
     }
 
