@@ -96,10 +96,10 @@ module ProcessOut {
     prefilledData: PrefilledData = {};
 
     /**
-     * Count of retries for capturing payment
+     * Date of first capture
      * @type {number}
      */
-    captureRetries = 0;
+    captureStart = null;
 
     /**
      * NativeAPM constructor
@@ -124,8 +124,8 @@ module ProcessOut {
 
       if (!this.napmContainer) {
         throw new Exception(
-          'default',
-          'Element with this selector does not exist. You must provide valid element selector'
+          "default",
+          "Element with this selector does not exist. You must provide valid element selector"
         );
       }
 
@@ -151,7 +151,7 @@ module ProcessOut {
       actions.onFetch();
 
       this.processOutInstance.apiRequest(
-        'GET',
+        "GET",
         `invoices/${paymentConfig.invoiceId}/native-payment/${paymentConfig.gatewayConfigurationId}`,
         {},
         actions.onSuccess.bind(this),
@@ -229,7 +229,7 @@ module ProcessOut {
         );
 
       this.processOutInstance.apiRequest(
-        'POST',
+        "POST",
         `invoices/${paymentConfig.invoiceId}/native-payment`,
         {
           gateway_configuration_id: paymentConfig.gatewayConfigurationId,
@@ -278,7 +278,7 @@ module ProcessOut {
         return this.loadView(errorView.getViewElement());
       }
 
-      if (data.native_apm && data.native_apm.state === 'CUSTOMER_INPUT') {
+      if (data.native_apm && data.native_apm.state === "CUSTOMER_INPUT") {
         const customerInputView = new NativeApmFormView(
           {
             gateway: this.gatewayConfiguration.native_apm.gateway,
@@ -295,9 +295,9 @@ module ProcessOut {
         return this.loadView(customerInputView.getViewElement());
       }
 
-      if (data.native_apm && data.native_apm.state === 'PENDING_CAPTURE') {
+      if (data.native_apm && data.native_apm.state === "PENDING_CAPTURE") {
         this.updatePaymentProviderLogo(
-          data.native_apm.parameterValues['provider_logo_url']
+          data.native_apm.parameterValues["provider_logo_url"]
         );
 
         const pendingView = new NativeApmPendingView(
@@ -332,9 +332,12 @@ module ProcessOut {
      */
     public capturePayment() {
       const paymentConfig = this.paymentConfig.getConfig();
+      if (!this.captureStart) {
+        this.captureStart = new Date();
+      }
 
       this.processOutInstance.apiRequest(
-        'POST',
+        "POST",
         `invoices/${paymentConfig.invoiceId}/capture`,
         {
           source: paymentConfig.gatewayConfigurationId,
@@ -344,6 +347,16 @@ module ProcessOut {
       );
     }
 
+    private checkIfCaptureTimeout() {
+      const MAX_CAPTURE_TIMEOUT_IN_SECONDS = 180;
+      const now = new Date();
+
+      const differenceInSeconds =
+        (now.getTime() - this.captureStart.getTime()) / 1000;
+
+      return differenceInSeconds >= MAX_CAPTURE_TIMEOUT_IN_SECONDS;
+    }
+
     /**
      * This function handles Native APM capture success
      */
@@ -351,24 +364,23 @@ module ProcessOut {
       if (
         data.success &&
         data.native_apm &&
-        data.native_apm.state === 'PENDING_CAPTURE' &&
-        this.captureRetries < 1
+        data.native_apm.state === "PENDING_CAPTURE" &&
+        !this.checkIfCaptureTimeout()
       ) {
-        this.captureRetries++;
-
         return this.capturePayment();
       }
 
       if (
         data.success &&
         data.native_apm &&
-        data.native_apm.state === 'PENDING_CAPTURE' &&
-        this.captureRetries === 1
+        data.native_apm.state === "PENDING_CAPTURE" &&
+        this.checkIfCaptureTimeout()
       ) {
+        this.captureStart = null;
         const errorView = new NativeApmErrorView(
           {
             ...this.gatewayConfiguration.native_apm,
-            errorMessage: TextUtils.getText('paymentTimeout'),
+            errorMessage: TextUtils.getText("paymentTimeout"),
           },
           this.theme
         );
@@ -379,6 +391,7 @@ module ProcessOut {
       }
 
       if (!data.success) {
+        this.captureStart = null;
         const errorView = new NativeApmErrorView(
           this.gatewayConfiguration.native_apm,
           this.theme
@@ -389,6 +402,7 @@ module ProcessOut {
         return this.loadView(errorView.getViewElement());
       }
 
+      this.captureStart = null;
       const successView = new NativeApmSuccessView(
         this.gatewayConfiguration,
         this.markdownLibraryInstance,
@@ -466,10 +480,10 @@ module ProcessOut {
      * This function creates widget wrapper for styling purposes
      */
     private createWidgetWrapper() {
-      const widgetWrapper = document.createElement('div');
+      const widgetWrapper = document.createElement("div");
       const styleElement = this.theme.createInitialStyleTag();
 
-      widgetWrapper.setAttribute('class', 'native-apm-widget-wrapper');
+      widgetWrapper.setAttribute("class", "native-apm-widget-wrapper");
 
       widgetWrapper.appendChild(styleElement);
 
@@ -482,9 +496,9 @@ module ProcessOut {
      * This function loads markdown JS library to handle custommer action messages
      */
     private loadMarkdownLibrary() {
-      const markdownScript = document.createElement('script');
+      const markdownScript = document.createElement("script");
       markdownScript.src =
-        'https://js.processout.ninja/js/libraries/showdown.min.js';
+        "https://js.processout.ninja/js/libraries/showdown.min.js";
       markdownScript.onload = () => {
         this.markdownLibraryInstance =
           window.globalThis && window.globalThis.showdown
