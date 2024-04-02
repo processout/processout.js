@@ -396,7 +396,7 @@ module ProcessOut {
          * @return {void}
          */
         public tokenize(val: Card | CardForm | ApplePay | PaymentToken, data: any,
-                        success: (token: string, card: Card) => void,
+                        success: (token: string, card: Card, applyPayData?: any) => void,
                         error: (err: Exception) => void): void {
 
             if (val instanceof Card)

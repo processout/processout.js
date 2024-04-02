@@ -37,9 +37,9 @@ module ProcessOut {
     /**
      * onSuccess is the handler called when a successful
      * Apple Pay authorization was done
-     * @type {(e: any, card: Card) => void}
+     * @type {(e: any, card: Card, applyPayData?: any) => void}
      */
-    protected onsuccess: (e: any, card: Card) => void;
+    protected onsuccess: (e: any, card: Card, applyPayData?: any) => void;
 
     /**
      * onError is the handler called (when set) when an error occurs
@@ -140,7 +140,7 @@ module ProcessOut {
             } else{
               // first data.card was meant originally to be token (not whole card), leaving it here for backwards compatibility
               // second data.card is to keep api cohesive
-              t.onsuccess(data.card, data.card);
+              t.onsuccess(data.card, data.card, event.payment);
             }
           },
           function (
@@ -168,7 +168,7 @@ module ProcessOut {
      * @return {void}
      */
     protected setHandlers(
-      onsuccess: (e: any, card: Card) => void,
+      onsuccess: (e: any, card: Card, applyPayData?: any) => void,
       onerror?: (err: Exception) => void
     ): void {
       if (!onsuccess) throw new Exception("applepay.no-success-handler");
@@ -181,13 +181,13 @@ module ProcessOut {
     /**
      * Tokenize handles the Apple Pay payment sheet
      * @param {any} data
-     * @param {(e: any) => void} onsuccess
+     * @param {(e: any, card: Card, applyPayData?: any) => void} onsuccess
      * @param {(err: Exception) => void} onerror
      * @return {void}
      */
     public tokenize(
       data: any,
-      onsuccess: (e: any, card: Card) => void,
+      onsuccess: (e: any, card: Card, applyPayData?: any) => void,
       onerror?: (err: Exception) => void
     ): void {
       this.setHandlers(onsuccess, onerror);
