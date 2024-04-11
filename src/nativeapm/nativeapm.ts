@@ -377,17 +377,8 @@ module ProcessOut {
         this.checkIfCaptureTimeout()
       ) {
         this.captureStart = null;
-        const errorView = new NativeApmErrorView(
-          {
-            ...this.gatewayConfiguration.native_apm,
-            errorMessage: TextUtils.getText("paymentTimeout"),
-          },
-          this.theme
-        );
 
-        EventsUtils.dispatchPaymentErrorEvent(data);
-
-        return this.loadView(errorView.getViewElement());
+        return EventsUtils.dispatchPaymentErrorEvent(data);
       }
 
       if (!data.success) {
