@@ -77,6 +77,13 @@ module ProcessOut {
     public onshippingmethodselected: (event: any) => void;
 
     /**
+     * onpaymentauthorizedPostprocess is the handler for onpaymentauthorized event (called when the Apple Pay payment is authorized).
+     * It is called when the default onpaymentauthorized handler returns.
+     * @type {(event: any) => void}
+     */
+    public onpaymentauthorizedPostprocess: (event: any) => void;
+
+    /**
      * ApplePay constructor
      * @param {ProcessOut} instance
      * @param {ApplePayPaymentRequest} req
@@ -123,6 +130,8 @@ module ProcessOut {
           }
         );
       };
+
+      // Default onpaymentauthorized handler
       this.session.onpaymentauthorized = function (event: any): void {
         var req = t.data;
         if (!req) req = {};
@@ -152,13 +161,17 @@ module ProcessOut {
             t.session.abort();
           }
         );
+
+        // Replay the onpaymentauthorized event for the postprocess handler
+        t.onpaymentauthorizedPostprocess(event);
       };
+
+      // Register onpaymentauthorized postprocess handler for the user (fired when the default onpaymentauthorized handler returns)
+      this.onpaymentauthorizedPostprocess = this.onPaymentAuthorizedPostprocessHandler.bind(this);
       // As well as the other ones
       this.session.oncancel = this.onCancelHandler.bind(this);
-      this.session.onshippingcontactselected =
-        this.onShippingContactSelectedHandler.bind(this);
-      this.session.onshippingmethodselected =
-        this.onShippingMethodSelectedHandler.bind(this);
+      this.session.onshippingcontactselected = this.onShippingContactSelectedHandler.bind(this);
+      this.session.onshippingmethodselected = this.onShippingMethodSelectedHandler.bind(this);
     }
 
     /**
@@ -316,6 +329,16 @@ module ProcessOut {
      */
     protected onShippingMethodSelectedHandler(event: any): void {
       if (this.onshippingmethodselected) this.onshippingmethodselected(event);
+    }
+
+    /**
+     * onpaymentauthorizedPostprocess is the handler for onpaymentauthorized event (called when the Apple Pay payment is authorized).
+     * It is called after the default onpaymentauthorized handler.
+     * @param {any} event
+     * @return {void}
+     */
+    protected onPaymentAuthorizedPostprocessHandler(event: any): void {
+      if (this.onpaymentauthorizedPostprocess) this.onpaymentauthorizedPostprocess(event);
     }
   }
 }
