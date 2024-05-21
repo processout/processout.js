@@ -155,6 +155,32 @@ module ProcessOut {
             "request.gateway.not-supported": "La pasarela de pago no es compatible.",
             "resource.invalid-type": "El recurso proporcionado no es válido. Debe ser un invoice, una suscripción o una solicitud de autorización.",
             "applepay.not-supported": "Su navegador o dispositivo actual no es compatible con Apple Pay.",
+        },
+        "pt": {
+            "default": "Ocorreu um erro: o seu pagamento foi recusado.",
+            "card.declined": "O cartão de crédito foi recusado.",
+            "card.expired": "O cartão fornecido expirou.",
+            "card.duplicate": "O pagamento não pôde ser concluído. Por favor, tente novamente mais tarde.",
+            "card.network-failed": "O pagamento não pôde ser concluído. Por favor, tente novamente mais tarde.",
+            "card.invalid": "O cartão fornecido é inválido.",
+            "card.invalid-name": "O nome do titular do cartão é inválido.",
+            "card.invalid-number": "O número do cartão é inválido.",
+            "card.invalid-expiry-date": "A data de validade do cartão é inválida.",
+            "card.invalid-expiry-month": "O mês de validade do cartão é inválido.",
+            "card.invalid-expiry-year": "O ano de validade do cartão é inválido.",
+            "card.invalid-date": "A data de validade do cartão é inválida.",
+            "card.invalid-month": "O mês de validade do cartão é inválido.",
+            "card.invalid-year": "O ano de validade do cartão é inválido.",
+            "card.invalid-cvc": "O código CVC do cartão é inválido.",
+            "card.missing-cvc": "O código CVC do cartão é obrigatório.",
+            "card.missing-cardholder-name": "O nome do titular do cartão é obrigatório.",
+            "card.invalid-zip": "O código postal do cartão é válido.",
+            "card.failed-cvc-and-avs": "O código CVC e o código AVS são inválidos.",
+            "card.failed-three-d-s": "A autenticação 3D-Secure falhou.",
+            "card.bad-track-data": "O cartão não pôde ser verificado. Talvez o seu CVC seja inválido?",
+            "card.not-registered": "O cartão não está registrado.",
+            "card.issuer-not-found": "O emissor do cartão não pôde ser encontrado. Por favor, tente outro cartão.",
+            "card.possible-fraud": "O pagamento não pôde ser concluí"
         }
     };
 
@@ -170,6 +196,10 @@ module ProcessOut {
         "es": {
             "label.cancel": "Cancelar",
             "label.apm-description": "Se abrió una nueva ventana para procesar su pago. Clic aquí para continuar."
+        },
+        "pt": {
+            "label.cancel": "Cancelar",
+            "label.apm-description": "Uma nova janela foi aberta para processar o seu pagamento. Clique aqui para continuar."
         }
     };
 
