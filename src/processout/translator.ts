@@ -155,6 +155,58 @@ module ProcessOut {
             "request.gateway.not-supported": "La pasarela de pago no es compatible.",
             "resource.invalid-type": "El recurso proporcionado no es válido. Debe ser un invoice, una suscripción o una solicitud de autorización.",
             "applepay.not-supported": "Su navegador o dispositivo actual no es compatible con Apple Pay.",
+        },
+        "pt": {
+            "default": "Ocorreu um erro: o pagamento foi recusado.",
+            "card.declined": "O cartão foi recusado.",
+            "card.expired": "O cartão fornecido expirou.",
+            "card.duplicate": "O pagamento não foi concluído. Por favor, tente novamente.",
+            "card.network-failed": "O pagamento não foi concluído. Por favor, tente novamente.",
+            "card.invalid": "O cartão fornecido é inválido.",
+            "card.invalid-name": "O nome do titular do cartão é inválido.",
+            "card.invalid-number": "O número do cartão é inválido.",
+            "card.invalid-date": "A data de validade do cartão é inválida.",
+            "card.invalid-expiry-date": "A data de validade do cartão é inválida.",
+            "card.invalid-month": "O mês de validade do cartão é inválido.",
+            "card.invalid-expiry-month": "O mês de validade do cartão é inválido.",
+            "card.invalid-year": "O ano de validade do cartão é inválido.",
+            "card.invalid-expiry-year": "O ano de validade do cartão é inválido.",
+            "card.invalid-cvc": "O código de verificação do cartão é inválido.",
+            "card.missing-cvc": "O código de verificação do cartão é obrigatório.",
+            "card.invalid-zip": "O código postal do cartão é inválido.",
+            "card.failed-cvc-and-avs": "Os códigos de verificação do cartão e morada são inválidos.",
+            "card.failed-three-d-s": "A autenticação 3D-Secure falhou.",
+            "card.bad-track-data": "O cartão não pode ser verificado.",
+            "card.missing-cardholder-name": "O nome do titular do cartão é obrigatório.",
+            "card.not-registered": "O cartão não está registado.",
+            "card.issuer-not-found": "O emissor do cartão não existe. Por favor, utilize outro cartão.",
+            "card.possible-fraud": "O pagamento não foi concluído. Por favor, entre em contato com o seu banco para mais informação.",
+            "card.contact-bank": "O pagamento não foi concluído. Por favor, entre em contato com o seu banco para mais informação.",
+            "card.not-authorized": "O pagamento não foi autorizado com o cartão fornecido.",
+            "card.do-not-honor": "O pagamento não foi concluído. Por favor, entre em contato com o seu banco para mais informação.",
+            "card.maximum-attempts": "O número de tentativas foi excedido e o pagamento não pode ser processado.",
+            "card.stolen": "O pagamento não pode ser processado sendo que o cartão foi dado como roubado.",
+            "card.lost": "O pagamento não pode ser processado sendo que o cartão foi dado como perdido.",
+            "card.exceeded-limits": "O pagamento não pode ser processado sendo que o limite de pagamento do cartão foi excedido.",
+            "card.no-money": "A conta bancária associada ao cartão possivelmente não possui fundos suficientes.",
+            "customer.canceled": "O cliente cancelou o pagamento.",
+            "customer.popup-blocked": "Por favor, ative os pop-ups para prosseguir com o pagamento.",
+            "gateway.declined": "O pagamento foi recusado.",
+            "payment.declined": "O pagamento foi recusado.",
+            "payment.pending": "O pagamento está pendente, por favor aguarde alguns minutos para ser processado.",
+            "three-d-s-2.fingerprint-timed-out": "A assinatura digital 3D-Secure expirou.",
+            "request.validation.error": "A informação fornecida está inválida ou incompleta.",
+            "request.validation.invalid-country": "O país fornecido não é válido.",
+            "request.validation.missing-name": "O nome é obrigatório.",
+            "request.validation.invalid-name": "O nome fornecido não é válido.",
+            "request.validation.missing-email": "O email é obrigatório.",
+            "request.validation.invalid-email": "O email fornecido não é válido.",
+            "request.validation.invalid-address": "O endereço fornecido não é válido.",
+            "request.validation.no-method-selected": "Por favor, selecione um método de pagamento.",
+            "request.gateway.not-available": "O gateway de pagamento solicitado está indisponível.",
+            "request.gateway.not-supported": "O gateway de pagamento não é suportado.",
+            "resource.invalid-type": "O recurso fornecido é inválido. Este recurso deve ser uma fatura (invoice), assinatura (subscription) ou pedido de autorização (authorization request).",
+            "applepay.not-supported": "O navegador / dispositivo utilizado não suporta Apple Pay."
         }
     };
 
@@ -170,6 +222,10 @@ module ProcessOut {
         "es": {
             "label.cancel": "Cancelar",
             "label.apm-description": "Se abrió una nueva ventana para procesar su pago. Clic aquí para continuar."
+        },
+        "pt": {
+            "label.cancel": "Cancelar",
+            "label.apm-description": "Uma nova janela foi aberta para processar o seu pagamento. Clique aqui para continuar."
         }
     };
 
