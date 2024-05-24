@@ -203,10 +203,14 @@ module ProcessOut {
       }
     }
 
-    private onGatewayConfigurationError(req: XMLHttpRequest) {
+    private onGatewayConfigurationError(req: XMLHttpRequest, e: ProgressEvent, errorCode: ApiRequestError) {
       const errorView = new NativeApmErrorView({}, this.theme);
 
-      EventsUtils.dispatchGatewayConfigurationErrorEvent(req.response);
+      let errorData = req.response;
+      if (!req.response && errorCode)
+        errorData = { success: false, error_type: errorCode, message: Translator.translateError(errorCode) };
+
+      EventsUtils.dispatchGatewayConfigurationErrorEvent(errorData);
 
       return this.loadView(errorView.getViewElement());
     }
@@ -316,13 +320,17 @@ module ProcessOut {
     /**
      * This function handles error response of payment
      */
-    private handlePaymentError(req: XMLHttpRequest) {
+    private handlePaymentError(req: XMLHttpRequest, e: ProgressEvent, errorCode: ApiRequestError) {
       const errorView = new NativeApmErrorView(
         this.gatewayConfiguration.native_apm,
         this.theme
       );
 
-      EventsUtils.dispatchPaymentErrorEvent(req.response);
+      let errorData = req.response;
+      if (!req.response && errorCode)
+        errorData = { success: false, error_type: errorCode, message: Translator.translateError(errorCode) };
+
+      EventsUtils.dispatchPaymentErrorEvent(errorData);
 
       this.loadView(errorView.getViewElement());
     }
@@ -408,13 +416,17 @@ module ProcessOut {
     /**
      * This function handles Native APM capture error
      */
-    private handleCaptureError(req: XMLHttpRequest) {
+    private handleCaptureError(req: XMLHttpRequest, e: ProgressEvent, errorCode: ApiRequestError) {
       const errorView = new NativeApmErrorView(
         this.gatewayConfiguration.native_apm,
         this.theme
       );
 
-      EventsUtils.dispatchPaymentErrorEvent(req.response);
+      let errorData = req.response;
+      if (!req.response && errorCode)
+        errorData = { success: false, error_type: errorCode, message: Translator.translateError(errorCode) };
+
+      EventsUtils.dispatchPaymentErrorEvent(errorData);
 
       this.loadView(errorView.getViewElement());
     }
