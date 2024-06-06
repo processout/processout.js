@@ -761,41 +761,40 @@ module ProcessOut {
          * @return {string}
          */
         public getInvoiceActionURL(
-            invoiceID: string,
-            gatewayConf: any,
-            additionalData: any
+          invoiceID: string,
+          gatewayConf: any,
+          additionalData: any
         ): string {
           var gatewayConfigurationId = gatewayConf && gatewayConf.id ? gatewayConf.id : gatewayConf;
-          return this.getConfigurableInvoiceActionURL(new InvoiceActionUrlConfig(
-            invoiceID,
-            gatewayConfigurationId,
-            additionalData,
-            null
-          ));
+          return this.getConfigurableInvoiceActionURL({
+            invoiceId: invoiceID,
+            gatewayConfigurationId: gatewayConfigurationId,
+            additionalData: additionalData,
+          });
         }
 
         /**
          * Returns the invoice action URL.
-         * @param {InvoiceActionUrlConfig} config
+         * @param {InvoiceActionUrlProps} config
          */
         public getConfigurableInvoiceActionURL(
-          config: InvoiceActionUrlConfig
+          config: InvoiceActionUrlProps
         ): string {
-          var gatewayConfID = config.getGatewayConfigurationId();
-          var invoiceId = config.getInvoiceId();
+          var gatewayConfID = config.gatewayConfigurationId;
+          var invoiceId = config.invoiceId;
 
           if (!invoiceId) {
             throw new Exception("processout-js.missing-resource-id", "An Invoice Action was requested, but the Invoice ID was missing. Make sure you didn't rather want to call `customerToken` helpers on the gateway configuration instead of `invoice` ones.")
           }
 
           var suffix = "?"
-          var additionalData = config.getAdditionalData();
+          var additionalData = config.additionalData;
           for (var key in additionalData) {
             suffix += `additional_data[${key}]=${encodeURI(additionalData[key])}&`;
           }
 
-          var tokenSuffix = config.getCustomerTokenId()
-            ? `/tokenized/${config.getCustomerTokenId()}`
+          var tokenSuffix = config.customerTokenId
+            ? `/tokenized/${config.customerTokenId}`
             : ""
           var path = `/${this.getProjectID()}/${invoiceId}/redirect/${gatewayConfID}${tokenSuffix}${suffix.substring(0, suffix.length - 1)}`
           return this.endpoint("checkout", path);
@@ -857,27 +856,27 @@ module ProcessOut {
         /**
          * handleInvoiceActionConfigurable handles the invoice action for the given invoice
          * action configuration. This creates a new tab, iFrame or window depending on the gateway used
-         * @param {InvoiceActionConfig} config
+         * @param {InvoiceActionProps} props
          * @return {ActionHandler}
          */
         public handleConfigurableInvoiceAction(
-          config: InvoiceActionConfig
+          props: InvoiceActionProps
         ): ActionHandler {
-          console.log(config)
-          var gatewayName = config.getGatewayConfiguration().getGateway().getName();
-          var gatewayLogo = config.getGatewayConfiguration().getGateway().getLogoUrl();
+          var sanitizedProps = sanitizeInvoiceActionProps(props);
+          var gatewayName = sanitizedProps.gatewayConf.gatewayName;
+          var gatewayLogo = sanitizedProps.gatewayConf.gatewayLogoUrl;
 
-          var options = new ActionHandlerOptions(gatewayName, gatewayLogo, config.getIframeOverride());
-          var urlConfig = new InvoiceActionUrlConfig(
-            config.getInvoiceId(),
-            config.getGatewayConfiguration().getId(),
-            config.getAdditionalData(),
-            config.getCustomerTokenId()
-          );
+          var options = new ActionHandlerOptions(gatewayName, gatewayLogo, sanitizedProps.iframeOverride);
+          var urlConfig: InvoiceActionUrlProps = {
+            invoiceId: sanitizedProps.invoiceId,
+            gatewayConfigurationId: sanitizedProps.gatewayConf.id,
+            additionalData: sanitizedProps.additionalData,
+            customerTokenId: sanitizedProps.customerTokenId
+          };
           return this.handleAction(
             this.getConfigurableInvoiceActionURL(urlConfig),
-            config.getTokenized(),
-            config.getTokenError(),
+            sanitizedProps.tokenized,
+            sanitizedProps.tokenError,
             options
           );
         }
@@ -926,37 +925,16 @@ module ProcessOut {
             tokenError: (err: Exception) => void,
             iframeOverride?: IframeOverride,
           ): ActionHandler {
-            return this.handleConfigurableInvoiceAction(new InvoiceActionConfig(
-              invoiceID,
-              tokenized,
-              tokenError,
-              this.mapGatewayConfiguration(gatewayConf),
-              customerTokenId,
-              {},
-              iframeOverride
-            ));
+            return this.handleConfigurableInvoiceAction({
+              invoiceId: invoiceID,
+              tokenized: tokenized,
+              tokenError: tokenError,
+              gatewayConf: mapInvoiceGatewayConfigurationProps(gatewayConf),
+              customerTokenId: customerTokenId,
+              additionalData: {},
+              iframeOverride: iframeOverride
+            });
           }.bind(this);
-        }
-
-        private mapGatewayConfiguration(gatewayConf?: any): InvoiceActionGatewayConfiguration | undefined {
-          if (!gatewayConf) {
-            return null;
-          }
-
-          var gatewayConfigurationId = gatewayConf instanceof String || !gatewayConf.id
-            ? gatewayConf
-            : gatewayConf.id;
-
-          var gateway = this.mapGateway(gatewayConf.gateway);
-
-          return new InvoiceActionGatewayConfiguration(gatewayConfigurationId, gateway);
-        }
-
-        private mapGateway(gateway?: any): InvoiceActionGateway | undefined {
-          if (!gateway) {
-            return null;
-          }
-          return new InvoiceActionGateway(gateway.name, gateway.logo_url);
         }
 
         protected buildConfHookForInvoice(
@@ -977,29 +955,6 @@ module ProcessOut {
                     e.preventDefault();
 
                     gatewayConf.handleInvoiceAction(tokenized, tokenError);
-                    return false;
-                }.bind(this));
-            }.bind(this);
-        }
-
-        protected buildConfHookForTokenInvoice(
-            gatewayConf: any
-        ): (
-            el: HTMLElement,
-            success: (token: string) => void,
-            error: (err: Exception) => void
-        ) => void {
-
-            return function (
-                el: HTMLElement,
-                tokenized: (token: string) => void,
-                tokenError: (err: Exception) => void) {
-
-                el.addEventListener("click", function (e) {
-                    // Prevent from doing the default redirection
-                    e.preventDefault();
-
-                    gatewayConf.handleTokenInvoiceAction(tokenized, tokenError);
                     return false;
                 }.bind(this));
             }.bind(this);

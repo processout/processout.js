@@ -4,221 +4,137 @@ module ProcessOut {
   /**
    * Configuration for the invoice action operation.
    */
-  export class InvoiceActionConfig {
+  export type InvoiceActionProps = {
     /**
      * Invoice ID.
-     * @private
      * @var {string}
      */
-    private readonly invoiceId: string;
-
+    invoiceId: string;
     /**
      * Gateway Configuration to be used for the invoice action.
-     * @private
      * @var {string}
      */
-    private readonly gatewayConf: InvoiceActionGatewayConfiguration;
-
+    gatewayConf: InvoiceGatewayConfigurationProps;
     /**
      * Customer Token ID - the ID of the customer token ID to use for the invoice action, if any.
-     * @private
-     * @var {string}
+     * @var {string|undefined}
      */
-    private readonly customerTokenId?: string;
-
+    customerTokenId?: string;
     /**
      * Additional data - any additional data that should be passed to the gateway.
-     * @private
      * @var {Object.<string, string>}
      */
-    private readonly additionalData: any;
-
+    additionalData?: any;
     /**
      * Tokenized callback - a function that will be called with the tokenized object created during the invoice action handling.
-     * @private
      * @var {TokenCallback}
      */
-    private readonly tokenized: TokenCallback
-
+    tokenized: TokenCallback;
     /**
      * Token error callback - a function that will be called if an error occurs while tokenizing the payment method.
-     * @private
      * @var {TokenErrorCallback}
      */
-    private readonly tokenError: TokenErrorCallback
-
+    tokenError: TokenErrorCallback;
     /**
      * Iframe override - an object containing the iframe override configuration.
-     * @private
      * @var {IframeOverride}
      */
-    private readonly iframeOverride?: IframeOverride;
-
-    constructor(
-      invoiceId: string,
-      tokenized: TokenCallback,
-      tokenError: TokenErrorCallback,
-      gatewayConf?: InvoiceActionGatewayConfiguration,
-      customerTokenId?: string,
-      additionalData?: any,
-      iframeOverride?: IframeOverride
-    ) {
-      this.invoiceId = invoiceId;
-      this.gatewayConf = gatewayConf ? gatewayConf : new InvoiceActionGatewayConfiguration();
-      this.customerTokenId = customerTokenId;
-      this.additionalData = additionalData ? additionalData : {};
-      this.tokenized = tokenized;
-      this.tokenError = tokenError;
-      this.iframeOverride = iframeOverride;
-    }
-
-    public getInvoiceId(): string {
-      return this.invoiceId;
-    }
-
-    public getGatewayConfiguration(): InvoiceActionGatewayConfiguration {
-      return this.gatewayConf;
-    }
-
-    public getCustomerTokenId(): string | undefined {
-      return this.customerTokenId;
-    }
-
-    public getAdditionalData(): any {
-      return this.additionalData;
-    }
-
-    public getTokenized(): TokenCallback {
-      return this.tokenized;
-    }
-
-    public getTokenError(): TokenErrorCallback {
-      return this.tokenError;
-    }
-
-    public getIframeOverride(): IframeOverride | undefined {
-      return this.iframeOverride;
-    }
+    iframeOverride?: IframeOverride;
   }
 
-  export class InvoiceActionUrlConfig {
+  export type InvoiceGatewayConfigurationProps = {
     /**
-     * Invoice ID.
-     * @private
+     * Gateway configuration ID.
      * @var {string}
      */
-    private readonly invoiceId: string;
+    id: string;
+    /**
+     * Gateway name.
+     * @var {string|undefined}
+     */
+    gatewayName?: string;
+    /**
+     * Gateway logo URL.
+     * @var {string|undefined}
+     */
+    gatewayLogoUrl?: string;
+  }
+
+  export type InvoiceActionUrlProps = {
+    /**
+     * Invoice ID.
+     * @var {string}
+     */
+    invoiceId: string;
 
     /**
      * ID of the gateway configuration to be used.
-     * @private
      * @var {string}
      */
-    private readonly gatewayConfigurationId: string;
+    gatewayConfigurationId: string;
 
     /**
      * Additional data - any additional data that should be passed to the gateway.
-     * @private
      * @var {Object.<string, string>}
      */
-    private readonly additionalData: any;
+    additionalData: any;
 
     /**
      * Customer Token ID - the ID of the customer token ID to use for the invoice action, if any.
-     * @private
      * @var {string}
      */
-    private readonly customerTokenId?: string;
+    customerTokenId?: string;
+  }
 
-    constructor(
-      invoiceId: string,
-      gatewayConfigurationId: string,
-      additionalData?: any,
-      customerTokenId?: string
-    ) {
-      this.invoiceId = invoiceId;
-      this.gatewayConfigurationId = gatewayConfigurationId;
-      this.additionalData = additionalData ? additionalData : {};
-      this.customerTokenId = customerTokenId
+  /**
+   * Map gatewayConf parameter to a valid {@link InvoiceGatewayConfigurationProps} instance.
+   * @param {any|string} gatewayConf
+   */
+  export function mapInvoiceGatewayConfigurationProps(gatewayConf?: any): InvoiceGatewayConfigurationProps {
+    if (!gatewayConf) {
+      return null;
     }
 
-    public getInvoiceId(): string {
-      return this.invoiceId;
+    var gatewayConfigurationId = gatewayConf instanceof String || !gatewayConf.id
+      ? gatewayConf
+      : gatewayConf.id;
+
+    if (!gatewayConf.gateway) {
+      return {
+        id: gatewayConfigurationId
+      };
     }
 
-    public getGatewayConfigurationId(): string {
-      return this.gatewayConfigurationId;
-    }
+    var gateway = gatewayConf.gateway;
 
-    public getAdditionalData(): any {
-      return this.additionalData;
-    }
-
-    public getCustomerTokenId(): string | undefined {
-      return this.customerTokenId;
+    return {
+      id: gatewayConfigurationId,
+      gatewayName: gateway.name,
+      gatewayLogoUrl: gateway.logo_url
     }
   }
 
   /**
-   * Gateway configuration used for the invoice action.
+   * Sanitize the invoice action props to a valid {@link InvoiceActionProps} instance.
+   * @param {InvoiceActionProps} props
    */
-  export class InvoiceActionGatewayConfiguration {
-    /**
-     * Gateway configuration ID.
-     * @private
-     * @var {string}
-     */
-    private readonly id?: string
-    /**
-     * Gateway used by this particular gateway configuration.
-     * @private
-     * @var {Gateway}
-     */
-    private readonly gateway: InvoiceActionGateway
-
-    constructor(id?: string, gateway?: InvoiceActionGateway) {
-      this.id = id;
-      this.gateway = gateway ? gateway : new InvoiceActionGateway();
-    }
-
-    public getId(): string | undefined {
-      return this.id
-    }
-
-    public getGateway(): InvoiceActionGateway {
-      return this.gateway;
-    }
+  export function sanitizeInvoiceActionProps(props: InvoiceActionProps): InvoiceActionProps {
+    return {
+      invoiceId: props.invoiceId,
+      gatewayConf: sanitizeGatewayConfigurationProps(props.gatewayConf),
+      customerTokenId: props.customerTokenId,
+      additionalData: props.additionalData,
+      tokenized: props.tokenized,
+      tokenError: props.tokenError,
+      iframeOverride: props.iframeOverride
+    };
   }
 
-  /**
-   * Gateway associated with the gateway configuration used for the invoice action.
-   */
-  export class InvoiceActionGateway {
-    /**
-     * Gateway name.
-     * @private
-     * @var {string}
-     */
-    private readonly name?: string;
-    /**
-     * Gateway logo URL.
-     * @private
-     * @var {string}
-     */
-    private readonly logoUrl?: string;
-
-    constructor(name?: string, logoUrl?: string) {
-      this.name = name;
-      this.logoUrl = logoUrl;
+  function sanitizeGatewayConfigurationProps(props: InvoiceGatewayConfigurationProps): InvoiceGatewayConfigurationProps {
+    if (!props) {
+      return {id: null}
     }
-
-    public getName(): string | undefined {
-      return this.name;
-    }
-
-    public getLogoUrl(): string | undefined {
-      return this.logoUrl;
-    }
+    return props;
   }
 
   /**
