@@ -95,9 +95,9 @@ module ProcessOut {
       return null;
     }
 
-    var gatewayConfigurationId = gatewayConf instanceof String || !gatewayConf.id
-      ? gatewayConf
-      : gatewayConf.id;
+    var gatewayConfigurationId: string = gatewayConf && gatewayConf.id
+      ? gatewayConf.id
+      : gatewayConf;
 
     if (!gatewayConf.gateway) {
       return {
