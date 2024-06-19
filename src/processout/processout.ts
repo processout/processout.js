@@ -1109,6 +1109,24 @@ module ProcessOut {
         }
 
         /**
+         * MakeHPPCardPayment TODO: add explanation
+         * @param invoiceID
+         * @param cardID
+         * @param options
+         * @param success
+         * @param error
+         */
+        public MakeHPPCardPayment(
+            invoiceID: string, cardID: string,
+            options: any,
+            success: (data: any) => void,
+            error: (err: Exception) => void): void {
+
+            this.handleCardActions("POST", `invoices/${invoiceID}/three-d-s`, invoiceID,
+                cardID, options, success, error);
+        }
+
+        /**
          * MakeCardPayment makes a full card payment, handling any required
          * customer action such as authentication for SCA (like 3DS 1 or 2)
          * @param {string} invoiceID
@@ -1233,10 +1251,14 @@ module ProcessOut {
                             opts = ActionHandlerOptions.ThreeDSChallengeFlowNoIframe;
                         }
                         // This is for 3DS1
-                        this.handleAction(data.customer_action.value, function (data: any): void {
-                            options.gatewayRequestSource = null;
-                            this.handleCardActions(method, endpoint, resourceID, cardID, options, success, error);
-                        }.bind(this), error, new ActionHandlerOptions(opts));
+                        this.handleAction(
+                            data.customer_action.value,
+                            function (data: any): void {
+                                options.gatewayRequestSource = null;
+                                this.handleCardActions(method, endpoint, resourceID, cardID, options, success, error);
+                            }.bind(this),
+                            error,
+                            new ActionHandlerOptions(opts));
                         break;
 
                     case "fingerprint":
