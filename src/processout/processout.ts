@@ -73,6 +73,12 @@ module ProcessOut {
         protected processOutMessageHubEndpoint = "";
 
         /**
+         * Indicates that the flow was initiated by a hosted payment page
+         * @type {boolean}
+         */
+        protected hppInitiated = false;
+
+        /**
          * Version of the API used by ProcessOut.js
          * @type {string}
          */
@@ -1109,12 +1115,14 @@ module ProcessOut {
         }
 
         /**
-         * MakeHPPCardPayment TODO: add explanation
-         * @param invoiceID
-         * @param cardID
-         * @param options
-         * @param success
-         * @param error
+         * MakeHPPCardPayment the same as makeCardPayment but for HPP.
+         * This method is used to handle the 3DS flow for HPP payments.
+         * It uses different endpoint and sets hppInitiated to true.
+         * @param {string} invoiceID
+         * @param {string} cardID
+         * @param {any} options
+         * @param {callback} success
+         * @param {callback} error
          */
         public MakeHPPCardPayment(
             invoiceID: string, cardID: string,
@@ -1122,8 +1130,10 @@ module ProcessOut {
             success: (data: any) => void,
             error: (err: Exception) => void): void {
 
-            this.handleCardActions("POST", `invoices/${invoiceID}/three-d-s`, invoiceID,
-                cardID, options, success, error);
+            this.hppInitiated = true;
+            this.handleCardActions(
+                "POST", `invoices/${invoiceID}/three-d-s`, invoiceID, cardID, options, success, error,
+            );
         }
 
         /**
@@ -1254,6 +1264,12 @@ module ProcessOut {
                         this.handleAction(
                             data.customer_action.value,
                             function (data: any): void {
+                                if (this.hppInitiated) {
+                                    // If the HPP was initiated, we don't want to call the success callback
+                                    this.hppInitiated = false;
+                                    success(data);
+                                    return;
+                                }
                                 options.gatewayRequestSource = null;
                                 this.handleCardActions(method, endpoint, resourceID, cardID, options, success, error);
                             }.bind(this),
