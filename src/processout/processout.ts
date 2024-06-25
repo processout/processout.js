@@ -1118,22 +1118,24 @@ module ProcessOut {
          * MakeHPPCardPayment the same as makeCardPayment but for HPP.
          * This method is used to handle the 3DS flow for HPP payments.
          * It uses different endpoint and sets hppInitiated to true.
-         * @param {string} invoiceID
-         * @param {string} cardID
-         * @param {any} options
-         * @param {callback} success
-         * @param {callback} error
+         * @param {string} invoiceID - the invoice ID
+         * @param {string} cardID - the card ID
+         * @param {any} options - the additional options
+         * @param {boolean} resume - if true, it will resume the 3DS flow after a soft decline
+         * @param {callback} success - the success callback
+         * @param {callback} error - the error callback
          */
         public MakeHPPCardPayment(
             invoiceID: string, cardID: string,
             options: any,
+            resume: boolean,
             success: (data: any) => void,
             error: (err: Exception) => void): void {
 
-            this.hppInitiated = true;
-            this.handleCardActions(
-                "POST", `invoices/${invoiceID}/three-d-s`, invoiceID, cardID, options, success, error,
-            );
+            const url: string = resume ? `invoices/${invoiceID}/authorize` : `invoices/${invoiceID}/three-d-s`;
+            this.hppInitiated = !resume;
+
+            this.handleCardActions("POST", url, invoiceID, cardID, options, success, error);
         }
 
         /**
@@ -1209,7 +1211,7 @@ module ProcessOut {
                                     error: (err: Exception) => void): void {
 
             if (!options) options = {};
-            var source = cardID;
+            let source: string = cardID;
             if (options.gatewayRequestSource)
                 source = options.gatewayRequestSource;
 
@@ -1221,6 +1223,7 @@ module ProcessOut {
                 "source": source,
 
                 "enable_three_d_s_2": true,
+                "enable_three_ds2": true,
 
                 "verify": options.verify,
                 "verify_metadata": options.verify_metadata,
@@ -1265,7 +1268,7 @@ module ProcessOut {
                             data.customer_action.value,
                             function (data: any): void {
                                 if (this.hppInitiated) {
-                                    // If the HPP was initiated, we don't want to call the success callback
+                                    // If the HPP was initiated, we don't want to call handleCardActions again.
                                     this.hppInitiated = false;
                                     success(data);
                                     return;
