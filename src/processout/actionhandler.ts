@@ -56,8 +56,9 @@ module ProcessOut {
         NewWindow,
         IFrame,
         FingerprintIframe,
+        CurrentWindow,
     }
-    
+
     export type IframeOverride = {
         width: number,
         height: number
@@ -83,10 +84,10 @@ module ProcessOut {
         public static ThreeDSFingerprintFlow = "three-d-s-fingerprint-flow";
 
         /**
-         * 
+         *
          * @param actionType gateway string
          * @param gatewayLogo gateway logo url
-         * @param override If specified, the flow will use iframe with width and height override setting. 
+         * @param override If specified, the flow will use iframe with width and height override setting.
          */
         constructor(actionType?: string, gatewayLogo?: string, override?: IframeOverride) {
             this.gatewayLogo = gatewayLogo;
@@ -100,9 +101,7 @@ module ProcessOut {
 
             // The 3DS flow where iframe is not supported
             case ActionHandlerOptions.ThreeDSChallengeFlowNoIframe:
-                this.flow = ActionFlow.NewWindow;
-                this.newWindowHeight = 645;
-                this.newWindowWidth  = 450;
+                this.flow = ActionFlow.CurrentWindow;
                 break;
 
             // The 3DS Fingerprint flow is another special one where we
@@ -295,6 +294,11 @@ module ProcessOut {
                     newWindow.close()
                     error(new Exception("three-d-s-2.fingerprint-timed-out"));
                 }, 10000);
+                break;
+
+            case ActionFlow.CurrentWindow:
+                newWindow = window;
+                window.location.replace(url);
                 break;
 
             default:

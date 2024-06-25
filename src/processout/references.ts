@@ -16,3 +16,4 @@
 /// <reference path="message.ts" />
 /// <reference path="paymenttoken.ts" />
 /// <reference path="../nativeapm/references.ts" />
+/// <reference path="invoice-action.ts" />
