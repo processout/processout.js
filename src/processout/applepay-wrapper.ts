@@ -36,7 +36,7 @@ module ProcessOut {
                 return;
             }
 
-            req = req || {}
+            req = req || {};
             this.instance.apiRequest("get", this.instance.endpoint("api", "/applepay/available"), {
                 "domain_name": window.location.hostname,
                 "applepay_mid": req.merchantApplePayCertificateId || ""
