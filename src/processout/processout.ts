@@ -76,7 +76,13 @@ module ProcessOut {
          * Indicates that the flow was initiated by a hosted payment page
          * @type {boolean}
          */
-        protected hppInitiated = false;
+        protected hppInitialStep: boolean = false;
+
+        /**
+         * URL for the hosted payment page
+         * @protected
+         */
+        protected hppInitialURL: string = "";
 
         /**
          * Version of the API used by ProcessOut.js
@@ -767,16 +773,16 @@ module ProcessOut {
          * @return {string}
          */
         public getInvoiceActionURL(
-          invoiceID: string,
-          gatewayConf: any,
-          additionalData: any
+            invoiceID: string,
+            gatewayConf: any,
+            additionalData: any
         ): string {
-          var gatewayConfigurationId = gatewayConf && gatewayConf.id ? gatewayConf.id : gatewayConf;
-          return this.getConfigurableInvoiceActionURL({
-            invoiceId: invoiceID,
-            gatewayConfigurationId: gatewayConfigurationId,
-            additionalData: additionalData,
-          });
+            var gatewayConfigurationId = gatewayConf && gatewayConf.id ? gatewayConf.id : gatewayConf;
+            return this.getConfigurableInvoiceActionURL({
+                invoiceId: invoiceID,
+                gatewayConfigurationId: gatewayConfigurationId,
+                additionalData: additionalData,
+            });
         }
 
         /**
@@ -784,26 +790,26 @@ module ProcessOut {
          * @param {InvoiceActionUrlProps} config
          */
         public getConfigurableInvoiceActionURL(
-          config: InvoiceActionUrlProps
+            config: InvoiceActionUrlProps
         ): string {
-          var gatewayConfID = config.gatewayConfigurationId;
-          var invoiceId = config.invoiceId;
+            var gatewayConfID = config.gatewayConfigurationId;
+            var invoiceId = config.invoiceId;
 
-          if (!invoiceId) {
-            throw new Exception("processout-js.missing-resource-id", "An Invoice Action was requested, but the Invoice ID was missing. Make sure you didn't rather want to call `customerToken` helpers on the gateway configuration instead of `invoice` ones.")
-          }
+            if (!invoiceId) {
+                throw new Exception("processout-js.missing-resource-id", "An Invoice Action was requested, but the Invoice ID was missing. Make sure you didn't rather want to call `customerToken` helpers on the gateway configuration instead of `invoice` ones.")
+            }
 
-          var suffix = "?"
-          var additionalData = config.additionalData;
-          for (var key in additionalData) {
-            suffix += `additional_data[${key}]=${encodeURI(additionalData[key])}&`;
-          }
+            var suffix = "?"
+            var additionalData = config.additionalData;
+            for (var key in additionalData) {
+                suffix += `additional_data[${key}]=${encodeURI(additionalData[key])}&`;
+            }
 
-          var tokenSuffix = config.customerTokenId
-            ? `/tokenized/${config.customerTokenId}`
-            : ""
-          var path = `/${this.getProjectID()}/${invoiceId}/redirect/${gatewayConfID}${tokenSuffix}${suffix.substring(0, suffix.length - 1)}`
-          return this.endpoint("checkout", path);
+            var tokenSuffix = config.customerTokenId
+                ? `/tokenized/${config.customerTokenId}`
+                : ""
+            var path = `/${this.getProjectID()}/${invoiceId}/redirect/${gatewayConfID}${tokenSuffix}${suffix.substring(0, suffix.length - 1)}`
+            return this.endpoint("checkout", path);
         }
 
         /**
@@ -866,25 +872,25 @@ module ProcessOut {
          * @return {ActionHandler}
          */
         public handleConfigurableInvoiceAction(
-          props: InvoiceActionProps
+            props: InvoiceActionProps
         ): ActionHandler {
-          var sanitizedProps = sanitizeInvoiceActionProps(props);
-          var gatewayName = sanitizedProps.gatewayConf.gatewayName;
-          var gatewayLogo = sanitizedProps.gatewayConf.gatewayLogoUrl;
+            var sanitizedProps = sanitizeInvoiceActionProps(props);
+            var gatewayName = sanitizedProps.gatewayConf.gatewayName;
+            var gatewayLogo = sanitizedProps.gatewayConf.gatewayLogoUrl;
 
-          var options = new ActionHandlerOptions(gatewayName, gatewayLogo, sanitizedProps.iframeOverride);
-          var urlConfig: InvoiceActionUrlProps = {
-            invoiceId: sanitizedProps.invoiceId,
-            gatewayConfigurationId: sanitizedProps.gatewayConf.id,
-            additionalData: sanitizedProps.additionalData,
-            customerTokenId: sanitizedProps.customerTokenId
-          };
-          return this.handleAction(
-            this.getConfigurableInvoiceActionURL(urlConfig),
-            sanitizedProps.tokenized,
-            sanitizedProps.tokenError,
-            options
-          );
+            var options = new ActionHandlerOptions(gatewayName, gatewayLogo, sanitizedProps.iframeOverride);
+            var urlConfig: InvoiceActionUrlProps = {
+                invoiceId: sanitizedProps.invoiceId,
+                gatewayConfigurationId: sanitizedProps.gatewayConf.id,
+                additionalData: sanitizedProps.additionalData,
+                customerTokenId: sanitizedProps.customerTokenId
+            };
+            return this.handleAction(
+                this.getConfigurableInvoiceActionURL(urlConfig),
+                sanitizedProps.tokenized,
+                sanitizedProps.tokenError,
+                options
+            );
         }
 
         protected buildGetInvoiceActionURL(
@@ -915,32 +921,32 @@ module ProcessOut {
         }
 
         protected buildHandleTokenInvoiceAction(
-          invoiceID: string,
-          gatewayConf: any,
-          customerTokenId?: string,
+            invoiceID: string,
+            gatewayConf: any,
+            customerTokenId?: string,
         ): (
-          tokenized: (token: string) => void,
-          tokenError: (err: Exception) => void
-        ) => ActionHandler {
-          if (!customerTokenId) {
-            return this.buildHandleInvoiceAction(invoiceID, gatewayConf);
-          }
-
-          return function (
             tokenized: (token: string) => void,
-            tokenError: (err: Exception) => void,
-            iframeOverride?: IframeOverride,
-          ): ActionHandler {
-            return this.handleConfigurableInvoiceAction({
-              invoiceId: invoiceID,
-              tokenized: tokenized,
-              tokenError: tokenError,
-              gatewayConf: mapInvoiceGatewayConfigurationProps(gatewayConf),
-              customerTokenId: customerTokenId,
-              additionalData: {},
-              iframeOverride: iframeOverride
-            });
-          }.bind(this);
+            tokenError: (err: Exception) => void
+        ) => ActionHandler {
+            if (!customerTokenId) {
+                return this.buildHandleInvoiceAction(invoiceID, gatewayConf);
+            }
+
+            return function (
+                tokenized: (token: string) => void,
+                tokenError: (err: Exception) => void,
+                iframeOverride?: IframeOverride,
+            ): ActionHandler {
+                return this.handleConfigurableInvoiceAction({
+                    invoiceId: invoiceID,
+                    tokenized: tokenized,
+                    tokenError: tokenError,
+                    gatewayConf: mapInvoiceGatewayConfigurationProps(gatewayConf),
+                    customerTokenId: customerTokenId,
+                    additionalData: {},
+                    iframeOverride: iframeOverride
+                });
+            }.bind(this);
         }
 
         protected buildConfHookForInvoice(
@@ -1192,23 +1198,22 @@ module ProcessOut {
          * This method is used to handle the 3DS flow for HPP payments.
          * It uses different endpoint and sets hppInitiated to true.
          * @param {string} invoiceID - the invoice ID
-         * @param {string} cardID - the card ID
+         * @param {string} source - any supported source
          * @param {any} options - the additional options
-         * @param {boolean} resume - if true, it will resume the 3DS flow after a soft decline
          * @param {callback} success - the success callback
          * @param {callback} error - the error callback
          */
-        public MakeHPPCardPayment(
-            invoiceID: string, cardID: string,
+        public makeHPPCardPayment(
+            invoiceID: string, source: string,
             options: any,
-            resume: boolean,
             success: (data: any) => void,
             error: (err: Exception) => void): void {
 
-            const url: string = resume ? `invoices/${invoiceID}/authorize` : `invoices/${invoiceID}/three-d-s`;
-            this.hppInitiated = !resume;
+            const url: string = `invoices/${invoiceID}/capture`;
+            this.hppInitialURL = `invoices/${invoiceID}/three-d-s`
+            this.hppInitialStep = true;
 
-            this.handleCardActions("POST", url, invoiceID, cardID, options, success, error);
+            this.handleCardActions("POST", url, invoiceID, source, options, success, error);
         }
 
         /**
@@ -1283,6 +1288,11 @@ module ProcessOut {
                                     success: (data: any) => void,
                                     error: (err: Exception) => void): void {
 
+            // returns this.hppInitialURL only once during the first call from HPP, then returns the endpoint
+            const getEndpoint = (): string => {
+                return !this.hppInitialStep ? endpoint : (this.hppInitialStep = false, this.hppInitialURL);
+            }
+
             if (!options) options = {};
             let source: string = cardID;
             if (options.gatewayRequestSource)
@@ -1314,7 +1324,7 @@ module ProcessOut {
                 options.iterationNumber++;
             }
 
-            this.apiRequest(method, endpoint, payload, function (data: any): void {
+            this.apiRequest(method, getEndpoint(), payload, function (data: any): void {
                 if (!data.success) {
                     error(new Exception(data.error_type, data.message));
                     return;
@@ -1327,7 +1337,7 @@ module ProcessOut {
 
                 var nextStep = function (data: any): void {
                     options.gatewayRequestSource = data;
-                    this.handleCardActions(method, endpoint, resourceID, cardID, options, success, error);
+                    this.handleCardActions(method, getEndpoint(), resourceID, cardID, options, success, error);
                 }.bind(this);
 
                 switch (data.customer_action.type) {
@@ -1340,14 +1350,8 @@ module ProcessOut {
                         this.handleAction(
                             data.customer_action.value,
                             function (data: any): void {
-                                if (this.hppInitiated) {
-                                    // If the HPP was initiated, we don't want to call handleCardActions again.
-                                    this.hppInitiated = false;
-                                    success(data);
-                                    return;
-                                }
                                 options.gatewayRequestSource = null;
-                                this.handleCardActions(method, endpoint, resourceID, cardID, options, success, error);
+                                this.handleCardActions(method, getEndpoint(), resourceID, cardID, options, success, error);
                             }.bind(this),
                             error,
                             new ActionHandlerOptions(opts));
@@ -1355,7 +1359,7 @@ module ProcessOut {
 
                     case "fingerprint":
                         this.handleAction(data.customer_action.value, nextStep, function (err) {
-                            var gReq = new GatewayRequest();
+                            const gReq: GatewayRequest = new GatewayRequest();
                             gReq.url = data.customer_action.value;
                             gReq.method = "POST";
                             gReq.headers = {
