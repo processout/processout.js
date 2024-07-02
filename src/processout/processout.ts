@@ -1296,7 +1296,12 @@ module ProcessOut {
 
             // returns this.hppInitialURL only once during the first call from HPP, then returns the endpoint
             const getEndpoint = (): string => {
-                return !this.threeDSInitiationRequested ? endpoint : (this.threeDSInitiationRequested = false, this.threeDSInitiationURL);
+                if (this.threeDSInitiationRequested) {
+                    this.threeDSInitiationRequested = false;
+                    return this.threeDSInitiationURL
+                }
+
+                return endpoint;
             }
 
             if (!options) options = {};
