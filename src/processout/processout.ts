@@ -73,16 +73,21 @@ module ProcessOut {
         protected processOutMessageHubEndpoint = "";
 
         /**
-         * Indicates that the flow was initiated by a hosted payment page
+         * Indicates that the flow was initiated from initiateThreeDS method
+         * Used only once during the first request to threeDSInitiationURL
+         * @protected
          * @type {boolean}
          */
-        protected hppInitialStep: boolean = false;
+        protected threeDSInitiationRequested: boolean = false;
 
         /**
-         * URL for the hosted payment page
+         * URL that is used to initiate the 3DS flow
+         * Empty by default
+         * It is being set in initiateThreeDS method
          * @protected
+         * @type {string}
          */
-        protected hppInitialURL: string = "";
+        protected threeDSInitiationURL: string = "";
 
         /**
          * Version of the API used by ProcessOut.js
@@ -1194,24 +1199,25 @@ module ProcessOut {
         }
 
         /**
-         * MakeHPPCardPayment the same as makeCardPayment but for HPP.
-         * This method is used to handle the 3DS flow for HPP payments.
-         * It uses different endpoint and sets hppInitiated to true.
+         * InitiateThreeDS the same as makeCardPayment but for HPP
+         * This method is used to handle the 3DS flow for HPP payments
+         * It sets the threeDSInitiationURL and threeDSInitiationRequested fields that
+         * would be used during the first call to our server, to trigger PrepareThreeDS
          * @param {string} invoiceID - the invoice ID
          * @param {string} source - any supported source
          * @param {any} options - the additional options
          * @param {callback} success - the success callback
          * @param {callback} error - the error callback
          */
-        public makeHPPCardPayment(
+        public initiateThreeDS(
             invoiceID: string, source: string,
             options: any,
             success: (data: any) => void,
             error: (err: Exception) => void): void {
 
             const url: string = `invoices/${invoiceID}/capture`;
-            this.hppInitialURL = `invoices/${invoiceID}/three-d-s`
-            this.hppInitialStep = true;
+            this.threeDSInitiationURL = `invoices/${invoiceID}/three-d-s`
+            this.threeDSInitiationRequested = true;
 
             this.handleCardActions("POST", url, invoiceID, source, options, success, error);
         }
@@ -1290,7 +1296,7 @@ module ProcessOut {
 
             // returns this.hppInitialURL only once during the first call from HPP, then returns the endpoint
             const getEndpoint = (): string => {
-                return !this.hppInitialStep ? endpoint : (this.hppInitialStep = false, this.hppInitialURL);
+                return !this.threeDSInitiationRequested ? endpoint : (this.threeDSInitiationRequested = false, this.threeDSInitiationURL);
             }
 
             if (!options) options = {};
@@ -1306,7 +1312,6 @@ module ProcessOut {
                 "source": source,
 
                 "enable_three_d_s_2": true,
-                "enable_three_ds2": true,
 
                 "verify": options.verify,
                 "verify_metadata": options.verify_metadata,
