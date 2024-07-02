@@ -16,6 +16,9 @@ interface ApplePayPaymentRequest {
   merchantCertificateId?: string;
   merchantApplePayCertificateId?: string;
 }
+interface ApplePayCheckAvailabilityRequest {
+  merchantApplePayCertificateId?: string;
+}
 declare enum ApplePayStatusCodes {
   // The requested action succeeded.
   STATUS_SUCCESS = 1,
