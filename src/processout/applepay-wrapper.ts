@@ -26,17 +26,20 @@ module ProcessOut {
          * can be used on the device, an error otherwise. The function itself
          * returns void and is not blocking
          * @param {(err: Exception) => void} callback
+         * @param {ApplePayCheckAvailabilityRequest} req
          * @return {void}
          */ 
-        public checkAvailability(callback: (err: Exception) => void): void {
+        public checkAvailability(callback: (err: Exception) => void, req?: ApplePayCheckAvailabilityRequest): void {
             // Let's first check if the browser itself supports ApplePay
             if (!(<any>window).ApplePaySession || !ApplePaySession.canMakePayments()) {
                 callback(new Exception("applepay.not-supported"));
                 return;
             }
 
+            req = req || {};
             this.instance.apiRequest("get", this.instance.endpoint("api", "/applepay/available"), {
-                "domain_name": window.location.hostname
+                "domain_name": window.location.hostname,
+                "applepay_mid": req.merchantApplePayCertificateId || ""
             }, 
                 function(data: any, req: XMLHttpRequest, e: Event): void {
                     if (data.success)
