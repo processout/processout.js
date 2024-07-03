@@ -235,12 +235,13 @@ module ProcessOut {
          * @param  {Object} data
          * @param  {callback} success
          * @param  {callback} error
+         * @param  {boolean} isLegacy
          * @return {void}
          */
         public apiRequest(method: string, path: string, data,
                           success: (data: any, req: XMLHttpRequest, e: Event) => void,
                           error: (req: XMLHttpRequest, e: Event, errorCode: ApiRequestError) => void,
-                          retry?: number): void {
+                          retry?: number, isLegacy: boolean = true): void {
 
             if (!retry) retry = 0;
 
@@ -264,10 +265,12 @@ module ProcessOut {
                 delete data.idempotency_key;
             }
 
-            // We need to hack our project ID in the URL itself so that
-            // ProcessOut's load-balancers and routers can route the request
-            // to the project's region
-            path += `?legacyrequest=true&project_id=${this.projectID}`
+            if(isLegacy){
+                // We need to hack our project ID in the URL itself so that
+                // ProcessOut's load-balancers and routers can route the request
+                // to the project's region
+                path += `?legacyrequest=true&project_id=${this.projectID}`
+            }
 
             // We also need to hack our request headers for legacy browsers to
             // work, but also for modern browsers with extensions playing with
@@ -398,6 +401,21 @@ module ProcessOut {
                 );
 
             return new NativeApm(this, config);
+        }
+
+        /**
+         * SetupDynamicCheckout creates a Dynamic Checkout instance
+         * @param {DynamicCheckoutConfigType} config
+         * @return {DynamicCheckout}
+         */
+        public setupDynamicCheckout(config: DynamicCheckoutConfigType): DynamicCheckout {
+            if (!this.projectID)
+                throw new Exception(
+                    'default',
+                    "You must instantiate ProcessOut.js with a valid project ID in order to use ProcessOut's Dynamic Checkout"
+                );
+
+            return new DynamicCheckout(this, config);
         }
 
         /**
@@ -1292,7 +1310,8 @@ module ProcessOut {
                                     resourceID: string, cardID: string,
                                     options: any,
                                     success: (data: any) => void,
-                                    error: (err: Exception) => void): void {
+                                    error: (err: Exception) => void,
+                                ): void {
 
             // returns this.hppInitialURL only once during the first call from HPP, then returns the endpoint
             const getEndpoint = (): string => {
