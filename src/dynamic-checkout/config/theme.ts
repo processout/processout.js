@@ -63,10 +63,6 @@ const dynamicStyles = `
   border-radius: 4px;
 }
 
-.klarna {
-  background-color: #ffb3c7;
-}
-
 .or {
   position: relative;
   text-align: center;
