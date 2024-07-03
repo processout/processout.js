@@ -1,14 +1,9 @@
 /// <reference path="../references.ts" />
 
-type DynamicCheckoutFormData = {
-  parameters: NativeApmInputData[]
-}
-
 module ProcessOut {
   export class DynamicCheckoutFormView {
     formElement: HTMLFormElement
     onSubmitHandler: Function
-    formData: NativeApmFormData
     paymentMethods: PaymentMethod[]
     projectId: string
     invoiceId: string
