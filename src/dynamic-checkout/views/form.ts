@@ -182,8 +182,6 @@ module ProcessOut {
               </div>
           </div>
           <button type="submit" class="cta-pay">Pay</button>
-          <div id="errors"></div>
-          <div id="success"></div>
         </form>`
     }
 
@@ -216,7 +214,7 @@ module ProcessOut {
         }
         case "applepay": {
           return ``
-          // not yet supported 0 implementation in progress
+          // not yet supported - implementation in progress
           return `
           <div class="pay-button" id="google-pay-button-container">
               <!-- Google Pay button will be dynamically added here -->
