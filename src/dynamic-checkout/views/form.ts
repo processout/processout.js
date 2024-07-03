@@ -70,7 +70,7 @@ module ProcessOut {
             client.tokenize(
               form,
               {
-                name: nameElement?.value || "",
+                name: nameElement.value || "",
               },
               function (token) {
                 DynamicCheckoutEventsUtils.dispatchTokenizePaymentSuccessEvent(token)
