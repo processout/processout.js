@@ -2,7 +2,8 @@
     "compilerOptions": {
         "removeComments": true,
         "outFile": "../../scripts/processout.js",
-        "target": "es5"
+          "target": "es5",
+          "lib": ["dom", "es2015"],
     },
     "compileOnSave": false,
     "buildOnSave": false

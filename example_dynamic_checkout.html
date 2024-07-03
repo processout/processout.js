@@ -1,0 +1,65 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+    <title>ProcessOut Dynamic Checkout Example Page</title>
+    <style>
+      body {
+        width: 100%;
+        font-family: "Arial";
+        display: flex;
+        justify-content: center;
+      }
+
+      h1 {
+        margin-bottom: 50px;
+      }
+
+      #dynamic-cko-container {
+        width: 400px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="dynamic-cko-container"></div>
+    <script src="https://js.processout.com/processout.js"></script>
+    <script src="https://pay.google.com/gp/p/js/pay.js" async></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const projectId = "project-id"
+        const invoiceId = "invoice-id"
+
+        const client = new ProcessOut.ProcessOut(projectId)
+
+        const dynamicCheckout = client.setupDynamicCheckout({
+          invoiceId,
+          projectId,
+        })
+
+        dynamicCheckout.mount("#dynamic-cko-container")
+
+        // Dynamic Checkout widget dispatches event on every major action. Here are event handlers to test them
+        window.addEventListener("processout_dynamic_checkout_loading", function (e) {
+          console.log("Widget loading")
+        })
+
+        window.addEventListener("processout_dynamic_checkout_ready", function (e) {
+          console.log("Widget Ready")
+        })
+
+        window.addEventListener("processout_dynamic_checkout_invoice_fetching_error", function (e) {
+          console.log("Invoice fetching error")
+        })
+
+        window.addEventListener("processout_dynamic_checkout_tokenize_payment_success", function (e) {
+          console.log("Tokenize payment success")
+        })
+
+        window.addEventListener("processout_dynamic_checkout_tokenize_payment_error", function (e) {
+          console.log("Tokenize payment error")
+        })
+      })
+    </script>
+  </body>
+</html>
