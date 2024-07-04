@@ -61,6 +61,10 @@ module ProcessOut {
               color: "#ECEFF1",
             },
           },
+          requireCVC: false,
+          placeholder: "",
+          expiryAutoNext: true,
+          cardNumberAutoNext: true,
         },
         function (form) {
           form.addEventListener("submit", function (e) {
