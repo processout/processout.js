@@ -1129,39 +1129,35 @@ module ProcessOut {
           customerID: string,
           tokenID: string,
           gatewayConf: any
-      ): (
-          tokenized: (token: string) => void,
-          tokenError: (err: Exception) => void
-      ) => ActionHandler {
-
-          return function (
-              tokenized: (token: string) => void,
-              tokenError: (err: Exception) => void
-          ): ActionHandler {
-
-              return this.handleCustomerTokenAction(customerID, tokenID, gatewayConf, tokenized, tokenError);
-          }.bind(this);
-      }
-
-      protected buildHandleCustomerTokenActionAdditionalData(
-        customerID: string,
-        tokenID: string,
-        gatewayConf: any
-    ): (
-      additionalData: any,
-        tokenized: (token: string) => void,
-        tokenError: (err: Exception) => void
-    ) => ActionHandler {
-
-        return function (
-          additionalData: any,
+        ): (
             tokenized: (token: string) => void,
             tokenError: (err: Exception) => void
-        ): ActionHandler {
+        ) => ActionHandler {
+            return function (
+                tokenized: (token: string) => void,
+                tokenError: (err: Exception) => void
+            ): ActionHandler {
+                return this.handleCustomerTokenAction(customerID, tokenID, gatewayConf, tokenized, tokenError);
+            }.bind(this);
+        }
 
-            return this.handleCustomerTokenActionAdditionalData(customerID, tokenID, gatewayConf, additionalData, tokenized, tokenError);
-        }.bind(this);
-    }
+        protected buildHandleCustomerTokenActionAdditionalData(
+            customerID: string,
+            tokenID: string,
+            gatewayConf: any
+        ): (
+            additionalData: any,
+            tokenized: (token: string) => void,
+            tokenError: (err: Exception) => void
+        ) => ActionHandler {
+            return function (
+                additionalData: any,
+                tokenized: (token: string) => void,
+                tokenError: (err: Exception) => void
+            ): ActionHandler {
+                return this.handleCustomerTokenActionAdditionalData(customerID, tokenID, gatewayConf, additionalData, tokenized, tokenError);
+            }.bind(this);
+        }
 
         protected buildConfHookForCustomerToken(
             gatewayConf: any
