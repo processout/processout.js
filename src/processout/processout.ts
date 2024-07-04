@@ -780,6 +780,7 @@ module ProcessOut {
 
                         conf.getCustomerTokenActionURL = this.buildGetCustomerTokenActionURL(config.customerID, config.tokenID, conf);
                         conf.handleCustomerTokenAction = this.buildHandleCustomerTokenAction(config.customerID, config.tokenID, conf);
+                        conf.handleCustomerTokenActionAdditionalData = this.buildHandleCustomerTokenActionAdditionalData(config.customerID, config.tokenID, conf);
                         conf.hookForCustomerToken = this.buildConfHookForCustomerToken(conf);
                         confs.push(conf);
                     }
@@ -1125,22 +1126,42 @@ module ProcessOut {
         }
 
         protected buildHandleCustomerTokenAction(
-            customerID: string,
-            tokenID: string,
-            gatewayConf: any
-        ): (
+          customerID: string,
+          tokenID: string,
+          gatewayConf: any
+      ): (
+          tokenized: (token: string) => void,
+          tokenError: (err: Exception) => void
+      ) => ActionHandler {
+
+          return function (
+              tokenized: (token: string) => void,
+              tokenError: (err: Exception) => void
+          ): ActionHandler {
+
+              return this.handleCustomerTokenAction(customerID, tokenID, gatewayConf, tokenized, tokenError);
+          }.bind(this);
+      }
+
+      protected buildHandleCustomerTokenActionAdditionalData(
+        customerID: string,
+        tokenID: string,
+        gatewayConf: any
+    ): (
+      additionalData: any,
+        tokenized: (token: string) => void,
+        tokenError: (err: Exception) => void
+    ) => ActionHandler {
+
+        return function (
+          additionalData: any,
             tokenized: (token: string) => void,
             tokenError: (err: Exception) => void
-        ) => ActionHandler {
+        ): ActionHandler {
 
-            return function (
-                tokenized: (token: string) => void,
-                tokenError: (err: Exception) => void
-            ): ActionHandler {
-
-                return this.handleCustomerTokenAction(customerID, tokenID, gatewayConf, tokenized, tokenError);
-            }.bind(this);
-        }
+            return this.handleCustomerTokenActionAdditionalData(customerID, tokenID, gatewayConf, additionalData, tokenized, tokenError);
+        }.bind(this);
+    }
 
         protected buildConfHookForCustomerToken(
             gatewayConf: any
