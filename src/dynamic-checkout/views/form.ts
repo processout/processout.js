@@ -51,21 +51,25 @@ module ProcessOut {
       const cardFormElement = document.getElementById("card-form") as HTMLElement
       const projectId = this.projectId
       const client = new ProcessOut(projectId)
+
+      const options = new CardFieldOptions("")
+
+      options.style = {
+        fontSize: "14px",
+        //@ts-ignore
+        "::placeholder": {
+          color: "#ECEFF1",
+        },
+      }
+
+      options.requireCVC = false
+      options.placeholder = ""
+      options.expiryAutoNext = true
+      options.cardNumberAutoNext = true
+
       client.setupForm(
         cardFormElement,
-        {
-          style: {
-            fontSize: "14px",
-            //@ts-ignore
-            "::placeholder": {
-              color: "#ECEFF1",
-            },
-          },
-          requireCVC: false,
-          placeholder: "",
-          expiryAutoNext: true,
-          cardNumberAutoNext: true,
-        },
+        options,
         function (form) {
           form.addEventListener("submit", function (e) {
             e.preventDefault()
