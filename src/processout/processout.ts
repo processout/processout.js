@@ -1374,6 +1374,8 @@ module ProcessOut {
                 }
             }
 
+            payload = this.injectDeviceData(payload);
+
             if (options.idempotency_key) {
                 // As we're executing this multiple times, we need to keep
                 // track of the executing number
