@@ -265,7 +265,7 @@ module ProcessOut {
                 delete data.idempotency_key;
             }
 
-            if(isLegacy){
+            if (isLegacy) {
                 // We need to hack our project ID in the URL itself so that
                 // ProcessOut's load-balancers and routers can route the request
                 // to the project's region
@@ -1126,9 +1126,9 @@ module ProcessOut {
         }
 
         protected buildHandleCustomerTokenAction(
-          customerID: string,
-          tokenID: string,
-          gatewayConf: any
+            customerID: string,
+            tokenID: string,
+            gatewayConf: any
         ): (
             tokenized: (token: string) => void,
             tokenError: (err: Exception) => void
@@ -1328,7 +1328,7 @@ module ProcessOut {
                                     options: any,
                                     success: (data: any) => void,
                                     error: (err: Exception) => void,
-                                ): void {
+        ): void {
 
             // returns this.hppInitialURL only once during the first call from HPP, then returns the endpoint
             const getEndpoint = (): string => {
@@ -1358,9 +1358,21 @@ module ProcessOut {
                 "verify_metadata": options.verify_metadata,
                 "set_default": options.set_default,
                 "incremental": options.incremental,
-                "preferred_scheme": options.preferred_scheme
+                "preferred_scheme": options.preferred_scheme,
             };
-            payload = this.injectDeviceData(payload);
+
+            if (options.external_three_d_s) {
+                switch (typeof options.external_three_d_s) {
+                    case "string":
+                        payload["external_three_d_s"] = options.external_three_d_s;
+                    case "object":
+                        try {
+                            payload["external_three_d_s"] = JSON.stringify(options.external_three_d_s);
+                        } catch (err) {
+                            console.log("Error while parsing external_three_d_s object", err);
+                        }
+                }
+            }
 
             if (options.idempotency_key) {
                 // As we're executing this multiple times, we need to keep
