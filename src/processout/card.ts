@@ -151,15 +151,16 @@ module ProcessOut {
             var err = Expiry.validateMonth(this.getMonth());
             if (err)
                 return err;
-            
+
             err = Expiry.validateYear(this.getYear());
             if (err)
                 return err;
-            
+
             var date = new Date();
-            if (this.getMonth() < date.getMonth() && this.getYear() == date.getFullYear())
+            let dateMonth = date.getMonth() + 1;
+            if (this.getMonth() < dateMonth && this.getYear() == date.getFullYear())
                 return new Exception("card.invalid-date");
-            
+
             return null;
         }
 
@@ -236,7 +237,7 @@ module ProcessOut {
         public static validateYear(year: number): Exception {
             if (year < 100)
                 year += 2000;
-            
+
             var date = new Date();
             if (!year || year < date.getFullYear())
                 return new Exception("card.invalid-year");
@@ -276,7 +277,7 @@ module ProcessOut {
             this.expiry = expiry;
         }
 
-        /** 
+        /**
          * getNumber returns the card number trimmed from all spaces
          * @return {string}
          */
@@ -352,7 +353,7 @@ module ProcessOut {
             return Card.getIIN(this.number);
         }
 
-        /** 
+        /**
          * GetLast4Digits returns the last 4 digits of the card number
          * @return {string}
          */
@@ -399,7 +400,7 @@ module ProcessOut {
          * @return {string}
          */
         public static parseNumber(number: string): string {
-            // Make sure to return a String as IE sometimes detects it as 
+            // Make sure to return a String as IE sometimes detects it as
             // an object (?)
             return String(number.replace(/ /gi, "").replace(/\-/gi, "").replace(/\-/gi, ""));
         }
@@ -476,10 +477,10 @@ module ProcessOut {
         }
 
         /**
-         * autoFormatNumber automatically formats the number field and 
+         * autoFormatNumber automatically formats the number field and
          * calls next when the input is done
-         * @param {HTMLInputElement} number 
-         * @param {callback} next 
+         * @param {HTMLInputElement} number
+         * @param {callback} next
          * @return {void}
          */
         public static autoFormatNumber(number: HTMLInputElement, next?: () => void): void {
@@ -504,10 +505,10 @@ module ProcessOut {
         }
 
         /**
-         * autoFormatNumber automatically formats the expiry field and calls 
+         * autoFormatNumber automatically formats the expiry field and calls
          * next when the input is done
-         * @param {HTMLInputElement} exp 
-         * @param {callback} next 
+         * @param {HTMLInputElement} exp
+         * @param {callback} next
          * @return {void}
          */
         public static autoFormatExpiry(exp: HTMLInputElement, next?: () => void): void {
@@ -546,7 +547,7 @@ module ProcessOut {
 
         /**
          * getCardFormat returns the most likely card format for the given
-         * iin, in the format of a slice of numbers. The card should be 
+         * iin, in the format of a slice of numbers. The card should be
          * formatted by packs of numbers, represented by the slice
          * @param {string} iin
          * @return Array<number>
