@@ -7,6 +7,10 @@ interface Window {
     XDomainRequest?: any;
 }
 
+interface apiRequestOptions {
+    isLegacy?: boolean;
+    customerSecret?: string;
+}
 
 /**
  * ProcessOut module/namespace
@@ -106,6 +110,7 @@ module ProcessOut {
          * @type {ThreeDSWrapper}
          */
         public threeDS: ThreeDSWrapper;
+        static ProcessOut: any;
 
         /**
          * ProcessOut constructor
@@ -241,18 +246,21 @@ module ProcessOut {
         public apiRequest(method: string, path: string, data,
                           success: (data: any, req: XMLHttpRequest, e: Event) => void,
                           error: (req: XMLHttpRequest, e: Event, errorCode: ApiRequestError) => void,
-                          retry?: number, isLegacy: boolean = true): void {
+                          retry?: number, options?: apiRequestOptions): void {
 
             if (!retry) retry = 0;
 
             method = method.toLowerCase();
+
+            const { isLegacy = true, customerSecret = "" } = options
 
             if (path.substring(0, 4) != "http" && path[0] != "/")
                 path = this.endpoint("api", "/" + path);
 
             var headers = {
                 "Content-Type": "application/json",
-                "API-Version": this.apiVersion
+                "API-Version": this.apiVersion,
+                "x-processout-client-secret": customerSecret
             };
             if (this.projectID)
                 headers["Authorization"] = `Basic ${btoa(this.projectID + ":")}`;
