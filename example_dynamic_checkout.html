@@ -29,12 +29,14 @@
       document.addEventListener("DOMContentLoaded", function () {
         const projectId = "project-id"
         const invoiceId = "invoice-id"
+        const clientSecret = "client-secret"
 
         const client = new ProcessOut.ProcessOut(projectId)
 
         const dynamicCheckout = client.setupDynamicCheckout({
           invoiceId,
           projectId,
+          clientSecret
         })
 
         dynamicCheckout.mount("#dynamic-cko-container")

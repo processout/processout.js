@@ -3,6 +3,7 @@
 type DynamicCheckoutConfigType = {
   invoiceId: string
   projectId: string
+  clientSecret?: string
   paymentMethods: PaymentMethod[]
 }
 
@@ -34,6 +35,7 @@ type PaymentMethod = {
   display?: Display
   card?: Card
   apm?: Apm
+  apm_customer_token: Apm
 }
 
 type Googlepay = {
@@ -110,6 +112,12 @@ module ProcessOut {
     projectId: DynamicCheckoutConfigType["projectId"]
 
     /**
+     * Dynamic Checkout Client Secret
+     * @type {DynamicCheckoutConfigType['clientSecret']}
+     */
+    clientSecret: DynamicCheckoutConfigType["clientSecret"]
+
+    /**
      * Payment Methods
      * @type {DynamicCheckoutConfigType['paymentMethods']}
      */
@@ -130,7 +138,8 @@ module ProcessOut {
       return {
         invoiceId: this.invoiceId,
         projectId: this.projectId,
-        paymentMethods: this.paymentMethods
+        paymentMethods: this.paymentMethods,
+        clientSecret: this.clientSecret
       }
     }
 
@@ -144,10 +153,11 @@ module ProcessOut {
         )
       }
 
-      const { invoiceId, projectId } = config
+      const { invoiceId, projectId, clientSecret = "" } = config
 
       this.invoiceId = invoiceId
       this.projectId = projectId
+      this.clientSecret = clientSecret
     }
 
     /**

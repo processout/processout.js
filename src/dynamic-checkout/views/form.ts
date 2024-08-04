@@ -197,9 +197,10 @@ module ProcessOut {
       let expressCheckoutHtml = ""
       let directCheckoutHtml = ""
 
-      this.paymentMethods.forEach(({ flow, type, apm, display }) => {
+      this.paymentMethods.forEach(({ flow, type, apm, apm_customer_token, display }) => {
         if (flow === "express") {
-          expressCheckoutHtml += this.getExpressCheckoutHtml(type)
+          let formattedApm = type === "apm_customer_token" ? apm_customer_token : apm
+          expressCheckoutHtml += this.getExpressCheckoutHtml(type, formattedApm, display)
         } else if (type === "apm") {
           directCheckoutHtml += this.getDirectCheckoutHtml(apm, display)
         }
@@ -208,7 +209,7 @@ module ProcessOut {
       return { expressCheckoutHtml, directCheckoutHtml }
     }
 
-    private getExpressCheckoutHtml(type: string): string {
+    private getExpressCheckoutHtml(type: string, apm: Apm, display: Display): string {
       // TODO: enable when merchant configuration ready
       switch (type) {
         case "googlepay": {
@@ -229,6 +230,9 @@ module ProcessOut {
           </div>
         `
         }
+        case "apm_customer_token": {
+          return this.getSavedDirectCheckoutHtml(apm, display)
+        }
         default: {
           return ""
         }
@@ -236,6 +240,19 @@ module ProcessOut {
     }
 
     private getDirectCheckoutHtml(apm: Apm, display: Display): string {
+      return `
+        <div class="pay-button" data-method-id="${apm.gateway_configuration_uid}.${
+        apm.gateway_name
+      }" data-redirect-url="${apm.redirect_url || ""}">
+            <div class="payment-method" style="background-color: ${this.hexToRgba(
+              display.brand_color.dark,
+            )}">
+                <img src="${display.logo.dark_url.vector}" style="margin: 0 auto; height: 40px" />
+            </div>
+        </div>`
+    }
+
+    private getSavedDirectCheckoutHtml(apm: Apm, display: Display): string {
       return `
         <div class="pay-button" data-method-id="${apm.gateway_configuration_uid}.${
         apm.gateway_name

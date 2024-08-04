@@ -63,7 +63,10 @@ module ProcessOut {
         actions.onSuccess.bind(this),
         actions.onError.bind(this),
         0,
-        false,
+        {
+          isLegacy: false,
+          customerSecret: this.paymentConfig.clientSecret,
+        },
       )
     }
 
