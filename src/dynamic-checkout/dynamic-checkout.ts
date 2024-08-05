@@ -1,61 +1,44 @@
 /// <reference path="./references.ts" />
 
-/**
- * ProcessOut module/namespace
- */
 module ProcessOut {
-  /**
-   * ProcessOut Dynamic Checkout class
-   */
   export class DynamicCheckout {
-    /**
-     * ProcessOut instance
-     * @type {ProcessOut}
-     */
-    processOutInstance: ProcessOut
+    processOutInstance: ProcessOut;
+    paymentConfig: DynamicCheckoutPaymentConfig;
+    dcoContainer: Element;
+    widgetWrapper: Element;
+    invoiceDetails: Invoice;
 
-    /**
-     * Dynamic Checkout container element for mounting the widget
-     * @type {Element}
-     */
-    dcoContainer: Element
-
-    /**
-     * Dynamic Checkout widget wrapper element for styling purposes
-     * @type {Element}
-     */
-    widgetWrapper: Element
-
-    /**
-     * Configuration of Dynamic Checkout payment
-     * @type {DynamicCheckoutConfig}
-     */
-    paymentConfig: DynamicCheckoutConfig
-
-    /**
-     * Invoice details
-     * @type {Invoice}
-     */
-    invoiceDetails: Invoice
-
-    /**
-     * DynamicCheckout constructor
-     * @param  {ProcessOut} processOutInstance
-     * @param  {DynamicCheckoutConfigType} paymentConfig
-     */
-    constructor(processOutInstance: ProcessOut, paymentConfig: DynamicCheckoutConfigType) {
-      this.processOutInstance = processOutInstance
-      this.paymentConfig = new DynamicCheckoutConfig(paymentConfig)
+    constructor(
+      processOutInstance: ProcessOut,
+      config: DynamicCheckoutPaymentConfigType
+    ) {
+      this.processOutInstance = processOutInstance;
+      this.paymentConfig = new DynamicCheckoutPaymentConfig(config);
     }
 
-    /**
-     * This function gets invoice details
-     */
+    public mount(containerSelector: string) {
+      this.dcoContainer = document.querySelector(containerSelector);
+
+      if (!this.dcoContainer) {
+        throw new Error(
+          "Element with this selector does not exist. You must provide a valid element selector"
+        );
+      }
+
+      return this.getInvoiceDetails({
+        onFetch: DynamicCheckoutEventsUtils.dispatchWidgetLoadingEvent,
+        onSuccess: this.onGetInvoiceSuccess.bind(this),
+        onError: this.onGetInvoiceError.bind(this),
+      });
+    }
+
     private getInvoiceDetails(actions: {
-      onFetch: Function
-      onSuccess: Function
-      onError: Function
+      onFetch: Function;
+      onSuccess: Function;
+      onError: Function;
     }) {
+      actions.onFetch();
+
       this.processOutInstance.apiRequest(
         "GET",
         `invoices/${this.paymentConfig.invoiceId}?expand=transaction`,
@@ -70,68 +53,65 @@ module ProcessOut {
       )
     }
 
-    private onGetInvoiceError(req: XMLHttpRequest, e: ProgressEvent, errorCode: ApiRequestError) {
-      let errorData = req.response
+    private onGetInvoiceSuccess(data: any) {
+      if (!data.success) {
+        return DynamicCheckoutEventsUtils.dispatchInvoiceFetchingErrorEvent(
+          data
+        );
+      }
+
+      this.paymentConfig.setInvoiceDetails(data.invoice);
+
+      this.loadDynamicCheckoutView();
+    }
+
+    private onGetInvoiceError(
+      req: XMLHttpRequest,
+      e: ProgressEvent,
+      errorCode: ApiRequestError
+    ) {
+      let errorData = req.response;
+
       if (!req.response && errorCode)
         errorData = {
           success: false,
           error_type: errorCode,
           message: Translator.translateError(errorCode),
-        }
+        };
 
-      DynamicCheckoutEventsUtils.dispatchInvoiceFetchingErrorEvent(errorData)
+      DynamicCheckoutEventsUtils.dispatchInvoiceFetchingErrorEvent(errorData);
     }
 
-    private onGetInvoiceSuccess(data: any) {
-      if (!data.success) {
-        return DynamicCheckoutEventsUtils.dispatchInvoiceFetchingErrorEvent(data)
-      }
+    private loadDynamicCheckoutView() {
+      const paymentMethodsView = new DynamicCheckoutPaymentMethodsView(
+        this.processOutInstance,
+        this.paymentConfig,
+      );
 
-      const { invoice } = data
-      this.invoiceDetails = invoice
-      this.paymentConfig.paymentMethods = invoice.payment_methods
-      this.performMounting()
-    }
+      this.loadView(paymentMethodsView.getViewElement());
 
-    public mount(containerSelector: string) {
-      this.dcoContainer = document.querySelector(containerSelector)
+      paymentMethodsView.setupEventListeners();
 
-      if (!this.dcoContainer) {
-        throw new Error(
-          "Element with this selector does not exist. You must provide a valid element selector",
-        )
-      }
-
-      this.getInvoiceDetails({
-        onFetch: DynamicCheckoutEventsUtils.dispatchWidgetLoadingEvent,
-        onSuccess: this.onGetInvoiceSuccess.bind(this),
-        onError: this.onGetInvoiceError.bind(this),
-      })
-    }
-
-    private performMounting() {
-      const formView = new DynamicCheckoutFormView(this.paymentConfig)
-      this.loadView(formView.getViewElement())
-      formView.postSetup()
-
-      DynamicCheckoutEventsUtils.dispatchWidgetReadyEvent()
+      DynamicCheckoutEventsUtils.dispatchWidgetReadyEvent();
     }
 
     private loadView(view: HTMLElement) {
       if (this.widgetWrapper) {
-        this.dcoContainer.removeChild(this.widgetWrapper)
+        this.dcoContainer.removeChild(this.widgetWrapper);
       }
 
-      this.widgetWrapper = this.createWidgetWrapper()
-      this.widgetWrapper.appendChild(view)
-      this.dcoContainer.appendChild(this.widgetWrapper)
+      this.widgetWrapper = this.createWidgetWrapper();
+
+      this.widgetWrapper.appendChild(view);
+      this.dcoContainer.appendChild(this.widgetWrapper);
     }
 
     private createWidgetWrapper() {
-      const widgetWrapper = document.createElement("div")
-      widgetWrapper.setAttribute("class", "dynamic-checkout-widget-wrapper")
+      const widgetWrapper = document.createElement("div");
 
-      return widgetWrapper
+      widgetWrapper.setAttribute("class", "dynamic-checkout-widget-wrapper");
+
+      return widgetWrapper;
     }
   }
 }
