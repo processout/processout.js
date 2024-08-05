@@ -17,7 +17,7 @@ interface apiRequestOptions {
  */
 module ProcessOut {
 
-    export const DEBUG = true;
+    export const DEBUG = false;
     export const TestModePrefix = "test-";
 
     /**
@@ -140,15 +140,14 @@ module ProcessOut {
             if (jsHost == "" && !DEBUG) {
                 throw new Exception("processout-js.not-hosted");
             }
-            // if (/^https?:\/\/.*\.processout\.ninja\//.test(jsHost)) {
-            //     this.host = "processout.ninja";
-            // } else if (/^https?:\/\/.*\.processout\.dev\//.test(jsHost)) {
-            //     this.host = "processout.dev";
-            // } else {
-            //     this.host = "processout.com";
-            // }
-
-             this.host = "processout.ninja";
+            
+            if (/^https?:\/\/.*\.processout\.ninja\//.test(jsHost)) {
+                this.host = "processout.ninja";
+            } else if (/^https?:\/\/.*\.processout\.dev\//.test(jsHost)) {
+                this.host = "processout.dev";
+            } else {
+                this.host = "processout.com";
+            }
 
             if (!projectID)
                 throw new Exception("processout-js.missing-project-id");
