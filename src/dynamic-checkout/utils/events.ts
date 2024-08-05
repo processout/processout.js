@@ -1,8 +1,5 @@
 /// <reference path="../references.ts" />
 
-/**
- * ProcessOut module/namespace
- */
 module ProcessOut {
   const DYNAMIC_CHECKOUT_EVENTS = {
     WIDGET_LOADING: "processout_dynamic_checkout_loading",
@@ -10,11 +7,10 @@ module ProcessOut {
     INVOICE_FETCHING_ERROR: "processout_dynamic_checkout_invoice_fetching_error",
     TOKENIZE_PAYMENT_SUCCESS: "processout_dynamic_checkout_tokenize_payment_success",
     TOKENIZE_PAYMENT_ERROR: "processout_dynamic_checkout_tokenize_payment_error",
+    PAYMENT_ERROR: "processout_dynamic_checkout_payment_error",
+    PAYMENT_SUCCESS: "processout_dynamic_checkout_payment_error",
   }
 
-  /**
-   * ProcessOut Dynamic Checkout class to handle event dispatching
-   */
   export class DynamicCheckoutEventsUtils {
     static dispatchInvoiceFetchingErrorEvent(errorData: any) {
       const event = EventsUtils.createEvent(
@@ -46,6 +42,21 @@ module ProcessOut {
       const event = EventsUtils.createEvent(
         DYNAMIC_CHECKOUT_EVENTS.TOKENIZE_PAYMENT_ERROR,
         errorData,
+      )
+      return window.dispatchEvent(event)
+    }
+    
+    static dispatchPaymentErrorEvent(errorData: any) {
+      const event = EventsUtils.createEvent(
+        DYNAMIC_CHECKOUT_EVENTS.TOKENIZE_PAYMENT_ERROR,
+        errorData,
+      )
+      return window.dispatchEvent(event)
+    }
+
+    static dispatchPaymentSuccessEvent() {
+      const event = EventsUtils.createEvent(
+        DYNAMIC_CHECKOUT_EVENTS.TOKENIZE_PAYMENT_SUCCESS,
       )
       return window.dispatchEvent(event)
     }

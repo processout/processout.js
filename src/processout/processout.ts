@@ -17,7 +17,7 @@ interface apiRequestOptions {
  */
 module ProcessOut {
 
-    export const DEBUG = false;
+    export const DEBUG = true;
     export const TestModePrefix = "test-";
 
     /**
@@ -140,13 +140,15 @@ module ProcessOut {
             if (jsHost == "" && !DEBUG) {
                 throw new Exception("processout-js.not-hosted");
             }
-            if (/^https?:\/\/.*\.processout\.ninja\//.test(jsHost)) {
-                this.host = "processout.ninja";
-            } else if (/^https?:\/\/.*\.processout\.dev\//.test(jsHost)) {
-                this.host = "processout.dev";
-            } else {
-                this.host = "processout.com";
-            }
+            // if (/^https?:\/\/.*\.processout\.ninja\//.test(jsHost)) {
+            //     this.host = "processout.ninja";
+            // } else if (/^https?:\/\/.*\.processout\.dev\//.test(jsHost)) {
+            //     this.host = "processout.dev";
+            // } else {
+            //     this.host = "processout.com";
+            // }
+
+             this.host = "processout.ninja";
 
             if (!projectID)
                 throw new Exception("processout-js.missing-project-id");
@@ -252,7 +254,7 @@ module ProcessOut {
 
             method = method.toLowerCase();
 
-            const { isLegacy = true, customerSecret = "" } = options
+            const { isLegacy = true, customerSecret = "" } = options || {}
 
             if (path.substring(0, 4) != "http" && path[0] != "/")
                 path = this.endpoint("api", "/" + path);
@@ -401,7 +403,7 @@ module ProcessOut {
          * @param {NativeApmConfigType} config
          * @return {NativeApm}
          */
-        public setupNativeApm(config: NativeApmConfigType): NativeApm {
+        public setupNativeApm(config: NativeApmPaymentConfigType): NativeApm {
             if (!this.projectID)
                 throw new Exception(
                     'default',
@@ -416,7 +418,7 @@ module ProcessOut {
          * @param {DynamicCheckoutConfigType} config
          * @return {DynamicCheckout}
          */
-        public setupDynamicCheckout(config: DynamicCheckoutConfigType): DynamicCheckout {
+        public setupDynamicCheckout(config: DynamicCheckoutPaymentConfigType): DynamicCheckout {
             if (!this.projectID)
                 throw new Exception(
                     'default',

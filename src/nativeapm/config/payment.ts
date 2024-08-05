@@ -1,6 +1,6 @@
 /// <reference path="../references.ts" />
 
-type NativeApmConfigType = {
+type NativeApmPaymentConfigType = {
   gatewayConfigurationId: string;
   invoiceId: string;
 };
@@ -15,28 +15,28 @@ module ProcessOut {
   export class NativeApmPaymentConfig {
     /**
      * Native APM gateway configuration ID
-     * @type {NativeApmConfigType['gatewayConfigurationId']}
+     * @type {NativeApmPaymentConfigType['gatewayConfigurationId']}
      */
-    gatewayConfigurationId: NativeApmConfigType['gatewayConfigurationId'];
+    gatewayConfigurationId: NativeApmPaymentConfigType['gatewayConfigurationId'];
 
     /**
      * Native APM invoice ID
-     * @type {NativeApmConfigType['invoiceId']}
+     * @type {NativeApmPaymentConfigType['invoiceId']}
      */
-    invoiceId: NativeApmConfigType['invoiceId'];
+    invoiceId: NativeApmPaymentConfigType['invoiceId'];
 
     /**
      * NativeApm constructor
      * @param  {NativeApmConfig} config
      */
-    constructor(config: NativeApmConfigType) {
+    constructor(config: NativeApmPaymentConfigType) {
       this.setConfig(config);
     }
 
     /**
      * This function returns config of NativeAPM instance
      */
-    public getConfig(): NativeApmConfigType {
+    public getConfig(): NativeApmPaymentConfigType {
       return {
         gatewayConfigurationId: this.gatewayConfigurationId,
         invoiceId: this.invoiceId,
@@ -46,7 +46,7 @@ module ProcessOut {
     /**
      * This function sets config of Native APM widgets
      */
-    private setConfig(config: NativeApmConfigType) {
+    private setConfig(config: NativeApmPaymentConfigType) {
       if (!this.isValidConfig(config)) {
         throw new Exception(
           'default',
@@ -61,7 +61,7 @@ module ProcessOut {
     /**
      * This function validates if the config is valid
      */
-    private isValidConfig(config: NativeApmConfigType) {
+    private isValidConfig(config: NativeApmPaymentConfigType) {
       return config.gatewayConfigurationId && config.invoiceId;
     }
   }

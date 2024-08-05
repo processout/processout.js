@@ -107,7 +107,7 @@ module ProcessOut {
      */
     constructor(
       processOutInstance: ProcessOut,
-      paymentConfig: NativeApmConfigType
+      paymentConfig: NativeApmPaymentConfigType
     ) {
       this.processOutInstance = processOutInstance;
       this.paymentConfig = new NativeApmPaymentConfig(paymentConfig);
@@ -203,12 +203,20 @@ module ProcessOut {
       }
     }
 
-    private onGatewayConfigurationError(req: XMLHttpRequest, e: ProgressEvent, errorCode: ApiRequestError) {
+    private onGatewayConfigurationError(
+      req: XMLHttpRequest,
+      e: ProgressEvent,
+      errorCode: ApiRequestError
+    ) {
       const errorView = new NativeApmErrorView({}, this.theme);
 
       let errorData = req.response;
       if (!req.response && errorCode)
-        errorData = { success: false, error_type: errorCode, message: Translator.translateError(errorCode) };
+        errorData = {
+          success: false,
+          error_type: errorCode,
+          message: Translator.translateError(errorCode),
+        };
 
       EventsUtils.dispatchGatewayConfigurationErrorEvent(errorData);
 
@@ -320,7 +328,11 @@ module ProcessOut {
     /**
      * This function handles error response of payment
      */
-    private handlePaymentError(req: XMLHttpRequest, e: ProgressEvent, errorCode: ApiRequestError) {
+    private handlePaymentError(
+      req: XMLHttpRequest,
+      e: ProgressEvent,
+      errorCode: ApiRequestError
+    ) {
       const errorView = new NativeApmErrorView(
         this.gatewayConfiguration.native_apm,
         this.theme
@@ -328,7 +340,11 @@ module ProcessOut {
 
       let errorData = req.response;
       if (!req.response && errorCode)
-        errorData = { success: false, error_type: errorCode, message: Translator.translateError(errorCode) };
+        errorData = {
+          success: false,
+          error_type: errorCode,
+          message: Translator.translateError(errorCode),
+        };
 
       EventsUtils.dispatchPaymentErrorEvent(errorData);
 
@@ -416,7 +432,11 @@ module ProcessOut {
     /**
      * This function handles Native APM capture error
      */
-    private handleCaptureError(req: XMLHttpRequest, e: ProgressEvent, errorCode: ApiRequestError) {
+    private handleCaptureError(
+      req: XMLHttpRequest,
+      e: ProgressEvent,
+      errorCode: ApiRequestError
+    ) {
       const errorView = new NativeApmErrorView(
         this.gatewayConfiguration.native_apm,
         this.theme
@@ -424,7 +444,11 @@ module ProcessOut {
 
       let errorData = req.response;
       if (!req.response && errorCode)
-        errorData = { success: false, error_type: errorCode, message: Translator.translateError(errorCode) };
+        errorData = {
+          success: false,
+          error_type: errorCode,
+          message: Translator.translateError(errorCode),
+        };
 
       EventsUtils.dispatchPaymentErrorEvent(errorData);
 
