@@ -253,7 +253,12 @@ module ProcessOut {
 
             method = method.toLowerCase();
 
-            const { isLegacy = true, customerSecret = "" } = options || {}
+            const isLegacy = options && options.isLegacy !== undefined
+                ? options.isLegacy
+                : true;
+            const customerSecret = options && options.customerSecret !== undefined
+                ? options.customerSecret
+                : null
 
             if (path.substring(0, 4) != "http" && path[0] != "/")
                 path = this.endpoint("api", "/" + path);
@@ -261,8 +266,12 @@ module ProcessOut {
             var headers = {
                 "Content-Type": "application/json",
                 "API-Version": this.apiVersion,
-                "x-processout-client-secret": customerSecret
             };
+
+            if (customerSecret) {
+                headers["x-processout-client-secret"] = customerSecret;
+            }
+
             if (this.projectID)
                 headers["Authorization"] = `Basic ${btoa(this.projectID + ":")}`;
 
@@ -273,6 +282,7 @@ module ProcessOut {
                 headers["Idempotency-Key"] = data.idempotency_key;
                 delete data.idempotency_key;
             }
+
 
             if(isLegacy){
                 // We need to hack our project ID in the URL itself so that
