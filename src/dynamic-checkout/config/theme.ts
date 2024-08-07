@@ -12,8 +12,6 @@ const dynamicStyles = `
     max-width: 320px;
     padding: 20px;
     margin: 0 auto;
-    margin-top: 20px;
-    margin-bottom: 200px;
     width: 100%;
   }
 
