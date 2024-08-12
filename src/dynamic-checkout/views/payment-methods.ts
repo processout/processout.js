@@ -153,7 +153,7 @@ module ProcessOut {
         `;
         }
         case "apm_customer_token": {
-          return this.getSavedDirectCheckoutHtml(apm, display);
+          return this.getApmPaymentMethodButtonHtml(display, apm);
         }
         case "applepay": {
           return ``;
@@ -168,21 +168,6 @@ module ProcessOut {
           return "";
         }
       }
-    }
-
-    private getSavedDirectCheckoutHtml(apm: Apm, display: Display): string {
-      return `
-        <div class="pay-button" data-method-id="${
-          apm.gateway_configuration_id
-        }" data-redirect-url="${apm.redirect_url || ""}">
-            <div class="payment-method" style="background-color: ${DynamicCheckoutColorsUtils.hexToRgba(
-              display.brand_color.dark
-            )}">
-                <img src="${
-                  display.logo.dark_url.vector
-                }" style="margin: 0 auto; height: 40px" />
-            </div>
-        </div>`;
     }
 
     private getApmPaymentMethodButtonHtml(display: Display, apm: Apm): string {
