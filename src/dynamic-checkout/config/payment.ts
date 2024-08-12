@@ -36,6 +36,7 @@ type PaymentMethod = {
   card?: Card;
   apm?: Apm;
   apm_customer_token: Apm;
+  card_customer_token: Apm;
 };
 
 type Googlepay = {

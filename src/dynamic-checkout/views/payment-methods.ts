@@ -113,13 +113,17 @@ module ProcessOut {
       let directCheckoutHtml = "";
 
       this.paymentConfig.invoiceDetails.payment_methods.forEach(
-        ({ flow, type, apm, display, apm_customer_token }) => {
+        ({ flow, type, apm, display, apm_customer_token, card_customer_token }) => {
           if (flow === "express") {
-            let formattedApm =
-              type === "apm_customer_token" ? apm_customer_token : apm;
+            let apmConfig = apm;
+            if(type === "apm_customer_token") {
+              apmConfig = apm_customer_token
+            } else if (type === "card_customer_token") {
+              apmConfig = card_customer_token
+            }
             expressCheckoutHtml += this.getExpressCheckoutHtml(
               type,
-              formattedApm,
+              apmConfig,
               display
             );
           } else if (type === "apm") {
@@ -129,6 +133,13 @@ module ProcessOut {
             );
           } else if (type === "card") {
             directCheckoutHtml += this.getCardPaymentMethodButtonHtml(display);
+          } else if ( type === "card_customer_token") {
+            expressCheckoutHtml += this.getExpressCheckoutHtml(
+              type,
+              card_customer_token,
+              display
+            );
+
           }
         }
       );
@@ -153,6 +164,9 @@ module ProcessOut {
         `;
         }
         case "apm_customer_token": {
+          return this.getApmPaymentMethodButtonHtml(display, apm);
+        }
+        case "card_customer_token": {
           return this.getApmPaymentMethodButtonHtml(display, apm);
         }
         case "applepay": {
