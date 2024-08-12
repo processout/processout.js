@@ -168,7 +168,9 @@ module ProcessOut {
       const cardOptions = this.setupCardFormOptions();
 
       const procesoutInstance = this.processOutInstance;
+      const paymentConfig = this.paymentConfig
       const getBillingAddress = this.getBillingAddressValues.bind(this);
+      const getCardSuccessHtml = this.getCardAuthorizeSuccessHtml.bind(this);
 
       procesoutInstance.setupForm(
         container,
@@ -189,6 +191,30 @@ module ProcessOut {
               function (token) {
                 DynamicCheckoutEventsUtils.dispatchTokenizePaymentSuccessEvent(
                   token
+                );
+
+                procesoutInstance.makeCardPayment(
+                  paymentConfig.invoiceId,
+                  token,
+                  {
+                    authorize_only: true,
+                  },
+                  function(invoiceId) {
+                    container.innerHTML = getCardSuccessHtml();
+
+                    DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent(
+                      invoiceId
+                    );
+                  },
+                  function(err) {
+                    container.innerHTML = `
+                      <div class="dco-card-payment-error-text">
+                        Something went wrong. Please try again.
+                      </div>
+                    `;
+
+                    DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(err);
+                  }
                 );
               },
               function (err) {
@@ -389,6 +415,15 @@ module ProcessOut {
             </div>
           </form>
           `;
+    }
+
+    private getCardAuthorizeSuccessHtml() {
+      return `
+        <div class="dco-card-payment-success">
+          <p class="dco-card-payment-success-text">Success! Payment authorized.</p>
+          <img class="dco-card-payment-success-image" src="https://js.processout.com/images/native-apm-assets/payment_success_image.svg" />
+        </div>
+      `;
     }
 
     private getCardPaymentMethod() {

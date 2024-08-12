@@ -211,4 +211,28 @@ const dynamicStyles = `
     width: 18px !important;
     height: 18px !important;
   }
+
+  .dco-card-payment-success {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .dco-card-payment-success-image {
+    display: block;
+    width: 50%;
+    margin-top: 1.3rem;
+  }
+
+  .dco-card-payment-success-text {
+    display: block;
+    text-align: center;
+    font-size: 14px;
+  }
+
+  .dco-card-payment-error-text {
+    text-align: center;
+    font-size: 14px !important;
+  }
 `;

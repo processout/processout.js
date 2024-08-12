@@ -54,10 +54,11 @@ module ProcessOut {
       return window.dispatchEvent(event)
     }
 
-    static dispatchPaymentSuccessEvent() {
+    static dispatchPaymentSuccessEvent(invoiceId: string) {
       const event = EventsUtils.createEvent(
         DYNAMIC_CHECKOUT_EVENTS.TOKENIZE_PAYMENT_SUCCESS,
-      )
+        { invoiceId }
+      );
       return window.dispatchEvent(event)
     }
 
