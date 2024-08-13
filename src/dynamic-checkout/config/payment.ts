@@ -35,8 +35,8 @@ type PaymentMethod = {
   display?: Display;
   card?: Card;
   apm?: Apm;
-  apm_customer_token: Apm;
-  card_customer_token: Apm;
+  apm_customer_token?: Apm;
+  card_customer_token?: Apm;
 };
 
 type Googlepay = {
@@ -87,8 +87,9 @@ type BillingAddress = {
 }
 
 type Apm = {
-  gateway_configuration_id: string;
-  redirect_url: string;
+  gateway_configuration_id?: string;
+  redirect_url?: string;
+  customer_token_id?: string;
 };
 
 module ProcessOut {
