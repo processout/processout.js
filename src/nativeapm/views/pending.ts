@@ -30,6 +30,8 @@ module ProcessOut {
      */
     gatewayConfiguration: GatewayConfiguration;
 
+    customerActionMessage: string;
+
     /**
      * Native APM Form constructor
      */
@@ -37,7 +39,8 @@ module ProcessOut {
       gatewayConfiguration: GatewayConfiguration,
       markdownLibraryInstance: any,
       theme: NativeApmThemeConfigType,
-      capturePayment: Function
+      capturePayment: Function,
+      customerMessage: string,
     ) {
       if (!gatewayConfiguration) {
         throw new Exception(
@@ -49,6 +52,7 @@ module ProcessOut {
       this.markdownLibraryInstance = markdownLibraryInstance;
       this.gatewayConfiguration = gatewayConfiguration;
       this.theme = theme;
+      this.customerActionMessage = customerMessage;
       this.viewElement = this.createViewElement();
 
       capturePayment();
@@ -119,14 +123,11 @@ module ProcessOut {
 
       StylesUtils.styleElement(customerMessage, this.theme.message);
 
+      const message = this.gatewayConfiguration.native_apm.gateway.customer_action_message || this.customerActionMessage;
       customerMessage.innerHTML =
         this.markdownLibraryInstance && this.markdownLibraryInstance.makeHtml
-          ? this.markdownLibraryInstance.makeHtml(
-              this.gatewayConfiguration.native_apm.gateway
-                .customer_action_message
-            )
-          : this.gatewayConfiguration.native_apm.gateway
-              .customer_action_message;
+          ? this.markdownLibraryInstance.makeHtml(message)
+          : message;
 
       return customerMessage;
     }
