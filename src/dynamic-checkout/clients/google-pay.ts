@@ -81,6 +81,7 @@ module ProcessOut {
         };
 
         const paymentsClient = getGooglePaymentsClient();
+        
         paymentsClient
           .loadPaymentData(paymentDataRequest)
           .then(function (paymentData) {
