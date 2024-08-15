@@ -9,7 +9,7 @@ const dynamicStyles = `
     background-color: white;
     border-radius: 4px;
     border: 1px solid #edeeef;
-    max-width: 320px;
+    min-width: 320px;
     padding: 20px;
     margin: 0 auto;
     width: 100%;
