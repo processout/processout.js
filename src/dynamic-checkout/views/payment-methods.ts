@@ -43,11 +43,28 @@ module ProcessOut {
         button.addEventListener("click", () => {
           const redirectUrl = button.getAttribute("data-redirect-url");
           const dataMethodId = button.getAttribute("data-method-id");
+          const savedCardTokenId = button.getAttribute("data-card-token-id");
 
           if (redirectUrl) {
             window.location.href = redirectUrl;
           } else if (dataMethodId === "card") {
             this.cardFormView.setupCardForm(this.resetContainerHtml());
+          } else if (savedCardTokenId) {
+            this.processOutInstance.makeCardPayment(
+              this.paymentConfig.invoiceId,
+              savedCardTokenId,
+              {
+                authorize_only: true,
+              },
+              function(invoiceId) {
+                DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent(
+                  invoiceId
+                );
+              },
+              function(err) {
+                DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(err);
+              }
+            );
           } else {
             this.nativeApmView.setupNativeApmWidget(
               this.resetContainerHtml(),
@@ -169,7 +186,7 @@ module ProcessOut {
           return this.getApmPaymentMethodButtonHtml(display, apm);
         }
         case "card_customer_token": {
-          return this.getApmPaymentMethodButtonHtml(display, apm);
+          return this.getSavedCardPaymentMethodButtonHtml(display, apm);
         }
         case "applepay": {
           return ``;
@@ -186,6 +203,24 @@ module ProcessOut {
       }
     }
 
+    private getSavedCardPaymentMethodButtonHtml(display: Display, apm: Apm): string {
+      return `
+        <div class="dco-pay-button" data-method-id="saved-card" data-card-token-id="${apm.customer_token_id || ""}">
+            <div class="dco-payment-method dco-payment-method--regular" style="background-color: ${DynamicCheckoutColorsUtils.hexToRgba(
+              display.brand_color.dark
+            )}">
+                <img src="${
+                  display.logo.dark_url.vector
+                }" class="dco-payment-method-logo"/>
+                <span class="dco-payment-method-label">${display.name}</span>
+                ${
+                  apm.redirect_url
+                    ? `<span class="dco-payment-method-apm-message">You will be redirected to finalise this payment</span>`
+                    : ""
+                }
+            </div>
+        </div>`;
+    }
     private getApmPaymentMethodButtonHtml(display: Display, apm: Apm): string {
       return `
         <div class="dco-pay-button" data-method-id="${
