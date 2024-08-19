@@ -197,10 +197,10 @@ module ProcessOut {
                   authorize_only: true
                 }
 
-                const saveCardChecbkox = document.querySelector("#save-card-checkbox") as HTMLInputElement | null;
+                const saveCardCheckbox = document.querySelector("#save-card-checkbox") as HTMLInputElement | null;
 
-                if (saveCardChecbkox) {
-                  reqOptions["save_source"] = saveCardChecbkox.checked;
+                if (saveCardCheckbox) {
+                  reqOptions["save_source"] = saveCardCheckbox.checked;
                 } 
 
                 procesoutInstance.makeCardPayment(
@@ -224,7 +224,6 @@ module ProcessOut {
                     DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(err);
                   },
                   {
-                    isLegacy: true,
                     clientSecret: paymentConfig.clientSecret,
                   }
                 );
