@@ -9,7 +9,7 @@ interface Window {
 
 interface apiRequestOptions {
     isLegacy?: boolean;
-    customerSecret?: string;
+    clientSecret?: string;
 }
 
 /**
@@ -256,8 +256,8 @@ module ProcessOut {
             const isLegacy = options && options.isLegacy !== undefined
                 ? options.isLegacy
                 : true;
-            const customerSecret = options && options.customerSecret !== undefined
-                ? options.customerSecret
+            const clientSecret = options && options.clientSecret !== undefined
+                ? options.clientSecret
                 : null
 
             if (path.substring(0, 4) != "http" && path[0] != "/")
@@ -268,8 +268,8 @@ module ProcessOut {
                 "API-Version": this.apiVersion,
             };
 
-            if (customerSecret) {
-                headers["x-processout-client-secret"] = customerSecret;
+            if (clientSecret) {
+                headers["x-processout-client-secret"] = clientSecret;
             }
 
             if (this.projectID)
@@ -1288,10 +1288,10 @@ module ProcessOut {
         public makeCardPayment(invoiceID: string, cardID: string,
                                options: any,
                                success: (data: any) => void,
-                               error: (err: Exception) => void): void {
+                               error: (err: Exception) => void, apiRequestOptions?: apiRequestOptions): void {
 
             this.handleCardActions("POST", `invoices/${invoiceID}/capture`, invoiceID,
-                cardID, options, success, error);
+                cardID, options, success, error, apiRequestOptions);
         }
 
         /**
@@ -1347,6 +1347,7 @@ module ProcessOut {
                                     options: any,
                                     success: (data: any) => void,
                                     error: (err: Exception) => void,
+                                    apiRequestOptions?: apiRequestOptions
                                 ): void {
 
             // returns this.hppInitialURL only once during the first call from HPP, then returns the endpoint
@@ -1389,6 +1390,10 @@ module ProcessOut {
                 options.iterationNumber++;
             }
 
+            if (options.save_source) {
+                payload.save_source = options.save_source
+            }
+            
             this.apiRequest(method, getEndpoint(), payload, function (data: any): void {
                 if (!data.success) {
                     error(new Exception(data.error_type, data.message));
@@ -1453,7 +1458,7 @@ module ProcessOut {
                 }
             }.bind(this), function (req: XMLHttpRequest, e: Event, errorCode: ApiRequestError): void {
                 error(new Exception(errorCode));
-            });
+            }, 0, apiRequestOptions);
         }
     }
 }
