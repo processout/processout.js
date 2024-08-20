@@ -268,10 +268,6 @@ module ProcessOut {
                 "API-Version": this.apiVersion,
             };
 
-            if (clientSecret) {
-                headers["x-processout-client-secret"] = clientSecret;
-            }
-
             if (this.projectID)
                 headers["Authorization"] = `Basic ${btoa(this.projectID + ":")}`;
 
@@ -311,6 +307,11 @@ module ProcessOut {
             if (!window.XDomainRequest) {
                 for (var k in headers)
                     request.setRequestHeader(k, headers[k]);
+
+                // We want to add the header after adding them to the URL for the security reasons
+                if (clientSecret) {
+                    request.setRequestHeader("x-processout-client-secret", clientSecret)
+                }
             }
 
             request.timeout = 0;
