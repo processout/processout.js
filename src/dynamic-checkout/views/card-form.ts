@@ -193,20 +193,28 @@ module ProcessOut {
                   token
                 );
 
+                const reqOptions = {
+                  authorize_only: true
+                }
+
+                const saveCardCheckbox = document.querySelector("#save-card-checkbox") as HTMLInputElement | null;
+
+                if (saveCardCheckbox) {
+                  reqOptions["save_source"] = saveCardCheckbox.checked;
+                } 
+
                 procesoutInstance.makeCardPayment(
                   paymentConfig.invoiceId,
                   token,
-                  {
-                    authorize_only: true,
-                  },
-                  function(invoiceId) {
+                  reqOptions,
+                  function (invoiceId) {
                     container.innerHTML = getCardSuccessHtml();
 
                     DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent(
                       invoiceId
                     );
                   },
-                  function(err) {
+                  function (err) {
                     container.innerHTML = `
                       <div class="dco-card-payment-error-text">
                         Something went wrong. Please try again.
@@ -214,6 +222,9 @@ module ProcessOut {
                     `;
 
                     DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(err);
+                  },
+                  {
+                    clientSecret: paymentConfig.clientSecret,
                   }
                 );
               },
@@ -392,6 +403,15 @@ module ProcessOut {
       const amount = this.paymentConfig.invoiceDetails.amount;
       const currency = this.paymentConfig.invoiceDetails.currency;
 
+      const saveCardCheckbox =
+        cardPaymentMethod.card.saving_allowed ? `
+        <div>
+          <input type="checkbox" id="save-card-checkbox" name="saveCard">
+          <label for="save-card-checkbox" class="dco-card-payment-input-label">Save card for future use</label>
+        </div>
+      `
+          : "";
+
       return `
           <span class="dco-card-form-section-header">Payment details</span>
           <form action="" method="POST" id="card-form">
@@ -410,6 +430,7 @@ module ProcessOut {
                 ${cardHolderNameField}
                 ${cardBillingAddress}
             </div>
+            ${saveCardCheckbox}
             <div class="dco-card-form-buttons">
               <button type="submit" class="dco-cta-pay">Pay ${amount} ${currency}</button>
             </div>

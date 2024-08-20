@@ -48,7 +48,7 @@ module ProcessOut {
         0,
         {
           isLegacy: false,
-          customerSecret: this.paymentConfig.clientSecret,
+          clientSecret: this.paymentConfig.clientSecret,
         },
       )
     }
