@@ -1,6 +1,16 @@
 /// <reference path="../references.ts" />
 
 const dynamicStyles = `
+
+  @keyframes rotation {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
   .dco-wrapper * {
     box-sizing: border-box;
   }
@@ -90,6 +100,7 @@ const dynamicStyles = `
   }
 
   .dco-pay-button {
+  position: relative;
     min-height: 40px;
     border-radius: 4px;
   }
@@ -123,6 +134,7 @@ const dynamicStyles = `
   }
 
   .dco-cta-pay {
+    position: relative;
     border-radius: 4px;
     background-color: #242C38;
     color: white;
@@ -134,6 +146,22 @@ const dynamicStyles = `
     align-items: center;
     margin-top: 32px;
     cursor: pointer;
+  }
+
+  .dco-cta-back, .native-apm-back-button {
+    border-radius: 4px;
+    width: 100%;
+    height: 40px;
+    font-size: 14px;
+    margin-top: 16px;
+    background-color: transparent;
+    color: #242C38;
+    border: 1px solid #242C38;
+    cursor: pointer;
+  }
+
+  .native-apm-back-button {
+    margin-top: 0;
   }
 
   .dco-card-form-input,
@@ -181,6 +209,14 @@ const dynamicStyles = `
     color: white !important;
   }
 
+  .dco-card-pay-spinner {
+    width: 1rem;
+    height: 1rem; 
+    border: 3px solid #546073;
+    border-bottom-color: white;
+    border-radius: 50%;
+    animation: rotation 1s linear infinite;
+  }
   .native-apm-input-error {
     font-size: 14px !important;
   }
@@ -234,5 +270,16 @@ const dynamicStyles = `
   .dco-card-payment-error-text {
     text-align: center;
     font-size: 14px !important;
+  }
+
+  .dco-card-form-error-message {
+    font-size: 14px;
+    color: red;
+    margin-top: 3px;
+  }
+
+  .dco-error-view {
+    text-align: center;
+    font-size: 14px;
   }
 `;

@@ -78,6 +78,12 @@ module ProcessOut {
     paymentConfig: NativeApmPaymentConfig;
 
     /**
+     * Options of Native APM payment
+     * @type {NativeApmWidgetOptionsType}
+     */
+    widgetOptions: NativeApmWidgetOptionsType;
+
+    /**
      * Configuration of Native APM gateway
      * @type {GatewayConfiguration}
      */
@@ -107,10 +113,12 @@ module ProcessOut {
      */
     constructor(
       processOutInstance: ProcessOut,
-      paymentConfig: NativeApmPaymentConfigType
+      paymentConfig: NativeApmPaymentConfigType,
+      options?: NativeApmWidgetOptionsType
     ) {
       this.processOutInstance = processOutInstance;
       this.paymentConfig = new NativeApmPaymentConfig(paymentConfig);
+      this.widgetOptions = options;
       this.theme = new NativeApmThemeConfig();
       this.loadMarkdownLibrary();
     }
@@ -178,7 +186,8 @@ module ProcessOut {
           this.gatewayConfiguration.native_apm,
           this.proceedPayment.bind(this),
           this.theme,
-          this.prefilledData
+          this.prefilledData,
+          this.widgetOptions,
         );
 
         EventsUtils.dispatchWidgetReadyEvent();

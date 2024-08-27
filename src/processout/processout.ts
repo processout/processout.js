@@ -413,14 +413,14 @@ module ProcessOut {
          * @param {NativeApmConfigType} config
          * @return {NativeApm}
          */
-        public setupNativeApm(config: NativeApmPaymentConfigType): NativeApm {
+        public setupNativeApm(config: NativeApmPaymentConfigType, options?: NativeApmWidgetOptionsType): NativeApm {
             if (!this.projectID)
                 throw new Exception(
                     'default',
                     "You must instantiate ProcessOut.js with a valid project ID in order to use ProcessOut's Native APM"
                 );
 
-            return new NativeApm(this, config);
+            return new NativeApm(this, config, options);
         }
 
         /**

@@ -3,6 +3,7 @@
 module ProcessOut {
   export class DynamicCheckoutPaymentMethodsView {
     processOutInstance: ProcessOut;
+    dynamicCheckout: DynamicCheckout;
     cardFormView: DynamicCheckoutCardFormView;
     nativeApmView: DynamicCheckoutNativeApmView;
     paymentConfig: DynamicCheckoutPaymentConfigType;
@@ -10,24 +11,26 @@ module ProcessOut {
     onSubmitHandler: Function;
 
     constructor(
+      dynamicCheckout: DynamicCheckout,
       processOutInstance: ProcessOut,
       paymentConfig: DynamicCheckoutPaymentConfigType
     ) {
+      this.dynamicCheckout = dynamicCheckout;
       this.processOutInstance = processOutInstance;
       this.paymentConfig = paymentConfig;
 
       this.formElement = this.createFormElement();
 
       this.cardFormView = new DynamicCheckoutCardFormView(
+        dynamicCheckout,
         processOutInstance,
         paymentConfig
       );
       this.nativeApmView = new DynamicCheckoutNativeApmView(
+        dynamicCheckout,
         processOutInstance,
-        paymentConfig
+        paymentConfig,
       );
-
-      this.applyDynamicStyles();
     }
 
     public getViewElement() {
@@ -273,12 +276,6 @@ module ProcessOut {
                 <span class="dco-payment-method-label">${display.name}</span>
             </div>
         </div>`;
-    }
-
-    private applyDynamicStyles() {
-      const styleElement = document.createElement("style");
-      styleElement.innerHTML = dynamicStyles;
-      document.head.appendChild(styleElement);
     }
   }
 }
