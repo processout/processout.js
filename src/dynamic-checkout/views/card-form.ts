@@ -4,6 +4,7 @@ module ProcessOut {
   export class DynamicCheckoutCardFormView {
     processOutInstance: ProcessOut;
     paymentConfig: DynamicCheckoutPaymentConfigType;
+    dynamicCheckout: DynamicCheckout;
     selectedCountry: string;
     unitsHtmlMap = {
       street: `
@@ -61,9 +62,11 @@ module ProcessOut {
     };
 
     constructor(
+      dynamicCheckout: DynamicCheckout,
       processOutInstance: ProcessOut,
       paymentConfig: DynamicCheckoutPaymentConfigType
     ) {
+      this.dynamicCheckout = dynamicCheckout;
       this.processOutInstance = processOutInstance;
       this.paymentConfig = paymentConfig;
     }
@@ -89,19 +92,218 @@ module ProcessOut {
       return options;
     }
 
-    private setupCardEventListeners(container: HTMLElement) {
-      const selectInput = document.getElementById("dco-countries-input");
+    public setupCardForm(container: HTMLElement): void {
+      container.innerHTML = this.getCardPaymentHtml();
 
-      if (!selectInput) {
-        return;
+      this.setupCardFormEventListeners(container);
+
+      const cardOptions = this.setupCardFormOptions();
+
+      const procesoutInstance = this.processOutInstance;
+      const paymentConfig = this.paymentConfig
+      const getBillingAddress = this.getBillingAddressValues.bind(this);
+      const getCardSuccessHtml = this.getCardAuthorizeSuccessHtml.bind(this);
+      const showFormErrorMessages = this.showFormErrorMessages.bind(this);
+      const hideFormErrorMessages = this.hideFormErrorMessages.bind(this);
+      const setButtonLoadingState = this.setButtonLoadingState.bind(this);
+
+      procesoutInstance.setupForm(
+        container,
+        cardOptions,
+        function (form) {
+          form.addEventListener("submit", function (e) {
+            e.preventDefault();
+            let nameValid = true;
+
+            const nameElement = document.getElementById(
+              "dco-card-form-name"
+            ) as HTMLInputElement | null;
+
+            if (nameElement && nameElement.value.length === 0) {
+              nameValid = false;
+              showFormErrorMessages('card.missing-name')
+            }
+
+            form.validate(
+              () => {
+                if (!nameValid) {
+                  return;
+                }
+
+                hideFormErrorMessages()
+                setButtonLoadingState(true);
+
+                procesoutInstance.tokenize(
+                  form,
+                  {
+                    name: nameElement ? nameElement.value : "",
+                    contact: getBillingAddress(),
+                  },
+                  function (token) {
+                    DynamicCheckoutEventsUtils.dispatchTokenizePaymentSuccessEvent(
+                      token
+                    );
+    
+                    const reqOptions = {
+                      authorize_only: true
+                    }
+    
+                    const saveCardCheckbox = document.querySelector("#save-card-checkbox") as HTMLInputElement | null;
+    
+                    if (saveCardCheckbox) {
+                      reqOptions["save_source"] = saveCardCheckbox.checked;
+                    } 
+    
+                    procesoutInstance.makeCardPayment(
+                      paymentConfig.invoiceId,
+                      token,
+                      reqOptions,
+                      function (invoiceId) {
+                        setButtonLoadingState(false);
+                        container.innerHTML = getCardSuccessHtml();
+    
+                        DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent(
+                          invoiceId
+                        );
+                      },
+                      function (err) {
+                        setButtonLoadingState(false);
+                        container.innerHTML = `
+                          <div class="dco-card-payment-error-text">
+                            Something went wrong. Please try again.
+                          </div>
+                        `;
+    
+                        DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(err);
+                      },
+                      {
+                        clientSecret: paymentConfig.clientSecret,
+                      }
+                    );
+                  },
+                  function (err) {
+                    setButtonLoadingState(false);
+                    DynamicCheckoutEventsUtils.dispatchTokenizePaymentErrorEvent({
+                      message: `Tokenize payment error: ${JSON.stringify(
+                        err,
+                        undefined,
+                        2
+                      )}`,
+                    });
+                  }
+                );
+              },
+              (err) => {
+                setButtonLoadingState(false);
+                showFormErrorMessages(err.code)
+              }
+            )
+          });
+        },
+        function (err) {
+          console.log({ err });
+        }
+      );
+    }
+
+    private setButtonLoadingState(loading: boolean) {
+      const payButton = document.querySelector(".dco-cta-pay") as HTMLButtonElement;
+
+      if (loading) {
+        payButton.innerHTML = this.getCardPaymentSpinnerHtml();
+      } else {
+        payButton.innerHTML = this.getPayButtonText();
+      }
+    }
+
+    private showFormErrorMessages(errorCode: string) {
+      switch (errorCode) {
+        case 'card.invalid-number':
+          const cardNumberErrorMessage = document.querySelector(".dco-card-form-error-message-number")
+          if (cardNumberErrorMessage) {
+            cardNumberErrorMessage.textContent = "Invalid card number"
+          }
+          break;
+        case 'card.invalid-month':
+          const cardExpiryErrorMessage = document.querySelector(".dco-card-form-error-message-expiry")
+          if (cardExpiryErrorMessage) {
+            cardExpiryErrorMessage.textContent = "Invalid expiry date"
+          }
+          break;
+        case 'card.missing-cvc':
+          const cardCvcErrorMessage = document.querySelector(".dco-card-form-error-message-cvc")
+          if (cardCvcErrorMessage) {
+            cardCvcErrorMessage.textContent = "Invalid CVC"
+          }
+          break;
+        case 'card.missing-name':
+          const cardNameErrorMessage = document.querySelector(".dco-card-form-error-message-name")
+          if (cardNameErrorMessage) {
+            cardNameErrorMessage.textContent = "Cardholder name is required"
+          }
+          break;
+        default:
+          break;
+      }
+    }
+    private hideFormErrorMessages() {
+      const cardNumberErrorMessage = document.querySelector(".dco-card-form-error-message-number")
+      if (cardNumberErrorMessage) {
+        cardNumberErrorMessage.textContent = ""
+      }
+      const cardExpiryErrorMessage = document.querySelector(".dco-card-form-error-message-expiry")
+      if (cardExpiryErrorMessage) {
+        cardExpiryErrorMessage.textContent = ""
+      }
+      const cardCvcErrorMessage = document.querySelector(".dco-card-form-error-message-cvc")
+      if (cardCvcErrorMessage) {
+        cardCvcErrorMessage.textContent = ""
       }
 
-      selectInput.addEventListener("change", (e) => {
-        const selectedCountry = (e.target as HTMLSelectElement).value;
-        container.querySelector(
-          "#dco-billing-address-dynamic-fields"
-        ).innerHTML = this.getDynamicBillingAddressFieldsHtml(selectedCountry);
-      });
+      const cardNameErrorMessage = document.querySelector(".dco-card-form-error-message-name")
+      if (cardNameErrorMessage) {
+        cardNameErrorMessage.textContent = ""
+      }
+    }
+
+    private setupCardFormEventListeners(container: HTMLElement) {
+      const selectInput = document.getElementById("dco-countries-input");
+      const backButton = document.querySelector(".dco-cta-back");
+      const nameInput = document.getElementById("dco-card-form-name") as HTMLInputElement;
+
+      const hideFormErrorMessages = this.hideFormErrorMessages.bind(this)
+      const processOutInstance = this.processOutInstance;
+
+      window.addEventListener('message', (e) => {
+        if (e.origin === processOutInstance.endpoint('js', '')) {
+          const eventData = e.data ? JSON.parse(e.data) : {};
+
+          if (eventData.action === 'inputEvent') {
+            hideFormErrorMessages()
+          }
+        }
+      })
+
+      if (nameInput) {
+        nameInput.addEventListener("input", () => {
+          hideFormErrorMessages();
+        });
+      }
+
+      if (backButton) {
+        backButton.addEventListener("click", () => {
+          this.dynamicCheckout.loadDynamicCheckoutView();
+        });
+      }
+
+      if (selectInput) {
+        selectInput.addEventListener("change", (e) => {
+          const selectedCountry = (e.target as HTMLSelectElement).value;
+          container.querySelector(
+            "#dco-billing-address-dynamic-fields"
+          ).innerHTML = this.getDynamicBillingAddressFieldsHtml(selectedCountry);
+        });
+      }
     }
 
     private getBillingAddressValues() {
@@ -160,94 +362,6 @@ module ProcessOut {
       return billingAddressValues;
     }
 
-    public setupCardForm(container: HTMLElement): void {
-      container.innerHTML = this.getCardPaymentHtml();
-
-      this.setupCardEventListeners(container);
-
-      const cardOptions = this.setupCardFormOptions();
-
-      const procesoutInstance = this.processOutInstance;
-      const paymentConfig = this.paymentConfig
-      const getBillingAddress = this.getBillingAddressValues.bind(this);
-      const getCardSuccessHtml = this.getCardAuthorizeSuccessHtml.bind(this);
-
-      procesoutInstance.setupForm(
-        container,
-        cardOptions,
-        function (form) {
-          form.addEventListener("submit", function (e) {
-            e.preventDefault();
-            const nameElement = document.getElementById(
-              "dco-card-form-name"
-            ) as HTMLInputElement | null;
-
-            procesoutInstance.tokenize(
-              form,
-              {
-                name: nameElement ? nameElement.value : "",
-                contact: getBillingAddress(),
-              },
-              function (token) {
-                DynamicCheckoutEventsUtils.dispatchTokenizePaymentSuccessEvent(
-                  token
-                );
-
-                const reqOptions = {
-                  authorize_only: true
-                }
-
-                const saveCardCheckbox = document.querySelector("#save-card-checkbox") as HTMLInputElement | null;
-
-                if (saveCardCheckbox) {
-                  reqOptions["save_source"] = saveCardCheckbox.checked;
-                } 
-
-                procesoutInstance.makeCardPayment(
-                  paymentConfig.invoiceId,
-                  token,
-                  reqOptions,
-                  function (invoiceId) {
-                    container.innerHTML = getCardSuccessHtml();
-
-                    DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent(
-                      invoiceId
-                    );
-                  },
-                  function (err) {
-                    container.innerHTML = `
-                      <div class="dco-card-payment-error-text">
-                        Something went wrong. Please try again.
-                      </div>
-                    `;
-
-                    DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(err);
-                  },
-                  {
-                    clientSecret: paymentConfig.clientSecret,
-                  }
-                );
-              },
-              function (err) {
-                DynamicCheckoutEventsUtils.dispatchTokenizePaymentErrorEvent({
-                  message: `Tokenize payment error: ${JSON.stringify(
-                    err,
-                    undefined,
-                    2
-                  )}`,
-                });
-              }
-            );
-
-            return false;
-          });
-        },
-        function (err) {
-          console.log({ err });
-        }
-      );
-    }
-
     private getCountryOptions() {
       const cardPaymentMethod = this.getCardPaymentMethod();
 
@@ -255,7 +369,7 @@ module ProcessOut {
         ? cardPaymentMethod.card.billing_address.restrict_to_country_codes
         : [];
 
-      let countryOptions = "";
+      let countryOptions = "<option class='dco-select-country-option' disabled selected value=''>Select country</option>";
 
       const countries = Object.keys(billingAddressConfig).map(
         (countryCode) => ({
@@ -376,6 +490,19 @@ module ProcessOut {
       `;
     }
 
+    private getCardPaymentSpinnerHtml(): string {
+      return `
+        <div class="dco-card-pay-spinner"></div>
+      `;
+    }
+
+    private getPayButtonText() {
+      const amount = this.paymentConfig.invoiceDetails.amount;
+      const currency = this.paymentConfig.invoiceDetails.currency;
+
+      return `Pay ${amount} ${currency}`;
+    }
+
     private getCardPaymentHtml(): string {
       const cardPaymentMethod = this.getCardPaymentMethod();
 
@@ -385,6 +512,7 @@ module ProcessOut {
             <div class="dco-card-payment-input-group">
               <div class="dco-card-payment-input-label">CVC</div>
               <div class="dco-card-form-input" data-processout-input="cc-cvc" data-processout-placeholder="CVC"></div>
+              <span class="dco-card-form-error-message dco-card-form-error-message-cvc"></span>
             </div>
           `
           : "";
@@ -395,13 +523,12 @@ module ProcessOut {
             <div class="dco-card-payment-input-group">
               <div class="dco-card-payment-input-label">Cardholder Name</div>
               <input class="dco-card-form-input" type="text" id="dco-card-form-name" placeholder="Cardholder name"/>
+              <span class="dco-card-form-error-message dco-card-form-error-message-name"></span>
             </div>
           `
           : "";
 
       const cardBillingAddress = this.getCardBillingAddressHtml();
-      const amount = this.paymentConfig.invoiceDetails.amount;
-      const currency = this.paymentConfig.invoiceDetails.currency;
 
       const saveCardCheckbox =
         cardPaymentMethod.card.saving_allowed ? `
@@ -419,11 +546,13 @@ module ProcessOut {
                 <div class="dco-card-payment-input-group">
                     <div class="dco-card-payment-input-label">Card Number</div>
                     <div class="dco-card-form-input" data-processout-input="cc-number" data-processout-placeholder="0000 0000 0000 0000"></div>
+                    <span class="dco-card-form-error-message dco-card-form-error-message-number"></span> 
                 </div>
                 <div class="dco-card-payment-input-row">
                     <div class="dco-card-payment-input-group">
-                        <div class="dco-card-payment-input-label">Expiry Date</div>
-                        <div class="dco-card-form-input" data-processout-input="cc-exp" data-processout-placeholder="MM/YY"></div>
+                      <div class="dco-card-payment-input-label">Expiry Date</div>
+                      <div class="dco-card-form-input" data-processout-input="cc-exp" data-processout-placeholder="MM/YY"></div>
+                      <span class="dco-card-form-error-message dco-card-form-error-message-expiry"></span>
                     </div>
                     ${cvcField}
                 </div>
@@ -432,7 +561,8 @@ module ProcessOut {
             </div>
             ${saveCardCheckbox}
             <div class="dco-card-form-buttons">
-              <button type="submit" class="dco-cta-pay">Pay ${amount} ${currency}</button>
+              <button type="submit" class="dco-cta-pay">${this.getPayButtonText()}</button>
+              <button type="button" class="dco-cta-back">Back</button>
             </div>
           </form>
           `;

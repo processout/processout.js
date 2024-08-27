@@ -25,6 +25,8 @@ module ProcessOut {
         );
       }
 
+      this.applyDynamicStyles();
+
       return this.getInvoiceDetails({
         onFetch: DynamicCheckoutEventsUtils.dispatchWidgetLoadingEvent,
         onSuccess: this.onGetInvoiceSuccess.bind(this),
@@ -54,7 +56,9 @@ module ProcessOut {
     }
 
     private onGetInvoiceSuccess(data: any) {
-      if (!data.success) {
+      if (!data.success || data.invoice.transaction.status !== 'waiting') {
+        this.loadErrorView();
+
         return DynamicCheckoutEventsUtils.dispatchInvoiceFetchingErrorEvent(
           data
         );
@@ -79,11 +83,20 @@ module ProcessOut {
           message: Translator.translateError(errorCode),
         };
 
+      this.loadErrorView()
       DynamicCheckoutEventsUtils.dispatchInvoiceFetchingErrorEvent(errorData);
     }
 
-    private loadDynamicCheckoutView() {
+    private loadErrorView() {
+      const errorView = document.createElement("div");
+      errorView.setAttribute("class", "dco-error-view");
+      errorView.innerText = "Something went wrong. Please try again.";
+      this.loadView(errorView);
+    }
+
+    public loadDynamicCheckoutView() {
       const paymentMethodsView = new DynamicCheckoutPaymentMethodsView(
+        this,
         this.processOutInstance,
         this.paymentConfig,
       );
@@ -112,6 +125,12 @@ module ProcessOut {
       widgetWrapper.setAttribute("class", "dynamic-checkout-widget-wrapper");
 
       return widgetWrapper;
+    }
+
+    private applyDynamicStyles() {
+      const styleElement = document.createElement("style");
+      styleElement.innerHTML = dynamicStyles;
+      document.head.appendChild(styleElement);
     }
   }
 }
