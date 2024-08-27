@@ -121,8 +121,8 @@ module ProcessOut {
       form.appendChild(inputsWrapper);
       form.appendChild(this.submitButton.getButtonElement());
 
-      if (this.widgetOptions?.dynamicCheckout?.onBackButtonClick) {
-        const backButton = this.createBackButton(this.widgetOptions?.dynamicCheckout?.onBackButtonClick);
+      if (this.widgetOptions && this.widgetOptions.dynamicCheckout && this.widgetOptions.dynamicCheckout.onBackButtonClick) {
+        const backButton = this.createBackButton(this.widgetOptions.dynamicCheckout.onBackButtonClick);
         form.appendChild(backButton);
       }
 
