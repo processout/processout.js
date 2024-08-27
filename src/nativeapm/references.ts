@@ -1,6 +1,7 @@
 /// <reference path="nativeapm.ts" />
 /// <reference path="index.d.ts" />
 /// <reference path="config/payment.ts" />
+/// <reference path="config/options.ts" />
 /// <reference path="config/theme.ts" />
 /// <reference path="utils/styles.ts" />
 /// <reference path="utils/events.ts" />

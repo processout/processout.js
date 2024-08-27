@@ -36,6 +36,12 @@ module ProcessOut {
     formInputs: NativeApmInput[];
 
     /**
+     * Native APM widget options
+     * @type {NativeApmWidgetOptionsType}
+     */
+    widgetOptions: NativeApmWidgetOptionsType;
+
+    /**
      * Theme of the Native APM widget
      * @type {NativeApmThemeConfigType}
      */
@@ -66,7 +72,8 @@ module ProcessOut {
       formData: NativeApmFormData,
       onSubmitHandler: Function,
       theme: NativeApmThemeConfigType,
-      prefilledData: PrefilledData
+      prefilledData: PrefilledData,
+      widgetOptions?: NativeApmWidgetOptionsType
     ) {
       if (!formData) {
         throw new Exception(
@@ -75,6 +82,7 @@ module ProcessOut {
         );
       }
 
+      this.widgetOptions = widgetOptions;
       this.theme = theme;
       this.prefilledData = prefilledData;
       this.formData = formData;
@@ -113,6 +121,11 @@ module ProcessOut {
       form.appendChild(inputsWrapper);
       form.appendChild(this.submitButton.getButtonElement());
 
+      if (this.widgetOptions?.dynamicCheckout?.onBackButtonClick) {
+        const backButton = this.createBackButton(this.widgetOptions?.dynamicCheckout?.onBackButtonClick);
+        form.appendChild(backButton);
+      }
+
       form.addEventListener('submit', this.submitForm.bind(this));
 
       return form;
@@ -139,6 +152,23 @@ module ProcessOut {
       `;
 
       return new NativeApmButton(buttonText, this.theme);
+    }
+
+    /**
+     * This function creates the back button of the form
+     */
+    private createBackButton(onBackButtonClick: Function) {
+      const backButton = document.createElement('button');
+
+      backButton.setAttribute('class', 'native-apm-back-button');
+      backButton.setAttribute('type', 'button');
+      backButton.textContent = 'Back';
+
+      backButton.addEventListener('click', function(e) {
+        onBackButtonClick();
+      });
+
+      return backButton;
     }
 
     /**
