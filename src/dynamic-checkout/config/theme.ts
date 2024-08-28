@@ -17,8 +17,6 @@ const dynamicStyles = `
 
   .dco-wrapper {
     background-color: white;
-    border-radius: 4px;
-    border: 1px solid #edeeef;
     min-width: 320px;
     padding: 20px;
     margin: 0 auto;
@@ -26,6 +24,7 @@ const dynamicStyles = `
   }
 
   .dco-express-checkout {
+    position: relative;
     border: 1px solid #dde0e3;
     gap: 12px;
     display: flex;
@@ -38,9 +37,10 @@ const dynamicStyles = `
 
   .dco-express-checkout-title {
     position: absolute;
-    top: -11px;
     font-size: 14px;
-    left: 72px;
+    top: 0;
+    left: 50%;
+    transform: translate(-50%, -50%);
     background-color: white;
     padding: 0 10px;
   }
@@ -128,9 +128,28 @@ const dynamicStyles = `
     justify-content: space-between;
   }
 
+  .dco-save-card-checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .dco-save-card-checkbox-input { 
+    width:18px;
+    height: 18px;
+    background:white;
+    border-radius:5px;
+    border:2px solid #dde0e3;
+  }
+
   .dco-card-payment-input-label {
     margin-bottom: 8px;
     font-size: 14px;
+  }
+
+  .dco-save-card-checkbox-label {
+    font-size: 14px;
+    margin: 0;
   }
 
   .dco-cta-pay {
@@ -273,7 +292,7 @@ const dynamicStyles = `
   }
 
   .dco-card-form-error-message {
-    font-size: 14px;
+    font-size: 12px;
     color: red;
     margin-top: 3px;
   }
@@ -281,5 +300,9 @@ const dynamicStyles = `
   .dco-error-view {
     text-align: center;
     font-size: 14px;
+  }
+
+  .dco-save-card-checkbox-wrapper {
+
   }
 `;

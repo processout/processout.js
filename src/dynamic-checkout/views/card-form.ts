@@ -162,9 +162,10 @@ module ProcessOut {
                         setButtonLoadingState(false);
                         container.innerHTML = getCardSuccessHtml();
     
-                        DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent(
-                          invoiceId
-                        );
+                        DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
+                          invoiceId,
+                          returnUrl: paymentConfig.invoiceDetails.return_url,
+                        });
                       },
                       function (err) {
                         setButtonLoadingState(false);
@@ -239,7 +240,7 @@ module ProcessOut {
         case 'card.missing-name':
           const cardNameErrorMessage = document.querySelector(".dco-card-form-error-message-name")
           if (cardNameErrorMessage) {
-            cardNameErrorMessage.textContent = "Cardholder name is required"
+            cardNameErrorMessage.textContent = "Invalid cardholder name"
           }
           break;
         default:
@@ -532,9 +533,9 @@ module ProcessOut {
 
       const saveCardCheckbox =
         cardPaymentMethod.card.saving_allowed ? `
-        <div>
-          <input type="checkbox" id="save-card-checkbox" name="saveCard">
-          <label for="save-card-checkbox" class="dco-card-payment-input-label">Save card for future use</label>
+        <div class="dco-save-card-checkbox-wrapper">
+          <input type="checkbox" id="save-card-checkbox" name="saveCard" class="dco-save-card-checkbox-input">
+          <label for="save-card-checkbox" class="dco-save-card-checkbox-label">Save card for future use</label>
         </div>
       `
           : "";

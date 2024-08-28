@@ -8,7 +8,7 @@ module ProcessOut {
     TOKENIZE_PAYMENT_SUCCESS: "processout_dynamic_checkout_tokenize_payment_success",
     TOKENIZE_PAYMENT_ERROR: "processout_dynamic_checkout_tokenize_payment_error",
     PAYMENT_ERROR: "processout_dynamic_checkout_payment_error",
-    PAYMENT_SUCCESS: "processout_dynamic_checkout_payment_error",
+    PAYMENT_SUCCESS: "processout_dynamic_checkout_payment_success",
   }
 
   export class DynamicCheckoutEventsUtils {
@@ -54,10 +54,10 @@ module ProcessOut {
       return window.dispatchEvent(event)
     }
 
-    static dispatchPaymentSuccessEvent(invoiceId: string) {
+    static dispatchPaymentSuccessEvent(response: { invoiceId: string, returnUrl: string }) {
       const event = EventsUtils.createEvent(
-        DYNAMIC_CHECKOUT_EVENTS.TOKENIZE_PAYMENT_SUCCESS,
-        { invoiceId }
+        DYNAMIC_CHECKOUT_EVENTS.PAYMENT_SUCCESS,
+        response
       );
       return window.dispatchEvent(event)
     }

@@ -61,6 +61,10 @@
         window.addEventListener("processout_dynamic_checkout_tokenize_payment_error", function (e) {
           console.log("Tokenize payment error")
         })
+
+        window.addEventListener("processout_dynamic_checkout_payment_success", function (e) {
+          console.log("Payment success", e)
+        })
       })
     </script>
   </body>
