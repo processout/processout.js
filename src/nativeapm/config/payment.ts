@@ -3,6 +3,7 @@
 type NativeApmPaymentConfigType = {
   gatewayConfigurationId: string;
   invoiceId: string;
+  returnUrl?: string;
 };
 
 /**
@@ -24,6 +25,12 @@ module ProcessOut {
      * @type {NativeApmPaymentConfigType['invoiceId']}
      */
     invoiceId: NativeApmPaymentConfigType['invoiceId'];
+
+    /**
+     * Native APM invoice return url
+     * @type {NativeApmPaymentConfigType['invoiceId']}
+     */
+    returnUrl?: NativeApmPaymentConfigType['returnUrl'];
 
     /**
      * NativeApm constructor
@@ -56,6 +63,7 @@ module ProcessOut {
 
       this.gatewayConfigurationId = config.gatewayConfigurationId;
       this.invoiceId = config.invoiceId;
+      this.returnUrl = config.returnUrl;
     }
 
     /**

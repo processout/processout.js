@@ -65,6 +65,10 @@
         window.addEventListener("processout_dynamic_checkout_payment_success", function (e) {
           console.log("Payment success", e)
         })
+
+        window.addEventListener('processout_native_apm_payment_success', function(e) {
+          console.log('Payment Status (outside widget): Payment success', e)
+        })
       })
     </script>
   </body>

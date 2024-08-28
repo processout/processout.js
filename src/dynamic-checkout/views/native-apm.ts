@@ -24,6 +24,7 @@ module ProcessOut {
         {
           gatewayConfigurationId,
           invoiceId: this.paymentConfig.invoiceId,
+          returnUrl: this.paymentConfig.invoiceDetails.return_url,
         },
         {
           dynamicCheckout: {
