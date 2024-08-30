@@ -50,8 +50,8 @@ module ProcessOut {
       return window.dispatchEvent(event);
     }
 
-    static dispatchPaymentSuccessEvent() {
-      const event = EventsUtils.createEvent(NATIVE_APM_EVENTS.PAYMENT_SUCCESS);
+    static dispatchPaymentSuccessEvent(data: { returnUrl: string }) {
+      const event = EventsUtils.createEvent(NATIVE_APM_EVENTS.PAYMENT_SUCCESS, data);
       return window.dispatchEvent(event);
     }
 

@@ -435,7 +435,7 @@ module ProcessOut {
         this.theme
       );
 
-      EventsUtils.dispatchPaymentSuccessEvent();
+      EventsUtils.dispatchPaymentSuccessEvent({ returnUrl: this.paymentConfig.returnUrl });
 
       return this.loadView(successView.getViewElement());
     }
