@@ -4,10 +4,53 @@ module ProcessOut {
   export class GooglePayClient {
     libraryUrl = "https://pay.google.com/gp/p/js/pay.js";
 
-    processOutInstance: ProcessOut;
     googleClient: any;
-    isReadyToPayRequest: any;
-    paymentRequest: any;
+    processOutInstance: ProcessOut;
+    isReadyToPayRequest: {
+      apiVersion: number,
+      apiVersionMinor: number,
+      allowedPaymentMethods: {
+        type: string,
+        parameters: {
+          allowedAuthMethods: string[],
+          allowedCardNetworks: string[]
+        },
+        tokenizationSpecification: {
+          type: string,
+          parameters: {
+            gateway: string,
+            gatewayMerchantId: string
+          }
+        }
+      }[]
+    };
+
+    paymentRequest: {
+      apiVersion: number,
+      apiVersionMinor: number,
+      allowedPaymentMethods: {
+        type: string,
+        parameters: {
+          allowedAuthMethods: string[],
+          allowedCardNetworks: string[]
+        },
+        tokenizationSpecification: {
+          type: string,
+          parameters: {
+            gateway: string,
+            gatewayMerchantId: string
+          }
+        }
+      }[],
+      transactionInfo: {
+        totalPriceStatus: string,
+        totalPrice: string,
+        currencyCode: string,
+      },
+      merchantInfo: {
+        merchantName: string,
+      }
+    };
 
 
     constructor(processOutInstance: ProcessOut) {
