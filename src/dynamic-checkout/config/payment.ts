@@ -44,6 +44,8 @@ type Googlepay = {
   allowed_card_networks: string[]
   allow_prepaid_cards: boolean
   allow_credit_cards: boolean
+  gateway: string;
+  gateway_merchant_id: string;
 }
 
 type Applepay = {

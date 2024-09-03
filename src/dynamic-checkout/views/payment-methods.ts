@@ -3,6 +3,7 @@
 module ProcessOut {
   export class DynamicCheckoutPaymentMethodsView {
     processOutInstance: ProcessOut;
+    googlePayClient: GooglePayClient;
     dynamicCheckout: DynamicCheckout;
     cardFormView: DynamicCheckoutCardFormView;
     nativeApmView: DynamicCheckoutNativeApmView;
@@ -31,6 +32,8 @@ module ProcessOut {
         processOutInstance,
         paymentConfig,
       );
+
+      this.googlePayClient = new GooglePayClient(processOutInstance);
     }
 
     public getViewElement() {
@@ -95,6 +98,18 @@ module ProcessOut {
           }
         });
       });
+    }
+
+    public loadExternalClients() {
+      const googlePayButtonContainer = document.getElementById('google-pay-button-container');
+
+      if (googlePayButtonContainer) {
+        this.googlePayClient.loadButton(
+          googlePayButtonContainer,
+          this.resetContainerHtml.bind(this),
+          this.paymentConfig.invoiceDetails
+        );
+      }
     }
 
     private resetContainerHtml() {
@@ -196,13 +211,11 @@ module ProcessOut {
       // TODO: enable when merchant configuration ready
       switch (type) {
         case "googlepay": {
-          return ``;
-          // not yet supported -- missing merchant configuration
           return `
-          <div class="dco-pay-button" id="google-pay-button-container">
-              <!-- Google Pay button will be dynamically added here -->
-          </div>
-        `;
+            <div class="dco-pay-button" id="google-pay-button-container">
+                <!-- Google Pay button will be dynamically added here -->
+            </div>
+         `;
         }
         case "apm_customer_token": {
           return this.getApmPaymentMethodButtonHtml(display, apm);

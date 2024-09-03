@@ -56,12 +56,21 @@ module ProcessOut {
     }
 
     private onGetInvoiceSuccess(data: any) {
-      if (!data.success || data.invoice.transaction.status !== 'waiting') {
+      if (!data.success) {
         this.loadErrorView();
 
         return DynamicCheckoutEventsUtils.dispatchInvoiceFetchingErrorEvent(
           data
         );
+      }
+
+      if (data.invoice.transaction.status !== 'waiting') {
+        this.loadErrorView("We were unable to process your payment.");
+
+        return DynamicCheckoutEventsUtils.dispatchTransactionErrorEvent({
+          invoiceId: data.invoice.id,
+          returnUrl: data.invoice.return_url,
+        });
       }
 
       this.paymentConfig.setInvoiceDetails(data.invoice);
@@ -87,10 +96,10 @@ module ProcessOut {
       DynamicCheckoutEventsUtils.dispatchInvoiceFetchingErrorEvent(errorData);
     }
 
-    private loadErrorView() {
+    private loadErrorView(text?: string) {
       const errorView = document.createElement("div");
       errorView.setAttribute("class", "dco-error-view");
-      errorView.innerText = "Something went wrong. Please try again.";
+      errorView.innerText = text || "Something went wrong. Please try again.";
       this.loadView(errorView);
     }
 
@@ -104,6 +113,7 @@ module ProcessOut {
       this.loadView(paymentMethodsView.getViewElement());
 
       paymentMethodsView.setupEventListeners();
+      paymentMethodsView.loadExternalClients();
 
       DynamicCheckoutEventsUtils.dispatchWidgetReadyEvent();
     }

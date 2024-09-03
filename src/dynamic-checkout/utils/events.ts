@@ -9,6 +9,8 @@ module ProcessOut {
     TOKENIZE_PAYMENT_ERROR: "processout_dynamic_checkout_tokenize_payment_error",
     PAYMENT_ERROR: "processout_dynamic_checkout_payment_error",
     PAYMENT_SUCCESS: "processout_dynamic_checkout_payment_success",
+    TRANSACTION_ERROR: "processout_dynamic_checkout_transaction_error",
+    GOOGLE_PAY_LOAD_ERROR: "processout_dynamic_checkout_google_pay_load_error",
   }
 
   export class DynamicCheckoutEventsUtils {
@@ -59,6 +61,25 @@ module ProcessOut {
         DYNAMIC_CHECKOUT_EVENTS.PAYMENT_SUCCESS,
         response
       );
+
+      return window.dispatchEvent(event)
+    }
+
+    static dispatchTransactionErrorEvent(errorData: { invoiceId: string, returnUrl: string }) {
+      const event = EventsUtils.createEvent(
+        DYNAMIC_CHECKOUT_EVENTS.TRANSACTION_ERROR,
+        errorData
+      );
+      
+      return window.dispatchEvent(event)
+    }
+
+    static dispatchGooglePayLoadError(errorData: { invoiceId: string, returnUrl: string }) {
+      const event = EventsUtils.createEvent(
+        DYNAMIC_CHECKOUT_EVENTS.GOOGLE_PAY_LOAD_ERROR,
+        errorData
+      );
+      
       return window.dispatchEvent(event)
     }
 
