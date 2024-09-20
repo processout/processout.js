@@ -14,6 +14,7 @@ type GatewayConfiguration = {
       currency_code: string;
     };
     parameters: Array<NativeApmInputData>;
+    parameter_values?: Record<string, string>;
   };
 };
 
@@ -204,7 +205,7 @@ module ProcessOut {
           this.markdownLibraryInstance,
           this.theme,
           this.capturePayment.bind(this),
-          ""
+          this.gatewayConfiguration.native_apm.parameter_values?.customer_action_message || ""
         );
 
         EventsUtils.dispatchPaymentInitEvent();
