@@ -7,97 +7,116 @@ module ProcessOut {
     googleClient: any;
     processOutInstance: ProcessOut;
     isReadyToPayRequest: {
-      apiVersion: number,
-      apiVersionMinor: number,
+      apiVersion: number;
+      apiVersionMinor: number;
       allowedPaymentMethods: {
-        type: string,
+        type: string;
         parameters: {
-          allowedAuthMethods: string[],
-          allowedCardNetworks: string[]
-        },
+          allowedAuthMethods: string[];
+          allowedCardNetworks: string[];
+        };
         tokenizationSpecification: {
-          type: string,
+          type: string;
           parameters: {
-            gateway: string,
-            gatewayMerchantId: string
-          }
-        }
-      }[]
+            gateway: string;
+            gatewayMerchantId: string;
+          };
+        };
+      }[];
     };
 
     paymentRequest: {
-      apiVersion: number,
-      apiVersionMinor: number,
+      apiVersion: number;
+      apiVersionMinor: number;
       allowedPaymentMethods: {
-        type: string,
+        type: string;
         parameters: {
-          allowedAuthMethods: string[],
-          allowedCardNetworks: string[]
-        },
+          allowedAuthMethods: string[];
+          allowedCardNetworks: string[];
+        };
         tokenizationSpecification: {
-          type: string,
+          type: string;
           parameters: {
-            gateway: string,
-            gatewayMerchantId: string
-          }
-        }
-      }[],
+            gateway: string;
+            gatewayMerchantId: string;
+          };
+        };
+      }[];
       transactionInfo: {
-        totalPriceStatus: string,
-        totalPrice: string,
-        currencyCode: string,
-      },
+        totalPriceStatus: string;
+        totalPrice: string;
+        currencyCode: string;
+      };
       merchantInfo: {
-        merchantName: string,
-      }
+        merchantName: string;
+      };
     };
-
 
     constructor(processOutInstance: ProcessOut) {
       this.processOutInstance = processOutInstance;
     }
 
-    public loadButton(buttonContainer: HTMLElement, getViewContainer: () => HTMLElement, invoiceData: Invoice) {
+    public loadButton(
+      buttonContainer: HTMLElement,
+      getViewContainer: () => HTMLElement,
+      invoiceData: Invoice
+    ) {
       const googleClientScript = document.createElement("script");
 
       googleClientScript.src = this.libraryUrl;
-      
-      googleClientScript.onload = () => {
-        this.googleClient = window.globalThis && window.globalThis.google
-          ? new window.globalThis.google.payments.api.PaymentsClient({environment: 'TEST'})
-          : null;
 
-        this.initizalizeGooglePay(buttonContainer, getViewContainer, invoiceData);
+      googleClientScript.onload = () => {
+        this.googleClient =
+          window.globalThis && window.globalThis.google
+            ? new window.globalThis.google.payments.api.PaymentsClient({
+                environment: DEBUG ? "TEST" : "PRODUCTION",
+              })
+            : null;
+
+        this.initizalizeGooglePay(
+          buttonContainer,
+          getViewContainer,
+          invoiceData
+        );
       };
 
       document.head.appendChild(googleClientScript);
     }
 
-    private initizalizeGooglePay(buttonContainer: HTMLElement, getViewContainer: () => HTMLElement, invoiceData: Invoice) {
+    private initizalizeGooglePay(
+      buttonContainer: HTMLElement,
+      getViewContainer: () => HTMLElement,
+      invoiceData: Invoice
+    ) {
       this.prepareIsReadyToPayRequest(invoiceData);
       this.preparePaymentRequest(invoiceData);
 
-      this.googleClient.isReadyToPay(this.isReadyToPayRequest)
+      this.googleClient
+        .isReadyToPay(this.isReadyToPayRequest)
         .then((response) => {
           if (response.result) {
             const button = this.googleClient.createButton({
-              buttonColor: 'default',
-              buttonType: 'plain',
+              buttonColor: "default",
+              buttonType: "plain",
               buttonRadius: 4,
-              buttonSizeMode: 'fill',
+              buttonSizeMode: "fill",
               onClick: () => this.makePayment(invoiceData, getViewContainer),
             });
 
             buttonContainer.appendChild(button);
           }
         })
-        .catch(function(err) {
+        .catch(function (err) {
           DynamicCheckoutEventsUtils.dispatchGooglePayLoadError(err);
         });
     }
 
-    private makePayment(invoiceData: Invoice, getViewContainer: () => HTMLElement) {
-      this.googleClient.loadPaymentData(this.paymentRequest)
+    private makePayment(
+      invoiceData: Invoice,
+      getViewContainer: () => HTMLElement
+    ) {
+      this.googleClient
+        .loadPaymentData(this.paymentRequest)
         .then((paymentData) => {
           const paymentToken = new PaymentToken(
             TokenType.GooglePay,
@@ -105,8 +124,9 @@ module ProcessOut {
           );
 
           const processOutInstance = this.processOutInstance;
-          const getPaymentAuthorizeSuccessHtml = this.getPaymentAuthorizeSuccessHtml;
-          
+          const getPaymentAuthorizeSuccessHtml =
+            this.getPaymentAuthorizeSuccessHtml;
+
           processOutInstance.tokenize(
             paymentToken,
             {},
@@ -119,10 +139,11 @@ module ProcessOut {
                 invoiceData.id,
                 token,
                 {
-                  authorize_only: true
+                  authorize_only: true,
                 },
                 function (invoiceId) {
-                  getViewContainer().innerHTML = getPaymentAuthorizeSuccessHtml();
+                  getViewContainer().innerHTML =
+                    getPaymentAuthorizeSuccessHtml();
 
                   DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
                     invoiceId,
@@ -138,7 +159,7 @@ module ProcessOut {
 
                   DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(err);
                 }
-              )
+              );
             },
             function (err) {
               getViewContainer().innerHTML = `
@@ -146,7 +167,7 @@ module ProcessOut {
                   Something went wrong. Please try again.
                 </div>
               `;
-  
+
               DynamicCheckoutEventsUtils.dispatchTokenizePaymentErrorEvent({
                 message: `Tokenize payment error: ${JSON.stringify(
                   err,
@@ -155,7 +176,7 @@ module ProcessOut {
                 )}`,
               });
             }
-          )
+          );
         })
         .catch((err) => {
           DynamicCheckoutEventsUtils.dispatchGooglePayLoadError(err);
@@ -172,21 +193,26 @@ module ProcessOut {
       this.isReadyToPayRequest = {
         apiVersion: 2,
         apiVersionMinor: 0,
-        allowedPaymentMethods: [{
-          type: 'CARD',
-          parameters: {
-            allowedAuthMethods: googlePayMethod.googlepay.allowed_auth_methods,
-            allowedCardNetworks: googlePayMethod.googlepay.allowed_card_networks
-          },
-          tokenizationSpecification: {
-            type: 'PAYMENT_GATEWAY',
+        allowedPaymentMethods: [
+          {
+            type: "CARD",
             parameters: {
-              gateway: googlePayMethod.googlepay.gateway,
-              gatewayMerchantId: googlePayMethod.googlepay.gateway_merchant_id
-            }
-          }
-        }]
-      }
+              allowedAuthMethods:
+                googlePayMethod.googlepay.allowed_auth_methods,
+              allowedCardNetworks:
+                googlePayMethod.googlepay.allowed_card_networks,
+            },
+            tokenizationSpecification: {
+              type: "PAYMENT_GATEWAY",
+              parameters: {
+                gateway: googlePayMethod.googlepay.gateway,
+                gatewayMerchantId:
+                  googlePayMethod.googlepay.gateway_merchant_id,
+              },
+            },
+          },
+        ],
+      };
     }
 
     private preparePaymentRequest(invoiceData: Invoice) {
@@ -199,36 +225,41 @@ module ProcessOut {
       this.paymentRequest = {
         apiVersion: 2,
         apiVersionMinor: 0,
-        allowedPaymentMethods: [{
-          type: 'CARD',
-          parameters: {
-            allowedAuthMethods: googlePayMethod.googlepay.allowed_auth_methods,
-            allowedCardNetworks: googlePayMethod.googlepay.allowed_card_networks
-          },
-          tokenizationSpecification: {
-            type: 'PAYMENT_GATEWAY',
+        allowedPaymentMethods: [
+          {
+            type: "CARD",
             parameters: {
-              gateway: googlePayMethod.googlepay.gateway,
-              gatewayMerchantId: googlePayMethod.googlepay.gateway_merchant_id
-            }
-          }
-        }],
+              allowedAuthMethods:
+                googlePayMethod.googlepay.allowed_auth_methods,
+              allowedCardNetworks:
+                googlePayMethod.googlepay.allowed_card_networks,
+            },
+            tokenizationSpecification: {
+              type: "PAYMENT_GATEWAY",
+              parameters: {
+                gateway: googlePayMethod.googlepay.gateway,
+                gatewayMerchantId:
+                  googlePayMethod.googlepay.gateway_merchant_id,
+              },
+            },
+          },
+        ],
         transactionInfo: {
-          totalPriceStatus: 'FINAL',
+          totalPriceStatus: "FINAL",
           totalPrice: invoiceData.amount,
           currencyCode: invoiceData.currency,
         },
         merchantInfo: {
           merchantName: invoiceData.name,
-        }
-      }
+        },
+      };
     }
 
     private getGooglePayMethodData(invoiceData: Invoice) {
       let googlePayMethod;
 
       invoiceData.payment_methods.forEach((paymentMethod) => {
-        if (paymentMethod.type === 'googlepay') {
+        if (paymentMethod.type === "googlepay") {
           googlePayMethod = paymentMethod;
         }
       });
