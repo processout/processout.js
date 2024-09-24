@@ -4,83 +4,111 @@ module ProcessOut {
   const DYNAMIC_CHECKOUT_EVENTS = {
     WIDGET_LOADING: "processout_dynamic_checkout_loading",
     WIDGET_READY: "processout_dynamic_checkout_ready",
-    INVOICE_FETCHING_ERROR: "processout_dynamic_checkout_invoice_fetching_error",
-    TOKENIZE_PAYMENT_SUCCESS: "processout_dynamic_checkout_tokenize_payment_success",
-    TOKENIZE_PAYMENT_ERROR: "processout_dynamic_checkout_tokenize_payment_error",
+    INVOICE_FETCHING_ERROR:
+      "processout_dynamic_checkout_invoice_fetching_error",
+    TOKENIZE_PAYMENT_SUCCESS:
+      "processout_dynamic_checkout_tokenize_payment_success",
+    TOKENIZE_PAYMENT_ERROR:
+      "processout_dynamic_checkout_tokenize_payment_error",
     PAYMENT_ERROR: "processout_dynamic_checkout_payment_error",
     PAYMENT_SUCCESS: "processout_dynamic_checkout_payment_success",
     TRANSACTION_ERROR: "processout_dynamic_checkout_transaction_error",
     GOOGLE_PAY_LOAD_ERROR: "processout_dynamic_checkout_google_pay_load_error",
-  }
+    APPLE_PAY_NEW_SESSION: "processout_dynamic_checkout_apple_pay_new_session",
+  };
 
   export class DynamicCheckoutEventsUtils {
     static dispatchInvoiceFetchingErrorEvent(errorData: any) {
       const event = EventsUtils.createEvent(
         DYNAMIC_CHECKOUT_EVENTS.INVOICE_FETCHING_ERROR,
-        errorData,
-      )
+        errorData
+      );
 
-      return window.dispatchEvent(event)
+      return window.dispatchEvent(event);
     }
 
     static dispatchWidgetLoadingEvent() {
-      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.WIDGET_LOADING)
-      return window.dispatchEvent(event)
+      const event = EventsUtils.createEvent(
+        DYNAMIC_CHECKOUT_EVENTS.WIDGET_LOADING
+      );
+      return window.dispatchEvent(event);
     }
 
     static dispatchWidgetReadyEvent() {
-      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.WIDGET_READY)
-      return window.dispatchEvent(event)
+      const event = EventsUtils.createEvent(
+        DYNAMIC_CHECKOUT_EVENTS.WIDGET_READY
+      );
+      return window.dispatchEvent(event);
     }
 
     static dispatchTokenizePaymentSuccessEvent(token: string) {
-      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.TOKENIZE_PAYMENT_SUCCESS, {
-        token,
-      })
-      return window.dispatchEvent(event)
+      const event = EventsUtils.createEvent(
+        DYNAMIC_CHECKOUT_EVENTS.TOKENIZE_PAYMENT_SUCCESS,
+        {
+          token,
+        }
+      );
+      return window.dispatchEvent(event);
     }
 
     static dispatchTokenizePaymentErrorEvent(errorData: any) {
       const event = EventsUtils.createEvent(
         DYNAMIC_CHECKOUT_EVENTS.TOKENIZE_PAYMENT_ERROR,
-        errorData,
-      )
-      return window.dispatchEvent(event)
+        errorData
+      );
+      return window.dispatchEvent(event);
     }
-    
+
     static dispatchPaymentErrorEvent(errorData: any) {
       const event = EventsUtils.createEvent(
         DYNAMIC_CHECKOUT_EVENTS.TOKENIZE_PAYMENT_ERROR,
-        errorData,
-      )
-      return window.dispatchEvent(event)
+        errorData
+      );
+      return window.dispatchEvent(event);
     }
 
-    static dispatchPaymentSuccessEvent(response: { invoiceId: string, returnUrl: string }) {
+    static dispatchPaymentSuccessEvent(response: {
+      invoiceId: string;
+      returnUrl: string;
+    }) {
       const event = EventsUtils.createEvent(
         DYNAMIC_CHECKOUT_EVENTS.PAYMENT_SUCCESS,
         response
       );
 
-      return window.dispatchEvent(event)
+      return window.dispatchEvent(event);
     }
 
-    static dispatchTransactionErrorEvent(errorData: { invoiceId: string, returnUrl: string }) {
+    static dispatchApplePayNewSessionEvent() {
+      const event = EventsUtils.createEvent(
+        DYNAMIC_CHECKOUT_EVENTS.APPLE_PAY_NEW_SESSION
+      );
+
+      return window.dispatchEvent(event);
+    }
+
+    static dispatchTransactionErrorEvent(errorData: {
+      invoiceId: string;
+      returnUrl: string;
+    }) {
       const event = EventsUtils.createEvent(
         DYNAMIC_CHECKOUT_EVENTS.TRANSACTION_ERROR,
         errorData
       );
-      
-      return window.dispatchEvent(event)
+
+      return window.dispatchEvent(event);
     }
 
-    static dispatchGooglePayLoadError(errorData: { invoiceId: string, returnUrl: string }) {
+    static dispatchGooglePayLoadError(errorData: {
+      invoiceId: string;
+      returnUrl: string;
+    }) {
       const event = EventsUtils.createEvent(
         DYNAMIC_CHECKOUT_EVENTS.GOOGLE_PAY_LOAD_ERROR,
         errorData
       );
-      
-      return window.dispatchEvent(event)
+
+      return window.dispatchEvent(event);
     }
 
     // IE 11 polyfill
@@ -89,11 +117,11 @@ module ProcessOut {
         return new CustomEvent(eventName, {
           bubbles: true,
           detail: data,
-        })
+        });
       } else {
-        const event = document.createEvent("CustomEvent")
-        event.initCustomEvent(eventName, true, false, data)
-        return event
+        const event = document.createEvent("CustomEvent");
+        event.initCustomEvent(eventName, true, false, data);
+        return event;
       }
     }
   }
