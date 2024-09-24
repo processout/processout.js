@@ -205,7 +205,9 @@ module ProcessOut {
           this.markdownLibraryInstance,
           this.theme,
           this.capturePayment.bind(this),
-          this.gatewayConfiguration.native_apm.parameter_values?.customer_action_message || ""
+          (this.gatewayConfiguration.native_apm.parameter_values &&
+            this.gatewayConfiguration.native_apm.parameter_values.customer_action_message) ||
+            ""
         );
 
         EventsUtils.dispatchPaymentInitEvent();
