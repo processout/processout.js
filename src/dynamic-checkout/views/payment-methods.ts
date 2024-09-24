@@ -4,6 +4,7 @@ module ProcessOut {
   export class DynamicCheckoutPaymentMethodsView {
     processOutInstance: ProcessOut;
     googlePayClient: GooglePayClient;
+    applePayClient: ApplePayClient;
     dynamicCheckout: DynamicCheckout;
     cardFormView: DynamicCheckoutCardFormView;
     nativeApmView: DynamicCheckoutNativeApmView;
@@ -30,10 +31,11 @@ module ProcessOut {
       this.nativeApmView = new DynamicCheckoutNativeApmView(
         dynamicCheckout,
         processOutInstance,
-        paymentConfig,
+        paymentConfig
       );
 
       this.googlePayClient = new GooglePayClient(processOutInstance);
+      this.applePayClient = new ApplePayClient(processOutInstance);
     }
 
     public getViewElement() {
@@ -57,14 +59,14 @@ module ProcessOut {
             this.cardFormView.setupCardForm(this.resetContainerHtml());
           } else if (savedCardTokenId) {
             const resetContainerHtml = this.resetContainerHtml;
-            
+
             this.processOutInstance.makeCardPayment(
               this.paymentConfig.invoiceId,
               savedCardTokenId,
               {
                 authorize_only: true,
               },
-              function(invoiceId) {
+              function (invoiceId) {
                 const container = resetContainerHtml();
 
                 container.innerHTML = `
@@ -78,7 +80,7 @@ module ProcessOut {
                   invoiceId
                 );
               },
-              function(err) {
+              function (err) {
                 const container = resetContainerHtml();
 
                 container.innerHTML = `
@@ -101,12 +103,28 @@ module ProcessOut {
     }
 
     public loadExternalClients() {
-      const googlePayButtonContainer = document.getElementById('google-pay-button-container');
+      const googlePayButtonContainer = document.getElementById(
+        "google-pay-button-container"
+      );
+
+      const applePayButtonContainer = document.getElementById(
+        "apple-pay-button-container"
+      );
+
+      const resetContainerHtml = this.resetContainerHtml.bind(this);
 
       if (googlePayButtonContainer) {
         this.googlePayClient.loadButton(
           googlePayButtonContainer,
-          this.resetContainerHtml.bind(this),
+          resetContainerHtml,
+          this.paymentConfig.invoiceDetails
+        );
+      }
+
+      if (applePayButtonContainer) {
+        this.applePayClient.loadButton(
+          applePayButtonContainer,
+          resetContainerHtml,
           this.paymentConfig.invoiceDetails
         );
       }
@@ -167,16 +185,23 @@ module ProcessOut {
       let directCheckoutHtml = "";
 
       this.paymentConfig.invoiceDetails.payment_methods.forEach(
-        ({ flow, type, apm, display, apm_customer_token, card_customer_token }) => {
+        ({
+          flow,
+          type,
+          apm,
+          display,
+          apm_customer_token,
+          card_customer_token,
+        }) => {
           if (flow === "express") {
             let apmConfig = apm;
 
-            if(type === "apm_customer_token") {
-              apmConfig = apm_customer_token
+            if (type === "apm_customer_token") {
+              apmConfig = apm_customer_token;
             } else if (type === "card_customer_token") {
-              apmConfig = card_customer_token
+              apmConfig = card_customer_token;
             }
-            
+
             expressCheckoutHtml += this.getExpressCheckoutHtml(
               type,
               apmConfig,
@@ -189,13 +214,12 @@ module ProcessOut {
             );
           } else if (type === "card") {
             directCheckoutHtml += this.getCardPaymentMethodButtonHtml(display);
-          } else if ( type === "card_customer_token") {
+          } else if (type === "card_customer_token") {
             expressCheckoutHtml += this.getExpressCheckoutHtml(
               type,
               card_customer_token,
               display
             );
-
           }
         }
       );
@@ -208,29 +232,26 @@ module ProcessOut {
       apm: Apm,
       display: Display
     ): string {
-      // TODO: enable when merchant configuration ready
       switch (type) {
-        case "googlepay": {
-          return `
-            <div class="dco-pay-button" id="google-pay-button-container">
-                <!-- Google Pay button will be dynamically added here -->
-            </div>
-         `;
-        }
         case "apm_customer_token": {
           return this.getApmPaymentMethodButtonHtml(display, apm);
         }
         case "card_customer_token": {
           return this.getSavedCardPaymentMethodButtonHtml(display, apm);
         }
-        case "applepay": {
-          return ``;
-          // not yet supported - implementation in progress
+        case "googlepay": {
           return `
-          <div class="dco-pay-button" id="google-pay-button-container">
+            <div class="dco-pay-button" id="google-pay-button-container">
               <!-- Google Pay button will be dynamically added here -->
-          </div>
-        `;
+            </div>
+         `;
+        }
+        case "applepay": {
+          return `
+            <div class="dco-pay-button" id="apple-pay-button-container">
+              <!-- Apple Pay button will be dynamically added here -->
+            </div>
+          `;
         }
         default: {
           return "";
@@ -238,9 +259,14 @@ module ProcessOut {
       }
     }
 
-    private getSavedCardPaymentMethodButtonHtml(display: Display, apm: Apm): string {
+    private getSavedCardPaymentMethodButtonHtml(
+      display: Display,
+      apm: Apm
+    ): string {
       return `
-        <div class="dco-pay-button" data-method-id="saved-card" data-card-token-id="${apm.customer_token_id || ""}">
+        <div class="dco-pay-button" data-method-id="saved-card" data-card-token-id="${
+          apm.customer_token_id || ""
+        }">
             <div class="dco-payment-method dco-payment-method--regular" style="background-color: ${DynamicCheckoutColorsUtils.hexToRgba(
               display.brand_color.dark
             )}">

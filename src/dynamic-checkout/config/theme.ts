@@ -274,6 +274,7 @@ const dynamicStyles = `
     justify-content: center;
   }
 
+  
   .dco-card-payment-success-image {
     display: block;
     width: 50%;
@@ -302,7 +303,21 @@ const dynamicStyles = `
     font-size: 14px;
   }
 
-  .dco-save-card-checkbox-wrapper {
+  apple-pay-button {
+    --apple-pay-button-width: 100%;
+    --apple-pay-button-height: 40px;
+    --apple-pay-button-border-radius: 4px;
+    --apple-pay-button-padding: 5px;
+    --apple-pay-button-box-sizing: border-box;
 
+    display: initial;
+  }
+
+  #apple-pay-button-container {
+    display: none;
+  }
+
+  #apple-pay-button-container.visible {
+    display: block;
   }
 `;
