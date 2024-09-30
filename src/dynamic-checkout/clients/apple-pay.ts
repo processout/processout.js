@@ -5,6 +5,31 @@ module ProcessOut {
     libraryUrl =
       "https://applepay.cdn-apple.com/jsapi/1.latest/apple-pay-sdk.js";
 
+    // It's needed because not every network that we support is supported by Apple Pay Web SDK
+    // and some of them are called slightly different than the ones we're using e.g. "amex" instead of "american express"
+    networksMap = {
+      "american express": "amex",
+      bancomat: "bancomat",
+      bancontact: "bancontact",
+      "carte bancaire": "cartesbancaires",
+      "china union pay": "chinaunionpay",
+      dankort: "dankort",
+      discover: "discover",
+      eftpos: "eftpos",
+      electron: "electron",
+      elo: "elo",
+      girocard: "girocard",
+      interac: "interac",
+      jcb: "jcb",
+      mada: "mada",
+      maestro: "maestro",
+      mastercard: "mastercard",
+      "nspk mir": "mir",
+      "private label": "privateLabel",
+      visa: "visa",
+      vpay: "vpay",
+    };
+
     processOutInstance: ProcessOut;
 
     constructor(processOutInstance: ProcessOut) {
@@ -36,21 +61,47 @@ module ProcessOut {
     ) {
       const tokenizeApplePay = this.tokenizeApplePay.bind(this);
 
-      this.processOutInstance.applePay.checkAvailability(function (err) {
-        if (err) {
-          console.log(err);
-        } else {
-          buttonContainer.classList.add("visible");
-          buttonContainer.addEventListener("click", () => {
-            tokenizeApplePay(invoiceData, getViewContainer);
-          });
+      const applePayPaymentMethodData =
+        this.getApplePayPaymentMethodData(invoiceData);
+
+      this.processOutInstance.applePay.checkAvailability(
+        function (err) {
+          if (err) {
+            console.log(err);
+          } else {
+            buttonContainer.classList.add("visible");
+
+            document
+              .querySelector("apple-pay-button")
+              .addEventListener("click", () => {
+                tokenizeApplePay(invoiceData, getViewContainer);
+              });
+          }
+        },
+        { merchantApplePayCertificateId: applePayPaymentMethodData.merchant_id }
+      );
+    }
+
+    private getSupportedNetworks(invoiceData: Invoice) {
+      const applePayPaymentMethodData =
+        this.getApplePayPaymentMethodData(invoiceData);
+
+      let supporedNetworks = [];
+
+      applePayPaymentMethodData.supported_networks.forEach((network) => {
+        if (this.networksMap[network]) {
+          supporedNetworks.push(this.networksMap[network]);
         }
       });
+
+      return supporedNetworks;
     }
 
     private createApplePaySession(invoiceData: Invoice) {
       const applePayPaymentMethodData =
         this.getApplePayPaymentMethodData(invoiceData);
+
+      const supportedNetworks = this.getSupportedNetworks(invoiceData);
 
       const session = this.processOutInstance.applePay.newSession(
         {
@@ -60,9 +111,10 @@ module ProcessOut {
           },
           currencyCode: invoiceData.currency,
           countryCode: applePayPaymentMethodData.country_code,
-          supportedNetworks: applePayPaymentMethodData.supported_networks,
+          supportedNetworks: supportedNetworks,
           merchantCapabilities: applePayPaymentMethodData.merchant_capabilities,
           merchantCertificateId: applePayPaymentMethodData.merchant_id,
+          applePaySessionVersion: 14,
         },
         DynamicCheckoutEventsUtils.dispatchApplePayNewSessionEvent,
         DynamicCheckoutEventsUtils.dispatchTokenizePaymentErrorEvent

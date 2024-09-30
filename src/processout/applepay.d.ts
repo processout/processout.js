@@ -15,6 +15,7 @@ interface ApplePayPaymentRequest {
   requiredShippingContactFields?: any;
   merchantCertificateId?: string;
   merchantApplePayCertificateId?: string;
+  applePaySessionVersion?: number;
 }
 interface ApplePayCheckAvailabilityRequest {
   merchantApplePayCertificateId?: string;
