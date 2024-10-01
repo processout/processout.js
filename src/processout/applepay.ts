@@ -101,7 +101,12 @@ module ProcessOut {
 
       // Let's now create the session so we can wrap it in our
       // Apple Pay class
-      this.session = new ApplePaySession(1, this.request);
+
+      this.session = new ApplePaySession(
+        req.applePaySessionVersion || 1,
+        this.request
+      );
+
       // Hook the session events we need
       var t = this;
       this.session.onvalidatemerchant = function (event: any): void {
@@ -146,7 +151,7 @@ module ProcessOut {
             if (!data.success) {
               t.onerror(new Exception(data.error_code, data.message));
               t.session.abort();
-            } else{
+            } else {
               // first data.card was meant originally to be token (not whole card), leaving it here for backwards compatibility
               // second data.card is to keep api cohesive
               t.onsuccess(data.card, data.card);
@@ -167,11 +172,14 @@ module ProcessOut {
       };
 
       // Register onpaymentauthorized postprocess handler for the user (fired when the default onpaymentauthorized handler returns)
-      this.onpaymentauthorizedPostprocess = this.onPaymentAuthorizedPostprocessHandler.bind(this);
+      this.onpaymentauthorizedPostprocess =
+        this.onPaymentAuthorizedPostprocessHandler.bind(this);
       // As well as the other ones
       this.session.oncancel = this.onCancelHandler.bind(this);
-      this.session.onshippingcontactselected = this.onShippingContactSelectedHandler.bind(this);
-      this.session.onshippingmethodselected = this.onShippingMethodSelectedHandler.bind(this);
+      this.session.onshippingcontactselected =
+        this.onShippingContactSelectedHandler.bind(this);
+      this.session.onshippingmethodselected =
+        this.onShippingMethodSelectedHandler.bind(this);
     }
 
     /**
@@ -338,7 +346,8 @@ module ProcessOut {
      * @return {void}
      */
     protected onPaymentAuthorizedPostprocessHandler(event: any): void {
-      if (this.onpaymentauthorizedPostprocess) this.onpaymentauthorizedPostprocess(event);
+      if (this.onpaymentauthorizedPostprocess)
+        this.onpaymentauthorizedPostprocess(event);
     }
   }
 }
