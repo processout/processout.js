@@ -86,15 +86,15 @@ module ProcessOut {
       const applePayPaymentMethodData =
         this.getApplePayPaymentMethodData(invoiceData);
 
-      let supporedNetworks = [];
+      let supportedNetworks = [];
 
       applePayPaymentMethodData.supported_networks.forEach((network) => {
         if (this.networksMap[network]) {
-          supporedNetworks.push(this.networksMap[network]);
+          supportedNetworks.push(this.networksMap[network]);
         }
       });
 
-      return supporedNetworks;
+      return supportedNetworks;
     }
 
     private createApplePaySession(invoiceData: Invoice) {
