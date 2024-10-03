@@ -15,6 +15,10 @@ module ProcessOut {
     TRANSACTION_ERROR: "processout_dynamic_checkout_transaction_error",
     GOOGLE_PAY_LOAD_ERROR: "processout_dynamic_checkout_google_pay_load_error",
     APPLE_PAY_NEW_SESSION: "processout_dynamic_checkout_apple_pay_new_session",
+    APPLE_PAY_SESSION_ERROR:
+      "processout_dynamic_checkout_apple_pay_session_error",
+    APPLE_PAY_AUTHORIZED_POST_PROCESS:
+      "processout_dynamic_checkout_apple_pay_authorized_post_process",
   };
 
   export class DynamicCheckoutEventsUtils {
@@ -61,7 +65,7 @@ module ProcessOut {
 
     static dispatchPaymentErrorEvent(errorData: any) {
       const event = EventsUtils.createEvent(
-        DYNAMIC_CHECKOUT_EVENTS.TOKENIZE_PAYMENT_ERROR,
+        DYNAMIC_CHECKOUT_EVENTS.PAYMENT_ERROR,
         errorData
       );
       return window.dispatchEvent(event);
@@ -82,6 +86,22 @@ module ProcessOut {
     static dispatchApplePayNewSessionEvent() {
       const event = EventsUtils.createEvent(
         DYNAMIC_CHECKOUT_EVENTS.APPLE_PAY_NEW_SESSION
+      );
+
+      return window.dispatchEvent(event);
+    }
+
+    static dispatchApplePayAuthorizedPostProcessEvent() {
+      const event = EventsUtils.createEvent(
+        DYNAMIC_CHECKOUT_EVENTS.APPLE_PAY_AUTHORIZED_POST_PROCESS
+      );
+
+      return window.dispatchEvent(event);
+    }
+
+    static dispatchApplePaySessionError(err: any) {
+      const event = EventsUtils.createEvent(
+        DYNAMIC_CHECKOUT_EVENTS.APPLE_PAY_SESSION_ERROR
       );
 
       return window.dispatchEvent(event);

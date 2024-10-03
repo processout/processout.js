@@ -113,12 +113,16 @@ module ProcessOut {
           countryCode: applePayPaymentMethodData.country_code,
           supportedNetworks: supportedNetworks,
           merchantCapabilities: applePayPaymentMethodData.merchant_capabilities,
-          merchantCertificateId: applePayPaymentMethodData.merchant_id,
+          merchantApplePayCertificateId: applePayPaymentMethodData.merchant_id,
           applePaySessionVersion: 14,
         },
         DynamicCheckoutEventsUtils.dispatchApplePayNewSessionEvent,
-        DynamicCheckoutEventsUtils.dispatchTokenizePaymentErrorEvent
+        DynamicCheckoutEventsUtils.dispatchApplePaySessionError
       );
+
+      session.onpaymentauthorizedPostprocess = (event) => {
+        DynamicCheckoutEventsUtils.dispatchApplePayAuthorizedPostProcessEvent();
+      };
 
       return session;
     }
@@ -133,17 +137,19 @@ module ProcessOut {
       this.processOutInstance.tokenize(
         session,
         {},
-        function (cardToken) {
-          DynamicCheckoutEventsUtils.dispatchTokenizePaymentSuccessEvent(
-            cardToken
-          );
+        function (card) {
+          session.completePayment(0);
 
-          session.completePayment(ApplePayStatusCodes.STATUS_SUCCESS);
+          DynamicCheckoutEventsUtils.dispatchTokenizePaymentSuccessEvent(card);
+
+          // The casting is needed since Apple Pay returns card object instead of card token for some reason
+          // You can check the implementation of tokenize function
+          const cardToken = (card as unknown as Record<string, any>).id;
 
           makeApplePayPayment(cardToken, invoiceData, getViewContainer);
         },
         function (err) {
-          session.completePayment(ApplePayStatusCodes.STATUS_FAILURE);
+          session.completePayment(1);
 
           DynamicCheckoutEventsUtils.dispatchTokenizePaymentErrorEvent(err);
 
