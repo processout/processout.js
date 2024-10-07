@@ -3,7 +3,7 @@
 type DynamicCheckoutPaymentConfigType = {
   invoiceId: string;
   projectId: string;
-  clientSecret?: string
+  clientSecret?: string;
   invoiceDetails: Invoice;
 };
 
@@ -25,7 +25,7 @@ type Invoice = {
   expires_at: string | null;
   metadata: Record<string, unknown>;
   transaction: Transaction;
-}
+};
 
 type PaymentMethod = {
   type: string;
@@ -40,58 +40,60 @@ type PaymentMethod = {
 };
 
 type Googlepay = {
-  allowed_auth_methods: string[]
-  allowed_card_networks: string[]
-  allow_prepaid_cards: boolean
-  allow_credit_cards: boolean
+  allowed_auth_methods: string[];
+  allowed_card_networks: string[];
+  allow_prepaid_cards: boolean;
+  allow_credit_cards: boolean;
   gateway: string;
   gateway_merchant_id: string;
-}
+};
 
 type Applepay = {
-  merchant_id: string
-  country_code: string
-  supported_networks: string[]
-  merchant_capabilities: string[]
-}
+  merchant_id: string;
+  country_code: string;
+  supported_networks: string[];
+  merchant_capabilities: string[];
+};
 
 type Display = {
-  name: string
-  logo: Logo
-  brand_color: BrandColor
-}
+  name: string;
+  logo: Logo;
+  brand_color: BrandColor;
+};
 
 type Logo = {
-  light_url: Url
-  dark_url: Url
-}
+  light_url: Url;
+  dark_url: Url;
+};
 
 type Url = {
-  vector: string
-  raster: string
-}
+  vector: string;
+  raster: string;
+};
 
 type BrandColor = {
-  light: string
-  dark: string
-}
+  light: string;
+  dark: string;
+};
 
 type Card = {
-  require_cvc: boolean
-  require_cardholder_name: boolean
-  allow_scheme_selection: boolean
-  billing_address: BillingAddress
-}
+  require_cvc: boolean;
+  require_cardholder_name: boolean;
+  allow_scheme_selection: boolean;
+  billing_address: BillingAddress;
+};
 
 type BillingAddress = {
-  collection_mode: string
-  restrict_to_country_codes: string[]
-}
+  collection_mode: string;
+  restrict_to_country_codes: string[];
+};
 
 type Apm = {
   gateway_configuration_id?: string;
   redirect_url?: string;
   customer_token_id?: string;
+  gateway_name?: string;
+  gateway_logo_url?: string;
 };
 
 module ProcessOut {

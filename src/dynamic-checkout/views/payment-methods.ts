@@ -28,6 +28,7 @@ module ProcessOut {
         processOutInstance,
         paymentConfig
       );
+
       this.nativeApmView = new DynamicCheckoutNativeApmView(
         dynamicCheckout,
         processOutInstance,
@@ -35,6 +36,7 @@ module ProcessOut {
       );
 
       this.googlePayClient = new GooglePayClient(processOutInstance);
+
       this.applePayClient = new ApplePayClient(processOutInstance);
     }
 
@@ -42,7 +44,7 @@ module ProcessOut {
       return this.formElement;
     }
 
-    public setupEventListeners(): void {
+    public setupPaymentMethodsEventListeners(): void {
       const buttons = document.querySelectorAll(
         ".dco-pay-button[data-method-id]"
       );
@@ -51,48 +53,35 @@ module ProcessOut {
         button.addEventListener("click", () => {
           const redirectUrl = button.getAttribute("data-redirect-url");
           const dataMethodId = button.getAttribute("data-method-id");
+          const dataMethodName = button.getAttribute(
+            "data-gateway-method-name"
+          );
+          const dataMethodLogo = button.getAttribute("data-method-logo");
           const savedCardTokenId = button.getAttribute("data-card-token-id");
+          const dataMethodType = button.getAttribute("data-method-type");
 
-          if (redirectUrl) {
-            window.location.href = redirectUrl;
-          } else if (dataMethodId === "card") {
+          // Regular card payment method
+          if (dataMethodId === "card") {
             this.cardFormView.setupCardForm(this.resetContainerHtml());
-          } else if (savedCardTokenId) {
-            const resetContainerHtml = this.resetContainerHtml;
+          }
 
-            this.processOutInstance.makeCardPayment(
+          // Saved cards
+          if (savedCardTokenId) {
+            this.handleSavedCardPayment(savedCardTokenId);
+          }
+
+          // APMs
+          if (redirectUrl) {
+            this.handleApmPayment(
               this.paymentConfig.invoiceId,
-              savedCardTokenId,
-              {
-                authorize_only: true,
-              },
-              function (invoiceId) {
-                const container = resetContainerHtml();
-
-                container.innerHTML = `
-                  <div class="dco-card-payment-success">
-                    <p class="dco-card-payment-success-text">Success! Payment authorized.</p>
-                    <img class="dco-card-payment-success-image" src="https://js.processout.com/images/native-apm-assets/payment_success_image.svg" />
-                  </div>
-                `;
-
-                DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent(
-                  invoiceId
-                );
-              },
-              function (err) {
-                const container = resetContainerHtml();
-
-                container.innerHTML = `
-                  <div class="dco-card-payment-error-text">
-                    Something went wrong. Please try again.
-                  </div>
-                `;
-
-                DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(err);
-              }
+              dataMethodName,
+              dataMethodLogo,
+              redirectUrl
             );
-          } else {
+          }
+
+          // Native APMs
+          if (!redirectUrl && dataMethodType === "apm") {
             this.nativeApmView.setupNativeApmWidget(
               this.resetContainerHtml(),
               dataMethodId
@@ -100,6 +89,100 @@ module ProcessOut {
           }
         });
       });
+    }
+
+    private handleApmPayment(
+      invoiceId: string,
+      gatewayName: string,
+      gatewayLogo: string,
+      redirectUrl: string
+    ) {
+      const processOutInstance = this.processOutInstance;
+      const resetContainerHtml = this.resetContainerHtml;
+      const actionHandlerOptions = new ActionHandlerOptions(
+        gatewayName,
+        gatewayLogo
+      );
+      let cardPaymentOptions = {};
+
+      // This is an edge case for everypay, which doesn't support authorize_only
+      if (gatewayName !== "everypay") {
+        cardPaymentOptions = {
+          authorize_only: true,
+        };
+      }
+
+      processOutInstance.handleAction(
+        redirectUrl,
+        (token) => {
+          processOutInstance.makeCardPayment(
+            invoiceId,
+            token,
+            cardPaymentOptions,
+            function (invoiceId) {
+              const container = resetContainerHtml();
+
+              container.innerHTML = `
+                <div class="dco-card-payment-success">
+                  <p class="dco-card-payment-success-text">Success! Payment was successful.</p>
+                  <img class="dco-card-payment-success-image" src="https://js.processout.com/images/native-apm-assets/payment_success_image.svg" />
+                </div>
+              `;
+
+              DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent(invoiceId);
+            },
+            function (err) {
+              console.log(err);
+              const container = resetContainerHtml();
+
+              container.innerHTML = `
+                <div class="dco-card-payment-error-text">
+                  Something went wrong. Please try again.
+                </div>
+              `;
+
+              DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(err);
+            }
+          );
+        },
+        DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent,
+        actionHandlerOptions
+      );
+    }
+
+    private handleSavedCardPayment(savedCardTokenId: string) {
+      const resetContainerHtml = this.resetContainerHtml;
+
+      this.processOutInstance.makeCardPayment(
+        this.paymentConfig.invoiceId,
+        savedCardTokenId,
+        {
+          authorize_only: true,
+        },
+        function (invoiceId) {
+          const container = resetContainerHtml();
+
+          container.innerHTML = `
+            <div class="dco-card-payment-success">
+              <p class="dco-card-payment-success-text">Success! Payment was successful.</p>
+              <img class="dco-card-payment-success-image" src="https://js.processout.com/images/native-apm-assets/payment_success_image.svg" />
+            </div>
+          `;
+
+          DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent(invoiceId);
+        },
+        function (err) {
+          const container = resetContainerHtml();
+
+          container.innerHTML = `
+            <div class="dco-card-payment-error-text">
+              Something went wrong. Please try again.
+            </div>
+          `;
+
+          DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(err);
+        }
+      );
     }
 
     public loadExternalClients() {
@@ -162,11 +245,11 @@ module ProcessOut {
         : "";
 
       return `
-            <div class="dco-wrapper">
-              ${expressCheckoutDiv}
-              ${directCheckoutDiv}
-            </div>
-          `;
+        <div class="dco-wrapper">
+          ${expressCheckoutDiv}
+          ${directCheckoutDiv}
+        </div>
+      `;
     }
 
     private createFormElement() {
@@ -198,7 +281,9 @@ module ProcessOut {
 
             if (type === "apm_customer_token") {
               apmConfig = apm_customer_token;
-            } else if (type === "card_customer_token") {
+            }
+
+            if (type === "card_customer_token") {
               apmConfig = card_customer_token;
             }
 
@@ -207,19 +292,25 @@ module ProcessOut {
               apmConfig,
               display
             );
-          } else if (type === "apm") {
-            directCheckoutHtml += this.getApmPaymentMethodButtonHtml(
-              display,
-              apm
-            );
-          } else if (type === "card") {
-            directCheckoutHtml += this.getCardPaymentMethodButtonHtml(display);
-          } else if (type === "card_customer_token") {
+          }
+
+          if (type === "card_customer_token") {
             expressCheckoutHtml += this.getExpressCheckoutHtml(
               type,
               card_customer_token,
               display
             );
+          }
+
+          if (type === "apm") {
+            directCheckoutHtml += this.getApmPaymentMethodButtonHtml(
+              display,
+              apm
+            );
+          }
+
+          if (type === "card") {
+            directCheckoutHtml += this.getCardPaymentMethodButtonHtml(display);
           }
         }
       );
@@ -264,35 +355,42 @@ module ProcessOut {
       apm: Apm
     ): string {
       return `
-        <div class="dco-pay-button" data-method-id="saved-card" data-card-token-id="${
-          apm.customer_token_id || ""
-        }">
-            <div class="dco-payment-method dco-payment-method--regular" style="background-color: ${DynamicCheckoutColorsUtils.hexToRgba(
-              display.brand_color.dark
-            )}">
-                <img src="${
-                  display.logo.dark_url.vector
-                }" class="dco-payment-method-logo"/>
-                <span class="dco-payment-method-label">${display.name}</span>
-                ${
-                  apm.redirect_url
-                    ? `<span class="dco-payment-method-apm-message">You will be redirected to finalise this payment</span>`
-                    : ""
-                }
-            </div>
-        </div>`;
+        <div
+          class="dco-pay-button"
+          data-method-id="saved-card"
+          data-card-token-id="${apm.customer_token_id || ""}"
+        >
+          <div class="dco-payment-methoddco-payment-method--regular">
+              <img
+                src="${display.logo.dark_url.vector}"
+                class="dco-payment-method-logo"
+              />
+              <span class="dco-payment-method-label">${display.name}</span>
+              ${
+                apm.redirect_url
+                  ? `<span class="dco-payment-method-apm-message">You will be redirected to finalise this payment</span>`
+                  : ""
+              }
+          </div>
+      </div>`;
     }
     private getApmPaymentMethodButtonHtml(display: Display, apm: Apm): string {
       return `
-        <div class="dco-pay-button" data-method-id="${
-          apm.gateway_configuration_id
-        }" data-redirect-url="${apm.redirect_url || ""}">
-            <div class="dco-payment-method dco-payment-method--regular" style="background-color: ${DynamicCheckoutColorsUtils.hexToRgba(
-              display.brand_color.dark
-            )}">
-                <img src="${
-                  display.logo.dark_url.vector
-                }" class="dco-payment-method-logo"/>
+        <div
+          class="dco-pay-button"
+          data-method-type="apm"
+          data-method-name="${display.name}"
+          data-method-id="${apm.gateway_configuration_id}"
+          data-redirect-url="${apm.redirect_url || ""}"
+          data-logo-url="${display.logo.dark_url.vector}"
+          data-gateway-method-name="${apm.gateway_name}"
+          data-method-logo="${apm.gateway_logo_url}"
+        >
+            <div class="dco-payment-method dco-payment-method--regular">
+                <img 
+                  src="${display.logo.dark_url.vector}"
+                  class="dco-payment-method-logo"
+                />
                 <span class="dco-payment-method-label">${display.name}</span>
                 ${
                   apm.redirect_url
@@ -306,12 +404,8 @@ module ProcessOut {
     private getCardPaymentMethodButtonHtml(display: Display): string {
       return `
         <div class="dco-pay-button" data-method-id="card">
-            <div class="dco-payment-method dco-payment-method--regular" style="background-color: ${DynamicCheckoutColorsUtils.hexToRgba(
-              display.brand_color.dark
-            )}">
-                <img src="${
-                  display.logo.dark_url.vector
-                }" class="dco-payment-method-logo"/>
+            <div class="dco-payment-method dco-payment-method--regular">
+                <img src="${display.logo.dark_url.vector}" class="dco-payment-method-logo"/>
                 <span class="dco-payment-method-label">${display.name}</span>
             </div>
         </div>`;
