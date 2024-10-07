@@ -368,7 +368,7 @@ module ProcessOut {
               <span class="dco-payment-method-label">${display.name}</span>
               ${
                 apm.redirect_url
-                  ? `<span class="dco-payment-method-apm-message">You will be redirected to finalise this payment</span>`
+                  ? `<span class="dco-payment-method-apm-message">You will be redirected to finalize this payment</span>`
                   : ""
               }
           </div>
@@ -394,7 +394,7 @@ module ProcessOut {
                 <span class="dco-payment-method-label">${display.name}</span>
                 ${
                   apm.redirect_url
-                    ? `<span class="dco-payment-method-apm-message">You will be redirected to finalise this payment</span>`
+                    ? `<span class="dco-payment-method-apm-message">You will be redirected to finalize this payment</span>`
                     : ""
                 }
             </div>
