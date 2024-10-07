@@ -27,32 +27,32 @@ module ProcessOut {
 
       this.applyDynamicStyles();
 
-      return this.getInvoiceDetails({
-        onFetch: DynamicCheckoutEventsUtils.dispatchWidgetLoadingEvent,
-        onSuccess: this.onGetInvoiceSuccess.bind(this),
-        onError: this.onGetInvoiceError.bind(this),
-      });
+      return this.getInvoiceDetails(
+        DynamicCheckoutEventsUtils.dispatchWidgetLoadingEvent,
+        this.onGetInvoiceSuccess.bind(this),
+        this.onGetInvoiceError.bind(this)
+      );
     }
 
-    private getInvoiceDetails(actions: {
-      onFetch: Function;
-      onSuccess: Function;
-      onError: Function;
-    }) {
-      actions.onFetch();
+    private getInvoiceDetails(
+      onFetch: Function,
+      onSuccess: Function,
+      onError: Function
+    ) {
+      onFetch();
 
       this.processOutInstance.apiRequest(
         "GET",
         `invoices/${this.paymentConfig.invoiceId}?expand=transaction`,
         {},
-        actions.onSuccess.bind(this),
-        actions.onError.bind(this),
+        onSuccess.bind(this),
+        onError.bind(this),
         0,
         {
           isLegacy: false,
           clientSecret: this.paymentConfig.clientSecret,
-        },
-      )
+        }
+      );
     }
 
     private onGetInvoiceSuccess(data: any) {
@@ -64,13 +64,19 @@ module ProcessOut {
         );
       }
 
-      if (data.invoice.transaction.status !== 'waiting') {
+      if (data.invoice.transaction.status !== "waiting") {
         this.loadErrorView("We were unable to process your payment.");
 
         return DynamicCheckoutEventsUtils.dispatchTransactionErrorEvent({
           invoiceId: data.invoice.id,
           returnUrl: data.invoice.return_url,
         });
+      }
+
+      if (!data.invoice.payment_methods) {
+        throw new Error(
+          "There is no Dynamic Checkout configuration supporting this invoice"
+        );
       }
 
       this.paymentConfig.setInvoiceDetails(data.invoice);
@@ -92,14 +98,17 @@ module ProcessOut {
           message: Translator.translateError(errorCode),
         };
 
-      this.loadErrorView()
+      this.loadErrorView();
+
       DynamicCheckoutEventsUtils.dispatchInvoiceFetchingErrorEvent(errorData);
     }
 
     private loadErrorView(text?: string) {
       const errorView = document.createElement("div");
+
       errorView.setAttribute("class", "dco-error-view");
       errorView.innerText = text || "Something went wrong. Please try again.";
+
       this.loadView(errorView);
     }
 
@@ -107,12 +116,12 @@ module ProcessOut {
       const paymentMethodsView = new DynamicCheckoutPaymentMethodsView(
         this,
         this.processOutInstance,
-        this.paymentConfig,
+        this.paymentConfig
       );
 
       this.loadView(paymentMethodsView.getViewElement());
 
-      paymentMethodsView.setupEventListeners();
+      paymentMethodsView.setupPaymentMethodsEventListeners();
       paymentMethodsView.loadExternalClients();
 
       DynamicCheckoutEventsUtils.dispatchWidgetReadyEvent();
@@ -139,7 +148,9 @@ module ProcessOut {
 
     private applyDynamicStyles() {
       const styleElement = document.createElement("style");
+
       styleElement.innerHTML = dynamicStyles;
+
       document.head.appendChild(styleElement);
     }
   }

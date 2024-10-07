@@ -199,7 +199,7 @@ module ProcessOut {
     private getPaymentAuthorizeSuccessHtml() {
       return `
         <div class="dco-card-payment-success">
-          <p class="dco-card-payment-success-text">Success! Payment authorized.</p>
+          <p class="dco-card-payment-success-text">Success! Payment was successful.</p>
           <img class="dco-card-payment-success-image" src="https://js.processout.com/images/native-apm-assets/payment_success_image.svg" />
         </div>
       `;
