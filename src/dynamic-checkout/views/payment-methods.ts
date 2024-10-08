@@ -44,7 +44,7 @@ module ProcessOut {
       return this.formElement;
     }
 
-    public setupPaymentMethodsEventListeners(): void {
+    public setupPaymentMethodsEventListeners() {
       const buttons = document.querySelectorAll(
         ".dco-pay-button[data-method-id]"
       );
@@ -103,14 +103,6 @@ module ProcessOut {
         gatewayName,
         gatewayLogo
       );
-      let cardPaymentOptions = {};
-
-      // This is an edge case for everypay, which doesn't support authorize_only
-      if (gatewayName !== "everypay") {
-        cardPaymentOptions = {
-          authorize_only: true,
-        };
-      }
 
       processOutInstance.handleAction(
         redirectUrl,
@@ -118,7 +110,10 @@ module ProcessOut {
           processOutInstance.makeCardPayment(
             invoiceId,
             token,
-            cardPaymentOptions,
+            {
+              authorize_only: true,
+              allow_fallback_to_sale: true,
+            },
             function (invoiceId) {
               const container = resetContainerHtml();
 
