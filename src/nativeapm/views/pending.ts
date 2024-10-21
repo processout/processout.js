@@ -40,12 +40,12 @@ module ProcessOut {
       markdownLibraryInstance: any,
       theme: NativeApmThemeConfigType,
       capturePayment: Function,
-      customerMessage: string,
+      customerMessage: string
     ) {
       if (!gatewayConfiguration) {
         throw new Exception(
-          'default',
-          'Gateway configuration is not defined. You must provide valid gateway configuration'
+          "default",
+          "Gateway configuration is not defined. You must provide valid gateway configuration"
         );
       }
 
@@ -87,11 +87,11 @@ module ProcessOut {
      * This function creates the merchant image element
      */
     private createMerchantImageElement() {
-      const merchantImg = document.createElement('img');
+      const merchantImg = document.createElement("img");
 
-      merchantImg.setAttribute('class', 'native-apm-payment-provider-logo');
+      merchantImg.setAttribute("class", "native-apm-payment-provider-logo");
       merchantImg.setAttribute(
-        'src',
+        "src",
         this.gatewayConfiguration.native_apm.gateway.logo_url
       );
 
@@ -104,9 +104,9 @@ module ProcessOut {
      * This function creates the wrapper element
      */
     private createWrapper() {
-      const wrapper = document.createElement('div');
+      const wrapper = document.createElement("div");
 
-      wrapper.setAttribute('class', 'native-apm-view-wrapper');
+      wrapper.setAttribute("class", "native-apm-view-wrapper");
 
       StylesUtils.styleElement(wrapper, this.theme.wrapper);
 
@@ -117,13 +117,15 @@ module ProcessOut {
      * This function creates the customer message element
      */
     private createCustomerMessage() {
-      const customerMessage = document.createElement('p');
+      const customerMessage = document.createElement("p");
 
-      customerMessage.setAttribute('class', 'native-apm-message');
+      customerMessage.setAttribute("class", "native-apm-message");
 
       StylesUtils.styleElement(customerMessage, this.theme.message);
 
-      const message = this.gatewayConfiguration.native_apm.gateway.customer_action_message || this.customerActionMessage;
+      const message =
+        this.gatewayConfiguration.native_apm.gateway.customer_action_message ||
+        this.customerActionMessage;
       customerMessage.innerHTML =
         this.markdownLibraryInstance && this.markdownLibraryInstance.makeHtml
           ? this.markdownLibraryInstance.makeHtml(message)
@@ -147,13 +149,13 @@ module ProcessOut {
      * This function creates the customer message element
      */
     private createCustomerMessageImage() {
-      const customerMessageImage = document.createElement('img');
+      const customerMessageImage = document.createElement("img");
 
       StylesUtils.styleElement(customerMessageImage, this.theme.actionImage);
 
-      customerMessageImage.setAttribute('class', 'native-apm-action-image');
+      customerMessageImage.setAttribute("class", "native-apm-action-image");
       customerMessageImage.setAttribute(
-        'src',
+        "src",
         this.gatewayConfiguration.native_apm.gateway.customer_action_image_url
       );
 

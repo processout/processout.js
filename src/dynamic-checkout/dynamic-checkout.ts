@@ -4,16 +4,24 @@ module ProcessOut {
   export class DynamicCheckout {
     processOutInstance: ProcessOut;
     paymentConfig: DynamicCheckoutPaymentConfig;
+    theme: DynamicCheckoutTheme;
     dcoContainer: Element;
     widgetWrapper: Element;
     invoiceDetails: Invoice;
 
     constructor(
       processOutInstance: ProcessOut,
-      config: DynamicCheckoutPaymentConfigType
+      config: DynamicCheckoutPaymentConfigType,
+      theme: DynamicCheckoutThemeType
     ) {
       this.processOutInstance = processOutInstance;
       this.paymentConfig = new DynamicCheckoutPaymentConfig(config);
+
+      if (theme) {
+        this.theme = new DynamicCheckoutTheme(theme);
+      }
+
+      this.applyDefaultStyles();
     }
 
     public mount(containerSelector: string) {
@@ -25,13 +33,24 @@ module ProcessOut {
         );
       }
 
-      this.applyDynamicStyles();
-
       return this.getInvoiceDetails(
         DynamicCheckoutEventsUtils.dispatchWidgetLoadingEvent,
         this.onGetInvoiceSuccess.bind(this),
         this.onGetInvoiceError.bind(this)
       );
+    }
+
+    public loadDynamicCheckoutView() {
+      const paymentMethodsView = new DynamicCheckoutPaymentMethodsView(
+        this,
+        this.processOutInstance,
+        this.paymentConfig,
+        this.theme
+      );
+
+      this.loadView(paymentMethodsView.element);
+
+      DynamicCheckoutEventsUtils.dispatchWidgetReadyEvent();
     }
 
     private getInvoiceDetails(
@@ -57,26 +76,38 @@ module ProcessOut {
 
     private onGetInvoiceSuccess(data: any) {
       if (!data.success) {
-        this.loadErrorView();
+        this.loadView(new DynamicCheckoutPaymentErrorView().element);
 
         return DynamicCheckoutEventsUtils.dispatchInvoiceFetchingErrorEvent(
           data
         );
       }
 
+      if (!data.invoice.payment_methods) {
+        this.loadView(
+          new DynamicCheckoutPaymentErrorView(
+            "We were unable to process your payment."
+          ).element
+        );
+
+        return DynamicCheckoutEventsUtils.dispatchNoDynamicCheckoutConfigurationEvent(
+          {
+            invoiceId: data.invoice.id,
+          }
+        );
+      }
+
       if (data.invoice.transaction.status !== "waiting") {
-        this.loadErrorView("We were unable to process your payment.");
+        this.loadView(
+          new DynamicCheckoutPaymentErrorView(
+            "We were unable to process your payment."
+          ).element
+        );
 
         return DynamicCheckoutEventsUtils.dispatchTransactionErrorEvent({
           invoiceId: data.invoice.id,
           returnUrl: data.invoice.return_url,
         });
-      }
-
-      if (!data.invoice.payment_methods) {
-        throw new Error(
-          "There is no Dynamic Checkout configuration supporting this invoice"
-        );
       }
 
       this.paymentConfig.setInvoiceDetails(data.invoice);
@@ -91,65 +122,37 @@ module ProcessOut {
     ) {
       let errorData = req.response;
 
-      if (!req.response && errorCode)
+      if (!errorData && errorCode)
         errorData = {
           success: false,
           error_type: errorCode,
           message: Translator.translateError(errorCode),
         };
 
-      this.loadErrorView();
-
       DynamicCheckoutEventsUtils.dispatchInvoiceFetchingErrorEvent(errorData);
+
+      this.loadView(new DynamicCheckoutPaymentErrorView().element);
     }
 
-    private loadErrorView(text?: string) {
-      const errorView = document.createElement("div");
-
-      errorView.setAttribute("class", "dco-error-view");
-      errorView.innerText = text || "Something went wrong. Please try again.";
-
-      this.loadView(errorView);
-    }
-
-    public loadDynamicCheckoutView() {
-      const paymentMethodsView = new DynamicCheckoutPaymentMethodsView(
-        this,
-        this.processOutInstance,
-        this.paymentConfig
-      );
-
-      this.loadView(paymentMethodsView.getViewElement());
-
-      paymentMethodsView.setupPaymentMethodsEventListeners();
-      paymentMethodsView.loadExternalClients();
-
-      DynamicCheckoutEventsUtils.dispatchWidgetReadyEvent();
-    }
-
-    private loadView(view: HTMLElement) {
+    private loadView(view: Element) {
       if (this.widgetWrapper) {
         this.dcoContainer.removeChild(this.widgetWrapper);
       }
 
-      this.widgetWrapper = this.createWidgetWrapper();
+      this.widgetWrapper = document.createElement("div");
+      this.widgetWrapper.setAttribute(
+        "class",
+        "dynamic-checkout-widget-wrapper"
+      );
 
       this.widgetWrapper.appendChild(view);
       this.dcoContainer.appendChild(this.widgetWrapper);
     }
 
-    private createWidgetWrapper() {
-      const widgetWrapper = document.createElement("div");
-
-      widgetWrapper.setAttribute("class", "dynamic-checkout-widget-wrapper");
-
-      return widgetWrapper;
-    }
-
-    private applyDynamicStyles() {
+    private applyDefaultStyles() {
       const styleElement = document.createElement("style");
 
-      styleElement.innerHTML = dynamicStyles;
+      styleElement.innerHTML = defaultStyles;
 
       document.head.appendChild(styleElement);
     }

@@ -2,34 +2,6 @@
 
 module ProcessOut {
   export class ApplePayClient {
-    libraryUrl =
-      "https://applepay.cdn-apple.com/jsapi/1.latest/apple-pay-sdk.js";
-
-    // It's needed because not every network that we support is supported by Apple Pay Web SDK
-    // and some of them are called slightly different than the ones we're using e.g. "amex" instead of "american express"
-    networksMap = {
-      "american express": "amex",
-      bancomat: "bancomat",
-      bancontact: "bancontact",
-      "carte bancaire": "cartesbancaires",
-      "china union pay": "chinaunionpay",
-      dankort: "dankort",
-      discover: "discover",
-      eftpos: "eftpos",
-      electron: "electron",
-      elo: "elo",
-      girocard: "girocard",
-      interac: "interac",
-      jcb: "jcb",
-      mada: "mada",
-      maestro: "maestro",
-      mastercard: "mastercard",
-      "nspk mir": "mir",
-      "private label": "privateLabel",
-      visa: "visa",
-      vpay: "vpay",
-    };
-
     processOutInstance: ProcessOut;
 
     constructor(processOutInstance: ProcessOut) {
@@ -38,14 +10,13 @@ module ProcessOut {
 
     public loadButton(
       buttonContainer: HTMLElement,
-      getViewContainer: () => HTMLElement,
-      invoiceData: Invoice
+      invoiceData: Invoice,
+      getViewContainer: () => HTMLElement
     ) {
       const applePayScript = document.createElement("script");
       const initializeApplePay = this.initializeApplePay.bind(this);
 
-      applePayScript.src = this.libraryUrl;
-
+      applePayScript.src = applePaySdkUrl;
       applePayScript.onload = () => {
         buttonContainer.innerHTML = `<apple-pay-button buttonstyle="black" type="plain" locale="en-US"></apple-pay-button>`;
         initializeApplePay(invoiceData, buttonContainer, getViewContainer);
@@ -83,14 +54,14 @@ module ProcessOut {
     }
 
     private getSupportedNetworks(invoiceData: Invoice) {
+      let supportedNetworks = [];
+
       const applePayPaymentMethodData =
         this.getApplePayPaymentMethodData(invoiceData);
 
-      let supportedNetworks = [];
-
       applePayPaymentMethodData.supported_networks.forEach((network) => {
-        if (this.networksMap[network]) {
-          supportedNetworks.push(this.networksMap[network]);
+        if (networksMap[network]) {
+          supportedNetworks.push(networksMap[network]);
         }
       });
 
@@ -98,10 +69,10 @@ module ProcessOut {
     }
 
     private createApplePaySession(invoiceData: Invoice) {
+      const supportedNetworks = this.getSupportedNetworks(invoiceData);
+
       const applePayPaymentMethodData =
         this.getApplePayPaymentMethodData(invoiceData);
-
-      const supportedNetworks = this.getSupportedNetworks(invoiceData);
 
       const session = this.processOutInstance.applePay.newSession(
         {
@@ -120,9 +91,8 @@ module ProcessOut {
         DynamicCheckoutEventsUtils.dispatchApplePaySessionError
       );
 
-      session.onpaymentauthorizedPostprocess = (event) => {
-        DynamicCheckoutEventsUtils.dispatchApplePayAuthorizedPostProcessEvent();
-      };
+      session.onpaymentauthorizedPostprocess =
+        DynamicCheckoutEventsUtils.dispatchApplePayAuthorizedPostProcessEvent;
 
       return session;
     }
@@ -167,9 +137,6 @@ module ProcessOut {
       invoiceData: Invoice,
       getViewContainer: () => HTMLElement
     ) {
-      const getPaymentAuthorizeSuccessHtml =
-        this.getPaymentAuthorizeSuccessHtml.bind(this);
-
       this.processOutInstance.makeCardPayment(
         invoiceData.id,
         cardToken,
@@ -177,32 +144,21 @@ module ProcessOut {
           authorize_only: true,
         },
         function (invoiceId) {
-          getViewContainer().innerHTML = getPaymentAuthorizeSuccessHtml();
-
+          this.resetContainerHtml().appendChild(
+            new DynamicCheckoutPaymentSuccessView().element
+          );
           DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
             invoiceId,
-            returnUrl: invoiceData.return_url,
+            returnUrl: this.paymentConfig.invoiceDetails.return_url,
           });
         },
-        function (err) {
-          getViewContainer().innerHTML = `
-            <div class="dco-card-payment-error-text">
-              Something went wrong. Please try again.
-            </div>
-          `;
-
-          DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(err);
+        function (error) {
+          this.resetContainerHtml().appendChild(
+            new DynamicCheckoutPaymentErrorView().element
+          );
+          DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error);
         }
       );
-    }
-
-    private getPaymentAuthorizeSuccessHtml() {
-      return `
-        <div class="dco-card-payment-success">
-          <p class="dco-card-payment-success-text">Success! Payment was successful.</p>
-          <img class="dco-card-payment-success-image" src="https://js.processout.com/images/native-apm-assets/payment_success_image.svg" />
-        </div>
-      `;
     }
 
     private getApplePayPaymentMethodData(invoiceData: Invoice) {
