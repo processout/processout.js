@@ -4,6 +4,10 @@
     <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
     <title>ProcessOut Dynamic Checkout Example Page</title>
     <style>
+      html {
+        font-size: 14px;
+      }
+
       body {
         width: 100%;
         font-family: "Arial";
@@ -26,17 +30,20 @@
     <script src="https://js.processout.com/processout.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", function () {
-        const projectId = "project-id"
-        const invoiceId = "invoice-id"
-        const clientSecret = "client-secret"
+        // Fill in with your project ID, invoice ID and client secret
+        const projectId = "project_id"
+        const invoiceId = "invoice_id"
+        const clientSecret = "client_secret"
 
         const client = new ProcessOut.ProcessOut(projectId)
 
-        const dynamicCheckout = client.setupDynamicCheckout({
+        const config = {
           invoiceId,
           projectId,
-          clientSecret
-        })
+          clientSecret,
+        }
+
+        const dynamicCheckout = client.setupDynamicCheckout(config)
 
         dynamicCheckout.mount("#dynamic-cko-container")
 

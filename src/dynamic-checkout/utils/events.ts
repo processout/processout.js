@@ -10,6 +10,8 @@ module ProcessOut {
       "processout_dynamic_checkout_tokenize_payment_success",
     TOKENIZE_PAYMENT_ERROR:
       "processout_dynamic_checkout_tokenize_payment_error",
+    NO_DYNAMIC_CHECKOUT_CONFIGURATION:
+      "processout_dynamic_checkout_no_dynamic_checkout_configuration",
     PAYMENT_ERROR: "processout_dynamic_checkout_payment_error",
     PAYMENT_SUCCESS: "processout_dynamic_checkout_payment_success",
     TRANSACTION_ERROR: "processout_dynamic_checkout_transaction_error",
@@ -58,6 +60,14 @@ module ProcessOut {
     static dispatchTokenizePaymentErrorEvent(errorData: any) {
       const event = EventsUtils.createEvent(
         DYNAMIC_CHECKOUT_EVENTS.TOKENIZE_PAYMENT_ERROR,
+        errorData
+      );
+      return window.dispatchEvent(event);
+    }
+
+    static dispatchNoDynamicCheckoutConfigurationEvent(errorData: any) {
+      const event = EventsUtils.createEvent(
+        DYNAMIC_CHECKOUT_EVENTS.NO_DYNAMIC_CHECKOUT_CONFIGURATION,
         errorData
       );
       return window.dispatchEvent(event);

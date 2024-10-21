@@ -2,8 +2,6 @@
 
 module ProcessOut {
   export class GooglePayClient {
-    libraryUrl = "https://pay.google.com/gp/p/js/pay.js";
-
     googleClient: any;
     processOutInstance: ProcessOut;
     isReadyToPayRequest: {
@@ -58,13 +56,12 @@ module ProcessOut {
 
     public loadButton(
       buttonContainer: HTMLElement,
-      getViewContainer: () => HTMLElement,
-      invoiceData: Invoice
+      invoiceData: Invoice,
+      getViewContainer: () => HTMLElement
     ) {
       const googleClientScript = document.createElement("script");
 
-      googleClientScript.src = this.libraryUrl;
-
+      googleClientScript.src = googlePaySdkUrl;
       googleClientScript.onload = () => {
         this.googleClient =
           window.globalThis && window.globalThis.google
@@ -106,9 +103,7 @@ module ProcessOut {
             buttonContainer.appendChild(button);
           }
         })
-        .catch(function (err) {
-          DynamicCheckoutEventsUtils.dispatchGooglePayLoadError(err);
-        });
+        .catch(DynamicCheckoutEventsUtils.dispatchGooglePayLoadError);
     }
 
     private makePayment(
@@ -124,8 +119,6 @@ module ProcessOut {
           );
 
           const processOutInstance = this.processOutInstance;
-          const getPaymentAuthorizeSuccessHtml =
-            this.getPaymentAuthorizeSuccessHtml;
 
           processOutInstance.tokenize(
             paymentToken,
@@ -142,32 +135,26 @@ module ProcessOut {
                   authorize_only: true,
                 },
                 function (invoiceId) {
-                  getViewContainer().innerHTML =
-                    getPaymentAuthorizeSuccessHtml();
-
+                  this.resetContainerHtml().appendChild(
+                    new DynamicCheckoutPaymentSuccessView().element
+                  );
                   DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
                     invoiceId,
-                    returnUrl: invoiceData.return_url,
+                    returnUrl: this.paymentConfig.invoiceDetails.return_url,
                   });
                 },
-                function (err) {
-                  getViewContainer().innerHTML = `
-                    <div class="dco-card-payment-error-text">
-                      Something went wrong. Please try again.
-                    </div>
-                  `;
-
-                  DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(err);
+                function (error) {
+                  this.resetContainerHtml().appendChild(
+                    new DynamicCheckoutPaymentErrorView().element
+                  );
+                  DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error);
                 }
               );
             },
             function (err) {
-              getViewContainer().innerHTML = `
-                <div class="dco-card-payment-error-text">
-                  Something went wrong. Please try again.
-                </div>
-              `;
-
+              this.resetContainerHtml().appendChild(
+                new DynamicCheckoutPaymentErrorView().element
+              );
               DynamicCheckoutEventsUtils.dispatchTokenizePaymentErrorEvent({
                 message: `Tokenize payment error: ${JSON.stringify(
                   err,
@@ -178,9 +165,7 @@ module ProcessOut {
             }
           );
         })
-        .catch((err) => {
-          DynamicCheckoutEventsUtils.dispatchGooglePayLoadError(err);
-        });
+        .catch(DynamicCheckoutEventsUtils.dispatchGooglePayLoadError);
     }
 
     private prepareIsReadyToPayRequest(invoiceData: Invoice) {
@@ -265,15 +250,6 @@ module ProcessOut {
       });
 
       return googlePayMethod;
-    }
-
-    private getPaymentAuthorizeSuccessHtml() {
-      return `
-        <div class="dco-card-payment-success">
-          <p class="dco-card-payment-success-text">Success! Payment was successful.</p>
-          <img class="dco-card-payment-success-image" src="https://js.processout.com/images/native-apm-assets/payment_success_image.svg" />
-        </div>
-      `;
     }
   }
 }

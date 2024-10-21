@@ -79,12 +79,6 @@ module ProcessOut {
     paymentConfig: NativeApmPaymentConfig;
 
     /**
-     * Options of Native APM payment
-     * @type {NativeApmWidgetOptionsType}
-     */
-    widgetOptions: NativeApmWidgetOptionsType;
-
-    /**
      * Configuration of Native APM gateway
      * @type {GatewayConfiguration}
      */
@@ -114,12 +108,10 @@ module ProcessOut {
      */
     constructor(
       processOutInstance: ProcessOut,
-      paymentConfig: NativeApmPaymentConfigType,
-      options?: NativeApmWidgetOptionsType
+      paymentConfig: NativeApmPaymentConfigType
     ) {
       this.processOutInstance = processOutInstance;
       this.paymentConfig = new NativeApmPaymentConfig(paymentConfig);
-      this.widgetOptions = options;
       this.theme = new NativeApmThemeConfig();
       this.loadMarkdownLibrary();
     }
@@ -128,8 +120,12 @@ module ProcessOut {
      * This function mounts the Native APM widget on the page
      * @param  {string} containerSelector
      */
-    public mount(containerSelector: string) {
-      this.napmContainer = document.querySelector(containerSelector);
+    public mount(containerSelector: string | HTMLElement) {
+      if (typeof containerSelector === "string") {
+        this.napmContainer = document.querySelector(containerSelector);
+      } else {
+        this.napmContainer = containerSelector;
+      }
 
       if (!this.napmContainer) {
         throw new Exception(
@@ -187,8 +183,7 @@ module ProcessOut {
           this.gatewayConfiguration.native_apm,
           this.proceedPayment.bind(this),
           this.theme,
-          this.prefilledData,
-          this.widgetOptions,
+          this.prefilledData
         );
 
         EventsUtils.dispatchWidgetReadyEvent();
@@ -206,7 +201,8 @@ module ProcessOut {
           this.theme,
           this.capturePayment.bind(this),
           (this.gatewayConfiguration.native_apm.parameter_values &&
-            this.gatewayConfiguration.native_apm.parameter_values.customer_action_message) ||
+            this.gatewayConfiguration.native_apm.parameter_values
+              .customer_action_message) ||
             ""
         );
 
@@ -330,7 +326,7 @@ module ProcessOut {
           this.markdownLibraryInstance,
           this.theme,
           this.capturePayment.bind(this),
-          data.native_apm.parameterValues.customer_action_message,
+          data.native_apm.parameterValues.customer_action_message
         );
 
         EventsUtils.dispatchPaymentInitEvent();
@@ -438,7 +434,9 @@ module ProcessOut {
         this.theme
       );
 
-      EventsUtils.dispatchPaymentSuccessEvent({ returnUrl: this.paymentConfig.returnUrl });
+      EventsUtils.dispatchPaymentSuccessEvent({
+        returnUrl: this.paymentConfig.returnUrl,
+      });
 
       return this.loadView(successView.getViewElement());
     }
