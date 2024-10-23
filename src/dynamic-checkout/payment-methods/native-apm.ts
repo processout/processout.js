@@ -33,11 +33,13 @@ module ProcessOut {
         returnUrl: invoiceDetails.return_url,
       });
 
+      const backgroundColor = this.theme && this.theme.payButtonColor ? this.theme.payButtonColor : "#242C38";
+      const color = this.theme && this.theme.payButtonTextColor ? this.theme.payButtonTextColor : "white";
       this.nativeApmInstance.setTheme({
         buttons: {
           default: {
-            backgroundColor: this.theme?.payButtonColor || "#242C38",
-            color: this.theme?.payButtonTextColor || "white",
+            backgroundColor: backgroundColor,
+            color: color,
           },
         },
       });

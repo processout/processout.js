@@ -43,12 +43,12 @@ module ProcessOut {
         },
       ]);
 
-      if (this.theme?.payButtonColor) {
-        payButton.style.backgroundColor = this.theme?.payButtonColor;
+      if (this.theme && this.theme.payButtonColor) {
+        payButton.style.backgroundColor = this.theme.payButtonColor;
       }
 
-      if (this.theme?.payButtonTextColor) {
-        payButton.style.color = this.theme?.payButtonTextColor;
+      if (this.theme && this.theme.payButtonTextColor) {
+        payButton.style.color = this.theme.payButtonTextColor;
       }
 
       HTMLElements.appendChildren(wrapper, [payButton]);

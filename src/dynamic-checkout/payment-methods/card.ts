@@ -221,12 +221,12 @@ module ProcessOut {
         },
       ]);
 
-      if (this.theme?.payButtonColor) {
-        payButton.style.backgroundColor = this.theme?.payButtonColor;
+      if (this.theme && this.theme.payButtonColor) {
+        payButton.style.backgroundColor = this.theme.payButtonColor;
       }
 
-      if (this.theme?.payButtonTextColor) {
-        payButton.style.color = this.theme?.payButtonTextColor;
+      if (this.theme && this.theme.payButtonTextColor) {
+        payButton.style.color = this.theme.payButtonTextColor;
       }
 
       HTMLElements.appendChildren(saveForFutureWrapper, [
@@ -543,12 +543,21 @@ module ProcessOut {
       countryInput.addEventListener("change", (e) => {
         const selectElement = e.target as HTMLSelectElement;
 
-        billingAddressFieldsWrapper.replaceChildren(
+        this.replaceChildren(
+          billingAddressFieldsWrapper,
           ...this.getBillingAddressField(selectElement.value)
         );
       });
 
       return countryInput;
+    }
+
+    private replaceChildren(parent: HTMLElement, ...newChildren: HTMLElement[]): void {
+      while (parent.firstChild) {
+        parent.removeChild(parent.firstChild);
+      }
+
+      newChildren.forEach(child => parent.appendChild(child));
     }
 
     private getBillingAddressField(country: string) {
