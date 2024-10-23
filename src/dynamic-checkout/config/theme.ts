@@ -11,8 +11,11 @@ module ProcessOut {
     payButtonTextColor?: string;
 
     constructor(config?: DynamicCheckoutThemeType) {
-      this.payButtonColor = config?.payButtonColor;
-      this.payButtonTextColor = config?.payButtonTextColor;
+      if (!config) {
+        return;
+      }
+      this.payButtonColor = config.payButtonColor;
+      this.payButtonTextColor = config.payButtonTextColor;
     }
 
     public getConfig(): DynamicCheckoutThemeType {
