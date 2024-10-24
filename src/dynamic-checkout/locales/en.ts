@@ -1,0 +1,28 @@
+module ProcessOut {
+  export const en = {
+    "apm-redirect-message": "You'll be redirected to finalize payment.",
+    "save-for-future-label": "Save for future payments",
+    "continue-with-apm-button": "Continue with",
+    "pay-button-text": "Pay",
+    "card-details-section-title": "Card details",
+    "cardholder-name-label": "Cardholder name",
+    "billing-address-section-title": "Billing address",
+    "country-label": "Country",
+    "select-country-placeholder": "Select country",
+    "select-state-placeholder": "Select state",
+    "card-number-error-message": "Card number is invalid",
+    "expiry-date-error-message": "Expiry date is invalid",
+    "cvc-error-message": "CVC is invalid",
+    "cardholder-name-error-message": "Cardholder name is invalid",
+    "payment-error-message": "Something went wrong. Please try again.",
+    "express-checkout-header": "Express checkout",
+    "other-payment-methods-header": "Other payment methods",
+    "payment-success-message": "This payment is completed.",
+    "payment-error-generic-message": "We were unable to process your payment.",
+    "street1-label": "Address line 1",
+    "street2-label": "Address line 2",
+    "city-label": "City",
+    "postcode-label": "Postal code",
+    "state-label": "State",
+  };
+}

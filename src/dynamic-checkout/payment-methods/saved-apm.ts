@@ -15,9 +15,17 @@ module ProcessOut {
       theme: DynamicCheckoutThemeType,
       resetContainerHtml: () => HTMLElement
     ) {
+      const rightContentElement = HTMLElements.createElement({
+        tagName: "div",
+        classNames: ["dco-payment-method-right-content"],
+      });
+
+      rightContentElement.textContent = paymentMethod.display.description;
+
       super(
         paymentMethod.display.name,
-        paymentMethod.display.logo.dark_url.vector
+        paymentMethod.display.logo.dark_url.vector,
+        rightContentElement
       );
 
       this.processOutInstance = processOutInstance;
@@ -38,7 +46,12 @@ module ProcessOut {
         {
           tagName: "button",
           classNames: ["dco-payment-method-button-pay-button"],
-          textContent: `Pay ${this.paymentConfig.invoiceDetails.amount} ${this.paymentConfig.invoiceDetails.currency}`,
+          textContent: `${Translations.getText(
+            "pay-button-text",
+            this.paymentConfig.locale
+          )} ${this.paymentConfig.invoiceDetails.amount} ${
+            this.paymentConfig.invoiceDetails.currency
+          }`,
         },
       ]);
 
@@ -63,6 +76,8 @@ module ProcessOut {
         allow_fallback_to_sale: true,
       };
 
+      this.setButtonLoading();
+
       this.processOutInstance.makeCardPayment(
         this.paymentConfig.invoiceId,
         this.paymentMethod.apm_customer_token.customer_token_id,
@@ -74,7 +89,7 @@ module ProcessOut {
 
     private handlePaymentSuccess(invoiceId: string) {
       this.resetContainerHtml().appendChild(
-        new DynamicCheckoutPaymentSuccessView().element
+        new DynamicCheckoutPaymentSuccessView(this.paymentConfig).element
       );
       DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
         invoiceId,
@@ -84,9 +99,25 @@ module ProcessOut {
 
     private handlePaymentError(error) {
       this.resetContainerHtml().appendChild(
-        new DynamicCheckoutPaymentErrorView().element
+        new DynamicCheckoutPaymentErrorView(this.paymentConfig).element
       );
       DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error);
+    }
+
+    private setButtonLoading() {
+      const payButton = document.querySelector(
+        ".dco-payment-method-button-pay-button"
+      ) as HTMLButtonElement;
+
+      payButton.disabled = true;
+      payButton.textContent = "";
+
+      const spinner = HTMLElements.createElement({
+        tagName: "span",
+        classNames: ["dco-payment-method-button-pay-button-spinner"],
+      });
+
+      HTMLElements.appendChildren(payButton, [spinner]);
     }
   }
 }

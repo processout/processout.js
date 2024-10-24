@@ -1,40 +1,13 @@
 /// <reference path="../references.ts" />
-/**
- * ProcessOut module/namespace
- */
+
 module ProcessOut {
-  /**
-   * ProcessOut Native APM class for handling pending view
-   */
   export class NativeApmPendingView {
-    /**
-     * Instance of JS library which handles markdown
-     * @type {any}
-     */
     markdownLibraryInstance: any;
-    /**
-     * Native APM form element
-     * @type {HTMLElement}
-     */
     viewElement: HTMLElement;
-
-    /**
-     * Theme of the Native APM widget
-     * @type {NativeApmThemeConfigType}
-     */
     theme: NativeApmThemeConfigType;
-
-    /**
-     * Gateway configuration data
-     * @type {GatewayConfiguration}
-     */
     gatewayConfiguration: GatewayConfiguration;
-
     customerActionMessage: string;
 
-    /**
-     * Native APM Form constructor
-     */
     constructor(
       gatewayConfiguration: GatewayConfiguration,
       markdownLibraryInstance: any,
@@ -58,16 +31,10 @@ module ProcessOut {
       capturePayment();
     }
 
-    /**
-     * This function returns the view element
-     */
     public getViewElement() {
       return this.viewElement;
     }
 
-    /**
-     * This function creates the view element
-     */
     private createViewElement() {
       const wrapper = this.createWrapper();
       const merchantImg = this.createMerchantImageElement();
@@ -83,9 +50,6 @@ module ProcessOut {
       return wrapper;
     }
 
-    /**
-     * This function creates the merchant image element
-     */
     private createMerchantImageElement() {
       const merchantImg = document.createElement("img");
 
@@ -100,9 +64,6 @@ module ProcessOut {
       return merchantImg;
     }
 
-    /**
-     * This function creates the wrapper element
-     */
     private createWrapper() {
       const wrapper = document.createElement("div");
 
@@ -113,9 +74,6 @@ module ProcessOut {
       return wrapper;
     }
 
-    /**
-     * This function creates the customer message element
-     */
     private createCustomerMessage() {
       const customerMessage = document.createElement("p");
 
@@ -134,9 +92,6 @@ module ProcessOut {
       return customerMessage;
     }
 
-    /**
-     * This function creates loading spinner
-     */
     private createLoadingSpinner() {
       const spinner = new NativeApmSpinner(this.theme).getSpinnerElement();
 
@@ -145,9 +100,6 @@ module ProcessOut {
       return spinner;
     }
 
-    /**
-     * This function creates the customer message element
-     */
     private createCustomerMessageImage() {
       const customerMessageImage = document.createElement("img");
 

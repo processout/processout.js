@@ -1,3 +1,5 @@
+/// <reference path="../references.ts" />
+
 module ProcessOut {
   export class DynamicCheckoutPaymentSuccessView {
     private successImageUrl =
@@ -5,7 +7,7 @@ module ProcessOut {
 
     public element: Element;
 
-    constructor() {
+    constructor(paymentConfig: DynamicCheckoutPaymentConfigType) {
       const [element, image, message] = HTMLElements.createMultipleElements([
         {
           tagName: "div",
@@ -21,7 +23,10 @@ module ProcessOut {
         {
           tagName: "p",
           classNames: ["dco-card-payment-success-text"],
-          textContent: "This payment is completed.",
+          textContent: Translations.getText(
+            "payment-success-message",
+            paymentConfig.locale
+          ),
         },
       ]);
 

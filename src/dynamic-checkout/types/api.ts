@@ -48,6 +48,7 @@ type ApplePay = {
 
 type Display = {
   name: string;
+  description: string;
   logo: Logo;
   brand_color: BrandColor;
 };

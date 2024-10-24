@@ -145,7 +145,7 @@ module ProcessOut {
         },
         function (invoiceId) {
           this.resetContainerHtml().appendChild(
-            new DynamicCheckoutPaymentSuccessView().element
+            new DynamicCheckoutPaymentSuccessView(this.paymentConfig).element
           );
           DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
             invoiceId,
@@ -154,7 +154,7 @@ module ProcessOut {
         },
         function (error) {
           this.resetContainerHtml().appendChild(
-            new DynamicCheckoutPaymentErrorView().element
+            new DynamicCheckoutPaymentErrorView(this.paymentConfig).element
           );
           DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error);
         }

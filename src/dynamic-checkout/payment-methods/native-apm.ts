@@ -33,13 +33,21 @@ module ProcessOut {
         returnUrl: invoiceDetails.return_url,
       });
 
-      const backgroundColor = this.theme && this.theme.payButtonColor ? this.theme.payButtonColor : "#242C38";
-      const color = this.theme && this.theme.payButtonTextColor ? this.theme.payButtonTextColor : "white";
+      const backgroundColor =
+        this.theme && this.theme.payButtonColor
+          ? this.theme.payButtonColor
+          : "#242C38";
+      const color =
+        this.theme && this.theme.payButtonTextColor
+          ? this.theme.payButtonTextColor
+          : "white";
+
       this.nativeApmInstance.setTheme({
         buttons: {
           default: {
             backgroundColor: backgroundColor,
             color: color,
+            fontWeight: 500,
           },
         },
       });
@@ -57,7 +65,7 @@ module ProcessOut {
 
       window.addEventListener(NATIVE_APM_EVENTS.PAYMENT_SUCCESS, (e) => {
         this.resetContainerHtml().appendChild(
-          new DynamicCheckoutPaymentSuccessView().element
+          new DynamicCheckoutPaymentSuccessView(this.paymentConfig).element
         );
 
         DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
@@ -68,7 +76,7 @@ module ProcessOut {
 
       window.addEventListener(NATIVE_APM_EVENTS.PAYMENT_ERROR, (e) => {
         this.resetContainerHtml().appendChild(
-          new DynamicCheckoutPaymentErrorView().element
+          new DynamicCheckoutPaymentErrorView(this.paymentConfig).element
         );
 
         DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(e);

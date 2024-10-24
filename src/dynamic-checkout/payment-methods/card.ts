@@ -76,7 +76,7 @@ module ProcessOut {
       };
 
       const saveForFutureCheckbox = document.getElementById(
-        "save-for-future"
+        "save-card-for-future"
       ) as HTMLInputElement | null;
 
       if (saveForFutureCheckbox) {
@@ -101,7 +101,7 @@ module ProcessOut {
 
     private handleCardPaymentSuccess(invoiceId: string) {
       this.resetContainerHtml().appendChild(
-        new DynamicCheckoutPaymentSuccessView().element
+        new DynamicCheckoutPaymentSuccessView(this.paymentConfig).element
       );
       DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
         invoiceId,
@@ -111,7 +111,7 @@ module ProcessOut {
 
     private handleCardPaymentError(error) {
       this.resetContainerHtml().appendChild(
-        new DynamicCheckoutPaymentErrorView().element
+        new DynamicCheckoutPaymentErrorView(this.paymentConfig).element
       );
       DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error);
     }
@@ -122,7 +122,6 @@ module ProcessOut {
       // @ts-ignore
       options.style = {
         fontSize: "14px",
-        fontFamily: getComputedStyle(document.body).fontFamily,
       };
 
       options.placeholder = "";
@@ -201,23 +200,31 @@ module ProcessOut {
           tagName: "input",
           classNames: ["dco-payment-method-button-save-for-future-checkbox"],
           attributes: {
-            id: "save-for-future",
+            id: "save-card-for-future",
             type: "checkbox",
-            name: "save-for-future",
+            name: "save-card-for-future",
           },
         },
         {
           tagName: "label",
           classNames: ["dco-payment-method-button-save-for-future-label"],
           attributes: {
-            for: "save-for-future",
+            for: "save-card-for-future",
           },
-          textContent: "Save for future payments",
+          textContent: Translations.getText(
+            "save-for-future-label",
+            this.paymentConfig.locale
+          ),
         },
         {
           tagName: "button",
           classNames: ["dco-payment-method-button-pay-button"],
-          textContent: `Pay ${this.paymentConfig.invoiceDetails.amount} ${this.paymentConfig.invoiceDetails.currency}`,
+          textContent: `${Translations.getText(
+            "pay-button-text",
+            this.paymentConfig.locale
+          )} ${this.paymentConfig.invoiceDetails.amount} ${
+            this.paymentConfig.invoiceDetails.currency
+          }`,
         },
       ]);
 
@@ -281,7 +288,10 @@ module ProcessOut {
         {
           tagName: "span",
           classNames: ["dco-payment-method-card-form-section-title"],
-          textContent: "Card details",
+          textContent: Translations.getText(
+            "card-details-section-title",
+            this.paymentConfig.locale
+          ),
         },
         {
           tagName: "div",
@@ -363,7 +373,10 @@ module ProcessOut {
           ],
           attributes: {
             name: "cardholder-name",
-            placeholder: "Cardholder name",
+            placeholder: Translations.getText(
+              "cardholder-name-label",
+              this.paymentConfig.locale
+            ),
           },
         },
         {
@@ -457,7 +470,10 @@ module ProcessOut {
         {
           tagName: "span",
           classNames: ["dco-payment-method-card-form-section-title"],
-          textContent: "Billing address",
+          textContent: Translations.getText(
+            "billing-address-section-title",
+            this.paymentConfig.locale
+          ),
         },
         {
           tagName: "div",
@@ -506,7 +522,10 @@ module ProcessOut {
         classNames: ["dco-payment-method-card-form-input"],
         attributes: {
           name: "country",
-          placeholder: "Country",
+          placeholder: Translations.getText(
+            "country-label",
+            this.paymentConfig.locale
+          ),
         },
       });
 
@@ -515,7 +534,12 @@ module ProcessOut {
         this.paymentMethod.card.billing_address.restrict_to_country_codes || [];
 
       HTMLElements.appendChildren(countryInput, [
-        this.getDefaultSelectOption("Select country"),
+        this.getDefaultSelectOption(
+          Translations.getText(
+            "select-country-placeholder",
+            this.paymentConfig.locale
+          )
+        ),
       ]);
 
       countries.forEach((country) => {
@@ -543,21 +567,13 @@ module ProcessOut {
       countryInput.addEventListener("change", (e) => {
         const selectElement = e.target as HTMLSelectElement;
 
-        this.replaceChildren(
+        HTMLElements.replaceChildren(
           billingAddressFieldsWrapper,
-          ...this.getBillingAddressField(selectElement.value)
+          this.getBillingAddressField(selectElement.value)
         );
       });
 
       return countryInput;
-    }
-
-    private replaceChildren(parent: HTMLElement, ...newChildren: HTMLElement[]): void {
-      while (parent.firstChild) {
-        parent.removeChild(parent.firstChild);
-      }
-
-      newChildren.forEach(child => parent.appendChild(child));
     }
 
     private getBillingAddressField(country: string) {
@@ -569,9 +585,10 @@ module ProcessOut {
       const shouldShowPostcodeForAutomaticMode =
         country === "US" || country === "CA" || country === "GB";
 
+      const noBillingAddressConfig = !countryConfig || !countryConfig.units;
+
       if (
-        !countryConfig ||
-        !countryConfig.units ||
+        noBillingAddressConfig ||
         (automaticMode && !shouldShowPostcodeForAutomaticMode)
       ) {
         return [];
@@ -584,7 +601,8 @@ module ProcessOut {
             classNames: ["dco-payment-method-card-form-input"],
             attributes: {
               name: "postcode",
-              placeholder: billingAddressUnitsData.postcode.placeholder,
+              placeholder: billingAddressUnitsData(this.paymentConfig).postcode
+                .placeholder,
             },
           }),
         ];
@@ -605,7 +623,12 @@ module ProcessOut {
           });
 
           HTMLElements.appendChildren(input, [
-            this.getDefaultSelectOption("Select state"),
+            this.getDefaultSelectOption(
+              Translations.getText(
+                "select-state-placeholder",
+                this.paymentConfig.locale
+              )
+            ),
           ]);
 
           countryConfig.states.forEach((state) => {
@@ -625,7 +648,7 @@ module ProcessOut {
             classNames: ["dco-payment-method-card-form-input"],
             attributes: {
               name: unit,
-              placeholder: billingAddressUnitsData[unit].placeholder,
+              placeholder: billingAddressUnitsData(this.paymentConfig)[unit].placeholder,
             },
           });
         }
@@ -677,7 +700,10 @@ module ProcessOut {
           );
 
           if (cardNumberErrorMessage) {
-            cardNumberErrorMessage.textContent = "Card number is invalid";
+            cardNumberErrorMessage.textContent = Translations.getText(
+              "card-number-error-message",
+              this.paymentConfig.locale
+            );
           }
           break;
         case "card.invalid-month":
@@ -686,7 +712,10 @@ module ProcessOut {
           );
 
           if (cardExpiryErrorMessage) {
-            cardExpiryErrorMessage.textContent = "Expiry date is invalid";
+            cardExpiryErrorMessage.textContent = Translations.getText(
+              "expiry-date-error-message",
+              this.paymentConfig.locale
+            );
           }
           break;
         case "card.missing-cvc":
@@ -694,7 +723,10 @@ module ProcessOut {
             document.getElementById("cvc-error-message");
 
           if (cardCvcErrorMessage) {
-            cardCvcErrorMessage.textContent = "CVC is invalid";
+            cardCvcErrorMessage.textContent = Translations.getText(
+              "cvc-error-message",
+              this.paymentConfig.locale
+            );
           }
           break;
         case "card.missing-name":
@@ -703,7 +735,10 @@ module ProcessOut {
           );
 
           if (cardNameErrorMessage) {
-            cardNameErrorMessage.textContent = "Cardholder name is invalid";
+            cardNameErrorMessage.textContent = Translations.getText(
+              "cardholder-name-error-message",
+              this.paymentConfig.locale
+            );
           }
           break;
         default:

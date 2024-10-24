@@ -12,6 +12,7 @@ const defaultStyles = `
 
   input,input::placeholder {
     font-family: inherit;
+    color: #696F79;
   }
 
   .native-apm-select-input, .native-apm-text-input {
@@ -136,7 +137,6 @@ const defaultStyles = `
 
   .dco-payment-methods-wrapper {
     min-width: 320px;
-    padding: 20px;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
@@ -259,6 +259,7 @@ const defaultStyles = `
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    padding: 20px 0;
   }
 
   .dco-payment-method-button-message-img {
@@ -280,6 +281,7 @@ const defaultStyles = `
     color: white;
     border: none;
     cursor: pointer;
+    font-weight: 500;
   }
 
   .dco-payment-method-button-save-for-future-wrapper {
@@ -392,10 +394,18 @@ const defaultStyles = `
     width: 18px;
     height: 18px;
     border: 3px solid #f2f2f2;
-    border-bottom-color: #7e57c2;
+    border-bottom-color: #bfbfbf;
     border-radius: 50%;
     display: inline-block;
     box-sizing: border-box;
     animation: rotation 1s linear infinite;
+  }
+
+  .dco-payment-method-right-content {
+    font-size: 0.9rem;
+    background-color: #1B20290F;
+    border-radius: 4px;
+    font-weight: 500;
+    padding: 5px 8px;
   }
 `;

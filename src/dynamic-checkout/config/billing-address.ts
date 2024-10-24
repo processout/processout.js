@@ -1,25 +1,38 @@
 module ProcessOut {
-  export const billingAddressUnitsData = {
-    street1: {
-      unit: "street1",
-      placeholder: "Address line 1",
-    },
-    street2: {
-      unit: "street2",
-      placeholder: "Address line 2",
-    },
-    city: {
-      unit: "city",
-      placeholder: "City",
-    },
-    postcode: {
-      unit: "postcode",
-      placeholder: "Postal code",
-    },
-    state: {
-      unit: "state",
-      placeholder: "State",
-    },
+  export const billingAddressUnitsData = (
+    paymentConfig: DynamicCheckoutPaymentConfigType
+  ) => {
+    return {
+      street1: {
+        unit: "street1",
+        placeholder: Translations.getText(
+          "street1-label",
+          paymentConfig.locale
+        ),
+      },
+      street2: {
+        unit: "street2",
+        placeholder: Translations.getText(
+          "street2-label",
+          paymentConfig.locale
+        ),
+      },
+      city: {
+        unit: "city",
+        placeholder: Translations.getText("city-label", paymentConfig.locale),
+      },
+      postcode: {
+        unit: "postcode",
+        placeholder: Translations.getText(
+          "postcode-label",
+          paymentConfig.locale
+        ),
+      },
+      state: {
+        unit: "state",
+        placeholder: Translations.getText("state-label", paymentConfig.locale),
+      },
+    };
   };
 
   export const billingAddressConfig = {
