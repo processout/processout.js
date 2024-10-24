@@ -48,5 +48,13 @@ module ProcessOut {
       children.forEach((child) => parent.append(child));
       return parent;
     }
+
+    static replaceChildren(parent: HTMLElement, children: HTMLElement[]) {
+      while (parent.firstChild) {
+        parent.removeChild(parent.firstChild);
+      }
+
+      this.appendChildren(parent, children);
+    }
   }
 }

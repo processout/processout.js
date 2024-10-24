@@ -45,6 +45,14 @@ module ProcessOut {
         allow_fallback_to_sale: true,
       };
 
+      const saveForFutureCheckbox = document.getElementById(
+        "save-apm-for-future"
+      ) as HTMLInputElement | null;
+
+      if (saveForFutureCheckbox) {
+        cardPaymentOptions["save_source"] = saveForFutureCheckbox.checked;
+      }
+
       this.processOutInstance.handleAction(
         apm.redirect_url,
         (paymentToken) => {
@@ -54,17 +62,21 @@ module ProcessOut {
             cardPaymentOptions,
             (invoiceId) => {
               this.resetContainerHtml().appendChild(
-                new DynamicCheckoutPaymentSuccessView().element
+                new DynamicCheckoutPaymentSuccessView(this.paymentConfig)
+                  .element
               );
 
               DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent(invoiceId);
             },
             (error) => {
               this.resetContainerHtml().appendChild(
-                new DynamicCheckoutPaymentErrorView().element
+                new DynamicCheckoutPaymentErrorView(this.paymentConfig).element
               );
 
               DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error);
+            },
+            {
+              clientSecret: this.paymentConfig.clientSecret,
             }
           );
         },
@@ -101,7 +113,10 @@ module ProcessOut {
         },
         {
           tagName: "p",
-          textContent: "You'll be redirected to finalize payment.",
+          textContent: Translations.getText(
+            "apm-redirect-message",
+            this.paymentConfig.locale
+          ),
         },
         {
           tagName: "div",
@@ -111,21 +126,28 @@ module ProcessOut {
           tagName: "input",
           attributes: {
             type: "checkbox",
-            name: "save-for-future",
+            name: "save-apm-for-future",
+            id: "save-apm-for-future",
           },
         },
         {
           tagName: "label",
           classNames: ["dco-payment-method-button-save-for-future-label"],
           attributes: {
-            for: "save-for-future",
+            for: "save-apm-for-future",
           },
-          textContent: "Save for future payments",
+          textContent: Translations.getText(
+            "save-for-future-label",
+            this.paymentConfig.locale
+          ),
         },
         {
           tagName: "button",
           classNames: ["dco-payment-method-button-pay-button"],
-          textContent: `Continue with ${this.paymentMethod.display.name}`,
+          textContent: `${Translations.getText(
+            "continue-with-apm-button",
+            this.paymentConfig.locale
+          )} ${this.paymentMethod.display.name}`,
         },
       ]);
 

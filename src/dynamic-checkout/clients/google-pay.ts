@@ -136,7 +136,8 @@ module ProcessOut {
                 },
                 function (invoiceId) {
                   this.resetContainerHtml().appendChild(
-                    new DynamicCheckoutPaymentSuccessView().element
+                    new DynamicCheckoutPaymentSuccessView(this.paymentConfig)
+                      .element
                   );
                   DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
                     invoiceId,
@@ -145,7 +146,8 @@ module ProcessOut {
                 },
                 function (error) {
                   this.resetContainerHtml().appendChild(
-                    new DynamicCheckoutPaymentErrorView().element
+                    new DynamicCheckoutPaymentErrorView(this.paymentConfig)
+                      .element
                   );
                   DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error);
                 }
@@ -153,7 +155,7 @@ module ProcessOut {
             },
             function (err) {
               this.resetContainerHtml().appendChild(
-                new DynamicCheckoutPaymentErrorView().element
+                new DynamicCheckoutPaymentErrorView(this.paymentConfig).element
               );
               DynamicCheckoutEventsUtils.dispatchTokenizePaymentErrorEvent({
                 message: `Tokenize payment error: ${JSON.stringify(
