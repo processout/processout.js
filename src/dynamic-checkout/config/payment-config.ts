@@ -4,6 +4,7 @@ module ProcessOut {
   export type DynamicCheckoutPaymentConfigType = {
     invoiceId: string;
     projectId: string;
+    locale?: string;
     clientSecret?: string;
     invoiceDetails: Invoice;
   };
@@ -12,6 +13,7 @@ module ProcessOut {
     invoiceId: DynamicCheckoutPaymentConfigType["invoiceId"];
     projectId: DynamicCheckoutPaymentConfigType["projectId"];
     clientSecret: DynamicCheckoutPaymentConfigType["clientSecret"];
+    locale: DynamicCheckoutPaymentConfigType["locale"] = "en";
     invoiceDetails: DynamicCheckoutPaymentConfigType["invoiceDetails"];
 
     constructor(config: DynamicCheckoutPaymentConfigType) {
@@ -22,6 +24,7 @@ module ProcessOut {
       return {
         invoiceId: this.invoiceId,
         projectId: this.projectId,
+        locale: this.locale,
         invoiceDetails: this.invoiceDetails,
       };
     }
@@ -39,6 +42,7 @@ module ProcessOut {
 
       this.invoiceId = config.invoiceId;
       this.projectId = config.projectId;
+      this.locale = config.locale || "en";
       this.clientSecret = config.clientSecret;
     }
 

@@ -76,7 +76,9 @@ module ProcessOut {
 
     private onGetInvoiceSuccess(data: any) {
       if (!data.success) {
-        this.loadView(new DynamicCheckoutPaymentErrorView().element);
+        this.loadView(
+          new DynamicCheckoutPaymentErrorView(this.paymentConfig).element
+        );
 
         return DynamicCheckoutEventsUtils.dispatchInvoiceFetchingErrorEvent(
           data
@@ -86,7 +88,11 @@ module ProcessOut {
       if (!data.invoice.payment_methods) {
         this.loadView(
           new DynamicCheckoutPaymentErrorView(
-            "We were unable to process your payment."
+            this.paymentConfig,
+            Translations.getText(
+              "payment-error-generic-message",
+              this.paymentConfig.locale
+            )
           ).element
         );
 
@@ -100,7 +106,11 @@ module ProcessOut {
       if (data.invoice.transaction.status !== "waiting") {
         this.loadView(
           new DynamicCheckoutPaymentErrorView(
-            "We were unable to process your payment."
+            this.paymentConfig,
+            Translations.getText(
+              "payment-error-generic-message",
+              this.paymentConfig.locale
+            )
           ).element
         );
 
@@ -131,7 +141,9 @@ module ProcessOut {
 
       DynamicCheckoutEventsUtils.dispatchInvoiceFetchingErrorEvent(errorData);
 
-      this.loadView(new DynamicCheckoutPaymentErrorView().element);
+      this.loadView(
+        new DynamicCheckoutPaymentErrorView(this.paymentConfig).element
+      );
     }
 
     private loadView(view: Element) {

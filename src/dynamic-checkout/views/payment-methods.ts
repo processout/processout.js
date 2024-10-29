@@ -119,7 +119,10 @@ module ProcessOut {
         {
           tagName: "span",
           classNames: ["dco-express-checkout-header"],
-          textContent: "Express checkout",
+          textContent: Translations.getText(
+            "express-checkout-header",
+            this.paymentConfig.locale
+          ),
         },
         {
           tagName: "div",
@@ -153,7 +156,10 @@ module ProcessOut {
         {
           tagName: "span",
           classNames: ["dco-regular-payment-methods-section-header"],
-          textContent: "Other payment methods",
+          textContent: Translations.getText(
+            "other-payment-methods-header",
+            this.paymentConfig.locale
+          ),
         },
         {
           tagName: "div",
