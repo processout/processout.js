@@ -382,13 +382,12 @@ module ProcessOut {
     }
 
     private checkIfCaptureTimeout() {
-      const MAX_CAPTURE_TIMEOUT_IN_SECONDS = 180;
       const now = new Date();
 
       const differenceInSeconds =
         (now.getTime() - this.captureStart.getTime()) / 1000;
 
-      return differenceInSeconds >= MAX_CAPTURE_TIMEOUT_IN_SECONDS;
+      return differenceInSeconds >= this.paymentConfig.pollingMaxTimeout;
     }
 
     /**
