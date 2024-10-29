@@ -2,16 +2,18 @@
 
 module ProcessOut {
   export class Translations {
-    static getText(key: string, locale: string) {
-      const locales = {
-        en: en,
-        es: es,
-        fr: fr,
-        pl: pl,
-        pt: pt,
-      };
+    static localeTranslationsMap = {
+      en: en,
+      es: es,
+      fr: fr,
+      pl: pl,
+      pt: pt,
+    };
 
-      const keys = locales[locale] || locales.en;
+    static getText(key: string, locale: string) {
+      const keys =
+        Translations.localeTranslationsMap[locale] ||
+        Translations.localeTranslationsMap.en;
 
       return keys[key] || "";
     }
