@@ -53,10 +53,10 @@ module ProcessOut {
         },
         {
           tagName: "input",
+          classNames: ["dco-payment-method-button-radio-button"],
           attributes: {
             type: "radio",
             name: "payment-method",
-            style: "height: 16px; width: 16px;",
           },
         },
       ]);

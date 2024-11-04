@@ -2,9 +2,6 @@
 
 module ProcessOut {
   export class DynamicCheckoutPaymentErrorView {
-    private errorImageUrl =
-      "https://js.processout.com/images/dynamic-checkout-assets/payment-error.svg";
-
     public element: Element;
 
     constructor(
@@ -20,7 +17,7 @@ module ProcessOut {
           tagName: "img",
           classNames: ["dco-card-payment-success-image"],
           attributes: {
-            src: this.errorImageUrl,
+            src: PAYMENT_ERROR_IMAGE_ASSET,
           },
         },
         {

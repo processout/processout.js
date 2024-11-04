@@ -46,6 +46,9 @@ module ProcessOut {
         {
           tagName: "button",
           classNames: ["dco-payment-method-button-pay-button"],
+          attributes: {
+            id: "dco-saved-card-pay-button",
+          },
           textContent: `${Translations.getText(
             "pay-button-text",
             this.paymentConfig.locale
@@ -102,8 +105,8 @@ module ProcessOut {
     }
 
     private setButtonLoading() {
-      const payButton = document.querySelector(
-        ".dco-payment-method-button-pay-button"
+      const payButton = document.getElementById(
+        "dco-saved-card-pay-button"
       ) as HTMLButtonElement;
 
       payButton.disabled = true;
