@@ -202,7 +202,6 @@ module ProcessOut {
           classNames: ["dco-payment-method-card-form-wrapper"],
           attributes: {
             id: "card-form",
-            action: "",
           },
         },
         {
