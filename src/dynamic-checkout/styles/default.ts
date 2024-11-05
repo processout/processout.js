@@ -162,6 +162,7 @@ const defaultStyles = `
 
   .dco-express-checkout-header {
     font-weight: 500;
+    font-size: 1.1rem;
   }
 
   .dco-wallet-checkout-wrapper {
@@ -187,6 +188,7 @@ const defaultStyles = `
 
   .dco-regular-payment-methods-section-header {
     font-weight: 500;
+    font-size: 1.1rem;
   }
 
   .dco-regular-payment-methods-list-wrapper {
@@ -200,7 +202,6 @@ const defaultStyles = `
   .dco-payment-method-wrapper {
     display: flex;
     flex-direction: column;
-    gap: 20px;
     padding: 10px;
     width: 100%;
     border-bottom: 1px solid #dde0e3;
@@ -212,15 +213,22 @@ const defaultStyles = `
   }
 
   .dco-payment-method-wrapper:has(input[type="radio"]:checked) .dco-payment-method-button-general-children-container {
-    display: block;
+    visibility: visible;
+    opacity: 1;
+    max-height: 100%;
+    margin-top: 20px;
   }
 
   .dco-payment-method-button-general-children-container {
-    display: none;
+    visibility: hidden;
+    opacity: 0;
+    max-height: 0;
+    transition: visibility 0s, opacity 0.3s ease-in-out;
   }
 
   .dco-payment-method-wrapper:last-child {
     border-bottom: none;
+    overflow: hidden;
   }
 
   .dco-payment-method-button-wrapper {
@@ -407,5 +415,45 @@ const defaultStyles = `
     border-radius: 4px;
     font-weight: 500;
     padding: 5px 8px;
+  }
+
+  .dco-card-schemes-wrapper {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .dco-card-scheme-logo {
+    width: 24px;
+  }
+
+  .dco-payment-method-button-radio-button {
+    -webkit-appearance: none;
+    appearance: none;
+    background-color: #fff;
+    margin: 0;
+    font: inherit;
+    color: #A1A6B0;
+    width: 16px;
+    height: 16px;
+    border: 1px solid #A1A6B0;
+    border-radius: 50%;
+    display: grid;
+    place-content: center;
+  }
+
+  .dco-payment-method-button-radio-button::before {
+    content: "";
+    width: 16px;
+    height: 16px;
+    box-sizing: border-box;
+    border-radius: 50%;
+    transform: scale(0);
+    transition: 120ms transform ease-in-out;
+    border: 4px solid #000;
+  }
+
+  .dco-payment-method-button-radio-button:checked::before {
+    transform: scale(1);
   }
 `;

@@ -2,9 +2,6 @@
 
 module ProcessOut {
   export class DynamicCheckoutPaymentSuccessView {
-    private successImageUrl =
-      "https://js.processout.com/images/dynamic-checkout-assets/payment-success.svg";
-
     public element: Element;
 
     constructor(paymentConfig: DynamicCheckoutPaymentConfigType) {
@@ -17,7 +14,7 @@ module ProcessOut {
           tagName: "img",
           classNames: ["dco-card-payment-success-image"],
           attributes: {
-            src: this.successImageUrl,
+            src: PAYMENT_SUCCESS_IMAGE_ASSET,
           },
         },
         {

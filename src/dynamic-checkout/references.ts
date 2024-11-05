@@ -15,6 +15,7 @@
 /// <reference path="payment-methods/apple-pay.ts" />
 /// <reference path="views/payment-error.ts" />
 /// <reference path="styles/default.ts" />
+/// <reference path="config/assets.ts" />
 /// <reference path="config/billing-address.ts" />
 /// <reference path="types/api.ts" />
 /// <reference path="locales/pl.ts" />

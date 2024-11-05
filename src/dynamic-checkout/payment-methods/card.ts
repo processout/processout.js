@@ -17,7 +17,24 @@ module ProcessOut {
     ) {
       const { display } = paymentMethod;
 
-      super(display.name, display.logo.dark_url.vector);
+      const rightContent = HTMLElements.createElement({
+        tagName: "div",
+        classNames: ["dco-card-schemes-wrapper"],
+      });
+
+      Object.keys(CARD_SCHEMES_ASSETS).forEach((schema) => {
+        const logo = HTMLElements.createElement({
+          tagName: "img",
+          classNames: ["dco-card-scheme-logo"],
+          attributes: {
+            src: CARD_SCHEMES_ASSETS[schema],
+          },
+        });
+
+        rightContent.appendChild(logo);
+      });
+
+      super(display.name, display.logo.dark_url.vector, rightContent);
 
       this.procesoutInstance = procesoutInstance;
       this.paymentMethod = paymentMethod;
@@ -36,7 +53,6 @@ module ProcessOut {
         this.getCardFormOptions(),
         (cardForm) => {
           this.getCardDetailsSectionEventListeners();
-
           cardForm.addEventListener("submit", (e) => {
             e.preventDefault();
 
@@ -219,6 +235,9 @@ module ProcessOut {
         {
           tagName: "button",
           classNames: ["dco-payment-method-button-pay-button"],
+          attributes: {
+            id: "dco-card-pay-button",
+          },
           textContent: `${Translations.getText(
             "pay-button-text",
             this.paymentConfig.locale
@@ -436,9 +455,10 @@ module ProcessOut {
         'input[name="cardholder-name"]'
       ) as HTMLInputElement;
 
-      cardholderNameInput.addEventListener("input", () => {
-        this.cleanErrorMessages();
-      });
+      cardholderNameInput &&
+        cardholderNameInput.addEventListener("input", () => {
+          this.cleanErrorMessages();
+        });
 
       // ProcessOut inputs doesn't have onChange event, so we need to listen to messages from the iframe
       window.addEventListener("message", (e) => {
@@ -501,8 +521,8 @@ module ProcessOut {
     }
 
     private setButtonLoading() {
-      const payButton = document.querySelector(
-        ".dco-payment-method-button-pay-button"
+      const payButton = document.getElementById(
+        "dco-card-pay-button"
       ) as HTMLButtonElement;
 
       payButton.disabled = true;
@@ -648,7 +668,8 @@ module ProcessOut {
             classNames: ["dco-payment-method-card-form-input"],
             attributes: {
               name: unit,
-              placeholder: billingAddressUnitsData(this.paymentConfig)[unit].placeholder,
+              placeholder: billingAddressUnitsData(this.paymentConfig)[unit]
+                .placeholder,
             },
           });
         }
