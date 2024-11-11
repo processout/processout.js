@@ -131,8 +131,12 @@ const defaultTheme: NativeApmThemeConfigType = {
   },
   actionImage: {
     marginTop: "1.3rem",
+    marginBottom: "1.3rem",
     width: "15rem",
     height: "auto",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
   },
 };
 
