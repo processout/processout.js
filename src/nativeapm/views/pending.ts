@@ -143,9 +143,9 @@ module ProcessOut {
           ? atob(this.customerActionBarcode.value)
           : null;
 
-      globalThis.QRCode &&
+      window.globalThis.QRCode &&
         text &&
-        new globalThis.QRCode(qrCodeElement, {
+        new window.globalThis.QRCode(qrCodeElement, {
           text,
           width: 128,
           height: 128,
