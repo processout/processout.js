@@ -18,6 +18,7 @@ module ProcessOut {
     "payment-error-message": "Algo deu errado. Por favor, tente novamente.",
     "express-checkout-header": "Checkout expresso",
     "other-payment-methods-header": "Outros métodos de pagamento",
+    "select-payment-method-label": "Selecionar método de pagamento",
     "payment-success-message": "Este pagamento foi concluído.",
     "payment-error-generic-message":
       "Não conseguimos processar o seu pagamento.",

@@ -114,6 +114,7 @@ module ProcessOut {
       this.paymentConfig = new NativeApmPaymentConfig(paymentConfig);
       this.theme = new NativeApmThemeConfig();
       this.loadMarkdownLibrary();
+      this.loadQrCodesLibrary();
     }
 
     /**
@@ -200,10 +201,7 @@ module ProcessOut {
           this.markdownLibraryInstance,
           this.theme,
           this.capturePayment.bind(this),
-          (this.gatewayConfiguration.native_apm.parameter_values &&
-            this.gatewayConfiguration.native_apm.parameter_values
-              .customer_action_message) ||
-            ""
+          this.gatewayConfiguration.native_apm.parameter_values
         );
 
         EventsUtils.dispatchPaymentInitEvent();
@@ -326,7 +324,7 @@ module ProcessOut {
           this.markdownLibraryInstance,
           this.theme,
           this.capturePayment.bind(this),
-          data.native_apm.parameterValues.customer_action_message
+          data.native_apm.parameterValues
         );
 
         EventsUtils.dispatchPaymentInitEvent();
@@ -536,7 +534,7 @@ module ProcessOut {
     private loadMarkdownLibrary() {
       const markdownScript = document.createElement("script");
       markdownScript.src =
-        "https://js.processout.ninja/js/libraries/showdown.min.js";
+        "https://js.processout.com/js/libraries/showdown.min.js";
       markdownScript.onload = () => {
         this.markdownLibraryInstance =
           window.globalThis && window.globalThis.showdown
@@ -544,6 +542,12 @@ module ProcessOut {
             : null;
       };
       document.head.appendChild(markdownScript);
+    }
+
+    private loadQrCodesLibrary() {
+      const qrCodeScript = document.createElement("script");
+      qrCodeScript.src = "https://js.processout.com/js/libraries/qrcode.min.js";
+      document.head.appendChild(qrCodeScript);
     }
   }
 }

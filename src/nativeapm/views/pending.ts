@@ -7,13 +7,22 @@ module ProcessOut {
     theme: NativeApmThemeConfigType;
     gatewayConfiguration: GatewayConfiguration;
     customerActionMessage: string;
-
+    customerActionBarcode?: {
+      type: string;
+      value: string;
+    };
     constructor(
       gatewayConfiguration: GatewayConfiguration,
       markdownLibraryInstance: any,
       theme: NativeApmThemeConfigType,
       capturePayment: Function,
-      customerMessage: string
+      parameterValues?: {
+        customer_action_message?: string;
+        customer_action_barcode?: {
+          type: string;
+          value: string;
+        };
+      }
     ) {
       if (!gatewayConfiguration) {
         throw new Exception(
@@ -25,7 +34,15 @@ module ProcessOut {
       this.markdownLibraryInstance = markdownLibraryInstance;
       this.gatewayConfiguration = gatewayConfiguration;
       this.theme = theme;
-      this.customerActionMessage = customerMessage;
+      this.customerActionMessage =
+        parameterValues && parameterValues.customer_action_message
+          ? parameterValues.customer_action_message
+          : "";
+      this.customerActionBarcode =
+        parameterValues && parameterValues.customer_action_barcode
+          ? parameterValues.customer_action_barcode
+          : undefined;
+
       this.viewElement = this.createViewElement();
 
       capturePayment();
@@ -39,7 +56,9 @@ module ProcessOut {
       const wrapper = this.createWrapper();
       const merchantImg = this.createMerchantImageElement();
       const customerMessage = this.createCustomerMessage();
-      const customerMessageImage = this.createCustomerMessageImage();
+      const customerMessageImage = this.customerActionBarcode
+        ? this.createQrCode()
+        : this.createCustomerMessageImage();
       const loadingSpinner = this.createLoadingSpinner();
 
       wrapper.appendChild(merchantImg);
@@ -84,6 +103,7 @@ module ProcessOut {
       const message =
         this.gatewayConfiguration.native_apm.gateway.customer_action_message ||
         this.customerActionMessage;
+
       customerMessage.innerHTML =
         this.markdownLibraryInstance && this.markdownLibraryInstance.makeHtml
           ? this.markdownLibraryInstance.makeHtml(message)
@@ -112,6 +132,26 @@ module ProcessOut {
       );
 
       return customerMessageImage;
+    }
+
+    private createQrCode() {
+      const qrCodeElement = document.createElement("div");
+      StylesUtils.styleElement(qrCodeElement, this.theme.actionImage);
+
+      const text =
+        this.customerActionBarcode && this.customerActionBarcode.value
+          ? atob(this.customerActionBarcode.value)
+          : null;
+
+      globalThis.QRCode &&
+        text &&
+        new globalThis.QRCode(qrCodeElement, {
+          text,
+          width: 128,
+          height: 128,
+        });
+
+      return qrCodeElement;
     }
   }
 }

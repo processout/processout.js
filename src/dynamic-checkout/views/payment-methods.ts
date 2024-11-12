@@ -90,7 +90,10 @@ module ProcessOut {
       } = this.getExpressCheckoutElements();
 
       const { regularPaymentMethodsSectionWrapper, regularPaymentMethodsList } =
-        this.getRegularPaymentMethodsElements();
+        this.getRegularPaymentMethodsElements([
+          ...expressPaymentMethods,
+          ...walletPaymentMethods,
+        ]);
 
       return {
         wrapper,
@@ -143,7 +146,9 @@ module ProcessOut {
       };
     }
 
-    private getRegularPaymentMethodsElements() {
+    private getRegularPaymentMethodsElements(
+      expressPaymentMethods: PaymentMethod[]
+    ) {
       const [
         regularPaymentMethodsSectionWrapper,
         regularPaymentMethodsSectionHeader,
@@ -157,7 +162,9 @@ module ProcessOut {
           tagName: "span",
           classNames: ["dco-regular-payment-methods-section-header"],
           textContent: Translations.getText(
-            "other-payment-methods-header",
+            expressPaymentMethods.length > 0
+              ? "other-payment-methods-header"
+              : "select-payment-method-label",
             this.paymentConfig.locale
           ),
         },

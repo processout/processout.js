@@ -18,6 +18,7 @@ module ProcessOut {
     "payment-error-message": "Algo salió mal. Por favor, inténtalo de nuevo.",
     "express-checkout-header": "Pago exprés",
     "other-payment-methods-header": "Otros métodos de pago",
+    "select-payment-method-label": "Seleccionar método de pago",
     "payment-success-message": "Este pago se ha completado.",
     "payment-error-generic-message": "No pudimos procesar su pago.",
     "street1-label": "Dirección, línea 1",

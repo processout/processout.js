@@ -19,6 +19,7 @@ module ProcessOut {
     "payment-error-message": "Coś poszło nie tak. Spróbuj ponownie.",
     "express-checkout-header": "Szybka płatność",
     "other-payment-methods-header": "Inne metody płatności",
+    "select-payment-method-label": "Wybierz metodę płatności",
     "payment-success-message": "Płatność została zakończona pomyślnie.",
     "payment-error-generic-message":
       "Nie udało nam się przetworzyć Twojej płatności.",
