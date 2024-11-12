@@ -17,6 +17,7 @@ module ProcessOut {
     "payment-error-message": "Something went wrong. Please try again.",
     "express-checkout-header": "Express checkout",
     "other-payment-methods-header": "Other payment methods",
+    "select-payment-method-label": "Select payment method",
     "payment-success-message": "This payment is completed.",
     "payment-error-generic-message": "We were unable to process your payment.",
     "street1-label": "Address line 1",
