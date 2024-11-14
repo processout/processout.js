@@ -728,6 +728,7 @@ module ProcessOut {
           }
           break;
         case "card.invalid-month":
+        case "card.invalid-year":
           const cardExpiryErrorMessage = document.getElementById(
             "expiry-date-error-message"
           );
@@ -740,6 +741,7 @@ module ProcessOut {
           }
           break;
         case "card.missing-cvc":
+        case "card.invalid-cvc":
           const cardCvcErrorMessage =
             document.getElementById("cvc-error-message");
 
