@@ -1684,7 +1684,8 @@ module ProcessOut {
               cardID,
               options,
               success,
-              error
+              error,
+              apiRequestOptions
             );
           }.bind(this);
 
@@ -1709,7 +1710,8 @@ module ProcessOut {
                     cardID,
                     options,
                     success,
-                    error
+                    error,
+                    apiRequestOptions
                   );
                 }.bind(this),
                 error,
