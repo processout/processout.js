@@ -1494,7 +1494,8 @@ module ProcessOut {
       source: string,
       options: any,
       success: (data: any) => void,
-      error: (err: Exception) => void
+      error: (err: Exception) => void,
+      apiRequestOptions?: apiRequestOptions
     ): void {
       const url: string = `invoices/${invoiceID}/capture`;
       this.threeDSInitiationURL = `invoices/${invoiceID}/three-d-s`;
@@ -1507,7 +1508,8 @@ module ProcessOut {
         source,
         options,
         success,
-        error
+        error,
+        apiRequestOptions
       );
     }
 
@@ -1682,7 +1684,8 @@ module ProcessOut {
               cardID,
               options,
               success,
-              error
+              error,
+              apiRequestOptions
             );
           }.bind(this);
 
@@ -1707,7 +1710,8 @@ module ProcessOut {
                     cardID,
                     options,
                     success,
-                    error
+                    error,
+                    apiRequestOptions
                   );
                 }.bind(this),
                 error,
