@@ -415,6 +415,10 @@ const defaultStyles = `
     border-radius: 4px;
     font-weight: 500;
     padding: 5px 8px;
+    max-width: 200px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
   }
 
   .dco-card-schemes-wrapper {
@@ -455,5 +459,22 @@ const defaultStyles = `
 
   .dco-payment-method-button-radio-button:checked::before {
     transform: scale(1);
+  }
+
+  .dco-invoice-loading-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .dco-invoice-loading {
+    width: 40px;
+    height: 40px; 
+    border: 5px solid #dedede;
+    border-bottom-color: #242C38;
+    display: inline-block;
+    border-radius: 50%;
+    box-sizing: border-box;
+    animation: rotation 1s linear infinite;
   }
 `;
