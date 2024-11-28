@@ -143,7 +143,7 @@ module ProcessOut {
       options.placeholder = "";
       options.expiryAutoNext = false;
       options.cardNumberAutoNext = true;
-      options.requireCVC = this.paymentMethod.card.require_cvc;
+      options.requireCVC = this.paymentMethod.card.cvc_required;
 
       return options;
     }
@@ -440,7 +440,7 @@ module ProcessOut {
       const children = [
         cardDetailsSectionTitle,
         cardDetailsSectionInputsWrapper,
-        this.paymentMethod.card.require_cardholder_name
+        this.paymentMethod.card.cardholder_name_required
           ? cardHolderNameInputWrapper
           : null,
       ].filter(Boolean);

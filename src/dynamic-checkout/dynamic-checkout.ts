@@ -34,7 +34,7 @@ module ProcessOut {
       }
 
       return this.getInvoiceDetails(
-        DynamicCheckoutEventsUtils.dispatchWidgetLoadingEvent,
+        this.onGetInvoiceLoading.bind(this),
         this.onGetInvoiceSuccess.bind(this),
         this.onGetInvoiceError.bind(this)
       );
@@ -72,6 +72,12 @@ module ProcessOut {
           clientSecret: this.paymentConfig.clientSecret,
         }
       );
+    }
+
+    private onGetInvoiceLoading() {
+      this.loadView(new DynamicCheckoutInvoiceLoadingView().element);
+
+      DynamicCheckoutEventsUtils.dispatchWidgetLoadingEvent();
     }
 
     private onGetInvoiceSuccess(data: any) {

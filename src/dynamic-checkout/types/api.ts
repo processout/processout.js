@@ -69,9 +69,9 @@ type BrandColor = {
 };
 
 type Card = {
-  require_cvc: boolean;
-  require_cardholder_name: boolean;
-  allow_scheme_selection: boolean;
+  cvc_required: boolean;
+  cardholder_name_required: boolean;
+  scheme_selection_allowed: boolean;
   saving_allowed: boolean;
   billing_address: BillingAddress;
 };
