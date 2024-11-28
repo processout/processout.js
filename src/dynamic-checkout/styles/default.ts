@@ -142,6 +142,10 @@ const defaultStyles = `
     flex-direction: column;
     gap: 20px;
     width: 100%;
+
+    @media (max-width: 480px) {
+      min-width: 100%;
+    }
   }
 
   .dco-express-checkout-wrapper {
