@@ -7,10 +7,14 @@ module ProcessOut {
 
     constructor(
       processOutInstance: ProcessOut,
+      paymentConfig: DynamicCheckoutPaymentConfigType,
       invoiceData: Invoice,
       resetContainerHtml: () => HTMLElement
     ) {
-      this.applePayClient = new ApplePayClient(processOutInstance);
+      this.applePayClient = new ApplePayClient(
+        processOutInstance,
+        paymentConfig
+      );
 
       this.element = this.getApplePayButtonElement();
 
