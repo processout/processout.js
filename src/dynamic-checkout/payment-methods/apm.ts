@@ -44,13 +44,12 @@ module ProcessOut {
       const cardPaymentOptions = {
         authorize_only: !this.paymentConfig.capturePayments,
         allow_fallback_to_sale: true,
-        authorize_only: true,
         save_source: false,
       };
 
       const requestOptions = {
         clientSecret,
-      }
+      };
 
       const saveForFutureCheckbox = document.getElementById(
         `save-apm-for-future-${display.name}`
@@ -61,14 +60,26 @@ module ProcessOut {
       }
 
       if (apm.saving_allowed && cardPaymentOptions["save_source"]) {
-        return this.handleApmPaymentWithSaveForFuture(cardPaymentOptions, actionHandlerOptions, requestOptions);
+        return this.handleApmPaymentWithSaveForFuture(
+          cardPaymentOptions,
+          actionHandlerOptions,
+          requestOptions
+        );
       }
 
       cardPaymentOptions["allow_fallback_to_sale"] = true;
-      this.handleApmPayment(cardPaymentOptions, actionHandlerOptions, requestOptions);
+      this.handleApmPayment(
+        cardPaymentOptions,
+        actionHandlerOptions,
+        requestOptions
+      );
     }
 
-    private handleApmPayment(cardPaymentOptions: any, actionHandlerOptions: ActionHandlerOptions, requestOptions: any) {
+    private handleApmPayment(
+      cardPaymentOptions: any,
+      actionHandlerOptions: ActionHandlerOptions,
+      requestOptions: any
+    ) {
       const { apm } = this.paymentMethod;
 
       this.processOutInstance.handleAction(
@@ -93,7 +104,7 @@ module ProcessOut {
 
               DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error);
             },
-            requestOptions,
+            requestOptions
           );
         },
         DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent,
@@ -101,16 +112,20 @@ module ProcessOut {
       );
     }
 
-    private handleApmPaymentWithSaveForFuture(cardPaymentOptions: any, actionHandlerOptions: ActionHandlerOptions, requestOptions: any) {
+    private handleApmPaymentWithSaveForFuture(
+      cardPaymentOptions: any,
+      actionHandlerOptions: ActionHandlerOptions,
+      requestOptions: any
+    ) {
       const { apm } = this.paymentMethod;
 
       const options = {
         ...cardPaymentOptions,
         source: apm.gateway_configuration_id,
-      }
+      };
 
       this.processOutInstance.apiRequest(
-        'POST',
+        "POST",
         `invoices/${this.paymentConfig.invoiceId}/capture`,
         options,
         (data) => {
@@ -126,14 +141,17 @@ module ProcessOut {
                     new DynamicCheckoutPaymentSuccessView(this.paymentConfig)
                       .element
                   );
-    
-                  DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent(invoiceId);
+
+                  DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent(
+                    invoiceId
+                  );
                 },
                 (error) => {
                   this.resetContainerHtml().appendChild(
-                    new DynamicCheckoutPaymentErrorView(this.paymentConfig).element
+                    new DynamicCheckoutPaymentErrorView(this.paymentConfig)
+                      .element
                   );
-    
+
                   DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error);
                 },
                 requestOptions
@@ -152,7 +170,7 @@ module ProcessOut {
         },
         0,
         requestOptions
-      )
+      );
     }
 
     private getChildrenElement() {
