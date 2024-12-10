@@ -201,6 +201,7 @@ module ProcessOut {
             case "applepay":
               const applePayPaymentMethod = new ApplePayPaymentMethod(
                 this.processOutInstance,
+                this.paymentConfig,
                 this.paymentConfig.invoiceDetails,
                 this.resetContainerHtml.bind(this)
               );

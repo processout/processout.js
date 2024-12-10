@@ -80,7 +80,7 @@ module ProcessOut {
         this.paymentConfig.invoiceId,
         this.paymentMethod.card_customer_token.customer_token_id,
         {
-          authorize_only: true,
+          authorize_only: !this.paymentConfig.capturePayments,
         },
         this.handlePaymentSuccess.bind(this),
         this.handlePaymentError.bind(this)

@@ -78,7 +78,7 @@ module ProcessOut {
       const { clientSecret, invoiceId } = this.paymentConfig;
       
       const cardPaymentOptions = {
-        authorize_only: true,
+        authorize_only: !this.paymentConfig.capturePayments,
         allow_fallback_to_sale: true,
       };
 

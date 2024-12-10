@@ -42,6 +42,8 @@ module ProcessOut {
       );
 
       const cardPaymentOptions = {
+        authorize_only: !this.paymentConfig.capturePayments,
+        allow_fallback_to_sale: true,
         authorize_only: true,
         save_source: false,
       };

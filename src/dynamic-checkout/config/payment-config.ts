@@ -6,6 +6,7 @@ module ProcessOut {
     projectId: string;
     locale?: string;
     clientSecret?: string;
+    capturePayments?: boolean;
     invoiceDetails: Invoice;
   };
 
@@ -14,6 +15,8 @@ module ProcessOut {
     projectId: DynamicCheckoutPaymentConfigType["projectId"];
     clientSecret: DynamicCheckoutPaymentConfigType["clientSecret"];
     locale: DynamicCheckoutPaymentConfigType["locale"] = "en";
+    capturePayments: DynamicCheckoutPaymentConfigType["capturePayments"] =
+      false;
     invoiceDetails: DynamicCheckoutPaymentConfigType["invoiceDetails"];
 
     constructor(config: DynamicCheckoutPaymentConfigType) {
@@ -44,6 +47,7 @@ module ProcessOut {
       this.projectId = config.projectId;
       this.locale = config.locale || "en";
       this.clientSecret = config.clientSecret;
+      this.capturePayments = config.capturePayments || false;
     }
 
     private isValidConfig(config: DynamicCheckoutPaymentConfigType) {

@@ -132,7 +132,7 @@ module ProcessOut {
                 invoiceData.id,
                 token,
                 {
-                  authorize_only: true,
+                  authorize_only: !this.paymentConfig.capturePayments,
                 },
                 function (invoiceId) {
                   this.resetContainerHtml().appendChild(
