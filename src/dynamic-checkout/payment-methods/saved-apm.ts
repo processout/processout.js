@@ -76,7 +76,7 @@ module ProcessOut {
     private handleApmPayment() {
       const { apm_customer_token } = this.paymentMethod;
       const { clientSecret, invoiceId } = this.paymentConfig;
-      
+
       const cardPaymentOptions = {
         authorize_only: !this.paymentConfig.capturePayments,
         allow_fallback_to_sale: true,
@@ -84,11 +84,11 @@ module ProcessOut {
 
       const requestOptions = {
         clientSecret,
-      }
+      };
 
       const actionHandlerOptions = new ActionHandlerOptions(
         apm_customer_token.gateway_name,
-        apm_customer_token.gateway_logo_url
+        apm_customer_token.gateway_logo.dark_url.raster
       );
 
       this.setButtonLoading();
@@ -106,17 +106,20 @@ module ProcessOut {
                   new DynamicCheckoutPaymentSuccessView(this.paymentConfig)
                     .element
                 );
-  
-                DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent(invoiceId);
+
+                DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent(
+                  invoiceId
+                );
               },
               (error) => {
                 this.resetContainerHtml().appendChild(
-                  new DynamicCheckoutPaymentErrorView(this.paymentConfig).element
+                  new DynamicCheckoutPaymentErrorView(this.paymentConfig)
+                    .element
                 );
-  
+
                 DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error);
               },
-              requestOptions,
+              requestOptions
             );
           },
           DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent,
