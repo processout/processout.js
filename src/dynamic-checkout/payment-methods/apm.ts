@@ -38,7 +38,7 @@ module ProcessOut {
 
       const actionHandlerOptions = new ActionHandlerOptions(
         apm.gateway_name,
-        apm.gateway_logo_url
+        apm.gateway_logo.dark_url.raster
       );
 
       const cardPaymentOptions = {

@@ -87,5 +87,12 @@ type Apm = {
   redirect_url?: string;
   customer_token_id?: string;
   gateway_name?: string;
-  gateway_logo_url?: string;
+  gateway_logo: {
+    light_url: {
+      raster: string;
+    };
+    dark_url: {
+      raster: string;
+    };
+  };
 };
