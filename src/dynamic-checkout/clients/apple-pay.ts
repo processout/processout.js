@@ -3,9 +3,14 @@
 module ProcessOut {
   export class ApplePayClient {
     processOutInstance: ProcessOut;
+    paymentConfig: DynamicCheckoutPaymentConfigType;
 
-    constructor(processOutInstance: ProcessOut) {
+    constructor(
+      processOutInstance: ProcessOut,
+      paymentConfig: DynamicCheckoutPaymentConfigType
+    ) {
       this.processOutInstance = processOutInstance;
+      this.paymentConfig = paymentConfig;
     }
 
     public loadButton(
@@ -132,16 +137,12 @@ module ProcessOut {
       );
     }
 
-    private makeApplePayPayment(
-      cardToken: string,
-      invoiceData: Invoice,
-      getViewContainer: () => HTMLElement
-    ) {
+    private makeApplePayPayment(cardToken: string, invoiceData: Invoice) {
       this.processOutInstance.makeCardPayment(
         invoiceData.id,
         cardToken,
         {
-          authorize_only: true,
+          authorize_only: !this.paymentConfig.capturePayments,
         },
         function (invoiceId) {
           this.resetContainerHtml().appendChild(

@@ -47,7 +47,7 @@ module ProcessOut {
           tagName: "button",
           classNames: ["dco-payment-method-button-pay-button"],
           attributes: {
-            id: "dco-saved-apm-pay-button",
+            id: `dco-saved-apm-pay-button-${this.paymentMethod.display.name}`,
           },
           textContent: `${Translations.getText(
             "pay-button-text",
@@ -74,19 +74,66 @@ module ProcessOut {
     }
 
     private handleApmPayment() {
+      const { apm_customer_token } = this.paymentMethod;
+      const { clientSecret, invoiceId } = this.paymentConfig;
+
       const cardPaymentOptions = {
-        authorize_only: true,
+        authorize_only: !this.paymentConfig.capturePayments,
         allow_fallback_to_sale: true,
       };
 
+      const requestOptions = {
+        clientSecret,
+      };
+
+      const actionHandlerOptions = new ActionHandlerOptions(
+        apm_customer_token.gateway_name,
+        apm_customer_token.gateway_logo.dark_url.raster
+      );
+
       this.setButtonLoading();
+
+      if (apm_customer_token.redirect_url) {
+        return this.processOutInstance.handleAction(
+          apm_customer_token.redirect_url,
+          (paymentToken) => {
+            this.processOutInstance.makeCardPayment(
+              invoiceId,
+              paymentToken,
+              cardPaymentOptions,
+              (invoiceId) => {
+                this.resetContainerHtml().appendChild(
+                  new DynamicCheckoutPaymentSuccessView(this.paymentConfig)
+                    .element
+                );
+
+                DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent(
+                  invoiceId
+                );
+              },
+              (error) => {
+                this.resetContainerHtml().appendChild(
+                  new DynamicCheckoutPaymentErrorView(this.paymentConfig)
+                    .element
+                );
+
+                DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error);
+              },
+              requestOptions
+            );
+          },
+          DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent,
+          actionHandlerOptions
+        );
+      }
 
       this.processOutInstance.makeCardPayment(
         this.paymentConfig.invoiceId,
         this.paymentMethod.apm_customer_token.customer_token_id,
         cardPaymentOptions,
         this.handlePaymentSuccess.bind(this),
-        this.handlePaymentError.bind(this)
+        this.handlePaymentError.bind(this),
+        requestOptions
       );
     }
 
@@ -109,7 +156,7 @@ module ProcessOut {
 
     private setButtonLoading() {
       const payButton = document.getElementById(
-        "dco-saved-apm-pay-button"
+        `dco-saved-apm-pay-button-${this.paymentMethod.display.name}`
       ) as HTMLButtonElement;
 
       payButton.disabled = true;

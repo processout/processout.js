@@ -47,7 +47,7 @@ module ProcessOut {
           tagName: "button",
           classNames: ["dco-payment-method-button-pay-button"],
           attributes: {
-            id: "dco-saved-card-pay-button",
+            id: `dco-saved-card-pay-button-${this.paymentMethod.display.description}`,
           },
           textContent: `${Translations.getText(
             "pay-button-text",
@@ -80,7 +80,7 @@ module ProcessOut {
         this.paymentConfig.invoiceId,
         this.paymentMethod.card_customer_token.customer_token_id,
         {
-          authorize_only: true,
+          authorize_only: !this.paymentConfig.capturePayments,
         },
         this.handlePaymentSuccess.bind(this),
         this.handlePaymentError.bind(this)
@@ -106,7 +106,7 @@ module ProcessOut {
 
     private setButtonLoading() {
       const payButton = document.getElementById(
-        "dco-saved-card-pay-button"
+        `dco-saved-card-pay-button-${this.paymentMethod.display.description}`
       ) as HTMLButtonElement;
 
       payButton.disabled = true;

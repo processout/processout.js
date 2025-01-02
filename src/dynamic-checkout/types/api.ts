@@ -69,9 +69,9 @@ type BrandColor = {
 };
 
 type Card = {
-  require_cvc: boolean;
-  require_cardholder_name: boolean;
-  allow_scheme_selection: boolean;
+  cvc_required: boolean;
+  cardholder_name_required: boolean;
+  scheme_selection_allowed: boolean;
   saving_allowed: boolean;
   billing_address: BillingAddress;
 };
@@ -87,5 +87,12 @@ type Apm = {
   redirect_url?: string;
   customer_token_id?: string;
   gateway_name?: string;
-  gateway_logo_url?: string;
+  gateway_logo: {
+    light_url: {
+      raster: string;
+    };
+    dark_url: {
+      raster: string;
+    };
+  };
 };
