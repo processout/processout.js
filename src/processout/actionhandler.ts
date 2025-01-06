@@ -238,7 +238,7 @@ module ProcessOut {
 
                 // And create the cancel button
                 var buttonWrapper = document.createElement("div");
-                buttonWrapper.setAttribute("style", "width: 100%; text-align: center; margin-bottom: 1em;");
+                buttonWrapper.setAttribute("style", "width: 150px; text-align: center; margin: 0 auto 1em auto;");
                 var button = document.createElement("div");
                 button.setAttribute("style", "cursor: pointer; color: white;");
                 button.innerHTML = Translator.translateMessage("label.cancel", "Cancel");
