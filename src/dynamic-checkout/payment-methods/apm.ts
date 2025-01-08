@@ -15,7 +15,11 @@ module ProcessOut {
       theme: DynamicCheckoutThemeType,
       resetContainerHtml: () => HTMLElement,
     ) {
-      super(paymentMethod.display.name, paymentMethod.display.logo.dark_url.vector)
+      super(
+        paymentMethod.display.name,
+        paymentMethod.display.logo.dark_url.vector,
+        paymentMethod.display.name,
+      )
 
       this.processOutInstance = processOutInstance
       this.paymentConfig = paymentConfig
@@ -46,7 +50,7 @@ module ProcessOut {
       }
 
       const saveForFutureCheckbox = document.getElementById(
-        `save-apm-for-future-${display.name}`,
+        `save-apm-for-future-${this.paymentMethod.apm.gateway_name}`,
       ) as HTMLInputElement | null
 
       if (saveForFutureCheckbox) {
@@ -204,10 +208,11 @@ module ProcessOut {
         },
         {
           tagName: "input",
+          classNames: ["dco-payment-method-button-save-for-future-checkbox"],
           attributes: {
             type: "checkbox",
             name: "save-apm-for-future",
-            id: `save-apm-for-future-${this.paymentMethod.display.name}`,
+            id: `save-apm-for-future-${this.paymentMethod.apm.gateway_name}`,
           },
         },
         {

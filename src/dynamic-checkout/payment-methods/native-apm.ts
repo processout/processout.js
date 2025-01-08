@@ -19,7 +19,7 @@ module ProcessOut {
       const { display, apm } = paymentMethod
       const { invoiceId, invoiceDetails } = paymentConfig
 
-      super(display.name, display.logo.dark_url.vector)
+      super(display.name, display.logo.dark_url.vector, display.name)
 
       this.paymentConfig = paymentConfig
       this.processOutInstance = processOutInstance
