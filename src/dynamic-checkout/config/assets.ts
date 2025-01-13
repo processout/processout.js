@@ -11,4 +11,13 @@ module ProcessOut {
 
   export const PAYMENT_ERROR_IMAGE_ASSET =
     "/images/dynamic-checkout-assets/payment-error.svg";
+
+  export const COG_ICON =
+    "/images/dynamic-checkout-assets/cog-icon.svg";
+
+  export const TRASH_ICON =
+    "/images/dynamic-checkout-assets/trash-icon.svg";
+
+  export const CREDIT_CARD_ICON =
+    "/images/dynamic-checkout-assets/credit-card.svg";
 }
