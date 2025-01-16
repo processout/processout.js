@@ -24,6 +24,7 @@ module ProcessOut {
                     document.documentElement.scrollHeight,
                     document.documentElement.offsetHeight);
                 this.element.style.height = height + "px";
+                this.element.style.maxHeight = "100%";
             }.bind(this));
             if(typeof(Event) === "function") {
                 var event = new Event("resize");
@@ -332,7 +333,7 @@ module ProcessOut {
                 }
                 try {
                     // We want to run the newWindow.closed condition in a try
-                    // catch as Chrome has a bug in which the access to the 
+                    // catch as Chrome has a bug in which the access to the
                     // window is lost when the user navigates back (ie clicks
                     // on the back button)
                     if (!newWindow || newWindow.closed) {
