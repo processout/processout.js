@@ -34,7 +34,7 @@ module ProcessOut {
         rightContent.appendChild(logo)
       })
 
-      super(display.name, display.logo.dark_url.vector, display.name, rightContent)
+      super(display.name, display.logo.light_url.vector, display.name, rightContent)
 
       this.procesoutInstance = procesoutInstance
       this.paymentMethod = paymentMethod
