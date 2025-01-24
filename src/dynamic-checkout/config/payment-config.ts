@@ -34,8 +34,12 @@ module ProcessOut {
         locale: this.locale,
         invoiceDetails: this.invoiceDetails,
         capturePayments: this.capturePayments,
+<<<<<<< HEAD
         allowFallbackToSale: this.allowFallbackToSale,
       }
+=======
+      };
+>>>>>>> 2b0114c (fixes)
     }
 
     public setInvoiceDetails(invoiceDetails: Invoice) {
