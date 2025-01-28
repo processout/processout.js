@@ -234,14 +234,7 @@ module ProcessOut {
 
 
                 const cancelButtonWrapperHeight = 80;
-
-                // For mobile devices we want to make iframe stretch for the whole height of screen
-                // minus the cancel button wrapper height. This is to make sure that content of iframe
-                // is not cut off. If iframeOverriden is true, we use the height provided by the merchant.
-                const calculatedIframeHeight =
-                  window && window.innerWidth < 500 && !this.options.iframeOverriden
-                    ? `calc(100% - ${cancelButtonWrapperHeight}px)`
-                    : `${this.options.iframeHeight}px`;
+                const calculatedIframeHeight = this.calculateIframeHeight(cancelButtonWrapperHeight);
 
                 // Create the iframe to be used later
                 var iframe = document.createElement("iframe");
@@ -267,6 +260,24 @@ module ProcessOut {
                     this.iframeWrapper.close();
                 }.bind(this);
             }
+        }
+
+        private calculateIframeHeight(cancelButtonWrapperHeight: number) {
+          const defaultIframeHeight = `${this.options.iframeHeight}px`;
+
+          // always respect merchant specified height
+          if (this.options.iframeOverriden) {
+            return defaultIframeHeight;
+          }
+
+          // For mobile devices we want to make iframe stretch for the whole height of screen
+          // minus the cancel button wrapper height. This is to make sure that content of iframe
+          // is not cut off.
+          if (window && window.innerWidth < 500) {
+            return `calc(100% - ${cancelButtonWrapperHeight}px)`;
+          }
+
+          return defaultIframeHeight;
         }
 
         /**
