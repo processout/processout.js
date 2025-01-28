@@ -84,6 +84,9 @@ module ProcessOut {
         public static ThreeDSChallengeFlowNoIframe = "three-d-s-challenge-flow-no-iframe";
         public static ThreeDSFingerprintFlow = "three-d-s-fingerprint-flow";
 
+        // Specifies if merchant provided iframe override
+        public iframeOverriden: boolean = false;
+
         /**
          *
          * @param actionType gateway string
@@ -146,6 +149,7 @@ module ProcessOut {
                 this.flow = ActionFlow.IFrame;
                 this.iframeWidth = override.width;
                 this.iframeHeight = override.height;
+                this.iframeOverriden = true;
             }
         }
     }
@@ -233,8 +237,9 @@ module ProcessOut {
 
                 // For mobile devices we want to make iframe stretch for the whole height of screen
                 // minus the cancel button wrapper height. This is to make sure that content of iframe
-                // is not cut off
-                const calculatedIframeHeight = window && window.innerWidth < 500
+                // is not cut off. If iframeOverriden is true, we use the height provided by the merchant.
+                const calculatedIframeHeight =
+                  window && window.innerWidth < 500 && !this.options.iframeOverriden
                     ? `calc(100% - ${cancelButtonWrapperHeight}px)`
                     : `${this.options.iframeHeight}px`;
 
