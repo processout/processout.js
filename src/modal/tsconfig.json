@@ -1,11 +1,17 @@
 {
-    "compilerOptions": {
-        "removeComments": true,
-        "outFile": "../../scripts/modal.js",
-        "allowJs": true,
-        "target": "es5",
-        "lib": ["dom", "es2015"],
-    },
-    "include": ["modal.ts", "../polyfills/base64.polyfill.min.js", "../polyfills/includes.polyfill.js", "../polyfills/object.assign.polyfill.min.js", "../polyfills/remove.polyfill.js"],
-    "exclude": ["node_modules"]
+  "compilerOptions": {
+    "removeComments": true,
+    "outFile": "../../scripts/modal.js",
+    "allowJs": true,
+    "target": "es5",
+    "lib": ["dom", "es2015"]
+  },
+  "include": [
+    "modal.ts",
+    "../polyfills/base64.polyfill.min.js",
+    "../polyfills/includes.polyfill.js",
+    "../polyfills/object.assign.polyfill.min.js",
+    "../polyfills/remove.polyfill.js"
+  ],
+  "exclude": ["node_modules"]
 }

@@ -6,13 +6,24 @@
     "build:processout": "tsc -p src/processout && uglifyjs --compress --keep-fnames --ie8 scripts/processout.js -o scripts/processout.js",
     "build:modal": "tsc -p src/modal && uglifyjs --compress --keep-fnames --ie8 scripts/modal.js -o scripts/modal.js",
     "build": "yarn build:processout & yarn build:modal",
-    "buildtest": "yarn build && yarn processout:debug",
-    "processout:debug": "echo 'ProcessOut.DEBUG = true;' >> scripts/processout.js && echo 'ProcessOut.DEBUG = true;' >> scripts/modal.js",
-    "test": "yarn build && rm -f scripts/*"
+    "build:test": "yarn build && yarn processout:debug",
+    "test": "yarn lint && yarn build",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
+    "format": "prettier --ignore-path .gitignore --write \"**/*.+(ts|json)\"",
+    "processout:debug": "echo 'ProcessOut.DEBUG = true;' >> scripts/processout.js && echo 'ProcessOut.DEBUG = true;' >> scripts/modal.js"
   },
   "packageManager": "yarn@1.22.22+sha1.ac34549e6aa8e7ead463a7407e1c7390f61a6610",
   "devDependencies": {
+    "@eslint/js": "^9.19.0",
+    "@typescript-eslint/eslint-plugin": "^8.23.0",
+    "@typescript-eslint/parser": "^8.23.0",
+    "eslint": "^9.19.0",
+    "eslint-config-prettier": "^10.0.1",
+    "globals": "^15.14.0",
+    "prettier": "^3.4.2",
     "typescript": "^5.7.3",
+    "typescript-eslint": "^8.23.0",
     "uglify-js": "^3.19.3"
   }
 }
