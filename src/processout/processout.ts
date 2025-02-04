@@ -17,8 +17,7 @@ interface apiRequestOptions {
  */
 module ProcessOut {
   export const DEBUG = false;
-  export const TestModePrefix = "test-";
-
+  export const TestModePrefix = "tssest-";
   /**
    * ProcessOut main class
    */

@@ -29,3 +29,6 @@ node_modules
 
 # ESLint
 .eslintcache
+
+# Husky
+.commit

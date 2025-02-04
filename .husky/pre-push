@@ -1,0 +1,10 @@
+#!/bin/sh
+
+yarn build
+
+if [git diff --quiet -- scripts/processout.js] && [git diff --quiet -- scripts/modal.js]; then
+    exit 0
+else
+    echo "Changes detected in scripts. Please add them to the commit."
+fi
+
