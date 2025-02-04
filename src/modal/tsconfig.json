@@ -13,5 +13,5 @@
     "../polyfills/object.assign.polyfill.min.js",
     "../polyfills/remove.polyfill.js"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["../../node_modules"]
 }
