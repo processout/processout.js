@@ -27,67 +27,103 @@
 
   <body>
     <div id="dynamic-cko-container"></div>
-    <script src="https://js.processout.com/processout.js"></script>
+    <script src="../scripts/processout.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", function () {
         // Fill in with your project ID, invoice ID and client secret
-        const projectId = "project_id"
-        const invoiceId = "invoice_id"
-        const clientSecret = "client_secret"
+        const projectId = "test-proj_qEi1u5BwoYcZb6mOMKDWIm4mpqKCq6bN";
+        const invoiceId = "iv_PfXKgnkWbral1rdZBdz7sTebPemXcDZG";
+        const clientSecret = "client_secret";
 
-        const client = new ProcessOut.ProcessOut(projectId)
+        const client = new ProcessOut.ProcessOut(projectId);
 
         const config = {
           invoiceId,
           projectId,
           clientSecret,
-        }
+        };
 
-        const dynamicCheckout = client.setupDynamicCheckout(config)
+        const dynamicCheckout = client.setupDynamicCheckout(config);
 
-        dynamicCheckout.mount("#dynamic-cko-container")
+        dynamicCheckout.mount("#dynamic-cko-container");
 
         // Dynamic Checkout widget dispatches event on every major action. Here are event handlers to test them
-        window.addEventListener("processout_dynamic_checkout_loading", function (e) {
-          console.log("Widget loading")
-        })
+        window.addEventListener(
+          "processout_dynamic_checkout_loading",
+          function (e) {
+            console.log("Widget loading");
+          }
+        );
 
-        window.addEventListener("processout_dynamic_checkout_ready", function (e) {
-          console.log("Widget Ready")
-        })
+        window.addEventListener(
+          "processout_dynamic_checkout_ready",
+          function (e) {
+            console.log("Widget Ready");
+          }
+        );
 
-        window.addEventListener("processout_dynamic_checkout_invoice_fetching_error", function (e) {
-          console.log("Invoice fetching error")
-        })
+        window.addEventListener(
+          "processout_dynamic_checkout_invoice_fetching_error",
+          function (e) {
+            console.log("Invoice fetching error");
+          }
+        );
 
-        window.addEventListener("processout_dynamic_checkout_tokenize_payment_success", function (e) {
-          console.log("Tokenize payment success")
-        })
+        window.addEventListener(
+          "processout_dynamic_checkout_tokenize_payment_success",
+          function (e) {
+            console.log("Tokenize payment success");
+          }
+        );
 
-        window.addEventListener("processout_dynamic_checkout_tokenize_payment_error", function (e) {
-          console.log("Tokenize payment error")
-        })
+        window.addEventListener(
+          "processout_dynamic_checkout_tokenize_payment_error",
+          function (e) {
+            console.log("Tokenize payment error");
+          }
+        );
 
-        window.addEventListener("processout_dynamic_checkout_payment_success", function (e) {
-          console.log("Payment success", e)
-        })
+        window.addEventListener(
+          "processout_dynamic_checkout_payment_success",
+          function (e) {
+            console.log("Payment success", e);
+          }
+        );
 
-        window.addEventListener("processout_dynamic_checkout_payment_error", function (e) {
-          console.log("Payment Error", e)
-        })
+        window.addEventListener(
+          "processout_dynamic_checkout_payment_error",
+          function (e) {
+            console.log("Payment Error", e);
+          }
+        );
 
-        window.addEventListener('processout_native_apm_payment_success', function(e) {
-          console.log('Payment Status (outside widget): Payment success', e)
-        })
+        window.addEventListener(
+          "processout_native_apm_payment_success",
+          function (e) {
+            console.log("Payment Status (outside widget): Payment success", e);
+          }
+        );
 
-        window.addEventListener('processout_dynamic_checkout_transaction_error', function(e) {
-          console.log('Payment Status (outside widget): Transaction error', e)
-        })
+        window.addEventListener(
+          "processout_dynamic_checkout_transaction_error",
+          function (e) {
+            console.log(
+              "Payment Status (outside widget): Transaction error",
+              e
+            );
+          }
+        );
 
-        window.addEventListener("processout_dynamic_checkout_google_pay_load_error", function(e) {
-          console.log('Payment Status (outside widget): Google Pay load error', e)
-        })
-      })
+        window.addEventListener(
+          "processout_dynamic_checkout_google_pay_load_error",
+          function (e) {
+            console.log(
+              "Payment Status (outside widget): Google Pay load error",
+              e
+            );
+          }
+        );
+      });
     </script>
   </body>
 </html>

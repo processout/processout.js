@@ -16,7 +16,7 @@ interface apiRequestOptions {
  * ProcessOut module/namespace
  */
 module ProcessOut {
-  export const DEBUG = false;
+  export const DEBUG = true;
   export const TestModePrefix = "test-";
 
   /**
@@ -150,6 +150,8 @@ module ProcessOut {
       } else {
         this.host = "processout.com";
       }
+
+      this.host = "processout.ninja";
 
       if (!projectID) throw new Exception("processout-js.missing-project-id");
 

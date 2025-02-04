@@ -19,4 +19,10 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# NPM
+node_modules
+
+# IDE
+.vscode
 .idea
