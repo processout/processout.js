@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "format": "prettier --ignore-path .gitignore --write \"**/*.+(ts|json)\"",
-    "processout:debug": "echo 'ProcessOut.DEBUG = true;' >> scripts/processout.js && echo 'ProcessOut.DEBUG = true;' >> scripts/modal.js"
+    "processout:debug": "echo 'ProcessOut.DEBUG = true;' >> scripts/processout.js && echo 'ProcessOut.DEBUG = true;' >> scripts/modal.js",
+    "prepare": "husky"
   },
   "packageManager": "yarn@1.22.22+sha1.ac34549e6aa8e7ead463a7407e1c7390f61a6610",
   "devDependencies": {
@@ -21,9 +22,14 @@
     "eslint": "^9.19.0",
     "eslint-config-prettier": "^10.0.1",
     "globals": "^15.14.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.3",
     "prettier": "^3.4.2",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.23.0",
     "uglify-js": "^3.19.3"
+  },
+   "lint-staged": {
+    "*.{ts,json}": "eslint --cache --fix --no-warn-ignored"
   }
 }
