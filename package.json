@@ -1,16 +1,17 @@
 {
   "name": "processout.js",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "description": "ProcessOut.js is a JavaScript library for ProcessOut's payment processing API.",
   "scripts": {
     "build:processout": "tsc -p src/processout && uglifyjs --compress --keep-fnames --ie8 scripts/processout.js -o scripts/processout.js",
     "build:modal": "tsc -p src/modal && uglifyjs --compress --keep-fnames --ie8 scripts/modal.js -o scripts/modal.js",
     "build:test": "yarn build && yarn processout:debug",
     "build": "yarn build:processout & yarn build:modal",
-    "test": "yarn lint && yarn build",
+    "verify": "yarn lint && yarn build",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "format": "prettier --ignore-path .gitignore --write \"**/*.+(ts|json)\"",
+    "format:check": "prettier --ignore-path .gitignore --check \"**/*.+(ts|json)\"",
     "processout:debug": "echo 'ProcessOut.DEBUG = true;' >> scripts/processout.js && echo 'ProcessOut.DEBUG = true;' >> scripts/modal.js",
     "prepare": "husky"
   },

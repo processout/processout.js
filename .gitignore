@@ -30,4 +30,5 @@ node_modules
 # ESLint
 .eslintcache
 
+# Dist files
 scripts
