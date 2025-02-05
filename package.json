@@ -1,6 +1,6 @@
 {
   "name": "processout.js",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "ProcessOut.js is a JavaScript library for ProcessOut's payment processing API.",
   "scripts": {
     "build:processout": "tsc -p src/processout && uglifyjs --compress --keep-fnames --ie8 scripts/processout.js -o scripts/processout.js",
@@ -29,7 +29,7 @@
     "typescript-eslint": "^8.23.0",
     "uglify-js": "^3.19.3"
   },
-   "lint-staged": {
+  "lint-staged": {
     "*.{ts,json}": "eslint --cache --fix --no-warn-ignored"
   }
 }
