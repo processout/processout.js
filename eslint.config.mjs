@@ -12,13 +12,6 @@ export default [
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    ignores: [
-      "node_modules/*",
-      "scripts/*",
-      "src/polyfills/*"
-    ]
-  },
-  {
     rules: {
       // TODO: We need to fix issues related to these rules and remove them
       "@typescript-eslint/triple-slash-reference": "off",
