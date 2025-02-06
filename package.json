@@ -28,7 +28,7 @@
     "prettier": "^3.4.2",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.23.0",
-    "uglify-js": "^3.19.3"
+    "uglify-js": "3.8.0"
   },
   "lint-staged": {
     "*.{ts,json}": "eslint --cache --fix --no-warn-ignored"
