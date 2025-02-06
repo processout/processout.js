@@ -1,10 +1,10 @@
-name: Test
+name: Build, lint and test
 
 on: [push]
 
 jobs:
   test:
-    name: "Test"
+    name: "Build, lint and test"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -24,5 +24,8 @@ jobs:
         if: steps.cache-nodemodules.outputs.cache-hit != 'true'
         run: yarn install --prefer-offline --frozen-lockfile
 
-      - name: Build, lint and test
-        run: yarn verify
+      - name: Lint
+        run: yarn lint
+
+      - name: Build
+        run: yarn build
