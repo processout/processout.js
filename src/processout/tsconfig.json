@@ -7,11 +7,11 @@
     "lib": ["dom", "es2015"]
   },
   "include": [
-    "*.ts",
     "../polyfills/base64.polyfill.min.js",
     "../polyfills/includes.polyfill.js",
     "../polyfills/object.assign.polyfill.min.js",
-    "../polyfills/remove.polyfill.js"
+    "../polyfills/remove.polyfill.js",
+    "*.ts",
   ],
   "exclude": ["../../node_modules"]
 }
