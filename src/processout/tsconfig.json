@@ -1,10 +1,17 @@
 {
-    "compilerOptions": {
-        "removeComments": true,
-        "outFile": "../../scripts/processout.js",
-          "target": "es5",
-          "lib": ["dom", "es2015"],
-    },
-    "compileOnSave": false,
-    "buildOnSave": false
+  "compilerOptions": {
+    "removeComments": true,
+    "allowJs": true,
+    "outFile": "../../scripts/processout.js",
+    "target": "es5",
+    "lib": ["dom", "es2015"]
+  },
+  "include": [
+    "../polyfills/base64.polyfill.min.js",
+    "../polyfills/includes.polyfill.js",
+    "../polyfills/object.assign.polyfill.min.js",
+    "../polyfills/remove.polyfill.js",
+    "*.ts",
+  ],
+  "exclude": ["../../node_modules"]
 }

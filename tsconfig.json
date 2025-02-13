@@ -1,6 +1,4 @@
 {
-  "compileOnSave": false,
-  "buildOnSave": false,
   "compilerOptions": {
     "target": "es5",
     "lib": ["dom", "es2015"]

@@ -4,17 +4,49 @@
 The ProcessOut's full API documentation can be found on [our documentation](https://docs.processout.com).
 You can also find ProcessOut.js specific documentation for [card fields](https://docs.processout.com/payments/processoutjs/) and [modals](https://docs.processout.com/payments/payment-modal/).
 
-## Building
+## Prerequisites
 
-To compile the code in this repository you will need ensure Node, NPM, TypeScript and Uglify are installed on your machine. This can be done by running the following commands on your terminal:
+- Node.js (v18.17.1)
+- Yarn (v1.22.22)
 
-``` bash
-brew install node
-node -v
-npm -v
+## Installation
 
-sudo npm install typescript@3.2.4 uglify-js@3.8.0 -g
-tsc -v
+To install the dependencies, run the following command:
+```bash
+yarn install
 ```
 
-After that, changes to the code can be compiled with the command `make build`. **This should be done before changes are merged into master**.
+## Building
+
+To build the project, run the following command:
+
+```bash
+yarn build
+```
+
+## Testing
+
+To run the tests, run the following command:
+
+```bash
+yarn test
+```
+
+## Linting
+
+To run the linting, run the following command:
+
+```bash
+yarn lint
+```
+
+## Formatting
+
+To run the formatting, run the following command:
+
+```bash
+yarn format
+```
+
+
+
