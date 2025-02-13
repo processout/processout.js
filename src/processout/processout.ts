@@ -321,7 +321,7 @@ module ProcessOut {
         "API-Version": this.apiVersion,
       }
 
-      // if (SCRIPT_VERSION) headers["X-ProcessOut-JS-Version"] = SCRIPT_VERSION
+      if (SCRIPT_VERSION) headers["X-ProcessOut-JS-Version"] = SCRIPT_VERSION
 
       if (this.projectID) headers["Authorization"] = `Basic ${btoa(this.projectID + ":")}`
 
