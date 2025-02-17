@@ -14,3 +14,8 @@ if (args.includes('--debug')) {
   fs.appendFileSync('dist/processout.js', `ProcessOut.DEBUG = true;`);
   fs.appendFileSync('dist/modal.js', `ProcessOut.DEBUG = true;`);
 }
+
+if (args.includes('--debug-host')) {
+  fs.appendFileSync('dist/processout.js', `ProcessOut.DEBUG_HOST = "processout.ninja";`);
+  fs.appendFileSync('dist/modal.js', `ProcessOut.DEBUG_HOST = "processout.ninja";`);
+}

@@ -17,10 +17,11 @@ interface apiRequestOptions {
  */
 module ProcessOut {
   export const TestModePrefix = "test-"
-  export const DEBUG = false
-  export const DEBUG_HOST = "processout.ninja"
+  export const DEBUG = true
   // This is set during the build process based on the version from package.json
   export const SCRIPT_VERSION = undefined
+  // This is set during development to point to the staging API
+  export const DEBUG_HOST = undefined
 
   /**
    * ProcessOut main class
@@ -144,12 +145,12 @@ module ProcessOut {
       if (/^https?:\/\/.*\.processout\.ninja\//.test(jsHost)) {
         this.host = "processout.ninja"
       } else if (/^https?:\/\/.*\.processout\.dev\//.test(jsHost)) {
-        this.host = "processout.dsev"
+        this.host = "processout.dev"
       } else {
         this.host = "processout.com"
       }
 
-      if (DEBUG) {
+      if (DEBUG_HOST) {
         this.host = DEBUG_HOST
       }
 
@@ -205,7 +206,7 @@ module ProcessOut {
         // We don't want to send requests when developing locally
         if (DEBUG) return
 
-        if (source.includes("processout.js")) {
+        if (source.indexOf("processout.js") > -1) {
           this.apiRequest(
             "POST",
             "telemetry",
@@ -213,7 +214,6 @@ module ProcessOut {
               metadata: {
                 application: {
                   name: "processout.js",
-                  version: SCRIPT_VERSION,
                 },
                 device: {
                   model: "web",
@@ -225,9 +225,9 @@ module ProcessOut {
                   timestamp: new Date().toISOString(),
                   message,
                   attributes: {
-                    line,
-                    source,
-                    stack: error?.stack,
+                    line: line,
+                    source: source,
+                    stack: error ? error.stack : undefined,
                   },
                 },
               ],
@@ -321,7 +321,7 @@ module ProcessOut {
         "API-Version": this.apiVersion,
       }
 
-      if (SCRIPT_VERSION) headers["X-ProcessOut-JS-Version"] = SCRIPT_VERSION
+      if (SCRIPT_VERSION && !DEBUG) headers["X-ProcessOut-JS-Version"] = SCRIPT_VERSION
 
       if (this.projectID) headers["Authorization"] = `Basic ${btoa(this.projectID + ":")}`
 

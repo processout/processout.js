@@ -5,7 +5,7 @@
   "scripts": {
     "build:processout": "tsc -p src/processout && uglifyjs --compress --keep-fnames --ie8 dist/processout.js -o dist/processout.js",
     "build:modal": "tsc -p src/modal && uglifyjs --compress --keep-fnames --ie8 dist/modal.js -o dist/modal.js",
-    "build:test": "yarn build && yarn append-dev-metadata",
+    "build:test": "yarn build:processout & yarn build:modal && yarn append-debug-mode && yarn append-version",
     "build": "yarn build:processout & yarn build:modal && yarn append-version",
     "verify": "yarn lint & yarn build",
     "lint": "eslint .",
@@ -14,8 +14,9 @@
     "format:check": "prettier --ignore-path .gitignore --check \"**/*.+(ts|json)\"",
     "dev": "concurrently \"vite\" \"yarn watch-processout\"",
     "watch-processout": "tsc-watch -p src/processout --onSuccess 'yarn append-dev-metadata'",
-    "append-dev-metadata": "yarn append-debug-mode && yarn append-version",
+    "append-dev-metadata": "yarn append-debug-mode && yarn append-version && yarn append-debug-host",
     "append-debug-mode": "node scripts/append-script-metadata.js --debug",
+    "append-debug-host": "node scripts/append-script-metadata.js --debug-host",
     "append-version": "node scripts/append-script-metadata.js --version",
     "bump-version": "yarn version"
   },
