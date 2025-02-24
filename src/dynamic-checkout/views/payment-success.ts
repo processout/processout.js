@@ -4,7 +4,7 @@ module ProcessOut {
   export class DynamicCheckoutPaymentSuccessView {
     public element: Element
 
-    constructor(paymentConfig: DynamicCheckoutPublicConfig) {
+    constructor(paymentConfig: DynamicCheckoutPaymentConfig) {
       const [element, image, message] = HTMLElements.createMultipleElements([
         {
           tagName: "div",

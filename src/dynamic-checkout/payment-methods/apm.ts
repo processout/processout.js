@@ -6,7 +6,7 @@ module ProcessOut {
       "https://js.processout.com/images/dynamic-checkout-assets/apm-redirect-arrow.svg"
 
     private processOutInstance: ProcessOut
-    private paymentConfig: DynamicCheckoutPublicConfig
+    private paymentConfig: DynamicCheckoutPaymentConfig
     private paymentMethod: PaymentMethod
     private theme: DynamicCheckoutThemeType
     private resetContainerHtml: () => HTMLElement
@@ -14,7 +14,7 @@ module ProcessOut {
     constructor(
       processOutInstance: ProcessOut,
       paymentMethod: PaymentMethod,
-      paymentConfig: DynamicCheckoutPublicConfig,
+      paymentConfig: DynamicCheckoutPaymentConfig,
       theme: DynamicCheckoutThemeType,
       resetContainerHtml: () => HTMLElement,
     ) {

@@ -207,6 +207,7 @@ module ProcessOut {
             const googlePayPaymentMethod = new GooglePayPaymentMethod(
               this.processOutInstance,
               this.paymentConfig.invoiceDetails,
+              this.paymentConfig,
               this.resetContainerHtml.bind(this),
             )
 

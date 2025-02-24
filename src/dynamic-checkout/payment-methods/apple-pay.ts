@@ -7,11 +7,7 @@ module ProcessOut {
 
     constructor(
       processOutInstance: ProcessOut,
-<<<<<<< HEAD
-      paymentConfig: DynamicCheckoutPublicConfig,
-=======
       paymentConfig: DynamicCheckoutPaymentConfig,
->>>>>>> 079f949 (include dc related stuff in this pr)
       invoiceData: Invoice,
       resetContainerHtml: () => HTMLElement,
     ) {

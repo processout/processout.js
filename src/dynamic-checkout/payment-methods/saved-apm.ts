@@ -144,6 +144,7 @@ module ProcessOut {
       this.resetContainerHtml().appendChild(
         new DynamicCheckoutPaymentSuccessView(this.paymentConfig).element,
       )
+
       DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
         invoiceId,
         returnUrl: this.paymentConfig.invoiceDetails.return_url,
@@ -154,6 +155,7 @@ module ProcessOut {
       this.resetContainerHtml().appendChild(
         new DynamicCheckoutPaymentErrorView(this.paymentConfig).element,
       )
+
       DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error)
     }
 

@@ -4,6 +4,7 @@ module ProcessOut {
   export class GooglePayClient {
     googleClient: any
     processOutInstance: ProcessOut
+    paymentConfig: DynamicCheckoutPaymentConfig
     isReadyToPayRequest: {
       apiVersion: number
       apiVersionMinor: number
@@ -22,7 +23,6 @@ module ProcessOut {
         }
       }[]
     }
-
     paymentRequest: {
       apiVersion: number
       apiVersionMinor: number
@@ -50,8 +50,9 @@ module ProcessOut {
       }
     }
 
-    constructor(processOutInstance: ProcessOut) {
+    constructor(processOutInstance: ProcessOut, paymentConfig: DynamicCheckoutPaymentConfig) {
       this.processOutInstance = processOutInstance
+      this.paymentConfig = paymentConfig
     }
 
     public loadButton(
@@ -116,7 +117,7 @@ module ProcessOut {
           processOutInstance.tokenize(
             paymentToken,
             {},
-            function (token) {
+            token => {
               DynamicCheckoutEventsUtils.dispatchTokenizePaymentSuccessEvent(token)
 
               processOutInstance.makeCardPayment(
@@ -126,27 +127,30 @@ module ProcessOut {
                   authorize_only: !this.paymentConfig.capturePayments,
                   allow_fallback_to_sale: this.paymentConfig.allowFallbackToSale,
                 },
-                function (invoiceId) {
-                  this.resetContainerHtml().appendChild(
+                invoiceId => {
+                  getViewContainer().appendChild(
                     new DynamicCheckoutPaymentSuccessView(this.paymentConfig).element,
                   )
+
                   DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
                     invoiceId,
                     returnUrl: this.paymentConfig.invoiceDetails.return_url,
                   })
                 },
                 function (error) {
-                  this.resetContainerHtml().appendChild(
+                  getViewContainer().appendChild(
                     new DynamicCheckoutPaymentErrorView(this.paymentConfig).element,
                   )
+
                   DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error)
                 },
               )
             },
             function (err) {
-              this.resetContainerHtml().appendChild(
+              getViewContainer().appendChild(
                 new DynamicCheckoutPaymentErrorView(this.paymentConfig).element,
               )
+
               DynamicCheckoutEventsUtils.dispatchTokenizePaymentErrorEvent({
                 message: `Tokenize payment error: ${JSON.stringify(err, undefined, 2)}`,
               })

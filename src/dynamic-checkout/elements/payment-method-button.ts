@@ -2,7 +2,7 @@
 
 module ProcessOut {
   export abstract class PaymentMethodButton {
-    public element: HTMLElement;
+    public element: HTMLElement
 
     constructor(
       name: string,
@@ -11,7 +11,7 @@ module ProcessOut {
       rightContent?: HTMLElement,
       deleteMode: boolean = false,
       deletingAllowed: boolean = false,
-      handleDeletePaymentMethod?: () => void
+      handleDeletePaymentMethod?: () => void,
     ) {
       this.element = this.createElement(
         name,
@@ -20,8 +20,8 @@ module ProcessOut {
         deleteMode,
         deletingAllowed,
         rightContent,
-        handleDeletePaymentMethod
-      );
+        handleDeletePaymentMethod,
+      )
     }
 
     private createElement(
@@ -31,7 +31,7 @@ module ProcessOut {
       deleteMode: boolean,
       deletingAllowed: boolean,
       rightContent?: HTMLElement,
-      handleDeletePaymentMethod?: () => void
+      handleDeletePaymentMethod?: () => void,
     ) {
       const [
         element,
@@ -97,49 +97,44 @@ module ProcessOut {
             src: TRASH_ICON,
           },
         },
-      ]);
+      ])
 
       if (rightContent) {
-        HTMLElements.appendChildren(rightContentWrapper, [rightContent]);
+        HTMLElements.appendChildren(rightContentWrapper, [rightContent])
       }
 
-      HTMLElements.appendChildren(paymentMethodInfo, [
-        paymentMethodLogo,
-        paymentMethodName,
-      ]);
-
-      HTMLElements.appendChildren(element, [paymentMethodButtonWrapper]);
-
+      HTMLElements.appendChildren(paymentMethodInfo, [paymentMethodLogo, paymentMethodName])
+      HTMLElements.appendChildren(element, [paymentMethodButtonWrapper])
       HTMLElements.appendChildren(paymentMethodButtonWrapper, [
         paymentMethodInfo,
         rightContentWrapper,
-      ]);
+      ])
 
       if (deleteMode && deletingAllowed) {
-        HTMLElements.appendChildren(deleteButton, [deleteButtonIcon]);
-        HTMLElements.appendChildren(rightContentWrapper, [deleteButton]);
+        HTMLElements.appendChildren(deleteButton, [deleteButtonIcon])
+        HTMLElements.appendChildren(rightContentWrapper, [deleteButton])
 
         deleteButton.addEventListener("click", () => {
-          deleteButton.setAttribute("disabled", "true");
-          handleDeletePaymentMethod();
-        });
+          deleteButton.setAttribute("disabled", "true")
+          handleDeletePaymentMethod()
+        })
       }
 
       if (!deleteMode) {
-        HTMLElements.appendChildren(rightContentWrapper, [radioButton]);
+        HTMLElements.appendChildren(rightContentWrapper, [radioButton])
       }
 
-      return element;
+      return element
     }
 
     public appendChildren(children: HTMLElement) {
       const childrenWrapper = HTMLElements.createElement({
         tagName: "div",
         classNames: ["dco-payment-method-button-general-children-container"],
-      });
+      })
 
-      HTMLElements.appendChildren(childrenWrapper, [children]);
-      HTMLElements.appendChildren(this.element, [childrenWrapper]);
+      HTMLElements.appendChildren(childrenWrapper, [children])
+      HTMLElements.appendChildren(this.element, [childrenWrapper])
     }
   }
 }

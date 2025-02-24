@@ -12,8 +12,8 @@ module ProcessOut {
       paymentConfig: DynamicCheckoutPaymentConfig,
     ) {
       this.expressPaymentMethods = expressPaymentMethods
-      this.element = this.createElement()
       this.paymentConfig = paymentConfig
+      this.element = this.createElement()
     }
 
     private createElement() {
