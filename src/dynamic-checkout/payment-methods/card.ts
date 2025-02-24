@@ -43,6 +43,7 @@ module ProcessOut {
       this.resetContainerHtml = resetContainerHtml
 
       const cardForm = this.getChildrenElement()
+
       super.appendChildren(cardForm)
       this.setupCardForm(cardForm)
     }
@@ -120,6 +121,7 @@ module ProcessOut {
       this.resetContainerHtml().appendChild(
         new DynamicCheckoutPaymentSuccessView(this.procesoutInstance, this.paymentConfig).element,
       )
+
       DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
         invoiceId,
         returnUrl: this.paymentConfig.invoiceDetails.return_url,
@@ -130,6 +132,7 @@ module ProcessOut {
       this.resetContainerHtml().appendChild(
         new DynamicCheckoutPaymentErrorView(this.procesoutInstance, this.paymentConfig).element,
       )
+
       DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error)
     }
 
@@ -151,17 +154,11 @@ module ProcessOut {
 
     private getAdditionalFormValues(form: HTMLElement) {
       const cardholderName = form.querySelector('input[name="cardholder-name"]') as HTMLInputElement
-
       const country = form.querySelector('select[name="country"]') as HTMLSelectElement
-
       const state = form.querySelector('select[name="state"]') as HTMLSelectElement
-
       const city = form.querySelector('input[name="city"]') as HTMLInputElement
-
       const postcode = form.querySelector('input[name="postcode"]') as HTMLInputElement
-
       const addressLine1 = form.querySelector('input[name="street1"]') as HTMLInputElement
-
       const addressLine2 = form.querySelector('input[name="street2"]') as HTMLInputElement
 
       return {

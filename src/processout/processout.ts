@@ -474,7 +474,7 @@ module ProcessOut {
      * @return {DynamicCheckout}
      */
     public setupDynamicCheckout(
-      config: DynamicCheckoutPublicConfig,
+      config: DynamicCheckoutPublicConfigType,
       theme?: DynamicCheckoutThemeType,
     ): DynamicCheckout {
       if (!this.projectID)

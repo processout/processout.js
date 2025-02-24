@@ -208,6 +208,7 @@ module ProcessOut {
               this.processOutInstance,
               this.paymentConfig,
               this.paymentConfig.invoiceDetails,
+              this.paymentConfig,
               this.resetContainerHtml.bind(this),
             )
 

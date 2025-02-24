@@ -23,7 +23,6 @@ module ProcessOut {
         }
       }[]
     }
-
     paymentRequest: {
       apiVersion: number
       apiVersionMinor: number
@@ -135,6 +134,7 @@ module ProcessOut {
                       this.paymentConfig,
                     ).element,
                   )
+
                   DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
                     invoiceId,
                     returnUrl: this.paymentConfig.invoiceDetails.return_url,
@@ -145,6 +145,7 @@ module ProcessOut {
                     new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig)
                       .element,
                   )
+
                   DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error)
                 },
               )
@@ -154,6 +155,7 @@ module ProcessOut {
                 new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig)
                   .element,
               )
+
               DynamicCheckoutEventsUtils.dispatchTokenizePaymentErrorEvent({
                 message: `Tokenize payment error: ${JSON.stringify(err, undefined, 2)}`,
               })

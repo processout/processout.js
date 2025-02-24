@@ -11,7 +11,7 @@ module ProcessOut {
 
     constructor(
       processOutInstance: ProcessOut,
-      config: DynamicCheckoutPublicConfig,
+      config: DynamicCheckoutPublicConfigType,
       theme?: DynamicCheckoutThemeType,
     ) {
       this.processOutInstance = processOutInstance

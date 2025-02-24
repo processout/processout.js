@@ -1,5 +1,5 @@
 module ProcessOut {
-  export const billingAddressUnitsData = (paymentConfig: DynamicCheckoutPublicConfig) => {
+  export const billingAddressUnitsData = (paymentConfig: DynamicCheckoutPaymentConfig) => {
     return {
       street1: {
         unit: "street1",
