@@ -18,8 +18,10 @@
 
         const dynamicCheckout = client.setupDynamicCheckout({
           invoiceId,
-          projectId,
           clientSecret,
+          capturePayments: true,
+          allowFallbackToSale: true,
+          locale: "en",
         })
 
         dynamicCheckout.mount("#dynamic-cko-container")
