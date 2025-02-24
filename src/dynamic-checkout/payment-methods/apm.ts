@@ -6,7 +6,7 @@ module ProcessOut {
       "https://js.processout.com/images/dynamic-checkout-assets/apm-redirect-arrow.svg"
 
     private processOutInstance: ProcessOut
-    private paymentConfig: DynamicCheckoutPublicConfig
+    private paymentConfig: DynamicCheckoutPaymentConfig
     private paymentMethod: PaymentMethod
     private theme: DynamicCheckoutThemeType
     private resetContainerHtml: () => HTMLElement
@@ -14,11 +14,15 @@ module ProcessOut {
     constructor(
       processOutInstance: ProcessOut,
       paymentMethod: PaymentMethod,
-      paymentConfig: DynamicCheckoutPublicConfig,
+      paymentConfig: DynamicCheckoutPaymentConfig,
       theme: DynamicCheckoutThemeType,
       resetContainerHtml: () => HTMLElement,
     ) {
-      super(paymentMethod.display.name, paymentMethod.display.logo.dark_url.vector)
+      super(
+        paymentMethod.display.name,
+        paymentMethod.display.logo.dark_url.vector,
+        paymentMethod.display.name,
+      )
 
       this.processOutInstance = processOutInstance
       this.paymentConfig = paymentConfig
@@ -30,7 +34,7 @@ module ProcessOut {
     }
 
     private proceedToApmPayment() {
-      const { apm, display } = this.paymentMethod
+      const { apm } = this.paymentMethod
       const { clientSecret } = this.paymentConfig
 
       const actionHandlerOptions = new ActionHandlerOptions(
@@ -49,7 +53,7 @@ module ProcessOut {
       }
 
       const saveForFutureCheckbox = document.getElementById(
-        `save-apm-for-future-${display.name}`,
+        `save-apm-for-future-${this.paymentMethod.apm.gateway_name}`,
       ) as HTMLInputElement | null
 
       if (saveForFutureCheckbox) {
@@ -64,7 +68,6 @@ module ProcessOut {
         )
       }
 
-      cardPaymentOptions["allow_fallback_to_sale"] = true
       this.handleApmPayment(cardPaymentOptions, actionHandlerOptions, requestOptions)
     }
 
@@ -197,10 +200,11 @@ module ProcessOut {
         },
         {
           tagName: "input",
+          classNames: ["dco-payment-method-button-save-for-future-checkbox"],
           attributes: {
             type: "checkbox",
             name: "save-apm-for-future",
-            id: `save-apm-for-future-${this.paymentMethod.display.name}`,
+            id: `save-apm-for-future-${this.paymentMethod.apm.gateway_name}`,
           },
         },
         {

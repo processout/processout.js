@@ -478,7 +478,7 @@ module ProcessOut {
      * @return {DynamicCheckout}
      */
     public setupDynamicCheckout(
-      config: DynamicCheckoutPublicConfig,
+      config: DynamicCheckoutPublicConfigType,
       theme?: DynamicCheckoutThemeType,
     ): DynamicCheckout {
       if (!this.projectID)
@@ -487,7 +487,7 @@ module ProcessOut {
           "You must instantiate ProcessOut.js with a valid project ID in order to use ProcessOut's Dynamic Checkout",
         )
 
-      return new DynamicCheckout(this, config, theme)
+      return new DynamicCheckout(this, { ...config, projectId: this.projectID }, theme)
     }
 
     /**

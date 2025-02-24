@@ -7,7 +7,7 @@ module ProcessOut {
 
     constructor(
       processOutInstance: ProcessOut,
-      paymentConfig: DynamicCheckoutPublicConfig,
+      paymentConfig: DynamicCheckoutPaymentConfig,
       invoiceData: Invoice,
       resetContainerHtml: () => HTMLElement,
     ) {

@@ -4,7 +4,7 @@ module ProcessOut {
   export class DynamicCheckoutPaymentErrorView {
     public element: Element
 
-    constructor(paymentConfig: DynamicCheckoutPublicConfig, errorMessage?: string) {
+    constructor(paymentConfig: DynamicCheckoutPaymentConfig, errorMessage?: string) {
       const [element, image, message] = HTMLElements.createMultipleElements([
         {
           tagName: "div",
@@ -25,9 +25,8 @@ module ProcessOut {
         },
       ])
 
-      HTMLElements.appendChildren(element, [image, message])
-
       this.element = element
+      HTMLElements.appendChildren(element, [image, message])
     }
   }
 }
