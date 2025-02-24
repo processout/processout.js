@@ -2,10 +2,9 @@
   "compilerOptions": {
     "removeComments": true,
     "allowJs": true,
-    "outFile": "../../dist/processout.js",
+    "outFile": "../../scripts/processout.js",
     "target": "es5",
-    "lib": ["dom", "es2015"],
-    "skipLibCheck": true
+    "lib": ["dom", "es2015"]
   },
   "include": [
     "../polyfills/base64.polyfill.min.js",
