@@ -1,64 +1,57 @@
 /// <reference path="../references.ts" />
 
 module ProcessOut {
-  export type DynamicCheckoutPublicConfig = {
-    invoiceId: string
-    projectId: string
-    locale?: string
-    clientSecret?: string
-    capturePayments?: boolean
-    allowFallbackToSale?: boolean
-  }
-
-  export type DynamicCheckoutInternalConfig = {
-    invoiceDetails: Invoice
-  }
+  export type DynamicCheckoutPaymentConfigType = {
+    invoiceId: string;
+    projectId: string;
+    locale?: string;
+    clientSecret?: string;
+    capturePayments?: boolean;
+    invoiceDetails: Invoice;
+  };
 
   export class DynamicCheckoutPaymentConfig {
-    invoiceId: DynamicCheckoutPublicConfig["invoiceId"]
-    projectId: DynamicCheckoutPublicConfig["projectId"]
-    clientSecret: DynamicCheckoutPublicConfig["clientSecret"]
-    locale: DynamicCheckoutPublicConfig["locale"] = "en"
-    capturePayments: DynamicCheckoutPublicConfig["capturePayments"] = false
-    allowFallbackToSale: DynamicCheckoutPublicConfig["allowFallbackToSale"] = false
-    invoiceDetails: DynamicCheckoutInternalConfig["invoiceDetails"]
+    invoiceId: DynamicCheckoutPaymentConfigType["invoiceId"];
+    projectId: DynamicCheckoutPaymentConfigType["projectId"];
+    clientSecret: DynamicCheckoutPaymentConfigType["clientSecret"];
+    locale: DynamicCheckoutPaymentConfigType["locale"] = "en";
+    capturePayments: DynamicCheckoutPaymentConfigType["capturePayments"] =
+      false;
+    invoiceDetails: DynamicCheckoutPaymentConfigType["invoiceDetails"];
 
-    constructor(config: DynamicCheckoutPublicConfig) {
-      this.setInitialConfig(config)
+    constructor(config: DynamicCheckoutPaymentConfigType) {
+      this.setInitialConfig(config);
     }
 
-    public getConfig(): DynamicCheckoutPublicConfig & DynamicCheckoutInternalConfig {
+    public getConfig(): DynamicCheckoutPaymentConfigType {
       return {
         invoiceId: this.invoiceId,
         projectId: this.projectId,
         locale: this.locale,
         invoiceDetails: this.invoiceDetails,
-        capturePayments: this.capturePayments,
-        allowFallbackToSale: this.allowFallbackToSale,
-      }
+      };
     }
 
     public setInvoiceDetails(invoiceDetails: Invoice) {
-      this.invoiceDetails = invoiceDetails
+      this.invoiceDetails = invoiceDetails;
     }
 
-    private setInitialConfig(config: DynamicCheckoutPublicConfig) {
+    private setInitialConfig(config: DynamicCheckoutPaymentConfigType) {
       if (!this.isValidConfig(config)) {
         throw new Error(
-          "You must instantiate Dynamic Checkout with a valid config in order to use it",
-        )
+          "You must instantiate Dynamic Checkout with a valid config in order to use it"
+        );
       }
 
-      this.invoiceId = config.invoiceId
-      this.projectId = config.projectId
-      this.locale = config.locale || "en"
-      this.clientSecret = config.clientSecret
-      this.capturePayments = config.capturePayments || false
-      this.allowFallbackToSale = config.allowFallbackToSale || false
+      this.invoiceId = config.invoiceId;
+      this.projectId = config.projectId;
+      this.locale = config.locale || "en";
+      this.clientSecret = config.clientSecret;
+      this.capturePayments = config.capturePayments || false;
     }
 
-    private isValidConfig(config: DynamicCheckoutPublicConfig) {
-      return !!config.projectId && !!config.invoiceId
+    private isValidConfig(config: DynamicCheckoutPaymentConfigType) {
+      return !!config.projectId && !!config.invoiceId;
     }
   }
 }
