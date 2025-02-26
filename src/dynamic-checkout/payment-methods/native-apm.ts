@@ -7,6 +7,7 @@ module ProcessOut {
     private isMounted: boolean;
     private theme: DynamicCheckoutThemeType;
     private resetContainerHtml: () => HTMLElement;
+    private processOutInstance: ProcessOut;
 
     constructor(
       processOutInstance: ProcessOut,
@@ -21,13 +22,14 @@ module ProcessOut {
       super(display.name, display.logo.dark_url.vector);
 
       this.paymentConfig = paymentConfig;
+      this.processOutInstance = processOutInstance;
       this.resetContainerHtml = resetContainerHtml;
       this.theme = theme;
 
       const wrapper = this.getNativeApmWrapper();
       super.appendChildren(wrapper);
 
-      this.nativeApmInstance = processOutInstance.setupNativeApm({
+      this.nativeApmInstance = this.processOutInstance.setupNativeApm({
         invoiceId,
         gatewayConfigurationId: apm.gateway_configuration_id,
         returnUrl: invoiceDetails.return_url,
@@ -65,7 +67,7 @@ module ProcessOut {
 
       window.addEventListener(NATIVE_APM_EVENTS.PAYMENT_SUCCESS, (e) => {
         this.resetContainerHtml().appendChild(
-          new DynamicCheckoutPaymentSuccessView(this.paymentConfig).element
+          new DynamicCheckoutPaymentSuccessView(this.processOutInstance, this.paymentConfig).element
         );
 
         DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
@@ -76,7 +78,7 @@ module ProcessOut {
 
       window.addEventListener(NATIVE_APM_EVENTS.PAYMENT_ERROR, (e) => {
         this.resetContainerHtml().appendChild(
-          new DynamicCheckoutPaymentErrorView(this.paymentConfig).element
+          new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig).element
         );
 
         DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(e);
