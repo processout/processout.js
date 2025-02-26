@@ -215,15 +215,23 @@ module ProcessOut {
             return walletPaymentMethods.push(googlePayPaymentMethod)
 
           case "applepay":
-            const applePayPaymentMethod = new ApplePayPaymentMethod(
-              this.processOutInstance,
-              this.paymentConfig,
-              this.paymentConfig.invoiceDetails,
-              this.resetContainerHtml.bind(this),
+            // We want to hide Apple Pay for HPP temporarily
+            const shouldHide = /^https?:\/\/.*pay\.processout\.(com|ninja)\//.test(
+              window.location.href,
             )
 
-            return walletPaymentMethods.push(applePayPaymentMethod)
+            if (!shouldHide) {
+              const applePayPaymentMethod = new ApplePayPaymentMethod(
+                this.processOutInstance,
+                this.paymentConfig,
+                this.paymentConfig.invoiceDetails,
+                this.resetContainerHtml.bind(this),
+              )
 
+              return walletPaymentMethods.push(applePayPaymentMethod)
+            }
+
+            break
           case "apm_customer_token":
             const savedApmPaymentMethod = new SavedApmPaymentMethod(
               this.processOutInstance,
