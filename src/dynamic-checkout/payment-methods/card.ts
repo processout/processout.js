@@ -27,7 +27,7 @@ module ProcessOut {
           tagName: "img",
           classNames: ["dco-card-scheme-logo"],
           attributes: {
-            src: procesoutInstance.endpoint("js", CARD_SCHEMES_ASSETS[schema]),
+            src: CARD_SCHEMES_ASSETS[schema],
           },
         });
 
@@ -117,7 +117,7 @@ module ProcessOut {
 
     private handleCardPaymentSuccess(invoiceId: string) {
       this.resetContainerHtml().appendChild(
-        new DynamicCheckoutPaymentSuccessView(this.procesoutInstance, this.paymentConfig).element
+        new DynamicCheckoutPaymentSuccessView(this.paymentConfig).element
       );
       DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
         invoiceId,
@@ -127,7 +127,7 @@ module ProcessOut {
 
     private handleCardPaymentError(error) {
       this.resetContainerHtml().appendChild(
-        new DynamicCheckoutPaymentErrorView(this.procesoutInstance, this.paymentConfig).element
+        new DynamicCheckoutPaymentErrorView(this.paymentConfig).element
       );
       DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error);
     }

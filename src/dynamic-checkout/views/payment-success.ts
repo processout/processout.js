@@ -4,7 +4,7 @@ module ProcessOut {
   export class DynamicCheckoutPaymentSuccessView {
     public element: Element;
 
-    constructor(processOutInstance: ProcessOut, paymentConfig: DynamicCheckoutPaymentConfigType) {
+    constructor(paymentConfig: DynamicCheckoutPaymentConfigType) {
       const [element, image, message] = HTMLElements.createMultipleElements([
         {
           tagName: "div",
@@ -14,7 +14,7 @@ module ProcessOut {
           tagName: "img",
           classNames: ["dco-card-payment-success-image"],
           attributes: {
-            src: processOutInstance.endpoint("js", PAYMENT_SUCCESS_IMAGE_ASSET),
+            src: PAYMENT_SUCCESS_IMAGE_ASSET,
           },
         },
         {
