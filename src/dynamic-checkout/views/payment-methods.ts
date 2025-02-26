@@ -192,6 +192,7 @@ module ProcessOut {
             case "googlepay":
               const googlePayPaymentMethod = new GooglePayPaymentMethod(
                 this.processOutInstance,
+                this.paymentConfig,
                 this.paymentConfig.invoiceDetails,
                 this.resetContainerHtml.bind(this)
               );

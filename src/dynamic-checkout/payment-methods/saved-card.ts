@@ -89,7 +89,7 @@ module ProcessOut {
 
     private handlePaymentSuccess(invoiceId: string) {
       this.resetContainerHtml().appendChild(
-        new DynamicCheckoutPaymentSuccessView(this.paymentConfig).element
+        new DynamicCheckoutPaymentSuccessView(this.processOutInstance,this.paymentConfig).element
       );
       DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
         invoiceId,
@@ -99,7 +99,7 @@ module ProcessOut {
 
     private handlePaymentError(error) {
       this.resetContainerHtml().appendChild(
-        new DynamicCheckoutPaymentErrorView(this.paymentConfig).element
+        new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig).element
       );
       DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error);
     }

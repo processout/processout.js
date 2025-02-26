@@ -533,8 +533,7 @@ module ProcessOut {
      */
     private loadMarkdownLibrary() {
       const markdownScript = document.createElement("script");
-      markdownScript.src =
-        "https://js.processout.com/js/libraries/showdown.min.js";
+      markdownScript.src = this.processOutInstance.endpoint("js", "/js/libraries/showdown.min.js")
       markdownScript.onload = () => {
         this.markdownLibraryInstance =
           window.globalThis && window.globalThis.showdown
@@ -546,7 +545,7 @@ module ProcessOut {
 
     private loadQrCodesLibrary() {
       const qrCodeScript = document.createElement("script");
-      qrCodeScript.src = "https://js.processout.com/js/libraries/qrcode.min.js";
+      qrCodeScript.src = this.processOutInstance.endpoint("js", "/js/libraries/qrcode.min.js")
       document.head.appendChild(qrCodeScript);
     }
   }

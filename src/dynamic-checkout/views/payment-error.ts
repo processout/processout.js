@@ -5,6 +5,7 @@ module ProcessOut {
     public element: Element;
 
     constructor(
+      processOutInstance: ProcessOut,
       paymentConfig: DynamicCheckoutPaymentConfigType,
       errorMessage?: string
     ) {
@@ -17,7 +18,7 @@ module ProcessOut {
           tagName: "img",
           classNames: ["dco-card-payment-success-image"],
           attributes: {
-            src: PAYMENT_ERROR_IMAGE_ASSET,
+            src: processOutInstance.endpoint("js", PAYMENT_ERROR_IMAGE_ASSET),
           },
         },
         {
