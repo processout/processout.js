@@ -7,11 +7,10 @@ module ProcessOut {
 
     constructor(
       processOutInstance: ProcessOut,
-      paymentConfig: DynamicCheckoutPaymentConfigType,
       invoiceData: Invoice,
       resetContainerHtml: () => HTMLElement
     ) {
-      this.googleClient = new GooglePayClient(processOutInstance, paymentConfig);
+      this.googleClient = new GooglePayClient(processOutInstance);
 
       this.element = this.getGooglePayButtonElement();
 

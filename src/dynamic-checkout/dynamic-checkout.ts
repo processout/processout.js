@@ -83,7 +83,7 @@ module ProcessOut {
     private onGetInvoiceSuccess(data: any) {
       if (!data.success) {
         this.loadView(
-          new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig).element
+          new DynamicCheckoutPaymentErrorView(this.paymentConfig).element
         );
 
         return DynamicCheckoutEventsUtils.dispatchInvoiceFetchingErrorEvent(
@@ -94,7 +94,6 @@ module ProcessOut {
       if (!data.invoice.payment_methods) {
         this.loadView(
           new DynamicCheckoutPaymentErrorView(
-            this.processOutInstance,
             this.paymentConfig,
             Translations.getText(
               "payment-error-generic-message",
@@ -113,7 +112,6 @@ module ProcessOut {
       if (data.invoice.transaction.status !== "waiting") {
         this.loadView(
           new DynamicCheckoutPaymentErrorView(
-            this.processOutInstance,
             this.paymentConfig,
             Translations.getText(
               "payment-error-generic-message",
@@ -150,7 +148,7 @@ module ProcessOut {
       DynamicCheckoutEventsUtils.dispatchInvoiceFetchingErrorEvent(errorData);
 
       this.loadView(
-        new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig).element
+        new DynamicCheckoutPaymentErrorView(this.paymentConfig).element
       );
     }
 
