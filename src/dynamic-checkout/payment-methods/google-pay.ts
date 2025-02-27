@@ -2,24 +2,20 @@
 
 module ProcessOut {
   export class GooglePayPaymentMethod {
-    public element: HTMLElement;
-    private googleClient: GooglePayClient;
+    public element: HTMLElement
+    private googleClient: GooglePayClient
 
     constructor(
       processOutInstance: ProcessOut,
-      paymentConfig: DynamicCheckoutPaymentConfigType,
+      paymentConfig: DynamicCheckoutPaymentConfig,
       invoiceData: Invoice,
-      resetContainerHtml: () => HTMLElement
+      resetContainerHtml: () => HTMLElement,
     ) {
-      this.googleClient = new GooglePayClient(processOutInstance, paymentConfig);
+      this.googleClient = new GooglePayClient(processOutInstance, paymentConfig)
 
-      this.element = this.getGooglePayButtonElement();
+      this.element = this.getGooglePayButtonElement()
 
-      this.googleClient.loadButton(
-        this.element,
-        invoiceData,
-        resetContainerHtml
-      );
+      this.googleClient.loadButton(this.element, invoiceData, resetContainerHtml)
     }
 
     private getGooglePayButtonElement() {
@@ -29,9 +25,9 @@ module ProcessOut {
         attributes: {
           id: "google-pay-button-container",
         },
-      });
+      })
 
-      return element;
+      return element
     }
   }
 }
