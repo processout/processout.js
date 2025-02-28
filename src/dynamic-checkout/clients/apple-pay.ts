@@ -16,12 +16,11 @@ module ProcessOut {
       getViewContainer: () => HTMLElement,
     ) {
       const applePayScript = document.createElement("script")
-      const initializeApplePay = this.initializeApplePay.bind(this)
 
       applePayScript.src = applePaySdkUrl
       applePayScript.onload = () => {
         buttonContainer.innerHTML = `<apple-pay-button buttonstyle="black" type="plain" locale="en-US"></apple-pay-button>`
-        initializeApplePay(invoiceData, buttonContainer, getViewContainer)
+        this.initializeApplePay(invoiceData, buttonContainer, getViewContainer)
       }
 
       document.head.appendChild(applePayScript)
@@ -29,21 +28,20 @@ module ProcessOut {
 
     private initializeApplePay(
       invoiceData: Invoice,
-      buttonContainer: HTMLDivElement,
+      buttonContainer: HTMLElement,
       getViewContainer: () => HTMLElement,
     ) {
-      const tokenizeApplePay = this.tokenizeApplePay.bind(this)
       const applePayPaymentMethodData = this.getApplePayPaymentMethodData(invoiceData)
 
       this.processOutInstance.applePay.checkAvailability(
-        function (err) {
+        err => {
           if (err) {
             console.log(err)
           } else {
             buttonContainer.classList.add("visible")
 
             document.querySelector("apple-pay-button").addEventListener("click", () => {
-              tokenizeApplePay(invoiceData, getViewContainer)
+              this.tokenizeApplePay(invoiceData, getViewContainer)
             })
           }
         },
@@ -53,8 +51,8 @@ module ProcessOut {
 
     private getSupportedNetworks(invoiceData: Invoice) {
       const applePayPaymentMethodData = this.getApplePayPaymentMethodData(invoiceData)
-      let supportedNetworks = []
 
+      let supportedNetworks = []
       applePayPaymentMethodData.supported_networks.forEach(network => {
         if (networksMap[network]) {
           supportedNetworks.push(networksMap[network])
@@ -92,13 +90,12 @@ module ProcessOut {
     }
 
     private tokenizeApplePay(invoiceData: Invoice, getViewContainer: () => HTMLElement) {
-      const makeApplePayPayment = this.makeApplePayPayment.bind(this)
       const session = this.createApplePaySession(invoiceData)
 
       this.processOutInstance.tokenize(
         session,
         {},
-        function (card) {
+        card => {
           session.completePayment(0)
 
           DynamicCheckoutEventsUtils.dispatchTokenizePaymentSuccessEvent(card)
@@ -107,9 +104,9 @@ module ProcessOut {
           // You can check the implementation of tokenize function
           const cardToken = (card as unknown as Record<string, any>).id
 
-          makeApplePayPayment(cardToken, invoiceData, getViewContainer)
+          this.makeApplePayPayment(cardToken, invoiceData, getViewContainer)
         },
-        function (err) {
+        err => {
           session.completePayment(1)
 
           getViewContainer().appendChild(
@@ -133,7 +130,7 @@ module ProcessOut {
           authorize_only: !this.paymentConfig.capturePayments,
           allow_fallback_to_sale: this.paymentConfig.allowFallbackToSale,
         },
-        function (invoiceId) {
+        invoiceId => {
           getViewContainer().appendChild(
             new DynamicCheckoutPaymentSuccessView(this.paymentConfig).element,
           )
@@ -143,7 +140,7 @@ module ProcessOut {
             returnUrl: this.paymentConfig.invoiceDetails.return_url,
           })
         },
-        function (error) {
+        error => {
           getViewContainer().appendChild(
             new DynamicCheckoutPaymentErrorView(this.paymentConfig).element,
           )

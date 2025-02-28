@@ -554,9 +554,7 @@ module ProcessOut {
 
     private getBillingAddressField(country: string) {
       const countryConfig = billingAddressConfig[country]
-
       const automaticMode = this.paymentMethod.card.billing_address.collection_mode === "automatic"
-
       const shouldShowPostcodeForAutomaticMode =
         country === "US" || country === "CA" || country === "GB"
 
@@ -630,7 +628,6 @@ module ProcessOut {
       })
 
       let mappedBillingAddressFields = []
-
       billingAddressFields.forEach(field => {
         if (field.getAttribute("name") === "city" || field.getAttribute("name") === "postcode") {
           HTMLElements.appendChildren(cityPostCodeSplitRow, [field])

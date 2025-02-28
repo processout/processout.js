@@ -47,6 +47,7 @@ module ProcessOut {
       }
       merchantInfo: {
         merchantName: string
+        merchantId: string
       }
     }
 
@@ -112,15 +113,13 @@ module ProcessOut {
             JSON.parse(paymentData.paymentMethodData.tokenizationData.token),
           )
 
-          const processOutInstance = this.processOutInstance
-
-          processOutInstance.tokenize(
+          this.processOutInstance.tokenize(
             paymentToken,
             {},
             token => {
               DynamicCheckoutEventsUtils.dispatchTokenizePaymentSuccessEvent(token)
 
-              processOutInstance.makeCardPayment(
+              this.processOutInstance.makeCardPayment(
                 invoiceData.id,
                 token,
                 {
@@ -137,7 +136,7 @@ module ProcessOut {
                     returnUrl: this.paymentConfig.invoiceDetails.return_url,
                   })
                 },
-                function (error) {
+                error => {
                   getViewContainer().appendChild(
                     new DynamicCheckoutPaymentErrorView(this.paymentConfig).element,
                   )
@@ -146,13 +145,13 @@ module ProcessOut {
                 },
               )
             },
-            function (err) {
+            error => {
               getViewContainer().appendChild(
                 new DynamicCheckoutPaymentErrorView(this.paymentConfig).element,
               )
 
               DynamicCheckoutEventsUtils.dispatchTokenizePaymentErrorEvent({
-                message: `Tokenize payment error: ${JSON.stringify(err, undefined, 2)}`,
+                message: `Tokenize payment error: ${JSON.stringify(error, undefined, 2)}`,
               })
             },
           )
@@ -222,6 +221,7 @@ module ProcessOut {
         },
         merchantInfo: {
           merchantName: invoiceData.name,
+          merchantId: googlePayMethod.googlepay.gateway_merchant_id,
         },
       }
     }

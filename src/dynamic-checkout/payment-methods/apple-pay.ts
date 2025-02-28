@@ -12,9 +12,7 @@ module ProcessOut {
       resetContainerHtml: () => HTMLElement,
     ) {
       this.applePayClient = new ApplePayClient(processOutInstance, paymentConfig)
-
       this.element = this.getApplePayButtonElement()
-
       this.applePayClient.loadButton(this.element, invoiceData, resetContainerHtml)
     }
 
