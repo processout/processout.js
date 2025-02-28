@@ -12,9 +12,7 @@ module ProcessOut {
       resetContainerHtml: () => HTMLElement,
     ) {
       this.googleClient = new GooglePayClient(processOutInstance, paymentConfig)
-
       this.element = this.getGooglePayButtonElement()
-
       this.googleClient.loadButton(this.element, invoiceData, resetContainerHtml)
     }
 
