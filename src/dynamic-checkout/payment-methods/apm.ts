@@ -25,6 +25,7 @@ module ProcessOut {
       this.paymentConfig = paymentConfig
       this.paymentMethod = paymentMethod
       this.theme = theme
+
       super.appendChildren(this.getChildrenElement())
 
       this.resetContainerHtml = resetContainerHtml
@@ -69,15 +70,23 @@ module ProcessOut {
     }
 
     private handleApmPayment(
-      cardPaymentOptions: any,
+      cardPaymentOptions: {
+        authorize_only: boolean
+        allow_fallback_to_sale: boolean
+        save_source: boolean
+      },
       actionHandlerOptions: ActionHandlerOptions,
-      requestOptions: any,
+      requestOptions: {
+        clientSecret: string
+      },
     ) {
       const { apm } = this.paymentMethod
 
       this.processOutInstance.handleAction(
         apm.redirect_url,
         paymentToken => {
+          this.resetContainerHtml().appendChild(new DynamicCheckoutInvoiceLoadingView().element)
+
           this.processOutInstance.makeCardPayment(
             this.paymentConfig.invoiceId,
             paymentToken,
@@ -191,10 +200,7 @@ module ProcessOut {
           tagName: "img",
           classNames: ["dco-payment-method-button-message-img"],
           attributes: {
-            src: this.processOutInstance.endpoint(
-              "js",
-              "/images/dynamic-checkout-assets/apm-redirect-arrow.svg",
-            ),
+            src: REDIRECT_ARROW_ICON,
           },
         },
         {

@@ -54,8 +54,8 @@ module ProcessOut {
 
       this.invoiceId = config.invoiceId
       this.projectId = config.projectId
-      this.locale = config.locale || "en"
       this.clientSecret = config.clientSecret
+      this.locale = config.locale || "en"
       this.capturePayments = config.capturePayments || false
       this.allowFallbackToSale = config.allowFallbackToSale || false
     }

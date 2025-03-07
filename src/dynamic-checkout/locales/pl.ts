@@ -1,7 +1,6 @@
 module ProcessOut {
   export const pl = {
-    "apm-redirect-message":
-      "Zostaniesz przekierowany, aby sfinalizować płatność.",
+    "apm-redirect-message": "Zostaniesz przekierowany, aby sfinalizować płatność.",
     "save-for-future-label": "Zapisz na przyszłe płatności",
     "continue-with-apm-button": "Kontynuuj z",
     "pay-button-text": "Zapłać",
@@ -14,15 +13,13 @@ module ProcessOut {
     "card-number-error-message": "Numer karty jest nieprawidłowy",
     "expiry-date-error-message": "Data ważności jest nieprawidłowa",
     "cvc-error-message": "CVC jest nieprawidłowy",
-    "cardholder-name-error-message":
-      "Imię i nazwisko posiadacza karty jest nieprawidłowe",
+    "cardholder-name-error-message": "Imię i nazwisko posiadacza karty jest nieprawidłowe",
     "payment-error-message": "Coś poszło nie tak. Spróbuj ponownie.",
     "express-checkout-header": "Szybka płatność",
     "other-payment-methods-header": "Inne metody płatności",
     "select-payment-method-label": "Wybierz metodę płatności",
     "payment-success-message": "Płatność została zakończona pomyślnie.",
-    "payment-error-generic-message":
-      "Nie udało nam się przetworzyć Twojej płatności.",
+    "payment-error-generic-message": "Nie udało nam się przetworzyć Twojej płatności.",
     "street1-label": "Adres, linia 1",
     "street2-label": "Adres, linia 2",
     "city-label": "Miasto",
@@ -33,5 +30,5 @@ module ProcessOut {
     "no-saved-payment-methods-header": "Brak zapisanych metod płatności",
     "no-saved-payment-methods-message":
       "Gdy następnym razem zapiszesz metodę płatności, pojawi się tutaj.",
-  };
+  }
 }

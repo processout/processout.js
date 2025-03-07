@@ -13,8 +13,7 @@ module ProcessOut {
     "card-number-error-message": "El número de tarjeta es inválido",
     "expiry-date-error-message": "La fecha de vencimiento es inválida",
     "cvc-error-message": "El CVC es inválido",
-    "cardholder-name-error-message":
-      "El nombre del titular de la tarjeta es inválido",
+    "cardholder-name-error-message": "El nombre del titular de la tarjeta es inválido",
     "payment-error-message": "Algo salió mal. Por favor, inténtalo de nuevo.",
     "express-checkout-header": "Pago exprés",
     "other-payment-methods-header": "Otros métodos de pago",
@@ -31,5 +30,5 @@ module ProcessOut {
     "no-saved-payment-methods-header": "No hay métodos de pago guardados",
     "no-saved-payment-methods-message":
       "La próxima vez que guardes un método de pago, aparecerá aquí.",
-  };
+  }
 }

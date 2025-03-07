@@ -30,6 +30,7 @@ module ProcessOut {
       ])
 
       this.element = element
+
       HTMLElements.appendChildren(element, [image, message])
     }
   }
