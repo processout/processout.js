@@ -18,6 +18,7 @@ module ProcessOut {
       const applePayScript = document.createElement("script")
 
       applePayScript.src = applePaySdkUrl
+
       applePayScript.onload = () => {
         buttonContainer.innerHTML = `<apple-pay-button buttonstyle="black" type="plain" locale="en-US"></apple-pay-button>`
         this.initializeApplePay(invoiceData, buttonContainer, getViewContainer)

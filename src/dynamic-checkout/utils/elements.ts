@@ -2,12 +2,12 @@
 
 module ProcessOut {
   type ElementOptions = {
-    tagName: string;
-    textContent?: string;
-    innerHTML?: string;
-    classNames?: string[];
-    attributes?: Record<string, string>;
-  };
+    tagName: string
+    textContent?: string
+    innerHTML?: string
+    classNames?: string[]
+    attributes?: Record<string, string>
+  }
 
   export class HTMLElements {
     static createElement({
@@ -17,44 +17,44 @@ module ProcessOut {
       attributes,
       innerHTML,
     }: ElementOptions): HTMLElement {
-      const element = document.createElement(tagName);
+      const element = document.createElement(tagName)
 
       if (classNames) {
-        classNames.forEach((className) => element.classList.add(className));
+        classNames.forEach(className => element.classList.add(className))
       }
 
       if (attributes) {
-        Object.keys(attributes).forEach((key) => {
-          element.setAttribute(key, attributes[key]);
-        });
+        Object.keys(attributes).forEach(key => {
+          element.setAttribute(key, attributes[key])
+        })
       }
 
       if (textContent) {
-        element.textContent = textContent;
+        element.textContent = textContent
       }
 
       if (innerHTML) {
-        element.innerHTML = innerHTML;
+        element.innerHTML = innerHTML
       }
 
-      return element;
+      return element
     }
 
     static createMultipleElements(elements: ElementOptions[]) {
-      return elements.map((element) => this.createElement(element));
+      return elements.map(element => this.createElement(element))
     }
 
     static appendChildren(parent: HTMLElement, children: HTMLElement[]) {
-      children.forEach((child) => parent.append(child));
-      return parent;
+      children.forEach(child => parent.append(child))
+      return parent
     }
 
     static replaceChildren(parent: HTMLElement, children: HTMLElement[]) {
       while (parent.firstChild) {
-        parent.removeChild(parent.firstChild);
+        parent.removeChild(parent.firstChild)
       }
 
-      this.appendChildren(parent, children);
+      this.appendChildren(parent, children)
     }
   }
 }

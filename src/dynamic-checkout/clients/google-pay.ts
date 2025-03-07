@@ -64,6 +64,7 @@ module ProcessOut {
       const googleClientScript = document.createElement("script")
 
       googleClientScript.src = googlePaySdkUrl
+
       googleClientScript.onload = () => {
         this.googleClient =
           window.globalThis && window.globalThis.google
