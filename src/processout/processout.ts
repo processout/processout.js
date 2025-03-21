@@ -230,9 +230,10 @@ module ProcessOut {
                     timestamp: new Date().toISOString(),
                     message: event.error.message,
                     attributes: {
-                      line: event.lineno,
-                      source: event.filename,
-                      stack: event.error.stack,
+                      Category: "JS Error",
+                      File: event.filename,
+                      Line: event.lineno,
+                      Stack: event.error.stack,
                     },
                   },
                 ],
@@ -326,8 +327,9 @@ module ProcessOut {
         "Content-Type": "application/json",
         "API-Version": this.apiVersion,
       }
+      let customHeaders = {}
 
-      if (SCRIPT_VERSION && !DEBUG) headers["X-ProcessOut-JS-Version"] = SCRIPT_VERSION
+      if (SCRIPT_VERSION) customHeaders["ProcessOut-JS-Version"] = SCRIPT_VERSION
 
       if (this.projectID) headers["Authorization"] = `Basic ${btoa(this.projectID + ":")}`
 
@@ -349,7 +351,14 @@ module ProcessOut {
       // We also need to hack our request headers for legacy browsers to
       // work, but also for modern browsers with extensions playing with
       // headers (such as antiviruses)
-      for (var k in headers) path += `&x-${k}=${headers[k]}`
+      for (var k in headers) {
+        path += `&x-${k}=${headers[k]}`
+      }
+
+      for (var k in customHeaders) {
+        path += `&x-${k}=${customHeaders[k]}`
+        headers[`X-${k}`] = customHeaders[k]
+      }
 
       if (method == "get") {
         for (var key in data) path += `&${key}=${encodeURIComponent(data[key])}`
