@@ -519,7 +519,7 @@ module ProcessOut {
 
                 field.value = Expiry.format(field.value.substring(0, 7));
 
-                if (next && l > lastLen && field.value.length == 7)
+                if (next && l > lastLen && field.value && field.value.length == 7)
                     next();
 
                 lastLen = l;
@@ -533,7 +533,7 @@ module ProcessOut {
                 const isNumericInput = /\d/.test(e.key)
 
                 // only allow numerics - and backspace, delete, arrows etc.
-                if (e.key.length === 1 && !isNumericInput && !e.ctrlKey && !e.metaKey) {
+                if (e.key && e.key.length === 1 && !isNumericInput && !e.ctrlKey && !e.metaKey) {
                     e.preventDefault();
                     return
                 }

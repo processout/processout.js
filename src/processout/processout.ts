@@ -230,9 +230,10 @@ module ProcessOut {
                     timestamp: new Date().toISOString(),
                     message: event.error.message,
                     attributes: {
-                      line: event.lineno,
-                      source: event.filename,
-                      stack: event.error.stack,
+                      Category: "JS Error",
+                      File: event.filename,
+                      Line: event.lineno,
+                      Stack: event.error.stack,
                     },
                   },
                 ],
