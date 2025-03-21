@@ -26,8 +26,11 @@ module ProcessOut {
 
         public static parseEvent(e: MessageEvent): Message {
             try {
-                var d = JSON.parse(e.data);
-                return <Message>d;
+              if (e && e.data) {
+                const d = JSON.parse(e.data);
+                return d ? <Message>d : new Message();
+              }
+              return new Message();
             } catch (e) {
                 return new Message();
             }
