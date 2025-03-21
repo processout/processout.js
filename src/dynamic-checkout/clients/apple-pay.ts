@@ -3,9 +3,9 @@
 module ProcessOut {
   export class ApplePayClient {
     processOutInstance: ProcessOut
-    paymentConfig: DynamicCheckoutPaymentConfigType
+    paymentConfig: DynamicCheckoutPaymentConfig
 
-    constructor(processOutInstance: ProcessOut, paymentConfig: DynamicCheckoutPaymentConfigType) {
+    constructor(processOutInstance: ProcessOut, paymentConfig: DynamicCheckoutPaymentConfig) {
       this.processOutInstance = processOutInstance
       this.paymentConfig = paymentConfig
     }
@@ -101,7 +101,7 @@ module ProcessOut {
       this.processOutInstance.tokenize(
         session,
         {},
-        (card) => {
+        card => {
           session.completePayment(0)
 
           DynamicCheckoutEventsUtils.dispatchTokenizePaymentSuccessEvent(card)
@@ -112,26 +112,32 @@ module ProcessOut {
 
           makeApplePayPayment(cardToken, invoiceData, getViewContainer)
         },
-        (err) => {
+        err => {
           session.completePayment(1)
 
           DynamicCheckoutEventsUtils.dispatchTokenizePaymentErrorEvent(err)
 
           getViewContainer().appendChild(
-            new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig).element
+            new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig)
+              .element,
           )
         },
       )
     }
 
-    private makeApplePayPayment(cardToken: string, invoiceData: Invoice, getViewContainer: () => HTMLElement) {
+    private makeApplePayPayment(
+      cardToken: string,
+      invoiceData: Invoice,
+      getViewContainer: () => HTMLElement,
+    ) {
       this.processOutInstance.makeCardPayment(
         invoiceData.id,
         cardToken,
         {
           authorize_only: !this.paymentConfig.capturePayments,
+          allow_fallback_to_sale: this.paymentConfig.allowFallbackToSale,
         },
-        (invoiceId) => {
+        invoiceId => {
           getViewContainer().appendChild(
             new DynamicCheckoutPaymentSuccessView(this.processOutInstance, this.paymentConfig)
               .element,
@@ -141,7 +147,7 @@ module ProcessOut {
             returnUrl: this.paymentConfig.invoiceDetails.return_url,
           })
         },
-        (error) =>{
+        error => {
           getViewContainer().appendChild(
             new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig)
               .element,
