@@ -214,7 +214,6 @@ module ProcessOut {
 
             this.iframe = document.createElement("iframe");
             this.iframe.className = "processout-field-cc-iframe";
-            this.iframe.title = "credit card number field";
             this.iframe.name = tmp;
             this.iframe.setAttribute("src", endpoint);
             this.iframe.setAttribute("style", "background: none; width: 100%;");
