@@ -1,0 +1,16 @@
+name: Check version bumped
+
+on: [ pull_request ]
+
+jobs:
+  check-version-bumped:
+    name: "Check version bumped"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const script = require('./scripts/check-version-bumped.js');
+            await script({core, github, context});
