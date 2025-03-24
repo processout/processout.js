@@ -3,8 +3,10 @@
 module ProcessOut {
   export abstract class PaymentMethodButton {
     public element: HTMLElement
+    protected processOutInstance: ProcessOut
 
     constructor(
+      processOutInstance: ProcessOut,
       name: string,
       logoUrl: string,
       id: string,
@@ -13,6 +15,8 @@ module ProcessOut {
       deletingAllowed: boolean = false,
       handleDeletePaymentMethod?: () => void,
     ) {
+      this.processOutInstance = processOutInstance
+
       this.element = this.createElement(
         name,
         logoUrl,
@@ -94,7 +98,7 @@ module ProcessOut {
           tagName: "img",
           classNames: ["dco-delete-payment-method-icon"],
           attributes: {
-            src: TRASH_ICON,
+            src: this.processOutInstance.endpoint("js", TRASH_ICON),
           },
         },
       ])

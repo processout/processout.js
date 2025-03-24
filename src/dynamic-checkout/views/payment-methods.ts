@@ -158,6 +158,7 @@ module ProcessOut {
       }
 
       this.paymentMethodsManager = new PaymentMethodsManager(
+        this.processOutInstance,
         expressPaymentMethods,
         this.paymentConfig,
       )
@@ -208,7 +209,6 @@ module ProcessOut {
               this.processOutInstance,
               this.paymentConfig,
               this.paymentConfig.invoiceDetails,
-              this.paymentConfig,
               this.resetContainerHtml.bind(this),
             )
 
@@ -410,7 +410,7 @@ module ProcessOut {
           tagName: "img",
           classNames: ["dco-no-saved-payment-methods-icon"],
           attributes: {
-            src: CREDIT_CARD_ICON,
+            src: this.processOutInstance.endpoint("js", CREDIT_CARD_ICON),
           },
         },
         {
@@ -449,7 +449,7 @@ module ProcessOut {
 
     private loadTingleLibrary() {
       const tingleScriptElement = document.createElement("script")
-      tingleScriptElement.src = tingleLibrary
+      tingleScriptElement.src = this.processOutInstance.endpoint("js", tingleLibrary)
       document.head.appendChild(tingleScriptElement)
     }
   }

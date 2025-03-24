@@ -6,12 +6,15 @@ module ProcessOut {
     private expressPaymentMethods: PaymentMethodButton[]
     public modal: any
     private paymentConfig: DynamicCheckoutPaymentConfig
+    private processOutInstance: ProcessOut
 
     constructor(
+      processOutInstance: ProcessOut,
       expressPaymentMethods: PaymentMethodButton[],
       paymentConfig: DynamicCheckoutPaymentConfig,
     ) {
       this.expressPaymentMethods = expressPaymentMethods
+      this.processOutInstance = processOutInstance
       this.paymentConfig = paymentConfig
       this.element = this.createElement()
     }
@@ -27,7 +30,7 @@ module ProcessOut {
             tagName: "img",
             classNames: ["dco-express-checkout-cog-icon"],
             attributes: {
-              src: COG_ICON,
+              src: this.processOutInstance.endpoint("js", COG_ICON),
             },
           },
         ])
@@ -43,28 +46,26 @@ module ProcessOut {
     }
 
     private openSavedPaymentMethodsManagerModal() {
+      const closeLabel = Translations.getText(
+        "payments-manager-close-button",
+        this.paymentConfig.locale,
+      )
+
       this.modal =
         window.globalThis && window.globalThis.tingle
           ? new window.globalThis.tingle.modal({
               footer: true,
               stickyFooter: true,
               closeMethods: ["overlay", "button", "escape"],
-              closeLabel: Translations.getText(
-                "payments-manager-close-button",
-                this.paymentConfig.locale,
-              ),
+              closeLabel: closeLabel,
             })
           : null
 
       this.modal.setContent(this.createModalContent())
 
-      this.modal.addFooterBtn(
-        Translations.getText("payments-manager-close-button", this.paymentConfig.locale),
-        "close-modal-btn",
-        () => {
-          this.modal.close()
-        },
-      )
+      this.modal.addFooterBtn(closeLabel, "close-modal-btn", () => {
+        this.modal.close()
+      })
 
       this.modal.open()
     }
@@ -95,6 +96,7 @@ module ProcessOut {
       })
 
       body.appendChild(paymentMethodsList)
+
       wrapper.appendChild(header)
       wrapper.appendChild(body)
 

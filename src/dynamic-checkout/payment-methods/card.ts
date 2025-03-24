@@ -34,7 +34,13 @@ module ProcessOut {
         rightContent.appendChild(logo)
       })
 
-      super(display.name, display.logo.light_url.vector, display.name, rightContent)
+      super(
+        procesoutInstance,
+        display.name,
+        display.logo.light_url.vector,
+        display.name,
+        rightContent,
+      )
 
       this.procesoutInstance = procesoutInstance
       this.paymentMethod = paymentMethod
@@ -175,6 +181,11 @@ module ProcessOut {
     }
 
     private getChildrenElement() {
+      const payButtonText = `${Translations.getText(
+        "pay-button-text",
+        this.paymentConfig.locale,
+      )} ${this.paymentConfig.invoiceDetails.amount} ${this.paymentConfig.invoiceDetails.currency}`
+
       const [
         cardFormWrapper,
         cardFormSectionsWrapper,
@@ -221,12 +232,7 @@ module ProcessOut {
           attributes: {
             id: "dco-card-pay-button",
           },
-          textContent: `${Translations.getText(
-            "pay-button-text",
-            this.paymentConfig.locale,
-          )} ${this.paymentConfig.invoiceDetails.amount} ${
-            this.paymentConfig.invoiceDetails.currency
-          }`,
+          textContent: payButtonText,
         },
       ])
 

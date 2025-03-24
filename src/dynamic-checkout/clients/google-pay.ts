@@ -1,55 +1,58 @@
 /// <reference path="../references.ts" />
 
 module ProcessOut {
+  interface IsReadyToPayRequest {
+    apiVersion: number
+    apiVersionMinor: number
+    allowedPaymentMethods: {
+      type: string
+      parameters: {
+        allowedAuthMethods: string[]
+        allowedCardNetworks: string[]
+      }
+      tokenizationSpecification: {
+        type: string
+        parameters: {
+          gateway: string
+          gatewayMerchantId: string
+        }
+      }
+    }[]
+  }
+
+  interface PaymentRequest {
+    apiVersion: number
+    apiVersionMinor: number
+    allowedPaymentMethods: {
+      type: string
+      parameters: {
+        allowedAuthMethods: string[]
+        allowedCardNetworks: string[]
+      }
+      tokenizationSpecification: {
+        type: string
+        parameters: {
+          gateway: string
+          gatewayMerchantId: string
+        }
+      }
+    }[]
+    transactionInfo: {
+      totalPriceStatus: string
+      totalPrice: string
+      currencyCode: string
+    }
+    merchantInfo: {
+      merchantName: string
+      merchantId: string
+    }
+  }
   export class GooglePayClient {
     googleClient: any
     processOutInstance: ProcessOut
     paymentConfig: DynamicCheckoutPaymentConfig
-    isReadyToPayRequest: {
-      apiVersion: number
-      apiVersionMinor: number
-      allowedPaymentMethods: {
-        type: string
-        parameters: {
-          allowedAuthMethods: string[]
-          allowedCardNetworks: string[]
-        }
-        tokenizationSpecification: {
-          type: string
-          parameters: {
-            gateway: string
-            gatewayMerchantId: string
-          }
-        }
-      }[]
-    }
-    paymentRequest: {
-      apiVersion: number
-      apiVersionMinor: number
-      allowedPaymentMethods: {
-        type: string
-        parameters: {
-          allowedAuthMethods: string[]
-          allowedCardNetworks: string[]
-        }
-        tokenizationSpecification: {
-          type: string
-          parameters: {
-            gateway: string
-            gatewayMerchantId: string
-          }
-        }
-      }[]
-      transactionInfo: {
-        totalPriceStatus: string
-        totalPrice: string
-        currencyCode: string
-      }
-      merchantInfo: {
-        merchantName: string
-        merchantId: string
-      }
-    }
+    isReadyToPayRequest: IsReadyToPayRequest
+    paymentRequest: PaymentRequest
 
     constructor(processOutInstance: ProcessOut, paymentConfig: DynamicCheckoutPaymentConfig) {
       this.processOutInstance = processOutInstance
@@ -62,9 +65,7 @@ module ProcessOut {
       getViewContainer: () => HTMLElement,
     ) {
       const googleClientScript = document.createElement("script")
-
       googleClientScript.src = googlePaySdkUrl
-
       googleClientScript.onload = () => {
         this.googleClient =
           window.globalThis && window.globalThis.google

@@ -1,8 +1,19 @@
 /// <reference path="../../references.ts" />
+/// <reference path="../../references.ts" />
 
 module ProcessOut {
+  interface CardPaymentOptions {
+    authorize_only: boolean
+    allow_fallback_to_sale: boolean
+    save_source: boolean
+  }
+
+  interface RequestOptions {
+    clientSecret: string
+  }
+
   export class ApmPaymentMethod extends PaymentMethodButton {
-    private processOutInstance: ProcessOut
+    protected processOutInstance: ProcessOut
     private paymentConfig: DynamicCheckoutPaymentConfig
     private paymentMethod: PaymentMethod
     private theme: DynamicCheckoutThemeType
@@ -16,6 +27,7 @@ module ProcessOut {
       resetContainerHtml: () => HTMLElement,
     ) {
       super(
+        processOutInstance,
         paymentMethod.display.name,
         paymentMethod.display.logo.dark_url.vector,
         paymentMethod.display.name,
@@ -25,10 +37,9 @@ module ProcessOut {
       this.paymentConfig = paymentConfig
       this.paymentMethod = paymentMethod
       this.theme = theme
+      this.resetContainerHtml = resetContainerHtml
 
       super.appendChildren(this.getChildrenElement())
-
-      this.resetContainerHtml = resetContainerHtml
     }
 
     private proceedToApmPayment() {
@@ -70,15 +81,9 @@ module ProcessOut {
     }
 
     private handleApmPayment(
-      cardPaymentOptions: {
-        authorize_only: boolean
-        allow_fallback_to_sale: boolean
-        save_source: boolean
-      },
+      cardPaymentOptions: CardPaymentOptions,
       actionHandlerOptions: ActionHandlerOptions,
-      requestOptions: {
-        clientSecret: string
-      },
+      requestOptions: RequestOptions,
     ) {
       const { apm } = this.paymentMethod
 
@@ -135,6 +140,8 @@ module ProcessOut {
           this.processOutInstance.handleAction(
             data.customer_action.value,
             paymentToken => {
+              this.resetContainerHtml().appendChild(new DynamicCheckoutInvoiceLoadingView().element)
+
               this.processOutInstance.makeCardPayment(
                 this.paymentConfig.invoiceId,
                 paymentToken,
@@ -200,7 +207,10 @@ module ProcessOut {
           tagName: "img",
           classNames: ["dco-payment-method-button-message-img"],
           attributes: {
-            src: REDIRECT_ARROW_ICON,
+            src: this.processOutInstance.endpoint(
+              "js",
+              "/images/dynamic-checkout-assets/apm-redirect-arrow.svg",
+            ),
           },
         },
         {
