@@ -583,17 +583,17 @@ module ProcessOut {
         private getIframeTitle() {
             switch (this.options.type) {
                 case CardField.number:
-                    return "card number field"
+                    return Translator.translateMessage("cardfield.number.title")
                 case CardField.expiry:
-                    return "card expiry field"
+                    return Translator.translateMessage("cardfield.expiry.title")
                 case CardField.cvc:
-                    return "card cvc field"
+                    return Translator.translateMessage("cardfield.cvc.title")
                 case CardField.expiryMonth:
-                    return "card expiry month field"
+                    return Translator.translateMessage("cardfield.expiry-month.title")
                 case CardField.expiryYear:
-                    return "card expiry year field"
+                    return Translator.translateMessage("cardfield.expiry-year.title")
                 default:
-                    return "card field"
+                    return Translator.translateMessage("cardfield.title")
             }
         }
     }
