@@ -113,6 +113,9 @@ module ProcessOut {
      */
     public threeDS: ThreeDSWrapper
     static ProcessOut: any
+
+    private errorReporter: ErrorReporter
+
     /**
      * ProcessOut constructor
      * @param  {string} projectID
@@ -171,6 +174,8 @@ module ProcessOut {
         throw new Exception("resource.invalid-type")
       }
 
+      this.errorReporter = new ErrorReporter(this)
+
       this.setupGlobalErrorHandler()
 
       this.applePay = new ApplePayWrapper(this)
@@ -211,35 +216,12 @@ module ProcessOut {
 
         if (/^https?:\/\/.*\.processout\.((com)|(ninja)|(dev))\//.test(event.filename)) {
           setTimeout(() => {
-            this.apiRequest(
-              "POST",
-              "telemetry",
-              {
-                metadata: {
-                  application: {
-                    name: "processout.js",
-                    version: SCRIPT_VERSION,
-                  },
-                  device: {
-                    model: "web",
-                  },
-                },
-                events: [
-                  {
-                    level: "error",
-                    timestamp: new Date().toISOString(),
-                    message: event.error.message,
-                    attributes: {
-                      line: event.lineno,
-                      source: event.filename,
-                      stack: event.error.stack,
-                    },
-                  },
-                ],
-              },
-              () => {},
-              () => {},
-            )
+            this.errorReporter.reportError({
+              fileName: event.filename,
+              lineNumber: event.lineno,
+              message: event.error.message,
+              stack: event.error.stack,
+            })
           }, requestDelayInMilliseconds)
         }
       })
@@ -326,8 +308,9 @@ module ProcessOut {
         "Content-Type": "application/json",
         "API-Version": this.apiVersion,
       }
+      let customHeaders = {}
 
-      if (SCRIPT_VERSION && !DEBUG) headers["X-ProcessOut-JS-Version"] = SCRIPT_VERSION
+      if (SCRIPT_VERSION) customHeaders["ProcessOut-JS-Version"] = SCRIPT_VERSION
 
       if (this.projectID) headers["Authorization"] = `Basic ${btoa(this.projectID + ":")}`
 
@@ -349,7 +332,14 @@ module ProcessOut {
       // We also need to hack our request headers for legacy browsers to
       // work, but also for modern browsers with extensions playing with
       // headers (such as antiviruses)
-      for (var k in headers) path += `&x-${k}=${headers[k]}`
+      for (var k in headers) {
+        path += `&x-${k}=${headers[k]}`
+      }
+
+      for (var k in customHeaders) {
+        path += `&x-${k}=${customHeaders[k]}`
+        headers[`X-${k}`] = customHeaders[k]
+      }
 
       if (method == "get") {
         for (var key in data) path += `&${key}=${encodeURIComponent(data[key])}`
