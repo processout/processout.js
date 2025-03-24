@@ -113,6 +113,9 @@ module ProcessOut {
      */
     public threeDS: ThreeDSWrapper
     static ProcessOut: any
+
+    private errorReporter: ErrorReporter
+
     /**
      * ProcessOut constructor
      * @param  {string} projectID
@@ -171,6 +174,8 @@ module ProcessOut {
         throw new Exception("resource.invalid-type")
       }
 
+      this.errorReporter = new ErrorReporter(this)
+
       this.setupGlobalErrorHandler()
 
       this.applePay = new ApplePayWrapper(this)
@@ -211,36 +216,12 @@ module ProcessOut {
 
         if (/^https?:\/\/.*\.processout\.((com)|(ninja)|(dev))\//.test(event.filename)) {
           setTimeout(() => {
-            this.apiRequest(
-              "POST",
-              "telemetry",
-              {
-                metadata: {
-                  application: {
-                    name: "processout.js",
-                    version: SCRIPT_VERSION,
-                  },
-                  device: {
-                    model: "web",
-                  },
-                },
-                events: [
-                  {
-                    level: "error",
-                    timestamp: new Date().toISOString(),
-                    message: event.error.message,
-                    attributes: {
-                      Category: "JS Error",
-                      File: event.filename,
-                      Line: event.lineno,
-                      Stack: event.error.stack,
-                    },
-                  },
-                ],
-              },
-              () => {},
-              () => {},
-            )
+            this.errorReporter.reportError({
+              fileName: event.filename,
+              lineNumber: event.lineno,
+              message: event.error.message,
+              stack: event.error.stack,
+            })
           }, requestDelayInMilliseconds)
         }
       })
