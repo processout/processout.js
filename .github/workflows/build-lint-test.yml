@@ -1,6 +1,6 @@
 name: Build, lint and test
 
-on: [push]
+on: [ push ]
 
 jobs:
   test:
@@ -19,6 +19,39 @@ jobs:
           key: ${{ runner.os }}-build-cache-node-modules-${{ hashFiles('./yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-build-cache-node-modules-
+
+      - name: Check package.json version changed
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const diff = await github.rest.repos.compareCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              base: context.payload.before,
+              head: context.payload.after,
+            });
+
+            if (!diff.data.files) {
+              core.info('No files changed in this Pull Request.');
+              return;
+            }
+            const packageJsonDiff = diff.data.files.find(file => file.filename === 'package.json');
+            if (!packageJsonDiff) {
+              core.setFailed('package.json file has not been modified in this Pull Request. Bump the version using `yarn bump` command.');
+              return;
+            }
+
+            const versionChangeRegex = /"version":\s*"(.+)"/;
+            const oldVersionMatch = versionChangeRegex.exec(packageJsonDiff.patch.split('\n').find(line => line.startsWith('-')));
+            const newVersionMatch = versionChangeRegex.exec(packageJsonDiff.patch.split('\n').find(line => line.startsWith('+')));
+
+
+            if (!oldVersionMatch || !newVersionMatch || oldVersionMatch[1] === newVersionMatch[1]) {
+              core.setFailed('The version in package.json has not been modified. Bump the version using `yarn bump` command.');
+              return;
+            }
+
+            core.info('Version check passed.');
 
       - name: Install dependencies
         if: steps.cache-nodemodules.outputs.cache-hit != 'true'
