@@ -213,19 +213,43 @@ module ProcessOut {
     const messages: { [locale: string]: { [name: string]: string } } = {
         "en": {
             "label.cancel": "Cancel",
-            "label.apm-description": "A new window was opened to process your payment. Click here to continue."
+            "label.apm-description": "A new window was opened to process your payment. Click here to continue.",
+            "cardfield.cvc.title": "card cvc field",
+            "cardfield.expiry.title": "card expiry field",
+            "cardfield.expiry-month.title": "card expiry month field",
+            "cardfield.expiry-year.title": "card expiry year field",
+            "cardfield.number.title": "card number field",
+            "cardfield.title": "card field",
         },
         "fr": {
             "label.cancel": "Annuler",
-            "label.apm-description": "Une nouvelle fen&ecirc;tre s'est ouverte pour proc&eacute;der au paiement. Cliquez ici pour continuer."
+            "label.apm-description": "Une nouvelle fen&ecirc;tre s'est ouverte pour proc&eacute;der au paiement. Cliquez ici pour continuer.",
+            "cardfield.cvc.title": "champ cvc de la carte",
+            "cardfield.expiry.title": "champ date d'expiration de la carte",
+            "cardfield.expiry-month.title": "champ mois d'expiration de la carte",
+            "cardfield.expiry-year.title": "champ année d'expiration de la carte",
+            "cardfield.number.title": "champ numéro de carte",
+            "cardfield.title": "champ carte",
         },
         "es": {
             "label.cancel": "Cancelar",
-            "label.apm-description": "Se abrió una nueva ventana para procesar su pago. Clic aquí para continuar."
+            "label.apm-description": "Se abrió una nueva ventana para procesar su pago. Clic aquí para continuar.",
+            "cardfield.cvc.title": "campo cvc de la tarjeta",
+            "cardfield.expiry.title": "campo fecha de expiración de la tarjeta",
+            "cardfield.expiry-month.title": "campo mes de expiración de la tarjeta",
+            "cardfield.expiry-year.title": "campo año de expiración de la tarjeta",
+            "cardfield.number.title": "campo número de tarjeta",
+            "cardfield.title": "campo tarjeta",
         },
         "pt": {
             "label.cancel": "Cancelar",
-            "label.apm-description": "Uma nova janela foi aberta para processar o seu pagamento. Clique aqui para continuar."
+            "label.apm-description": "Uma nova janela foi aberta para processar o seu pagamento. Clique aqui para continuar.",
+            "cardfield.cvc.title": "campo cvc de cartão",
+            "cardfield.expiry.title": "campo data de expiração de cartão",
+            "cardfield.expiry-month.title": "campo mês de expiração de cartão",
+            "cardfield.expiry-year.title": "campo ano de expiração de cartão",
+            "cardfield.number.title": "campo número de cartão",
+            "cardfield.title": "campo cartão",
         }
     };
 

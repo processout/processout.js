@@ -1,6 +1,6 @@
 {
   "name": "processout.js",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "ProcessOut.js is a JavaScript library for ProcessOut's payment processing API.",
   "scripts": {
     "build:processout": "tsc -p src/processout && uglifyjs --compress --keep-fnames --ie8 dist/processout.js -o dist/processout.js",
