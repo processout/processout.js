@@ -7,7 +7,7 @@ module ProcessOut {
     private isMounted: boolean
     private theme: DynamicCheckoutThemeType
     private resetContainerHtml: () => HTMLElement
-    private processOutInstance: ProcessOut
+    protected processOutInstance: ProcessOut
 
     constructor(
       processOutInstance: ProcessOut,
@@ -19,7 +19,7 @@ module ProcessOut {
       const { display, apm } = paymentMethod
       const { invoiceId, invoiceDetails } = paymentConfig
 
-      super(display.name, display.logo.dark_url.vector)
+      super(processOutInstance, display.name, display.logo.dark_url.vector, display.name)
 
       this.paymentConfig = paymentConfig
       this.processOutInstance = processOutInstance
@@ -37,6 +37,7 @@ module ProcessOut {
 
       const backgroundColor =
         this.theme && this.theme.payButtonColor ? this.theme.payButtonColor : "#242C38"
+
       const color =
         this.theme && this.theme.payButtonTextColor ? this.theme.payButtonTextColor : "white"
 
@@ -61,7 +62,7 @@ module ProcessOut {
         }
       })
 
-      window.addEventListener(NATIVE_APM_EVENTS.PAYMENT_SUCCESS, e => {
+      window.addEventListener(NATIVE_APM_EVENTS.PAYMENT_SUCCESS, () => {
         this.resetContainerHtml().appendChild(
           new DynamicCheckoutPaymentSuccessView(this.processOutInstance, this.paymentConfig)
             .element,

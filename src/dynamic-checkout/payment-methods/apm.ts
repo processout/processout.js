@@ -1,8 +1,19 @@
 /// <reference path="../../references.ts" />
+/// <reference path="../../references.ts" />
 
 module ProcessOut {
+  interface CardPaymentOptions {
+    authorize_only: boolean
+    allow_fallback_to_sale: boolean
+    save_source: boolean
+  }
+
+  interface RequestOptions {
+    clientSecret: string
+  }
+
   export class ApmPaymentMethod extends PaymentMethodButton {
-    private processOutInstance: ProcessOut
+    protected processOutInstance: ProcessOut
     private paymentConfig: DynamicCheckoutPaymentConfig
     private paymentMethod: PaymentMethod
     private theme: DynamicCheckoutThemeType
@@ -15,19 +26,24 @@ module ProcessOut {
       theme: DynamicCheckoutThemeType,
       resetContainerHtml: () => HTMLElement,
     ) {
-      super(paymentMethod.display.name, paymentMethod.display.logo.dark_url.vector)
+      super(
+        processOutInstance,
+        paymentMethod.display.name,
+        paymentMethod.display.logo.dark_url.vector,
+        paymentMethod.display.name,
+      )
 
       this.processOutInstance = processOutInstance
       this.paymentConfig = paymentConfig
       this.paymentMethod = paymentMethod
       this.theme = theme
-      super.appendChildren(this.getChildrenElement())
-
       this.resetContainerHtml = resetContainerHtml
+
+      super.appendChildren(this.getChildrenElement())
     }
 
     private proceedToApmPayment() {
-      const { apm, display } = this.paymentMethod
+      const { apm } = this.paymentMethod
       const { clientSecret } = this.paymentConfig
 
       const actionHandlerOptions = new ActionHandlerOptions(
@@ -46,7 +62,7 @@ module ProcessOut {
       }
 
       const saveForFutureCheckbox = document.getElementById(
-        `save-apm-for-future-${display.name}`,
+        `save-apm-for-future-${this.paymentMethod.apm.gateway_name}`,
       ) as HTMLInputElement | null
 
       if (saveForFutureCheckbox) {
@@ -61,20 +77,21 @@ module ProcessOut {
         )
       }
 
-      cardPaymentOptions["allow_fallback_to_sale"] = true
       this.handleApmPayment(cardPaymentOptions, actionHandlerOptions, requestOptions)
     }
 
     private handleApmPayment(
-      cardPaymentOptions: any,
+      cardPaymentOptions: CardPaymentOptions,
       actionHandlerOptions: ActionHandlerOptions,
-      requestOptions: any,
+      requestOptions: RequestOptions,
     ) {
       const { apm } = this.paymentMethod
 
       this.processOutInstance.handleAction(
         apm.redirect_url,
         paymentToken => {
+          this.resetContainerHtml().appendChild(new DynamicCheckoutInvoiceLoadingView().element)
+
           this.processOutInstance.makeCardPayment(
             this.paymentConfig.invoiceId,
             paymentToken,
@@ -123,6 +140,8 @@ module ProcessOut {
           this.processOutInstance.handleAction(
             data.customer_action.value,
             paymentToken => {
+              this.resetContainerHtml().appendChild(new DynamicCheckoutInvoiceLoadingView().element)
+
               this.processOutInstance.makeCardPayment(
                 this.paymentConfig.invoiceId,
                 paymentToken,
@@ -204,10 +223,11 @@ module ProcessOut {
         },
         {
           tagName: "input",
+          classNames: ["dco-payment-method-button-save-for-future-checkbox"],
           attributes: {
             type: "checkbox",
             name: "save-apm-for-future",
-            id: `save-apm-for-future-${this.paymentMethod.display.name}`,
+            id: `save-apm-for-future-${this.paymentMethod.apm.gateway_name}`,
           },
         },
         {

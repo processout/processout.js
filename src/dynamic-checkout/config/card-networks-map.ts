@@ -22,5 +22,5 @@ module ProcessOut {
     "private label": "privateLabel",
     visa: "visa",
     vpay: "vpay",
-  };
+  }
 }

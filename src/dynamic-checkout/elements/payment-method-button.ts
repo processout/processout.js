@@ -2,17 +2,40 @@
 
 module ProcessOut {
   export abstract class PaymentMethodButton {
-    public element: HTMLElement;
-    private rightContentWrapper: HTMLElement;
+    public element: HTMLElement
+    protected processOutInstance: ProcessOut
 
-    constructor(name: string, logoUrl: string, rightContent?: HTMLElement) {
-      this.element = this.createElement(name, logoUrl, rightContent);
+    constructor(
+      processOutInstance: ProcessOut,
+      name: string,
+      logoUrl: string,
+      id: string,
+      rightContent?: HTMLElement,
+      deleteMode: boolean = false,
+      deletingAllowed: boolean = false,
+      handleDeletePaymentMethod?: () => void,
+    ) {
+      this.processOutInstance = processOutInstance
+
+      this.element = this.createElement(
+        name,
+        logoUrl,
+        id,
+        deleteMode,
+        deletingAllowed,
+        rightContent,
+        handleDeletePaymentMethod,
+      )
     }
 
     private createElement(
       name: string,
       logoUrl: string,
-      rightContent?: HTMLElement
+      id: string,
+      deleteMode: boolean,
+      deletingAllowed: boolean,
+      rightContent?: HTMLElement,
+      handleDeletePaymentMethod?: () => void,
     ) {
       const [
         element,
@@ -22,10 +45,18 @@ module ProcessOut {
         paymentMethodName,
         rightContentWrapper,
         radioButton,
+        deleteButton,
+        deleteButtonIcon,
       ] = HTMLElements.createMultipleElements([
         {
           tagName: "label",
-          classNames: ["dco-payment-method-wrapper"],
+          classNames: [
+            "dco-payment-method-wrapper",
+            deleteMode && "dco-payment-method-wrapper--delete-mode",
+          ],
+          attributes: {
+            "data-id": id,
+          },
         },
         {
           tagName: "div",
@@ -59,36 +90,55 @@ module ProcessOut {
             name: "payment-method",
           },
         },
-      ]);
+        {
+          tagName: "button",
+          classNames: ["dco-delete-payment-method-button"],
+        },
+        {
+          tagName: "img",
+          classNames: ["dco-delete-payment-method-icon"],
+          attributes: {
+            src: this.processOutInstance.endpoint("js", TRASH_ICON),
+          },
+        },
+      ])
 
       if (rightContent) {
-        HTMLElements.appendChildren(rightContentWrapper, [rightContent]);
+        HTMLElements.appendChildren(rightContentWrapper, [rightContent])
       }
 
-      this.rightContentWrapper = rightContentWrapper;
-
-      HTMLElements.appendChildren(rightContentWrapper, [radioButton]);
-      HTMLElements.appendChildren(paymentMethodInfo, [
-        paymentMethodLogo,
-        paymentMethodName,
-      ]);
+      HTMLElements.appendChildren(paymentMethodInfo, [paymentMethodLogo, paymentMethodName])
+      HTMLElements.appendChildren(element, [paymentMethodButtonWrapper])
       HTMLElements.appendChildren(paymentMethodButtonWrapper, [
         paymentMethodInfo,
         rightContentWrapper,
-      ]);
-      HTMLElements.appendChildren(element, [paymentMethodButtonWrapper]);
+      ])
 
-      return element;
+      if (deleteMode && deletingAllowed) {
+        HTMLElements.appendChildren(deleteButton, [deleteButtonIcon])
+        HTMLElements.appendChildren(rightContentWrapper, [deleteButton])
+
+        deleteButton.addEventListener("click", () => {
+          deleteButton.setAttribute("disabled", "true")
+          handleDeletePaymentMethod()
+        })
+      }
+
+      if (!deleteMode) {
+        HTMLElements.appendChildren(rightContentWrapper, [radioButton])
+      }
+
+      return element
     }
 
     public appendChildren(children: HTMLElement) {
       const childrenWrapper = HTMLElements.createElement({
         tagName: "div",
         classNames: ["dco-payment-method-button-general-children-container"],
-      });
+      })
 
-      HTMLElements.appendChildren(childrenWrapper, [children]);
-      HTMLElements.appendChildren(this.element, [childrenWrapper]);
+      HTMLElements.appendChildren(childrenWrapper, [children])
+      HTMLElements.appendChildren(this.element, [childrenWrapper])
     }
   }
 }

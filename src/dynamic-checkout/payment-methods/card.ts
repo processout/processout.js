@@ -34,7 +34,13 @@ module ProcessOut {
         rightContent.appendChild(logo)
       })
 
-      super(display.name, display.logo.dark_url.vector, rightContent)
+      super(
+        procesoutInstance,
+        display.name,
+        display.logo.light_url.vector,
+        display.name,
+        rightContent,
+      )
 
       this.procesoutInstance = procesoutInstance
       this.paymentMethod = paymentMethod
@@ -43,6 +49,7 @@ module ProcessOut {
       this.resetContainerHtml = resetContainerHtml
 
       const cardForm = this.getChildrenElement()
+
       super.appendChildren(cardForm)
       this.setupCardForm(cardForm)
     }
@@ -120,6 +127,7 @@ module ProcessOut {
       this.resetContainerHtml().appendChild(
         new DynamicCheckoutPaymentSuccessView(this.procesoutInstance, this.paymentConfig).element,
       )
+
       DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
         invoiceId,
         returnUrl: this.paymentConfig.invoiceDetails.return_url,
@@ -130,6 +138,7 @@ module ProcessOut {
       this.resetContainerHtml().appendChild(
         new DynamicCheckoutPaymentErrorView(this.procesoutInstance, this.paymentConfig).element,
       )
+
       DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error)
     }
 
@@ -151,17 +160,11 @@ module ProcessOut {
 
     private getAdditionalFormValues(form: HTMLElement) {
       const cardholderName = form.querySelector('input[name="cardholder-name"]') as HTMLInputElement
-
       const country = form.querySelector('select[name="country"]') as HTMLSelectElement
-
       const state = form.querySelector('select[name="state"]') as HTMLSelectElement
-
       const city = form.querySelector('input[name="city"]') as HTMLInputElement
-
       const postcode = form.querySelector('input[name="postcode"]') as HTMLInputElement
-
       const addressLine1 = form.querySelector('input[name="street1"]') as HTMLInputElement
-
       const addressLine2 = form.querySelector('input[name="street2"]') as HTMLInputElement
 
       return {
@@ -178,6 +181,11 @@ module ProcessOut {
     }
 
     private getChildrenElement() {
+      const payButtonText = `${Translations.getText(
+        "pay-button-text",
+        this.paymentConfig.locale,
+      )} ${this.paymentConfig.invoiceDetails.amount} ${this.paymentConfig.invoiceDetails.currency}`
+
       const [
         cardFormWrapper,
         cardFormSectionsWrapper,
@@ -224,12 +232,7 @@ module ProcessOut {
           attributes: {
             id: "dco-card-pay-button",
           },
-          textContent: `${Translations.getText(
-            "pay-button-text",
-            this.paymentConfig.locale,
-          )} ${this.paymentConfig.invoiceDetails.amount} ${
-            this.paymentConfig.invoiceDetails.currency
-          }`,
+          textContent: payButtonText,
         },
       ])
 
@@ -522,11 +525,11 @@ module ProcessOut {
       ])
 
       countries.forEach(country => {
-        let shouldShow = true
+        let shouldShow = restrictedCountries.length === 0 ? true : false
 
         restrictedCountries.forEach(restrictedCountry => {
           if (restrictedCountry === country) {
-            shouldShow = false
+            shouldShow = true
           }
         })
 
@@ -557,9 +560,7 @@ module ProcessOut {
 
     private getBillingAddressField(country: string) {
       const countryConfig = billingAddressConfig[country]
-
       const automaticMode = this.paymentMethod.card.billing_address.collection_mode === "automatic"
-
       const shouldShowPostcodeForAutomaticMode =
         country === "US" || country === "CA" || country === "GB"
 
@@ -633,7 +634,6 @@ module ProcessOut {
       })
 
       let mappedBillingAddressFields = []
-
       billingAddressFields.forEach(field => {
         if (field.getAttribute("name") === "city" || field.getAttribute("name") === "postcode") {
           HTMLElements.appendChildren(cityPostCodeSplitRow, [field])

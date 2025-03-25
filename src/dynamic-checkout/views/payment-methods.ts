@@ -5,6 +5,7 @@ module ProcessOut {
     processOutInstance: ProcessOut
     dynamicCheckout: DynamicCheckout
     paymentConfig: DynamicCheckoutPaymentConfig
+    paymentMethodsManager: PaymentMethodsManager
     theme: DynamicCheckoutThemeType
     element: HTMLElement
 
@@ -19,6 +20,7 @@ module ProcessOut {
       this.paymentConfig = paymentConfig
       this.theme = theme
       this.element = this.createViewElement()
+      this.loadTingleLibrary()
     }
 
     private createViewElement() {
@@ -101,12 +103,17 @@ module ProcessOut {
       const [
         expressCheckoutWrapper,
         expressCheckoutHeader,
+        expressCheckoutHeaderText,
         walletCheckoutWrapper,
         expressPaymentMethodsWrapper,
       ] = HTMLElements.createMultipleElements([
         {
           tagName: "div",
           classNames: ["dco-express-checkout-wrapper"],
+        },
+        {
+          tagName: "div",
+          classNames: ["dco-express-checkout-header-wrapper"],
         },
         {
           tagName: "span",
@@ -123,13 +130,40 @@ module ProcessOut {
         },
       ])
 
+      expressCheckoutHeader.appendChild(expressCheckoutHeaderText)
       expressCheckoutWrapper.appendChild(expressCheckoutHeader)
+
+      if (this.shouldShowSettingsButton()) {
+        this.createPaymentMethodsManager(expressCheckoutHeader)
+      }
 
       return {
         expressCheckoutWrapper,
         walletCheckoutWrapper,
         expressPaymentMethodsWrapper,
       }
+    }
+
+    private createPaymentMethodsManager(expressCheckoutHeader: Element) {
+      const settingsButton = document.querySelector(".dco-express-checkout-header-settings-button")
+
+      if (settingsButton) {
+        settingsButton.remove()
+      }
+
+      const { expressPaymentMethods } = this.getPaymentMethodsElements(true)
+
+      if (expressPaymentMethods.length === 0) {
+        return
+      }
+
+      this.paymentMethodsManager = new PaymentMethodsManager(
+        this.processOutInstance,
+        expressPaymentMethods,
+        this.paymentConfig,
+      )
+
+      expressCheckoutHeader.appendChild(this.paymentMethodsManager.element)
     }
 
     private getRegularPaymentMethodsElements(expressPaymentMethods: PaymentMethod[]) {
@@ -163,7 +197,7 @@ module ProcessOut {
       return { regularPaymentMethodsSectionWrapper, regularPaymentMethodsList }
     }
 
-    private getPaymentMethodsElements() {
+    private getPaymentMethodsElements(deleteMode?: boolean) {
       let walletPaymentMethods = []
       let expressPaymentMethods = []
       let regularPaymentMethods = []
@@ -181,15 +215,23 @@ module ProcessOut {
             return walletPaymentMethods.push(googlePayPaymentMethod)
 
           case "applepay":
-            const applePayPaymentMethod = new ApplePayPaymentMethod(
-              this.processOutInstance,
-              this.paymentConfig,
-              this.paymentConfig.invoiceDetails,
-              this.resetContainerHtml.bind(this),
+            // We want to hide Apple Pay for HPP temporarily
+            const shouldHide = /^https?:\/\/.*pay\.processout\.(com|ninja)\//.test(
+              window.location.href,
             )
 
-            return walletPaymentMethods.push(applePayPaymentMethod)
+            if (!shouldHide) {
+              const applePayPaymentMethod = new ApplePayPaymentMethod(
+                this.processOutInstance,
+                this.paymentConfig,
+                this.paymentConfig.invoiceDetails,
+                this.resetContainerHtml.bind(this),
+              )
 
+              return walletPaymentMethods.push(applePayPaymentMethod)
+            }
+
+            break
           case "apm_customer_token":
             const savedApmPaymentMethod = new SavedApmPaymentMethod(
               this.processOutInstance,
@@ -197,6 +239,8 @@ module ProcessOut {
               this.paymentConfig,
               this.theme,
               this.resetContainerHtml.bind(this),
+              deleteMode,
+              () => this.handleDeletePaymentMethod(paymentMethod),
             )
 
             return expressPaymentMethods.push(savedApmPaymentMethod)
@@ -208,6 +252,8 @@ module ProcessOut {
               this.paymentConfig,
               this.theme,
               this.resetContainerHtml.bind(this),
+              deleteMode,
+              () => this.handleDeletePaymentMethod(paymentMethod),
             )
 
             return expressPaymentMethods.push(savedCardPaymentMethod)
@@ -257,6 +303,154 @@ module ProcessOut {
     private resetContainerHtml() {
       this.element.innerHTML = ""
       return this.element
+    }
+
+    private shouldShowSettingsButton() {
+      let shouldShowSettingsButton = false
+
+      this.paymentConfig.invoiceDetails.payment_methods.forEach(paymentMethod => {
+        const canDeleteApm =
+          paymentMethod.type === "apm_customer_token" &&
+          paymentMethod.apm_customer_token &&
+          paymentMethod.apm_customer_token.deleting_allowed
+
+        const canDeleteCard =
+          paymentMethod.type === "card_customer_token" &&
+          paymentMethod.card_customer_token &&
+          paymentMethod.card_customer_token.deleting_allowed
+
+        if (canDeleteApm || canDeleteCard) {
+          shouldShowSettingsButton = true
+        }
+      })
+
+      return shouldShowSettingsButton
+    }
+
+    private handleDeletePaymentMethod(paymentMethod: PaymentMethod) {
+      const isCardToken = paymentMethod.type === "card_customer_token"
+
+      const tokenId = isCardToken
+        ? paymentMethod.card_customer_token.customer_token_id
+        : paymentMethod.apm_customer_token.customer_token_id
+
+      const customerId = this.paymentConfig.invoiceDetails.customer_id
+
+      this.processOutInstance.apiRequest(
+        "delete",
+        `customers/${customerId}/tokens/${tokenId}`,
+        {},
+        () => {
+          this.deletePaymentMethodFromDom(tokenId, isCardToken)
+          DynamicCheckoutEventsUtils.dispatchDeletePaymentMethodEvent()
+        },
+        err => {
+          DynamicCheckoutEventsUtils.dispatchDeletePaymentMethodErrorEvent(err)
+        },
+        0,
+        {
+          clientSecret: this.paymentConfig.clientSecret,
+        },
+      )
+    }
+
+    private deletePaymentMethodFromDom(id: string, isCardToken: boolean) {
+      const paymentMethodElements = document.querySelectorAll(`[data-id=${id}`)
+      const paymentManagerMethodsList = document.querySelector(".dco-modal-payment-methods-list")
+      const expressCheckoutMethodsList = document.querySelector(
+        ".dco-express-checkout-payment-methods-wrapper",
+      )
+
+      const expressCheckoutHeader = document.querySelector(".dco-express-checkout-header-wrapper")
+
+      paymentMethodElements.forEach(element => element.remove())
+
+      this.paymentConfig.invoiceDetails.payment_methods =
+        this.paymentConfig.invoiceDetails.payment_methods.filter(paymentMethod => {
+          if (isCardToken && paymentMethod.card_customer_token) {
+            return paymentMethod.card_customer_token.customer_token_id !== id
+          }
+
+          if (paymentMethod.apm_customer_token) {
+            return paymentMethod.apm_customer_token.customer_token_id !== id
+          }
+
+          return true
+        })
+
+      if (paymentManagerMethodsList.childNodes.length === 0) {
+        this.createPaymentsManagerEmptyState(paymentManagerMethodsList)
+      }
+
+      if (expressCheckoutMethodsList.childNodes.length === 0) {
+        expressCheckoutMethodsList.remove()
+      }
+
+      this.createPaymentMethodsManager(expressCheckoutHeader)
+    }
+
+    private createPaymentsManagerEmptyState(paymentsManagerMethodsList: Element) {
+      const [
+        noSavedPaymentMethodsWrapper,
+        noSavedPaymentMethodsIconWrapper,
+        noSavedPaymentMethodsIcon,
+        noSavedPaymentMethodsTextWrapper,
+        noSavedPaymentMethodsHeader,
+        noSavedPaymentMethodsMessage,
+      ] = HTMLElements.createMultipleElements([
+        {
+          tagName: "div",
+          classNames: ["dco-no-saved-payment-methods-wrapper"],
+        },
+        {
+          tagName: "div",
+          classNames: ["dco-no-saved-payment-methods-icon-wrapper"],
+        },
+        {
+          tagName: "img",
+          classNames: ["dco-no-saved-payment-methods-icon"],
+          attributes: {
+            src: this.processOutInstance.endpoint("js", CREDIT_CARD_ICON),
+          },
+        },
+        {
+          tagName: "div",
+          classNames: ["dco-no-saved-payment-methods-text-wrapper"],
+        },
+        {
+          tagName: "span",
+          classNames: ["dco-no-saved-payment-methods-header"],
+          textContent: Translations.getText(
+            "no-saved-payment-methods-header",
+            this.paymentConfig.locale,
+          ),
+        },
+        {
+          tagName: "span",
+          classNames: ["dco-no-saved-payment-methods-message"],
+          textContent: Translations.getText(
+            "no-saved-payment-methods-message",
+            this.paymentConfig.locale,
+          ),
+        },
+      ])
+
+      noSavedPaymentMethodsIconWrapper.appendChild(noSavedPaymentMethodsIcon)
+
+      noSavedPaymentMethodsTextWrapper.appendChild(noSavedPaymentMethodsHeader)
+      noSavedPaymentMethodsTextWrapper.appendChild(noSavedPaymentMethodsMessage)
+
+      noSavedPaymentMethodsWrapper.appendChild(noSavedPaymentMethodsIconWrapper)
+      noSavedPaymentMethodsWrapper.appendChild(noSavedPaymentMethodsTextWrapper)
+
+      paymentsManagerMethodsList.appendChild(noSavedPaymentMethodsWrapper)
+      paymentsManagerMethodsList.classList.add("dco-modal-payment-methods-list--no-methods")
+    }
+
+    private loadTingleLibrary() {
+      const tingleScriptElement = document.createElement("script")
+      tingleScriptElement.src = this.processOutInstance.endpoint("js", tingleLibrary)
+      document.head.appendChild(tingleScriptElement)
     }
   }
 }

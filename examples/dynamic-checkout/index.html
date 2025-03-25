@@ -11,15 +11,17 @@
       document.addEventListener("DOMContentLoaded", function () {
         // You need to replace these values with your own
         const projectId = "test-proj_qEi1u5BwoYcZb6mOMKDWIm4mpqKCq6bN"
-        const invoiceId = "iv_cJXSDBgjJFcFBtzLJWcDoQ3ZcEqaJCEU"
-        const clientSecret = "client-secret"
+        const invoiceId = "iv_fbzOpNMPAuIQjy1mGVjJG7htCw7mNYkY"
+        const clientSecret = ""
 
         const client = new ProcessOut.ProcessOut(projectId)
 
         const dynamicCheckout = client.setupDynamicCheckout({
           invoiceId,
-          projectId,
           clientSecret,
+          capturePayments: false,
+          allowFallbackToSale: false,
+          locale: "en",
         })
 
         dynamicCheckout.mount("#dynamic-cko-container")

@@ -2,7 +2,7 @@
 
 module ProcessOut {
   export class SavedApmPaymentMethod extends PaymentMethodButton {
-    private processOutInstance: ProcessOut
+    protected processOutInstance: ProcessOut
     private paymentConfig: DynamicCheckoutPaymentConfig
     private paymentMethod: PaymentMethod
     private theme: DynamicCheckoutThemeType
@@ -14,18 +14,24 @@ module ProcessOut {
       paymentConfig: DynamicCheckoutPaymentConfig,
       theme: DynamicCheckoutThemeType,
       resetContainerHtml: () => HTMLElement,
+      deleteMode?: boolean,
+      handleDeletePaymentMethod?: () => void,
     ) {
       const rightContentElement = HTMLElements.createElement({
         tagName: "div",
         classNames: ["dco-payment-method-right-content"],
       })
-
       rightContentElement.textContent = paymentMethod.display.description
 
       super(
+        processOutInstance,
         paymentMethod.display.name,
         paymentMethod.display.logo.dark_url.vector,
+        paymentMethod.apm_customer_token.customer_token_id,
         rightContentElement,
+        deleteMode,
+        paymentMethod.apm_customer_token.deleting_allowed,
+        handleDeletePaymentMethod,
       )
 
       this.processOutInstance = processOutInstance
@@ -34,10 +40,17 @@ module ProcessOut {
       this.theme = theme
       this.resetContainerHtml = resetContainerHtml
 
-      super.appendChildren(this.getChildrenElement())
+      super.appendChildren(this.getChildrenElement(deleteMode))
     }
 
-    private getChildrenElement() {
+    private getChildrenElement(deleteMode?: boolean) {
+      const payButtonText = `${Translations.getText(
+        "pay-button-text",
+        this.paymentConfig.locale,
+      )} ${this.paymentConfig.invoiceDetails.amount} ${this.paymentConfig.invoiceDetails.currency}`
+
+      console.log(this.paymentMethod)
+
       const [wrapper, payButton] = HTMLElements.createMultipleElements([
         {
           tagName: "div",
@@ -47,14 +60,9 @@ module ProcessOut {
           tagName: "button",
           classNames: ["dco-payment-method-button-pay-button"],
           attributes: {
-            id: `dco-saved-apm-pay-button-${this.paymentMethod.display.name}`,
+            id: `dco-saved-apm-pay-button-${this.paymentMethod.apm_customer_token.customer_token_id}`,
           },
-          textContent: `${Translations.getText(
-            "pay-button-text",
-            this.paymentConfig.locale,
-          )} ${this.paymentConfig.invoiceDetails.amount} ${
-            this.paymentConfig.invoiceDetails.currency
-          }`,
+          textContent: payButtonText,
         },
       ])
 
@@ -68,7 +76,9 @@ module ProcessOut {
 
       HTMLElements.appendChildren(wrapper, [payButton])
 
-      payButton.addEventListener("click", this.handleApmPayment.bind(this))
+      if (!deleteMode) {
+        payButton.addEventListener("click", this.handleApmPayment.bind(this))
+      }
 
       return wrapper
     }
@@ -139,6 +149,7 @@ module ProcessOut {
       this.resetContainerHtml().appendChild(
         new DynamicCheckoutPaymentSuccessView(this.processOutInstance, this.paymentConfig).element,
       )
+
       DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
         invoiceId,
         returnUrl: this.paymentConfig.invoiceDetails.return_url,
@@ -149,12 +160,13 @@ module ProcessOut {
       this.resetContainerHtml().appendChild(
         new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig).element,
       )
+
       DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error)
     }
 
     private setButtonLoading() {
       const payButton = document.getElementById(
-        `dco-saved-apm-pay-button-${this.paymentMethod.display.name}`,
+        `dco-saved-apm-pay-button-${this.paymentMethod.apm_customer_token.customer_token_id}`,
       ) as HTMLButtonElement
 
       payButton.disabled = true

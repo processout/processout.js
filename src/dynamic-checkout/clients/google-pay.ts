@@ -1,55 +1,58 @@
 /// <reference path="../references.ts" />
 
 module ProcessOut {
+  interface IsReadyToPayRequest {
+    apiVersion: number
+    apiVersionMinor: number
+    allowedPaymentMethods: {
+      type: string
+      parameters: {
+        allowedAuthMethods: string[]
+        allowedCardNetworks: string[]
+      }
+      tokenizationSpecification: {
+        type: string
+        parameters: {
+          gateway: string
+          gatewayMerchantId: string
+        }
+      }
+    }[]
+  }
+
+  interface PaymentRequest {
+    apiVersion: number
+    apiVersionMinor: number
+    allowedPaymentMethods: {
+      type: string
+      parameters: {
+        allowedAuthMethods: string[]
+        allowedCardNetworks: string[]
+      }
+      tokenizationSpecification: {
+        type: string
+        parameters: {
+          gateway: string
+          gatewayMerchantId: string
+        }
+      }
+    }[]
+    transactionInfo: {
+      totalPriceStatus: string
+      totalPrice: string
+      currencyCode: string
+    }
+    merchantInfo: {
+      merchantName: string
+      merchantId: string
+    }
+  }
   export class GooglePayClient {
     googleClient: any
     processOutInstance: ProcessOut
     paymentConfig: DynamicCheckoutPaymentConfig
-    isReadyToPayRequest: {
-      apiVersion: number
-      apiVersionMinor: number
-      allowedPaymentMethods: {
-        type: string
-        parameters: {
-          allowedAuthMethods: string[]
-          allowedCardNetworks: string[]
-        }
-        tokenizationSpecification: {
-          type: string
-          parameters: {
-            gateway: string
-            gatewayMerchantId: string
-          }
-        }
-      }[]
-    }
-
-    paymentRequest: {
-      apiVersion: number
-      apiVersionMinor: number
-      allowedPaymentMethods: {
-        type: string
-        parameters: {
-          allowedAuthMethods: string[]
-          allowedCardNetworks: string[]
-        }
-        tokenizationSpecification: {
-          type: string
-          parameters: {
-            gateway: string
-            gatewayMerchantId: string
-          }
-        }
-      }[]
-      transactionInfo: {
-        totalPriceStatus: string
-        totalPrice: string
-        currencyCode: string
-      }
-      merchantInfo: {
-        merchantName: string
-      }
-    }
+    isReadyToPayRequest: IsReadyToPayRequest
+    paymentRequest: PaymentRequest
 
     constructor(processOutInstance: ProcessOut, paymentConfig: DynamicCheckoutPaymentConfig) {
       this.processOutInstance = processOutInstance
@@ -62,7 +65,6 @@ module ProcessOut {
       getViewContainer: () => HTMLElement,
     ) {
       const googleClientScript = document.createElement("script")
-
       googleClientScript.src = googlePaySdkUrl
       googleClientScript.onload = () => {
         this.googleClient =
@@ -113,15 +115,13 @@ module ProcessOut {
             JSON.parse(paymentData.paymentMethodData.tokenizationData.token),
           )
 
-          const processOutInstance = this.processOutInstance
-
-          processOutInstance.tokenize(
+          this.processOutInstance.tokenize(
             paymentToken,
             {},
             token => {
               DynamicCheckoutEventsUtils.dispatchTokenizePaymentSuccessEvent(token)
 
-              processOutInstance.makeCardPayment(
+              this.processOutInstance.makeCardPayment(
                 invoiceData.id,
                 token,
                 {
@@ -135,6 +135,7 @@ module ProcessOut {
                       this.paymentConfig,
                     ).element,
                   )
+
                   DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
                     invoiceId,
                     returnUrl: this.paymentConfig.invoiceDetails.return_url,
@@ -145,17 +146,19 @@ module ProcessOut {
                     new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig)
                       .element,
                   )
+
                   DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error)
                 },
               )
             },
-            err => {
+            error => {
               getViewContainer().appendChild(
                 new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig)
                   .element,
               )
+
               DynamicCheckoutEventsUtils.dispatchTokenizePaymentErrorEvent({
-                message: `Tokenize payment error: ${JSON.stringify(err, undefined, 2)}`,
+                message: `Tokenize payment error: ${JSON.stringify(error, undefined, 2)}`,
               })
             },
           )
@@ -225,6 +228,7 @@ module ProcessOut {
         },
         merchantInfo: {
           merchantName: invoiceData.name,
+          merchantId: googlePayMethod.googlepay.gateway_merchant_id,
         },
       }
     }

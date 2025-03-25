@@ -1,7 +1,6 @@
 module ProcessOut {
   export const pt = {
-    "apm-redirect-message":
-      "Você será redirecionado para finalizar o pagamento.",
+    "apm-redirect-message": "Você será redirecionado para finalizar o pagamento.",
     "save-for-future-label": "Salvar para pagamentos futuros",
     "continue-with-apm-button": "Continuar com",
     "pay-button-text": "Pagar",
@@ -20,12 +19,16 @@ module ProcessOut {
     "other-payment-methods-header": "Outros métodos de pagamento",
     "select-payment-method-label": "Selecionar método de pagamento",
     "payment-success-message": "Este pagamento foi concluído.",
-    "payment-error-generic-message":
-      "Não conseguimos processar o seu pagamento.",
+    "payment-error-generic-message": "Não conseguimos processar o seu pagamento.",
     "street1-label": "Endereço, linha 1",
     "street2-label": "Endereço, linha 2",
     "city-label": "Cidade",
     "postcode-label": "Código postal",
     "state-label": "Estado",
-  };
+    "payments-manager-header": "Gerenciar métodos de pagamento salvos",
+    "payments-manager-close-button": "Fechar",
+    "no-saved-payment-methods-header": "Nenhum método de pagamento salvo",
+    "no-saved-payment-methods-message":
+      "Depois de guardar uma forma de pagamento, ela aparecerá aqui. ",
+  }
 }

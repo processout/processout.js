@@ -1,27 +1,24 @@
 /// <reference path="../references.ts" />
 
 module ProcessOut {
-    export class DynamicCheckoutInvoiceLoadingView {
-      public element: Element;
-  
-      constructor(
-      ) {
-        const [element, spinner] = HTMLElements.createMultipleElements([
-          {
-            tagName: "div",
-            classNames: ["dco-invoice-loading-container"],
-          },
-          {
-            tagName: "div",
-            classNames: ["dco-invoice-loading"],
-          },
-        ]);
+  export class DynamicCheckoutInvoiceLoadingView {
+    public element: Element
 
-        HTMLElements.appendChildren(element, [spinner]);
+    constructor() {
+      const [element, spinner] = HTMLElements.createMultipleElements([
+        {
+          tagName: "div",
+          classNames: ["dco-invoice-loading-container"],
+        },
+        {
+          tagName: "div",
+          classNames: ["dco-invoice-loading"],
+        },
+      ])
 
-  
-        this.element = element;
-      }
+      HTMLElements.appendChildren(element, [spinner])
+
+      this.element = element
     }
   }
-  
+}

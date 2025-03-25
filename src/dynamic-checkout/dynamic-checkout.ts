@@ -2,16 +2,16 @@
 
 module ProcessOut {
   export class DynamicCheckout {
+    dcoContainer: Element
+    widgetWrapper: Element
     processOutInstance: ProcessOut
     paymentConfig: DynamicCheckoutPaymentConfig
     theme: DynamicCheckoutTheme
-    dcoContainer: Element
-    widgetWrapper: Element
     invoiceDetails: Invoice
 
     constructor(
       processOutInstance: ProcessOut,
-      config: DynamicCheckoutPublicConfig,
+      config: DynamicCheckoutPublicConfigType,
       theme?: DynamicCheckoutThemeType,
     ) {
       this.processOutInstance = processOutInstance
