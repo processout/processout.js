@@ -514,7 +514,10 @@ module ProcessOut {
         },
       })
 
-      const countries = Object.keys(billingAddressConfig)
+      // Sort countries by name
+      const countries = Object.keys(billingAddressConfig).sort((a, b) =>
+        billingAddressConfig[a].name.localeCompare(billingAddressConfig[b].name),
+      )
       const restrictedCountries =
         this.paymentMethod.card.billing_address.restrict_to_country_codes || []
 
