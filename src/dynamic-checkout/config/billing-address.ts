@@ -1294,5 +1294,73 @@ module ProcessOut {
       name: "Zimbabwe",
       units: ["street1", "street2", "city"],
     },
+    AQ: {
+      name: "Antarctica",
+      units: ["street1", "street2", "city", "state", "postcode"],
+    },
+    CX: {
+      name: "Christmas Island",
+      units: ["street1", "street2", "city", "state", "postcode"],
+    },
+    CC: {
+      name: "Cocos (Keeling) Islands",
+      units: ["street1", "street2", "city", "state", "postcode"],
+    },
+    CU: {
+      name: "Cuba",
+      units: ["street1", "street2", "city", "state", "postcode"],
+    },
+    HM: {
+      name: "Heard Island and McDonald Islands",
+      units: ["street1", "street2", "city"],
+    },
+    IR: {
+      name: "Iran",
+      units: ["street1", "street2", "city", "postcode", "state"],
+    },
+    MH: {
+      name: "Marshall Islands",
+      units: ["street1", "street2", "city", "postcode", "state"],
+    },
+    FM: {
+      name: "Micronesia",
+      units: ["street1", "street2", "city", "postcode", "state"],
+    },
+    MP: {
+      name: "Northern Mariana Islands",
+      units: ["street1", "street2", "city", "postcode", "state"],
+    },
+    NF: {
+      name: "Norfolk Island",
+      units: ["street1", "street2", "city", "postcode", "state"],
+    },
+    PW: {
+      name: "Palau",
+      units: ["street1", "street2", "city", "postcode", "state"],
+    },
+    SY: {
+      name: "Syria",
+      units: ["street1", "street2", "city", "postcode", "state"],
+    },
+    SD: {
+      name: "Sudan",
+      units: ["street1", "street2", "city", "postcode", "state"],
+    },
+    AS: {
+      name: "American Samoa",
+      units: ["street1", "street2", "city", "postcode", "state"],
+    },
+    VI: {
+      name: "Virgin Islands",
+      units: ["street1", "street2", "city", "postcode", "state"],
+    },
+    UM: {
+      name: "United States Minor Outlying Islands",
+      units: ["street1", "street2", "city", "postcode", "state"],
+    },
+    AN: {
+      name: "Netherlands Antilles",
+      units: ["street1", "street2", "city"],
+    },
   }
 }
