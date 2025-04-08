@@ -1395,6 +1395,7 @@ module ProcessOut {
       options: any,
       success: (data: any) => void,
       error: (err: Exception) => void,
+      iframeOverride?: IframeOverride,
     ): void {
       if (val instanceof Card || val instanceof CardForm)
         return this.tokenize(
@@ -1408,6 +1409,7 @@ module ProcessOut {
               options,
               success,
               error,
+              iframeOverride,
             )
           }.bind(this),
           error,
@@ -1420,6 +1422,7 @@ module ProcessOut {
         options,
         success,
         error,
+        iframeOverride,
       )
     }
 
@@ -1430,6 +1433,7 @@ module ProcessOut {
       options: any,
       success: (data: any) => void,
       error: (err: Exception) => void,
+      iframeOverride?: IframeOverride,
     ): void {
       this.handleCardActions(
         "PUT",
@@ -1439,6 +1443,8 @@ module ProcessOut {
         options,
         success,
         error,
+        undefined,
+        iframeOverride,
       )
     }
 
@@ -1460,6 +1466,7 @@ module ProcessOut {
       success: (data: any) => void,
       error: (err: Exception) => void,
       apiRequestOptions?: apiRequestOptions,
+      iframeOverride?: IframeOverride,
     ): void {
       const url: string = `invoices/${invoiceID}/capture`
       this.threeDSInitiationURL = `invoices/${invoiceID}/three-d-s`
@@ -1474,6 +1481,7 @@ module ProcessOut {
         success,
         error,
         apiRequestOptions,
+        iframeOverride,
       )
     }
 
@@ -1493,6 +1501,7 @@ module ProcessOut {
       success: (data: any) => void,
       error: (err: Exception) => void,
       apiRequestOptions?: apiRequestOptions,
+      iframeOverride?: IframeOverride,
     ): void {
       this.handleCardActions(
         "POST",
@@ -1503,6 +1512,7 @@ module ProcessOut {
         success,
         error,
         apiRequestOptions,
+        iframeOverride,
       )
     }
 
@@ -1521,6 +1531,7 @@ module ProcessOut {
       options: any,
       success: (data: any) => void,
       error: (err: Exception) => void,
+      iframeOverride?: IframeOverride,
     ): void {
       if (!options) options = {}
       options.incremental = true
@@ -1532,6 +1543,8 @@ module ProcessOut {
         options,
         success,
         error,
+        undefined,
+        iframeOverride,
       )
     }
 
@@ -1576,6 +1589,7 @@ module ProcessOut {
       success: (data: any) => void,
       error: (err: Exception) => void,
       apiRequestOptions?: apiRequestOptions,
+      iframeOverride?: IframeOverride,
     ): void {
       // returns this.hppInitialURL only once during the first call from HPP, then returns the endpoint
       const getEndpoint = (): string => {
@@ -1646,6 +1660,7 @@ module ProcessOut {
               success,
               error,
               apiRequestOptions,
+              iframeOverride,
             )
           }.bind(this)
 
@@ -1672,10 +1687,15 @@ module ProcessOut {
                     success,
                     error,
                     apiRequestOptions,
+                    iframeOverride,
                   )
                 }.bind(this),
                 error,
-                new ActionHandlerOptions(opts),
+                new ActionHandlerOptions(
+                  opts,
+                  undefined,
+                  opts !== ActionHandlerOptions.ThreeDSChallengeFlowNoIframe ? iframeOverride : undefined
+                )
               )
               break
 
@@ -1698,7 +1718,11 @@ module ProcessOut {
                   gReq.body = `threeDSMethodData={"threeDS2FingerprintTimeout":true}`
                   nextStep(gReq.token())
                 },
-                new ActionHandlerOptions(ActionHandlerOptions.ThreeDSFingerprintFlow),
+                new ActionHandlerOptions(
+                  ActionHandlerOptions.ThreeDSFingerprintFlow,
+                  undefined,
+                  iframeOverride,
+                ),
               )
               break
 
@@ -1708,7 +1732,11 @@ module ProcessOut {
                 data.customer_action.value,
                 nextStep,
                 error,
-                new ActionHandlerOptions(ActionHandlerOptions.ThreeDSChallengeFlow),
+                new ActionHandlerOptions(
+                  ActionHandlerOptions.ThreeDSChallengeFlow,
+                  undefined,
+                  iframeOverride,
+                ),
               )
               break
 
