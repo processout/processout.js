@@ -30,5 +30,6 @@ module ProcessOut {
     "no-saved-payment-methods-header": "No hay métodos de pago guardados",
     "no-saved-payment-methods-message":
       "La próxima vez que guardes un método de pago, aparecerá aquí.",
+    "card-label": "Tarjeta",
   }
 }
