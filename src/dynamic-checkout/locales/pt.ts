@@ -30,5 +30,6 @@ module ProcessOut {
     "no-saved-payment-methods-header": "Nenhum método de pagamento salvo",
     "no-saved-payment-methods-message":
       "Depois de guardar uma forma de pagamento, ela aparecerá aqui. ",
+    "card-label": "Cartão",
   }
 }

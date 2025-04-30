@@ -36,7 +36,7 @@ module ProcessOut {
 
       super(
         procesoutInstance,
-        display.name,
+        Translations.getText("card-label", paymentConfig.locale),
         display.logo.light_url.vector,
         display.name,
         rightContent,

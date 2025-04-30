@@ -30,5 +30,6 @@ module ProcessOut {
     "no-saved-payment-methods-header": "Brak zapisanych metod płatności",
     "no-saved-payment-methods-message":
       "Gdy następnym razem zapiszesz metodę płatności, pojawi się tutaj.",
+    "card-label": "Karta płatnicza",
   }
 }
