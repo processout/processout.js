@@ -120,6 +120,10 @@ module ProcessOut {
     }
 
     private handleTokenizeError(error) {
+      this.resetContainerHtml().appendChild(
+        new DynamicCheckoutPaymentErrorView(this.procesoutInstance, this.paymentConfig).element,
+      )
+
       DynamicCheckoutEventsUtils.dispatchTokenizePaymentErrorEvent(error)
     }
 

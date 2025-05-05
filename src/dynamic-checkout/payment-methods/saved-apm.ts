@@ -130,7 +130,14 @@ module ProcessOut {
               requestOptions,
             )
           },
-          DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent,
+          error => {
+            this.resetContainerHtml().appendChild(
+              new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig)
+                .element,
+            )
+
+            DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error)
+          },
           actionHandlerOptions,
         )
       }
