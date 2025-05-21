@@ -349,6 +349,7 @@ const defaultStyles = `
 
   .dco-payment-method-card-form-input {
     height: 40px;
+    position: relative;
     border-radius: 4px;
     border: 1px solid #dde0e3;
     background-color: #fff;
@@ -439,6 +440,11 @@ const defaultStyles = `
 
   .dco-card-scheme-logo {
     width: 24px;
+
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
   }
 
   .dco-payment-method-button-radio-button {

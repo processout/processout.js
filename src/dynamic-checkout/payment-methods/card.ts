@@ -22,18 +22,6 @@ module ProcessOut {
         classNames: ["dco-card-schemes-wrapper"],
       })
 
-      Object.keys(CARD_SCHEMES_ASSETS).forEach(schema => {
-        const logo = HTMLElements.createElement({
-          tagName: "img",
-          classNames: ["dco-card-scheme-logo"],
-          attributes: {
-            src: procesoutInstance.endpoint("js", CARD_SCHEMES_ASSETS[schema]),
-          },
-        })
-
-        rightContent.appendChild(logo)
-      })
-
       super(
         procesoutInstance,
         Translations.getText("card-label", paymentConfig.locale),
@@ -60,6 +48,24 @@ module ProcessOut {
         this.getCardFormOptions(),
         cardForm => {
           this.getCardDetailsSectionEventListeners()
+
+          // Dynamically change scheme logo based on the card number
+          cardForm.getNumberField().addEventListener("input", e => {
+            const scheme = e.schemes[0]
+            const cardSchemeLogo = document.querySelector(".dco-card-scheme-logo")
+
+            if (scheme && CARD_SCHEMES_ASSETS[scheme]) {
+              cardSchemeLogo.removeAttribute("hidden")
+
+              cardSchemeLogo.setAttribute(
+                "src",
+                this.procesoutInstance.endpoint("js", CARD_SCHEMES_ASSETS[scheme]),
+              )
+            } else {
+              cardSchemeLogo.setAttribute("hidden", "true")
+            }
+          })
+
           cardForm.addEventListener("submit", e => {
             e.preventDefault()
 
@@ -286,6 +292,7 @@ module ProcessOut {
         cardHolderNameInputWrapper,
         cardHolderNameInput,
         cardHolderNameInputErrorMessage,
+        cardSchemeLogo,
       ] = HTMLElements.createMultipleElements([
         {
           tagName: "div",
@@ -389,7 +396,16 @@ module ProcessOut {
             id: "cardholder-name-error-message",
           },
         },
+        {
+          tagName: "img",
+          classNames: ["dco-card-scheme-logo"],
+          attributes: {
+            src: this.procesoutInstance.endpoint("js", CARD_SCHEMES_ASSETS.visa),
+          },
+        },
       ])
+
+      HTMLElements.appendChildren(cardNumberInput, [cardSchemeLogo])
 
       HTMLElements.appendChildren(cardNumberInputWrapper, [
         cardNumberInput,
