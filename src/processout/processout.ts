@@ -219,7 +219,7 @@ module ProcessOut {
         if (/^https?:\/\/.*\.processout\.((com)|(ninja)|(dev))\//.test(event.filename)) {
           setTimeout(() => {
             this.errorReporter.reportError({
-              host: window.location.href,
+              host: window.location.host,
               fileName: event.filename,
               lineNumber: event.lineno,
               message: event.error.message,
