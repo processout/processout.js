@@ -2,6 +2,7 @@
 
 module ProcessOut {
   type ErrorReport = {
+    host: string
     fileName: string
     lineNumber: number
     message: string
@@ -36,6 +37,7 @@ module ProcessOut {
               timestamp: new Date().toISOString(),
               message: error.message,
               attributes: {
+                Host: error.host,
                 Category: error.category || "JS Error",
                 File: error.fileName,
                 Line: error.lineNumber,

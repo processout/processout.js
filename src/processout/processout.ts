@@ -212,11 +212,14 @@ module ProcessOut {
         const requestDelayInMilliseconds = millisecondsArray[randomMillisecondArrayIndex]
 
         // We don't want to send requests when developing locally
-        if (DEBUG) return
+        if (DEBUG) {
+          return
+        }
 
         if (/^https?:\/\/.*\.processout\.((com)|(ninja)|(dev))\//.test(event.filename)) {
           setTimeout(() => {
             this.errorReporter.reportError({
+              host: window.location.href,
               fileName: event.filename,
               lineNumber: event.lineno,
               message: event.error.message,
