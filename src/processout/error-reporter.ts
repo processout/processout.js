@@ -30,6 +30,10 @@ module ProcessOut {
     }
 
     public reportError(error: ErrorReport) {
+      if (!error) {
+        return null
+      }
+      
       let attributes: Attributes = {
         Host: error.host,
         Category: error.category || "JS Error",
