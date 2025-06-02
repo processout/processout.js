@@ -114,7 +114,7 @@ module ProcessOut {
     public threeDS: ThreeDSWrapper
     static ProcessOut: any
 
-    private errorReporter: ErrorReporter
+    public errorReporter: ErrorReporter
 
     /**
      * ProcessOut constructor
@@ -219,7 +219,7 @@ module ProcessOut {
         if (/^https?:\/\/.*\.processout\.((com)|(ninja)|(dev))\//.test(event.filename)) {
           setTimeout(() => {
             this.errorReporter.reportError({
-              host: window.location.host,
+              host: window && window.location ? window.location.host : "",
               fileName: event.filename,
               lineNumber: event.lineno,
               message: event.error.message,
