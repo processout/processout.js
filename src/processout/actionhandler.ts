@@ -270,6 +270,8 @@ module ProcessOut {
             var topLayer;
             var newWindow;
 
+            const errorReporter = this.instance.errorReporter;
+
             var refocus = function() {
                 if (topLayer) topLayer.remove();
                 window.focus();
@@ -318,18 +320,47 @@ module ProcessOut {
                 if (!timer) return;
 
                 if (t.isCanceled()) {
-                    clearInterval(timer); timer = null;
-                    newWindow.close();
-                    error(new Exception("customer.canceled"));
-                    refocus();
-                    return;
+                  clearInterval(timer)
+                  timer = null
+                  newWindow.close()
+                  error(new Exception("customer.canceled"))
+
+                  // Temporary just to investigate the issue
+                  errorReporter.reportError({
+                    host: window && window.location ? window.location.host : "",
+                    fileName: "actionhandler.ts/ActionHandler.handle.timer",
+                    lineNumber: 326,
+                    message: "isCanceled = true inside timer function",
+                    stack: "customer.cancelled",
+                    invoiceId: t.resourceID,
+                    data: {
+                      isCanceled: t.isCanceled(),
+                    },
+                  })
+
+                  refocus()
+                  return
                 }
 
                 var cancelf = function() {
-                    // The payment window was closed
-                    clearInterval(timer); timer = null;
-                    error(new Exception("customer.canceled"));
-                    refocus();
+                  // The payment window was closed
+                  clearInterval(timer)
+                  timer = null
+                  error(new Exception("customer.canceled"))
+
+                  // Temporary just to investigate the issue
+                  errorReporter.reportError({
+                    host: window && window.location ? window.location.host : "",
+                    fileName: "actionhandler.ts/ActionHandler.handle.cancelf",
+                    lineNumber: 344,
+                    message: "inside cancelf function. It means that payment window was closed",
+                    stack: "customer.cancelled",
+                    invoiceId: t.resourceID,
+                    data: {
+                      isCanceled: t.isCanceled(),
+                    },
+                  })
+                  refocus()
                 }
                 try {
                     // We want to run the newWindow.closed condition in a try
@@ -459,6 +490,8 @@ module ProcessOut {
 
             ActionHandler.listenerCount++;
             var cur = ActionHandler.listenerCount;
+            const errorReporter = this.instance.errorReporter;
+            const resourceID = this.resourceID;
 
             var alreadyDone = false;
             var handler = function(event) {
@@ -491,6 +524,17 @@ module ProcessOut {
                     newWindow.close();
 
                     error(new Exception("customer.canceled"));
+
+                    // Temporary just to investigate the issue
+                    errorReporter.reportError({
+                      host: window && window.location ? window.location.host : "",
+                      fileName: "actionhandler.ts/ActionHandler.listenEvents",
+                      lineNumber: 515,
+                      message: "inside listenEvents function. It means that customer canceled the payment",
+                      stack: "customer.cancelled",
+                      invoiceId: resourceID,
+                      data: data,
+                    })
                     refocus();
                     break;
 
