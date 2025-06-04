@@ -1,5 +1,6 @@
 /// <reference path="../references.ts" />
 
+
 // declare the IE specific XDomainRequest object
 declare var XDomainRequest: any
 
@@ -17,7 +18,7 @@ interface apiRequestOptions {
  */
 module ProcessOut {
   export const TestModePrefix = "test-"
-  export const DEBUG = false
+  export const DEBUG = true
   // This is set during the build process based on the version from package.json
   export const SCRIPT_VERSION = undefined
   // This is set during development to point to the staging API
@@ -469,6 +470,23 @@ module ProcessOut {
         )
 
       return new NativeApm(this, config)
+    }
+
+    /**
+     * SetupApm creates an APM instance
+     * @param {Container} container
+     * @param {TokenizationUserData} options
+     * @return {APM}
+     */
+    public createTokenizationFlow(container: Container, options: TokenizationUserData) {
+      return new APMImpl(this, container, {
+        ...options,
+        flow: 'tokenization',
+      })
+    }
+
+    public createAuthorizationFlow(container: Container, options: APMOptions) {
+      return new APMImpl(this, container, options)
     }
 
     /**
