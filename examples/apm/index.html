@@ -1,0 +1,47 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+  <title>ProcessOut.js Native APM</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div id="apm-container"></div>
+<script src="../../dist/processout.js" crossorigin="anonymous"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // You need to replace these values with your own
+    const projectId = "test-proj_qEi1u5BwoYcZb6mOMKDWIm4mpqKCq6bN"
+    const gatewayConfigurationId = "gway_conf_2puMFv3iwrPSLqslIfVcvzhFWZzmTHTy.sandbox"
+    const invoiceId = "iv_PMIMKkaXcZXxnXPXzKQzHOu8jz10CQgW"
+
+    const client = new ProcessOut.ProcessOut(projectId)
+    const el = document.querySelector('#apm-container')
+
+    const apm = client.createTokenizationFlow(el, {
+      gatewayConfigurationId,
+      invoiceId,
+      theme: {
+        colors: {
+          light: {
+            primary: '#000'
+          },
+          dark: {
+            primary: '#FFF'
+          }
+        }
+      }
+    })
+
+    apm.on('loading', () => {
+      console.log('apm')
+    })
+
+    apm.on('payment-success', ({ ok }) => {
+      console.log('apm', ok)
+    })
+
+    apm.initialise();
+  })
+</script>
+</body>
+</html>
