@@ -211,9 +211,10 @@ module ProcessOut {
          * @param {ProcessOut} instance
          * @param {string} resourceID
          */
-        constructor(instance: ProcessOut, options?: ActionHandlerOptions) {
+        constructor(instance: ProcessOut, options?: ActionHandlerOptions, resourceId?: string) {
             this.instance = instance;
             this.options  = options;
+            this.resourceID = resourceId;
 
             if (!this.options) this.options = new ActionHandlerOptions();
 
@@ -347,7 +348,7 @@ module ProcessOut {
                   clearInterval(timer)
                   timer = null
                   error(new Exception("customer.canceled"))
-
+                  
                   // Temporary just to investigate the issue
                   errorReporter.reportError({
                     host: window && window.location ? window.location.host : "",

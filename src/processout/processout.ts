@@ -1027,6 +1027,7 @@ module ProcessOut {
         tokenized,
         tokenError,
         options,
+        invoiceID,
       )
     }
 
@@ -1057,6 +1058,7 @@ module ProcessOut {
         sanitizedProps.tokenized,
         sanitizedProps.tokenError,
         options,
+        sanitizedProps.invoiceId,
       )
     }
 
@@ -1375,8 +1377,9 @@ module ProcessOut {
       success: (data: any) => void,
       error: (err: Exception) => void,
       options?: ActionHandlerOptions,
+      resourceId?: string,
     ): ActionHandler {
-      var handler = new ActionHandler(this, options)
+      var handler = new ActionHandler(this, options, resourceId)
       return handler.handle(url, success, error)
     }
 
@@ -1675,10 +1678,12 @@ module ProcessOut {
                     success,
                     error,
                     apiRequestOptions,
+                    resourceID,
                   )
                 }.bind(this),
                 error,
                 new ActionHandlerOptions(opts),
+                resourceID,
               )
               break
 
@@ -1702,6 +1707,7 @@ module ProcessOut {
                   nextStep(gReq.token())
                 },
                 new ActionHandlerOptions(ActionHandlerOptions.ThreeDSFingerprintFlow),
+                resourceID,
               )
               break
 
@@ -1712,6 +1718,7 @@ module ProcessOut {
                 nextStep,
                 error,
                 new ActionHandlerOptions(ActionHandlerOptions.ThreeDSChallengeFlow),
+                resourceID,
               )
               break
 
