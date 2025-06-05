@@ -124,6 +124,7 @@ module ProcessOut {
           DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error)
         },
         actionHandlerOptions,
+        this.paymentConfig.invoiceId,
       )
     }
 
@@ -183,6 +184,7 @@ module ProcessOut {
               DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error)
             },
             actionHandlerOptions,
+            this.paymentConfig.invoiceId,
           )
         },
         error => {
