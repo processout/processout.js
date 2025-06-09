@@ -114,7 +114,7 @@ module ProcessOut {
     public threeDS: ThreeDSWrapper
     static ProcessOut: any
 
-    public errorReporter: ErrorReporter
+    public telemetryClient: TelemetryClient
 
     /**
      * ProcessOut constructor
@@ -174,7 +174,7 @@ module ProcessOut {
         throw new Exception("resource.invalid-type")
       }
 
-      this.errorReporter = new ErrorReporter(this)
+      this.telemetryClient = new TelemetryClient(this)
 
       this.setupGlobalErrorHandler()
 
@@ -218,7 +218,7 @@ module ProcessOut {
 
         if (/^https?:\/\/.*\.processout\.((com)|(ninja)|(dev))\//.test(event.filename)) {
           setTimeout(() => {
-            this.errorReporter.reportError({
+            this.telemetryClient.reportError({
               host: window && window.location ? window.location.host : "",
               fileName: event.filename,
               lineNumber: event.lineno,

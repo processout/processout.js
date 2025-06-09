@@ -1,7 +1,7 @@
 /// <reference path="../references.ts" />
 
 module ProcessOut {
-  type ErrorReport = {
+  type TelemetryEventData = {
     host: string
     fileName: string
     lineNumber: number
@@ -18,36 +18,44 @@ module ProcessOut {
     File: string
     Line: number
     Stack: string
-    RawData?: any;
-    InvoiceId?: string;
+    RawData?: any
+    InvoiceId?: string
   }
 
-  export class ErrorReporter {
+  export class TelemetryClient {
     protected processOutInstance: ProcessOut
 
     constructor(processOutInstance: ProcessOut) {
       this.processOutInstance = processOutInstance
     }
 
-    public reportError(error: ErrorReport) {
-      if (!error) {
+    public reportError(data: TelemetryEventData) {
+      return this.report(data, "error")
+    }
+
+    public reportWarning(data: TelemetryEventData) {
+      return this.report(data, "warn")
+    }
+
+    public report(data: TelemetryEventData, level: "error" | "warn" | "info" = "error") {
+      if (!data) {
         return null
       }
-      
+
       let attributes: Attributes = {
-        Host: error.host,
-        Category: error.category || "JS Error",
-        File: error.fileName,
-        Line: error.lineNumber,
-        Stack: error.stack,
+        Host: data.host,
+        Category: data.category || "JS data",
+        File: data.fileName,
+        Line: data.lineNumber,
+        Stack: data.stack,
       }
 
-      if (error.data) {
-        attributes.RawData = JSON.stringify(error.data);
+      if (data.data) {
+        attributes.RawData = JSON.stringify(data.data)
       }
 
-      if (error.invoiceId) {
-        attributes.InvoiceId = error.invoiceId;
+      if (data.invoiceId) {
+        attributes.InvoiceId = data.invoiceId
       }
 
       this.processOutInstance.apiRequest(
@@ -65,9 +73,9 @@ module ProcessOut {
           },
           events: [
             {
-              level: "error",
+              level: level,
               timestamp: new Date().toISOString(),
-              message: error.message,
+              message: data.message,
               attributes: attributes,
             },
           ],

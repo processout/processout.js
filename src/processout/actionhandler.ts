@@ -271,7 +271,7 @@ module ProcessOut {
             var topLayer;
             var newWindow;
 
-            const errorReporter = this.instance.errorReporter;
+            const telemetryClient = this.instance.telemetryClient
 
             var refocus = function() {
                 if (topLayer) topLayer.remove();
@@ -327,7 +327,7 @@ module ProcessOut {
                   error(new Exception("customer.canceled"))
 
                   // Temporary just to investigate the issue
-                  errorReporter.reportError({
+                  telemetryClient.reportWarning({
                     host: window && window.location ? window.location.host : "",
                     fileName: "actionhandler.ts/ActionHandler.handle.timer",
                     lineNumber: 326,
@@ -350,7 +350,7 @@ module ProcessOut {
                   error(new Exception("customer.canceled"))
                   
                   // Temporary just to investigate the issue
-                  errorReporter.reportError({
+                  telemetryClient.reportWarning({
                     host: window && window.location ? window.location.host : "",
                     fileName: "actionhandler.ts/ActionHandler.handle.cancelf",
                     lineNumber: 344,
@@ -491,7 +491,7 @@ module ProcessOut {
 
             ActionHandler.listenerCount++;
             var cur = ActionHandler.listenerCount;
-            const errorReporter = this.instance.errorReporter;
+            const telemetryClient = this.instance.telemetryClient
             const resourceID = this.resourceID;
 
             var alreadyDone = false;
@@ -527,11 +527,12 @@ module ProcessOut {
                     error(new Exception("customer.canceled"));
 
                     // Temporary just to investigate the issue
-                    errorReporter.reportError({
+                    telemetryClient.reportWarning({
                       host: window && window.location ? window.location.host : "",
                       fileName: "actionhandler.ts/ActionHandler.listenEvents",
                       lineNumber: 515,
-                      message: "inside listenEvents function. It means that customer canceled the payment",
+                      message:
+                        "inside listenEvents function. It means that customer canceled the payment",
                       stack: "customer.cancelled",
                       invoiceId: resourceID,
                       data: data,
