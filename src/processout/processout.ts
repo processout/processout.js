@@ -18,7 +18,7 @@ interface apiRequestOptions {
  */
 module ProcessOut {
   export const TestModePrefix = "test-"
-  export const DEBUG = true
+  export const DEBUG = false
   // This is set during the build process based on the version from package.json
   export const SCRIPT_VERSION = undefined
   // This is set during development to point to the staging API
@@ -473,20 +473,26 @@ module ProcessOut {
     }
 
     /**
-     * SetupApm creates an APM instance
+     * createTokenizationFlow creates an APM instance within the tokenization flow
      * @param {Container} container
-     * @param {TokenizationUserData} options
+     * @param {TokenizationUserOptions} options
      * @return {APM}
      */
-    public createTokenizationFlow(container: Container, options: TokenizationUserData) {
-      return new APMImpl(this, container, {
+    public createTokenizationFlow(container: Container, options: TokenizationUserOptions) {
+      return new APMImpl(this, this.telemetryClient, container, {
         ...options,
         flow: 'tokenization',
       })
     }
 
-    public createAuthorizationFlow(container: Container, options: APMOptions) {
-      return new APMImpl(this, container, options)
+    /**
+     * createAuthorizationFlow creates an APM instance within the authorization flow
+     * @param {Container} container
+     * @param {AuthorizationUserOptions} options
+     * @return {APM}
+     */
+    public createAuthorizationFlow(container: Container, options: AuthorizationUserOptions) {
+      return new APMImpl(this, this.telemetryClient, container, { ...options, flow: 'authorization' })
     }
 
     /**
