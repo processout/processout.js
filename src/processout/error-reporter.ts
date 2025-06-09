@@ -1,7 +1,7 @@
 /// <reference path="../references.ts" />
 
 module ProcessOut {
-  type ErrorReport = {
+  export type ErrorReport = {
     fileName: string
     lineNumber: number
     message: string

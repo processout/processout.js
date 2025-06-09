@@ -18,13 +18,19 @@ module ProcessOut {
   export type TokenizationUserData = TokenizationFlowData & FlowData
   export type AuthorizationUserData = AuthorizationFlowData & FlowData
 
+  export type TokenizationUserOptions = Omit<TokenizationUserData, 'flow'>
+  export type AuthorizationUserOptions = Omit<AuthorizationUserData, 'flow'>
+
   export type APMUserData = TokenizationUserData | AuthorizationUserData
 
   export type APMContext = APMUserData & {
+    logger: {
+      error(message: Omit<ErrorReport, 'stack'>): void;
+    }
     events: APMEventsImpl,
     poClient: ProcessOut,
     page: APMPageImpl,
-    reload(): Promise<void>
+    reload(): void
   }
 
   interface Context {

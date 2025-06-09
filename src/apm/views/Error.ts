@@ -1,5 +1,5 @@
 module ProcessOut {
-  export class APMViewError extends APMViewImpl<{ message: string, code: string }> {
+  export class APMViewError extends APMViewImpl<{ title?:string, message: string, code: string, hideRefresh?: boolean }> {
     styles = css`
       .error-page {
         justify-content: center;
@@ -40,9 +40,11 @@ module ProcessOut {
       const { h1, p, button } = elements
 
       return page({ className: "error-page"},
-        h1({ className: 'error-title' }, 'Whoops! Something went wrong.'),
+        h1({ className: 'error-title' }, this.props.title || 'Whoops! Something went wrong.'),
         p({ className: 'error-description' }, this.props.message),
-        button({ className: 'error-refresh', onclick: this.onRefreshClick.bind(this) }, 'Refresh')
+        !this.props.hideRefresh
+          ? button({ className: 'error-refresh', onclick: this.onRefreshClick.bind(this) }, 'Refresh')
+          : null,
       )
     }
   }

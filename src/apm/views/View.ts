@@ -4,7 +4,8 @@ module ProcessOut {
   }
 
   export type APMViewConstructor<P = unknown> = new(container: Element, shadow: ShadowRoot | Document, props?: P) => APMView<P>
-
+  export type ExtractViewProps<T extends APMViewConstructor> =
+    T extends APMViewConstructor<infer P> ? P : never;
   export class APMViewImpl<P = unknown, S = unknown> implements APMView<P> {
     readonly container: Element
     readonly shadow: ShadowRoot | Document

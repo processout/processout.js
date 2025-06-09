@@ -4,6 +4,7 @@
 /// <reference path="Theme.ts" />
 /// <reference path="Page.ts" />
 /// <reference path="Context.ts" />
+/// <reference path="API.ts" />
 /// <reference path="elements/elements.ts" />
 /// <reference path="elements/page.ts" />
 /// <reference path="views/View.ts" />
