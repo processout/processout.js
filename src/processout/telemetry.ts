@@ -22,6 +22,8 @@ module ProcessOut {
     InvoiceId?: string
   }
 
+  type LogLevel = "error" | "warn" | "info" | "debug"
+
   export class TelemetryClient {
     protected processOutInstance: ProcessOut
 
@@ -37,7 +39,7 @@ module ProcessOut {
       return this.report(data, "warn")
     }
 
-    public report(data: TelemetryEventData, level: "error" | "warn" | "info" = "error") {
+    public report(data: TelemetryEventData, level: LogLevel) {
       if (!data) {
         return null
       }
