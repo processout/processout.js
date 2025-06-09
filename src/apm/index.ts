@@ -8,11 +8,11 @@ module ProcessOut {
     interface APM {
       on<K extends keyof APMEvents>(type: K, handler: EventHandler<APMEvents, K>): void;
       off<K extends keyof APMEvents>(type: K, handler: EventHandler<APMEvents, K>): void;
-      initialise(): Promise<void>
+      initialise(): void
     }
 
     export class APMImpl implements APM {
-      constructor(poClient: ProcessOut, container: Container, options: APMOptions) {
+      constructor(poClient: ProcessOut, logger: TelemetryClient, container: Container, options: APMOptions) {
         let containerEl = typeof container === 'string' ? document.querySelector(container) : container
         const { theme, ...data } = options
 
@@ -22,16 +22,27 @@ module ProcessOut {
 
         ContextImpl.instance.initialise({
           ...data,
+          logger: {
+            error: (options: Omit<Parameters<TelemetryClient['reportError']>[0], 'stack'>) => {
+              logger.reportError({
+                ...options,
+                stack: new Error().stack
+              });
+            },
+          },
           events: new APMEventsImpl(),
-          reload: this.initialise.bind(this),
+          reload: () => {
+            ContextImpl.context.page.render(APMViewLoading)
+            ContextImpl.context.page.load(APIImpl.getCurrentStep)
+          },
           page: new APMPageImpl(containerEl),
-          poClient: poClient
+          poClient: poClient,
         })
       }
 
-      public async initialise() {
-        ContextImpl.context.page.load(APMViewLoading)
-        ContextImpl.context.events.emit('loading')
+      public initialise() {
+        ContextImpl.context.page.render(APMViewLoading)
+        ContextImpl.context.page.load(APIImpl.initialise)
       }
 
       public on<K extends keyof APMEvents>(key: K, handler: EventHandler<APMEvents, K>) {
