@@ -37,13 +37,13 @@ module ProcessOut {
     }
 
     render() {
-      const { h1, p, button } = elements
+      const { h1, p } = elements
 
       return page({ className: "error-page"},
         h1({ className: 'error-title' }, this.props.title || 'Whoops! Something went wrong.'),
         p({ className: 'error-description' }, this.props.message),
         !this.props.hideRefresh
-          ? button({ className: 'error-refresh', onclick: this.onRefreshClick.bind(this) }, 'Refresh')
+          ? Button({ className: 'error-refresh', onclick: this.onRefreshClick.bind(this) }, 'Refresh')
           : null,
       )
     }

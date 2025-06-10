@@ -51,11 +51,16 @@ module ProcessOut {
 
 
       private createWrapper(container: Element) {
-        const isIE = (() => {
-          return !!(document as any).documentMode;
+        if (this.wrapper) {
+          return;
+        }
+
+        const supportsShadowDOM = (() => {
+          return !!(Element.prototype.attachShadow);
         })();
 
-        if (isIE) {
+
+        if (!supportsShadowDOM) {
           const iframe = document.createElement('iframe');
           iframe.setAttribute('frameBorder', '0');
           iframe.style.width = '100%';
@@ -68,9 +73,11 @@ module ProcessOut {
           if (doc) {
             if (!doc.body) {
               doc.open();
-              doc.write('<!DOCTYPE html><head></head><body></body>');
+              doc.write(`<!DOCTYPE html><head></head><body></body>`);
               doc.close();
             }
+
+            doc.head.innerHTML = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@100..900&display=swap" rel="stylesheet">';
 
             this.setStylesheet(doc);
 
@@ -83,6 +90,8 @@ module ProcessOut {
           this.shadow = doc;
           return;
         }
+
+        document.head.innerHTML += '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@100..900&display=swap" rel="stylesheet">';
 
         const shadow = container.attachShadow({ mode: 'open' })
         this.setStylesheet(shadow)
