@@ -3,22 +3,46 @@ module ProcessOut {
   type Spacing = (typeof spacing)[number]
 
   interface Palette {
-    primary: string
-    secondary: string
-    tertiary: string
+    background: string
+    surface: {
+      primary: string
+      secondary: string
+      tertiary: string
+      success: string
+      danger: string
+      disabled: string
+      hover: {
+        primary: string
+        secondary: string
+        tertiary: string
+        success: string
+        danger: string
+      }
+    },
+    text: {
+      primary: string
+      disabled: string
+    }
+    shadow: {
+      l2: string
+    }
   }
 
   export interface ThemeOptions {
     spacing: Record<Spacing, string>
-    colors: {
+    palette: {
       light: Palette
       dark: Palette
+    }
+    rounded: {
+      button: string
     }
   }
 
   interface Theme {
     get(): ThemeOptions
     get<P extends Paths<ThemeOptions>>(path: P): PathValue<ThemeOptions, P>
+    getTextColor<P extends Paths<ThemeOptions>>(path: P): '#FFFFFF' | '#000000'
     update(theme: DeepPartial<ThemeOptions>): void
 
     createStyles(): CSSText
@@ -28,16 +52,56 @@ module ProcessOut {
     static _instance: Theme;
 
     private theme: ThemeOptions = {
-      colors: {
+      palette: {
         dark: {
-          primary: "",
-          secondary: "",
-          tertiary: "",
+          background: "#000000",
+          surface: {
+            primary: "#FFFFFF",
+            secondary: "#555555",
+            tertiary: "#464646",
+            success: '#BAD8B1',
+            danger: '#FF8888',
+            disabled: '#2E3137',
+            hover: {
+              primary: '#bfc3c7',
+              secondary: '#5b5b5b',
+              tertiary: '#555555',
+              success: '#1bd163',
+              danger: '#ff4e4f'
+            }
+          },
+          text: {
+            primary: '#FFFFFF',
+            disabled: '#707378'
+          },
+          shadow: {
+            l2: '#353636'
+          }
         },
         light: {
-          primary: "",
-          secondary: "",
-          tertiary: "",
+          background: "#FFFFFF",
+          surface: {
+            primary: "#000000",
+            secondary: "#f1f1f1",
+            tertiary: "#FFFFFF",
+            success: '#16AC50',
+            danger: '#BE011B',
+            disabled: '#f3f3f3',
+            hover: {
+              primary: '#2E3137',
+              secondary: '#dfdfdf',
+              tertiary: '#eeeeee',
+              success: '#0e7434',
+              danger: '#870011'
+            }
+          },
+          text: {
+            primary: '#000000',
+            disabled: '#C0C3C8'
+          },
+          shadow: {
+            l2: '#b1b1b2'
+          }
         }
       },
       spacing: {
@@ -46,6 +110,9 @@ module ProcessOut {
         md: "12px",
         lg: "20px",
         xl: "30px",
+      },
+      rounded: {
+        button: '6px'
       }
     }
 
@@ -63,29 +130,206 @@ module ProcessOut {
       return this.recursiveFind(path, this.theme)
     }
 
+    public getTextColor<P extends Paths<ThemeOptions>>(path?: P): '#FFFFFF' | '#000000' {
+      const color = this.get(path)
+      if (!color) {
+        return '#FFFFFF'
+      }
+
+      const hexColor = this.recursiveFind(path, this.theme)
+      // 1. Remove the '#' if it's there
+      const sanitizedHex = hexColor.startsWith('#') ? hexColor.slice(1) : hexColor;
+
+      // 2. Handle shorthand hex codes (e.g., "03F" -> "0033FF")
+      const fullHex = sanitizedHex.length === 3
+        ? sanitizedHex.split('').map(char => char + char).join('')
+        : sanitizedHex;
+
+      // 3. Parse the R, G, B values from the hex code
+      const r = parseInt(fullHex.substring(0, 2), 16);
+      const g = parseInt(fullHex.substring(2, 4), 16);
+      const b = parseInt(fullHex.substring(4, 6), 16);
+
+      // 4. Calculate the perceived brightness using the WCAG formula (Luminance)
+      // This formula is weighted to account for human perception. We are more
+      // sensitive to green than red, and more sensitive to red than blue.
+      // Values range from 0 (black) to 255 (white).
+      const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b);
+
+      // 5. Decide on the text color based on a luminance threshold.
+      // If the background is bright (luminance > 140), use black text.
+      // If the background is dark (luminance <= 139), use white text.
+      return luminance > 140 ? '#000000' : '#FFFFFF';
+    }
+
     public update(theme: DeepPartial<ThemeOptions>) {
       this.theme = this.deepMerge(this.theme, theme)
     }
 
     public createStyles() {
+      const buttonVariants = Object.keys(ThemeImpl.instance.get("palette.light.surface")).reduce((acc, key) => {
+        const color = key as keyof ThemeOptions['palette']['light']['surface']
+
+        if (color === 'hover' || color === 'disabled') {
+          return acc;
+        }
+
+        acc += css`
+          .button.${color}, .button.${color}.loading:hover {
+            background-color: ${ThemeImpl.instance.get(`palette.light.surface.${color}`)};
+            color: ${ThemeImpl.instance.getTextColor(`palette.light.surface.${color}`)};
+
+            @media (prefers-color-scheme: dark) {
+              background-color: ${ThemeImpl.instance.get(`palette.dark.surface.${color}`)};
+              color: ${ThemeImpl.instance.getTextColor(`palette.dark.surface.${color}`)};
+            }
+          }
+
+          .button.${color} .loader {
+            border-color: ${ThemeImpl.instance.getTextColor(`palette.light.surface.${color}`)};
+
+            @media (prefers-color-scheme: dark) {
+              border-color: ${ThemeImpl.instance.getTextColor(`palette.dark.surface.${color}`)};
+            }
+          }
+
+          .button.${color}:hover, .button.${color}:focus {
+            background-color: ${ThemeImpl.instance.get(`palette.light.surface.hover.${color}`)};
+            color: ${ThemeImpl.instance.getTextColor(`palette.light.surface.hover.${color}`)};
+
+            @media (prefers-color-scheme: dark) {
+              background-color: ${ThemeImpl.instance.get(`palette.dark.surface.hover.${color}`)};
+              color: ${color === 'danger' ? '#000000' : ThemeImpl.instance.getTextColor(`palette.dark.surface.hover.${color}`)};
+            }
+          }
+        `()
+
+        return acc;
+      }, '')
+
       return css`
         ${this.resetCss}
 
         .main {
-          font-family: "Helvetica Neue", Arial, sans-serif;
+          font-family: "Work sans", Arial, sans-serif;
           container: main / size;
         }
 
         .page {
           display: flex;
+          flex-direction: column;
           width: 100%;
           min-height: 400px;
           padding: ${ThemeImpl.instance.get('spacing.sm')};
+          color: ${ThemeImpl.instance.get('palette.light.text.primary')};
+          background-color: ${ThemeImpl.instance.get('palette.light.background')};
+          @media (prefers-color-scheme: dark) {
+            color: ${ThemeImpl.instance.get('palette.dark.text.primary')};
+            background-color: ${ThemeImpl.instance.get('palette.dark.background')};
+          }
         }
 
-        .empty-view {
-          width: 100%;
+        .loader {
+          width: 30px;
+          height: 30px;
+          border: 3px solid ${ThemeImpl.instance.get('palette.light.text.primary')};
+          border-bottom-color: transparent !important;
+          border-radius: 50%;
+          display: inline-block;
+          box-sizing: border-box;
+          animation: rotation 1s linear infinite;
+          @media (prefers-color-scheme: dark) {
+            border-color: ${ThemeImpl.instance.get('palette.dark.text.primary')};
+            border-bottom-color: transparent;
+          })
+        }
+
+        @keyframes rotation {
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
+        }
+
+        .empty-title {
           text-align: center;
+          margin-bottom: 24px;
+        }
+
+        .empty-subtitle {
+          text-align: center;
+          margin-bottom: 18px;
+        }
+
+        .empty-controls {
+          display: grid;
+          gap: 12px;
+          grid-template-columns: repeat(3, 1fr);
+          padding: 8px;
+          text-align: center;
+        }
+
+        .button {
+          font-family: inherit;
+          width: 100%;
+          display: inline-block;
+          appearance: none;
+          border: none;
+          cursor: pointer;
+          font-weight: 500;
+          border-radius: ${ThemeImpl.instance.get('rounded.button')};
+          outline: none;
+        }
+
+        .button:focus {
+          box-shadow: 0 0 0 1px ${ThemeImpl.instance.get('palette.light.background')}, 0 0 0 3px ${ThemeImpl.instance.get('palette.light.shadow.l2')};
+          @media (prefers-color-scheme: dark) {
+            box-shadow: 0 0 0 1px ${ThemeImpl.instance.get('palette.dark.background')}, 0 0 0 3px ${ThemeImpl.instance.get('palette.light.shadow.l2')};
+          }
+        }
+
+        ${buttonVariants}
+
+        .button.disabled, .button.disabled:hover {
+          cursor: not-allowed;
+          background-color: ${ThemeImpl.instance.get('palette.light.surface.disabled')};
+          color: ${ThemeImpl.instance.get('palette.light.text.disabled')};
+
+          @media (prefers-color-scheme: dark) {
+            background-color: ${ThemeImpl.instance.get('palette.dark.surface.disabled')};
+            color: ${ThemeImpl.instance.get('palette.dark.text.disabled')};
+          }
+        }
+
+        .button.loading {
+          cursor: wait;
+        }
+
+        .button.loading .loader {
+          width: 16px;
+          height: 16px;
+          border-width: 2px;
+        }
+
+        .button.sm {
+          padding: 8px 12px;
+          height: 32px;
+          font-size: 13px;
+          line-height: 16px;
+        }
+        .button.md {
+          padding: 10px 16px;
+          height: 40px;
+          font-size: 14px;
+          line-height: 20px;
+        }
+        .button.lg {
+          padding: 15px 24px;
+          height: 48px;
+          font-size: 15px;
+          line-height: 18px;
         }
       `()
     }

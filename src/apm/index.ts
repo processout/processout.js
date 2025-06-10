@@ -1,7 +1,7 @@
 /// <reference path="./references.ts" />
 
 module ProcessOut {
-    export type APMOptions = APMUserData & {
+    export type APMOptions<D extends Record<string, unknown> = APMUserData> = D & {
       theme?: DeepPartial<ThemeOptions>
     }
 
