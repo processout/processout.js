@@ -472,10 +472,10 @@ module ProcessOut {
     /**
      * createTokenizationFlow creates an APM instance within the tokenization flow
      * @param {Container} container
-     * @param {TokenizationUserOptions} options
+     * @param {APMOptions<TokenizationUserOptions>} options
      * @return {APM}
      */
-    public createTokenizationFlow(container: Container, options: TokenizationUserOptions) {
+    public createTokenizationFlow(container: Container, options: APMOptions<TokenizationUserOptions>) {
       return new APMImpl(this, this.errorReporter, container, {
         ...options,
         flow: 'tokenization',
@@ -485,10 +485,10 @@ module ProcessOut {
     /**
      * createAuthorizationFlow creates an APM instance within the authorization flow
      * @param {Container} container
-     * @param {AuthorizationUserOptions} options
+     * @param {APMOptions<AuthorizationUserOptions>} options
      * @return {APM}
      */
-    public createAuthorizationFlow(container: Container, options: AuthorizationUserOptions) {
+    public createAuthorizationFlow(container: Container, options: APMOptions<AuthorizationUserOptions>) {
       return new APMImpl(this, this.errorReporter, container, { ...options, flow: 'authorization' })
     }
 
