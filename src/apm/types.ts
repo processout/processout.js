@@ -3,6 +3,17 @@ module ProcessOut {
       [P in keyof T]?: DeepPartial<T[P]>
     } : T;
 
+    type DeepReadonlyObject<T> = {
+      readonly [P in keyof T]: DeepReadonly<T[P]>;
+    };
+
+    type DeepReadonlyArray<T> = ReadonlyArray<DeepReadonly<T>>;
+
+    export type DeepReadonly<T> =
+      T extends (infer R)[] ? DeepReadonlyArray<R> :
+        T extends Function ? T :
+          T extends object ? DeepReadonlyObject<T> :
+            T;
 
     type Dot<Left extends string, Right extends string> =
       Right extends '' ? Left : `${Left}.${Right}`;

@@ -1,7 +1,24 @@
 module ProcessOut {
+
+  export type FormEmailField = {
+    type: "email"
+    key: string
+    label: string
+    required: boolean
+  }
+  export type FormData = {
+    type: 'form',
+    parameters: {
+      parameter_definitions: Array<FormEmailField>
+    }
+  }
+
+  export type APIElements = Array<FormData>
+
   export type APISuccessResponse = {
     success: true,
-    state: "SUCCESS" | 'NEXT_STEP_REQUIRED'
+    state: "SUCCESS" | 'NEXT_STEP_REQUIRED',
+    elements: APIElements
   }
 
   export type APIErrorResponse = {
@@ -25,7 +42,7 @@ module ProcessOut {
   type NetworkSuccessResponse = {
     success: true,
     state: "PENDING" | "SUCCESS" | 'NEXT_STEP_REQUIRED'
-    [key: string]: unknown
+    elements: APIElements
   }
 
   type NetworkErrorResponse = {
@@ -69,6 +86,16 @@ module ProcessOut {
           error: {
             code: 'processout-js.request.route-not-found',
             message: 'We were unable to connect to our API. Please contact support if you think this is an error.',
+          }
+        })
+        break;
+      case 'resource.gateway-configuration.not-found':
+        options.onFailure?.({
+          success: false,
+          state: 'FAILURE',
+          error: {
+            code: data.error_type,
+            message: data.message,
           }
         })
         break;
