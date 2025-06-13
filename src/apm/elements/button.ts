@@ -14,10 +14,9 @@ module ProcessOut {
       rest = [Loader()]
     }
 
-    const classNames = ["button", size || 'md', variant, loading && 'loading', disabled && 'disabled', className, ].filter(Boolean)
+    const classNames = ["button", size ?? 'lg', variant ?? 'primary', loading && 'loading', disabled && 'disabled', className, ].filter(Boolean)
 
     const props = mergeProps<HTMLElement>({ className: classNames.join(' '), disabled: disabled || loading}, userProps);
-
 
     return button(props, ...rest)
   }
