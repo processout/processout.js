@@ -1,7 +1,7 @@
 module ProcessOut {
-  type PlainObject = Record<PropertyKey, unknown>;
+  export type PlainObject = object;
 
-  function dedent(strings: TemplateStringsArray, ...values: unknown[]) {
+  function dedent(strings: TemplateStringsArray, ...values: unknown[]): string {
     const raw = String.raw(strings, ...values);            // untouched text
     const indent = raw.match(/^[ \t]*(?=\S)/m)[0].length;  // leading spaces of first non-blank line
     const pattern = new RegExp(`^[ \\t]{0,${indent}}`, 'gm');
@@ -15,6 +15,108 @@ module ProcessOut {
     // … with either no prototype or the base Object prototype
     const proto = Object.getPrototypeOf(value);
     return proto === null || proto === Object.prototype;
+  }
+
+  export const isEmpty = (value: Record<string, unknown> | Array<any>): boolean => {
+    if (Array.isArray(value)) {
+      return value.length === 0;
+    }
+
+    return Object.keys(value).length === 0;
+  }
+
+  export const isDeepEqual = (a: any, b: any): boolean => {
+    // This is a crucial performance optimization. If the two values are the
+    // exact same instance (or are identical primitives), we can immediately
+    // return true without any further checks.
+    if (a === b) return true;
+
+    // If either value is not an object (or is null), they can't be deeply
+    // equal unless they were strictly equal, which is handled by the check above.
+    // This prevents errors from trying to get keys from null or primitives.
+    if (a == null || typeof a !== 'object' || b == null || typeof b !== 'object') {
+      return false;
+    }
+
+    if (a instanceof Date && b instanceof Date) {
+      return a.getTime() === b.getTime();
+    }
+
+    if (Array.isArray(a) && Array.isArray(b)) {
+      if (a.length !== b.length) return false;
+
+      // We must recursively check each item in the array. If any pair of
+      // elements at the same index is not deeply equal, the arrays are not equal.
+      for (let i = 0; i < a.length; i++) {
+        if (!isDeepEqual(a[i], b[i])) return false;
+      }
+      return true;
+    }
+
+    if (a instanceof Object && b instanceof Object) {
+      const keysA = Object.keys(a);
+      const keysB = Object.keys(b);
+
+      if (keysA.length !== keysB.length) return false;
+
+      // We iterate through all keys of one object. For each key, we check if
+      // the other object has the same key and if the values for that key are also
+      // deeply equal. This ensures all properties match.
+      for (const key of keysA) {
+        if (!keysB.some(item => item === key) || !isDeepEqual(a[key], b[key])) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    return false;
+  }
+
+  export function createReadonlyProxy<T extends object>(obj: T, path: Array<PropertyKey> = []): DeepReadonly<T> {
+    const handler: ProxyHandler<T> = {
+      get(target, prop, receiver) {
+        const value = Reflect.get(target, prop, receiver);
+        if (value && typeof value === 'object') {
+          return createReadonlyProxy(value, path.concat(prop));
+        }
+        return value;
+      },
+      set(_, prop, __) {
+        throw new UpdatedReadOnly(String(path.concat(prop).join('.')))
+      },
+    };
+
+    return new Proxy(obj, handler) as DeepReadonly<T>;
+  }
+
+  export function createErrorHandlingProxy<T extends object>(
+    instance: T,
+    errorHandler: (error: any) => void
+  ): T {
+    const handler: ProxyHandler<T> = {
+      get(target, prop, receiver) {
+        // `target` is the original object.
+        // `receiver` is the proxy itself.
+        const originalValue = Reflect.get(target, prop);
+        // If the property is a function, we return our wrapper.
+        if (typeof originalValue === 'function') {
+          return function(...args: any[]) {
+            try {
+              return originalValue.apply(receiver, args);
+            } catch (error) {
+              errorHandler(error);
+              throw 'The above error was thrown and handled, please review the above error message for more details.'
+            }
+          };
+        }
+
+        // For non-function properties, return the value as is.
+        return originalValue;
+      }
+    };
+
+    return new Proxy(instance, handler);
   }
 
   export function injectStyleTag(root: Document | ShadowRoot, rules: string) {
@@ -59,7 +161,6 @@ module ProcessOut {
       const host = root instanceof ShadowRoot ? root : root.head;
       host.appendChild(styleEl);
     }
-
   }
 
   export type CSSText = string & { readonly __brand: 'CSSText' };

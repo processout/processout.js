@@ -23,7 +23,11 @@ module ProcessOut {
         ContextImpl.instance.initialise({
           ...data,
           logger: {
-            error: (options: Omit<Parameters<TelemetryClient['reportError']>[0], 'stack'>) => {
+            error: (options: Omit<Parameters<TelemetryClient['reportError']>[0], 'stack'>) => {]
+              if (DEBUG === true) {
+                console.error(options.message)
+              }
+
               logger.reportError({
                 ...options,
                 stack: new Error().stack
