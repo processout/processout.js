@@ -12,5 +12,6 @@
 /// <reference path="views/View.ts" />
 /// <reference path="views/Error.ts" />
 /// <reference path="views/Loading.ts" />
+/// <reference path="views/Components.ts" />
 /// <reference path="events/EventListener.ts" />
 /// <reference path="events/APMEventListener.ts" />

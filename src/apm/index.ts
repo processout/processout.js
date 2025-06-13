@@ -42,7 +42,7 @@ module ProcessOut {
 
       public initialise() {
         ContextImpl.context.page.render(APMViewLoading)
-        ContextImpl.context.page.load(APIImpl.initialise)
+        ContextImpl.context.page.render(APMViewComponents)
       }
 
       public on<K extends keyof APMEvents>(key: K, handler: EventHandler<APMEvents, K>) {

@@ -269,6 +269,7 @@ module ProcessOut {
           grid-template-columns: repeat(3, 1fr);
           padding: 8px;
           text-align: center;
+          margin-bottom: 24px;
         }
 
         .button {
@@ -314,19 +315,19 @@ module ProcessOut {
         }
 
         .button.sm {
-          padding: 8px 12px;
+          padding: 0 12px;
           height: 32px;
           font-size: 13px;
           line-height: 16px;
         }
         .button.md {
-          padding: 10px 16px;
+          padding: 0 16px;
           height: 40px;
           font-size: 14px;
           line-height: 20px;
         }
         .button.lg {
-          padding: 15px 24px;
+          padding: 0 24px;
           height: 48px;
           font-size: 15px;
           line-height: 18px;
