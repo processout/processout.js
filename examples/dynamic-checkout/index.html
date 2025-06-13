@@ -11,7 +11,7 @@
       document.addEventListener("DOMContentLoaded", function () {
         // You need to replace these values with your own
         const projectId = "test-proj_qEi1u5BwoYcZb6mOMKDWIm4mpqKCq6bN"
-        const invoiceId = "iv_L6EnGEsM4a4VlxzJ4aCQZUcnX7oVkHVw"
+        const invoiceId = "iv_1buJtZFcpQe3sdo3TdtnDWp8jTHTEk88"
         const clientSecret = ""
 
         const client = new ProcessOut.ProcessOut(projectId)
@@ -37,6 +37,14 @@
 
         window.addEventListener("processout_dynamic_checkout_invoice_fetching_error", function (e) {
           console.log("Invoice fetching error")
+        })
+
+        window.addEventListener("processout_dynamic_checkout_apm_payment_submitted", function (e) {
+          console.log("Apm payment submitted", e)
+        })
+
+        window.addEventListener("processout_dynamic_checkout_apm_payment_pending", function (e) {
+          console.log("Apm payment pending", e)
         })
 
         window.addEventListener(

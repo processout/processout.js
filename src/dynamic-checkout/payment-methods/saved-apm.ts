@@ -49,8 +49,6 @@ module ProcessOut {
         this.paymentConfig.locale,
       )} ${this.paymentConfig.invoiceDetails.amount} ${this.paymentConfig.invoiceDetails.currency}`
 
-      console.log(this.paymentMethod)
-
       const [wrapper, payButton] = HTMLElements.createMultipleElements([
         {
           tagName: "div",
@@ -84,7 +82,7 @@ module ProcessOut {
     }
 
     private handleApmPayment() {
-      const { apm_customer_token } = this.paymentMethod
+      const { apm_customer_token, apm } = this.paymentMethod
       const { clientSecret, invoiceId } = this.paymentConfig
 
       const cardPaymentOptions = {
@@ -104,9 +102,17 @@ module ProcessOut {
       this.setButtonLoading()
 
       if (apm_customer_token.redirect_url) {
+        DynamicCheckoutEventsUtils.dispatchApmPaymentSubmittedEvent({
+          gateway_name: apm.gateway_name,
+        })
+
         return this.processOutInstance.handleAction(
           apm_customer_token.redirect_url,
           paymentToken => {
+            DynamicCheckoutEventsUtils.dispatchApmPaymentPendingEvent(paymentToken, {
+              gateway_name: apm.gateway_name,
+            })
+
             this.processOutInstance.makeCardPayment(
               invoiceId,
               paymentToken,
@@ -142,6 +148,13 @@ module ProcessOut {
           this.paymentConfig.invoiceId,
         )
       }
+
+      DynamicCheckoutEventsUtils.dispatchApmPaymentPendingEvent(
+        this.paymentMethod.apm_customer_token.customer_token_id,
+        {
+          gateway_name: apm.gateway_name,
+        },
+      )
 
       this.processOutInstance.makeCardPayment(
         this.paymentConfig.invoiceId,
