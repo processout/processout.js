@@ -36,7 +36,8 @@ module ProcessOut {
     }
 
     protected render(): Element | DocumentFragment {
-      return this.defaultView();
+      this.defaultView();
+      return null
     }
 
     private applyStyles(): void {
@@ -51,49 +52,7 @@ module ProcessOut {
     }
 
     private defaultView() {
-      const { h1, h2, h3, div } = elements;
-
-      return div({ className: 'page' },
-        h1({ className: 'empty-title' }, 'Components'),
-        h2({ className: 'empty-subtitle' }, 'Buttons'),
-        div({ className: 'empty-controls' },
-          h3("Primary"),
-          h3("Secondary"),
-          h3("Tertiary"),
-          div(Button({ size: 'sm', variant: 'primary' }, 'Refresh')),
-          div(Button({ size: 'sm', variant: 'secondary' }, 'Refresh')),
-          div(Button({ size: 'sm', variant: 'tertiary' }, 'Refresh')),
-          div(Button({ size: 'md', variant: 'primary' }, 'Refresh')),
-          div(Button({ size: 'md', variant: 'secondary' }, 'Refresh')),
-          div(Button({ size: 'md', variant: 'tertiary' }, 'Refresh')),
-          div(Button({ size: 'lg', variant: 'primary' }, 'Refresh')),
-          div(Button({ size: 'lg', variant: 'secondary' }, 'Refresh')),
-          div(Button({ size: 'lg', variant: 'tertiary' }, 'Refresh')),
-          div(Button({ size: 'md', variant: 'primary', loading: true }, 'Refresh')),
-          div(Button({ size: 'md', variant: 'secondary', loading: true }, 'Refresh')),
-          div(Button({ size: 'md', variant: 'tertiary', loading: true }, 'Refresh')),
-          div(Button({ size: 'md', variant: 'primary' , disabled: true }, 'Refresh')),
-          div(Button({ size: 'md', variant: 'secondary', disabled: true }, 'Refresh')),
-          div(Button({ size: 'md', variant: 'tertiary', disabled: true }, 'Refresh')),
-        ),
-        div({ className: 'empty-controls' },
-          h3("Success"),
-          h3("Danger"),
-          div(),
-          div(Button({ size: 'sm', variant: 'success' }, 'Refresh')),
-          div(Button({ size: 'sm', variant: 'danger' }, 'Refresh')),
-          div(),
-          div(Button({ size: 'md', variant: 'success'  }, 'Refresh')),
-          div(Button({ size: 'md', variant: 'danger'  }, 'Refresh')),
-          div(),
-          div(Button({ size: 'lg', variant: 'success' }, 'Refresh')),
-          div(Button({ size: 'lg', variant: 'danger' }, 'Refresh')),
-          div(),
-          div(Button({ size: 'md', variant: 'success', loading: true }, 'Refresh')),
-          div(Button({ size: 'md', variant: 'danger', loading: true }, 'Refresh')),
-          div(),
-        )
-      )
+      throw new Error('Not implemented')
     }
   }
 }
