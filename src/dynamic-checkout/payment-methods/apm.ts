@@ -87,10 +87,18 @@ module ProcessOut {
     ) {
       const { apm } = this.paymentMethod
 
+      DynamicCheckoutEventsUtils.dispatchApmPaymentSubmittedEvent({
+        gateway_name: apm.gateway_name,
+      })
+
       this.processOutInstance.handleAction(
         apm.redirect_url,
         paymentToken => {
           this.resetContainerHtml().appendChild(new DynamicCheckoutInvoiceLoadingView().element)
+
+          DynamicCheckoutEventsUtils.dispatchApmPaymentPendingEvent(paymentToken, {
+            gateway_name: apm.gateway_name,
+          })
 
           this.processOutInstance.makeCardPayment(
             this.paymentConfig.invoiceId,
