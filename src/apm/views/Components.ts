@@ -56,6 +56,11 @@ module ProcessOut {
           div(Button({ size: 'md', variant: 'success', loading: true }, 'Refresh')),
           div(Button({ size: 'md', variant: 'danger', loading: true }, 'Refresh')),
           div(),
+        ),
+        div({ className: 'empty-controls' },
+          OTP({ name: 'otp', length: 6 }),
+          Phone({ label: 'Phone number (optional)', dialingCodes: [{ regionCode: 'FR', value: '+33' }, { regionCode: 'BE', value: '+32' }] }),
+          Input({ name: 'full-name', label: 'Full name', type: 'text' }),
         )
       )
     }

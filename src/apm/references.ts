@@ -12,6 +12,7 @@
 /// <reference path="elements/button.ts" />
 /// <reference path="elements/input.ts" />
 /// <reference path="elements/otp.ts" />
+/// <reference path="elements/phone.ts" />
 /// <reference path="views/View.ts" />
 /// <reference path="views/Error.ts" />
 /// <reference path="views/Loading.ts" />

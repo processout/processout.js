@@ -36,6 +36,7 @@ module ProcessOut {
       errored: string
     }
     shadow: {
+      focus: string,
       l2: string
     }
   }
@@ -89,6 +90,7 @@ module ProcessOut {
               default: '#484a50',
               errored: '#FF8888',
               disabled: '#2E3137',
+
             }
           },
           text: {
@@ -98,6 +100,7 @@ module ProcessOut {
             errored: '#FF8888',
           },
           shadow: {
+            focus: '#63656b',
             l2: '#353636',
           }
         },
@@ -138,6 +141,7 @@ module ProcessOut {
             errored: '#BE011B',
           },
           shadow: {
+            focus: '#b1b1b2',
             l2: '#b1b1b2',
           }
         }
@@ -316,6 +320,33 @@ module ProcessOut {
           grid-template-columns: repeat(3, 1fr);
         }
 
+        .chevron {
+          display: inline-block;
+          width: 4.5px;
+          height: 3.5px;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 6' fill='none'%3E%3Cpath d='M1 2L4 5L7 2' stroke='${encodeURIComponent(ThemeImpl.instance.get('palette.light.border.input.default'))}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+          background-size: contain;
+          background-repeat: no-repeat;
+
+          transition: transform 0.2s ease-in-out;
+          @media (prefers-color-scheme: dark) {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 6' fill='none'%3E%3Cpath d='M1 2L4 5L7 2' stroke='${encodeURIComponent(ThemeImpl.instance.get('palette.dark.border.input.default'))}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+          }
+        }
+        .chevron.up {
+          transform: rotate(-180deg);
+        }
+        .chevron.left,.chevron.right {
+          width: 3.5px;
+          height: 4.5px;
+        }
+        .chevron.left {
+          transform: rotate(90deg);
+        }
+        .chevron.right {
+          transform: rotate(-90deg);
+        }
+
         .button {
           font-family: inherit;
           width: 100%;
@@ -383,7 +414,18 @@ module ProcessOut {
           line-height: 18px;
         }
 
-        .input {
+        .form {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .field-container {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .field {
           display: flex;
           width: 100%;
           background-color: ${ThemeImpl.instance.get('palette.light.surface.input.default')};
@@ -396,13 +438,13 @@ module ProcessOut {
             border-color: ${ThemeImpl.instance.get('palette.dark.border.input.default')};
           }
         }
-        .input.focused {
+        .field.focused {
           border-color: ${ThemeImpl.instance.get('palette.light.text.default')};
           @media (prefers-color-scheme: dark) {
             border-color: ${ThemeImpl.instance.get('palette.dark.text.default')};
           }
         }
-        .input span {
+        .field .label {
           font-family: inherit;
           position: absolute;
           top: 16px;
@@ -411,19 +453,18 @@ module ProcessOut {
           font-size: 15px;
           line-height: 18px;
           transition: font-size 0.1s ease-in-out, line-height 0.1s ease-in-out, top 0.1s ease-in-out;
-
           color: ${ThemeImpl.instance.get('palette.light.text.label')};
 
           @media (prefers-color-scheme: dark) {
             color: ${ThemeImpl.instance.get('palette.dark.text.label')};
           }
         }
-        .input.filled.has-label span {
+        .field.filled.has-label .label {
           font-size: 12px;
           line-height: 14px;
           top: 8px;
         }
-        .input input {
+        .field input {
           font-family: inherit;
           appearance: none;
           background-color: transparent;
@@ -447,54 +488,35 @@ module ProcessOut {
             -webkit-text-fill-color: ${ThemeImpl.instance.get('palette.dark.text.default')};
           }
         }
-        .input.filled.has-label input {
+        .field.filled.has-label input {
           padding: 25px 16px 10px;
         }
-        .input.disabled {
+        .field.disabled {
           border-color: ${ThemeImpl.instance.get('palette.light.border.input.disabled')};
           @media (prefers-color-scheme: dark) {
             border-color: ${ThemeImpl.instance.get('palette.dark.border.input.disabled')};
           }
         }
-        .input.disabled.filled {
+        .field.disabled.filled {
           background-color: ${ThemeImpl.instance.get('palette.light.surface.input.disabled')};
           @media (prefers-color-scheme: dark) {
             background-color: ${ThemeImpl.instance.get('palette.dark.surface.input.disabled')};
           }
         }
-        .input.disabled input {
+        .field.disabled input {
           pointer-events: none;
         }
-        .input.errored:not(.disabled) {
+        .field.errored:not(.disabled) {
           border-color: ${ThemeImpl.instance.get('palette.light.text.errored')};
           @media (prefers-color-scheme: dark) {
             border-color: ${ThemeImpl.instance.get('palette.dark.text.errored')};
           }
         }
-        .input.errored:not(.disabled) span {
+        .field.errored:not(.disabled) .label {
           color: ${ThemeImpl.instance.get('palette.light.text.errored')};
           @media (prefers-color-scheme: dark) {
             color: ${ThemeImpl.instance.get('palette.dark.text.errored')};
           }
-        }
-
-        .field {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        .error {
-          background-color: #FDE3DE;
-          padding: 8px 12px;
-          gap: 8px;
-          border-radius: 6px;
-          border: 1px solid #efd7d2;
-          color: #630407;
-          font-weight: 500;
-          font-size: 14px;
-          line-height: 20px;
-
         }
 
         .otp {
@@ -513,6 +535,137 @@ module ProcessOut {
           text-align: center;
           padding-left: 0;
           padding-right: 0;
+        }
+
+        .phone .dialing-code {
+          display: flex;
+          justify-content: end;
+          align-items: center;
+          gap: 6px;
+          width: 58px;
+          height: 26px;
+          position: absolute;
+          top: 11px;
+          right: 16px;
+          border-left: 2px solid ${ThemeImpl.instance.get('palette.light.border.input.default')};;
+
+          @media (prefers-color-scheme: dark) {
+            border-color: ${ThemeImpl.instance.get('palette.dark.border.input.default')};
+          }
+        }
+        .phone .dialing-code.open {
+          padding-right: 18px;
+          width: 76px;
+          height: 52px;
+          top: -2px;
+          right: -2px;
+          border-left: 2px solid ${ThemeImpl.instance.get('palette.light.text.default')};
+          box-shadow: 0 0 0 3px ${ThemeImpl.instance.get('palette.light.shadow.focus')};
+          border-top-right-radius: 6px;
+          border-bottom-right-radius: 6px;
+
+          @media (prefers-color-scheme: dark) {
+            border-color: ${ThemeImpl.instance.get('palette.dark.text.default')};
+            box-shadow: 0 0 0 3px ${ThemeImpl.instance.get('palette.dark.shadow.focus')};
+          }
+        }
+
+        .phone .dialing-code.open:before,
+        .phone .dialing-code.open:after {
+          content: "";
+          display: block;
+          width: 3px;
+          height: 2px;
+          background-color: ${ThemeImpl.instance.get('palette.light.text.default')};
+          position: absolute;
+          left: -5px;
+          @media (prefers-color-scheme: dark) {
+            background-color: ${ThemeImpl.instance.get('palette.dark.text.default')};
+          }
+        }
+        .phone .dialing-code.open:before {
+          top: 0;
+        }
+        .phone .dialing-code.open:after {
+          bottom: 0;
+        }
+
+        .phone .dialing-code-label {
+          overflow: hidden;
+          border-radius: 2px;
+          justify-content: center;
+          display: flex;
+        }
+        .phone .dialing-code-chevrons {
+          width: 12px;
+          height: 12px;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          gap: 1px;
+        }
+
+        .phone .dialing-code.open .chevron {
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 6' fill='none'%3E%3Cpath d='M1 2L4 5L7 2' stroke='${encodeURIComponent(ThemeImpl.instance.get('palette.light.text.default'))}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+          @media (prefers-color-scheme: dark) {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 6' fill='none'%3E%3Cpath d='M1 2L4 5L7 2' stroke='${encodeURIComponent(ThemeImpl.instance.get('palette.dark.text.default'))}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+
+          }
+        }
+
+        .phone select {
+          width: 58px;
+          height: 26px;
+          position: absolute;
+          top: 11px;
+          right: 16px;
+          border: none;
+          text-align: right;
+          outline: none;
+          opacity: 0;
+        }
+
+        @keyframes select-caret {
+          0% {
+            text-decoration: none;
+          }
+          50% {
+            text-decoration: underline;
+          }
+          100% {
+            text-decoration: none;
+          }
+        }
+
+        .phone select:focus {
+          animation: select-caret 1s infinite;
+        }
+
+        .phone.errored:not(.disabled) .dialing-code.open {
+          border-color: ${ThemeImpl.instance.get('palette.light.text.errored')};
+          @media (prefers-color-scheme: dark) {
+            border-color: ${ThemeImpl.instance.get('palette.dark.text.errored')};
+          }
+        }
+        .phone.errored:not(.disabled) .dialing-code.open:before, .phone.errored:not(.disabled) .dialing-code.open:after {
+          background-color: ${ThemeImpl.instance.get('palette.light.text.errored')};
+
+          @media (prefers-color-scheme: dark) {
+            background-color: ${ThemeImpl.instance.get('palette.dark.text.errored')};
+          }
+        }
+
+        .error {
+          background-color: #FDE3DE;
+          padding: 8px 12px;
+          gap: 8px;
+          border-radius: 6px;
+          border: 1px solid #efd7d2;
+          color: #630407;
+          font-weight: 500;
+          font-size: 14px;
+          line-height: 20px;
         }
       `()
     }

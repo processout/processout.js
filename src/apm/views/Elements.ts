@@ -22,6 +22,16 @@ module ProcessOut {
       return {
         ...acc,
         ...form.parameters.parameter_definitions.reduce((acc, param) => {
+          if (param.type === 'phone') {
+            return {
+              ...acc,
+              [param.key]: {
+                dialing_code: '',
+                value: '',
+              }
+            }
+          }
+
           return {
             ...acc,
             [param.key]: undefined,
@@ -68,7 +78,7 @@ module ProcessOut {
     private renderElement(type: string, props: any) {
       switch (type) {
         case "form": {
-          return Form(props, this.state as { form: FormState }, this.setState.bind(this))
+          return Form(props, this.state, this.setState.bind(this), this.handleSubmit.bind(this))
         }
         default: {
           return null
@@ -85,6 +95,7 @@ module ProcessOut {
       }
 
       this.setState({ loading: true });
+      ContextImpl.context.page.load(APIImpl.sendFormData(state.form?.values ?? {}))
     }
 
     render() {

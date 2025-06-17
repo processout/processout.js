@@ -5,7 +5,7 @@ module ProcessOut {
   }
 
   export class APMPageImpl implements APMPage {
-    private wrapper: Element
+    public wrapper: Element
     private shadow: ShadowRoot | Document
 
     constructor(container: Element) {
@@ -14,7 +14,6 @@ module ProcessOut {
 
     render<V extends APMViewConstructor>(View: V, props?: ExtractViewProps<V>) {
       this.setStylesheet(this.shadow)
-      this.wrapper.replaceChildren()
       const view = new View(this.wrapper, this.shadow, props)
       view.mount()
     }

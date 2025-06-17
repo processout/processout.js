@@ -48,9 +48,7 @@ module ProcessOut {
       const newView = this.render.call(this);
 
       // We don't want to update the entire tree, just the elements that have changed.
-      console.time('patch');
       this._patch(this.container as HTMLElement, newView, this.container.firstChild as PropsElement<HTMLElement>);
-      console.timeEnd('patch');
     }
 
     /**
@@ -62,11 +60,13 @@ module ProcessOut {
       }
 
       this._applyStyles();
-      const view = this.render();
+      const view = this.render.call(this);
       if (!view) {
         return;
       }
-      this.container.appendChild(view);
+
+      this._applyRefs(view);
+      this._patch(this.container as HTMLElement, view, this.container.firstChild as PropsElement<HTMLElement>);
     }
 
     /**
@@ -97,9 +97,28 @@ module ProcessOut {
       }
     }
 
+    /**
+     * Walks a newly created DOM tree and executes any `ref` callbacks. This ensures
+     * that components can get a reference to their live DOM nodes on initial mount.
+     * @param node The root node of the tree to traverse.
+     */
+    private _applyRefs(node: Node) {
+      if (!(node instanceof HTMLElement)) return;
+
+      const props = (node as PropsElement<HTMLElement>).__props__;
+      if (props && typeof props.ref === 'function') {
+        // Execute the ref callback with the live DOM element.
+        props.ref(node);
+      }
+
+      // Recursively apply refs to all children.
+      node.childNodes.forEach(child => this._applyRefs(child));
+    }
+
     private _patch(parent: Element, newNode: PropsElement<HTMLElement> | null, oldNode: PropsElement<HTMLElement> | null) {
       // Case 1: A new node is being added where there was none before.
       if (!oldNode && newNode) {
+        this._applyRefs(newNode);
         parent.appendChild(newNode);
         return;
       }
@@ -113,6 +132,7 @@ module ProcessOut {
       // Case 3: The nodes are fundamentally different (e.g., a `div` changes to a `p`).
       // The most efficient action is to simply replace the old node with the new one.
       if (!newNode || !oldNode || oldNode.nodeName !== newNode.nodeName) {
+        this._applyRefs(newNode);
         parent.replaceChild(newNode, oldNode);
         return;
       }
@@ -121,8 +141,7 @@ module ProcessOut {
       // `targetNode` is the live DOM element we will be updating.
       const targetNode = oldNode;
 
-      // Case 4: Handle simple text updates. If both are text nodes, we just
-      // update the text content if it's different, which is very fast.
+      // Case 4: Handle simple text updates.
       if (targetNode.nodeType === Node.TEXT_NODE && newNode.nodeType === Node.TEXT_NODE) {
         if (targetNode.textContent !== newNode.textContent) {
           targetNode.textContent = newNode.textContent;
@@ -130,15 +149,11 @@ module ProcessOut {
         return;
       }
 
-      // Get the props from both the old and new nodes. The `__props__` object
-      // is our "source of truth" that was attached during element creation.
       const oldProps = targetNode.__props__ || {};
       const newProps = newNode.__props__ || {};
 
       // Delegate all attribute/property/event listener updates to the `_patchProps` function.
       this._patchProps(targetNode, oldProps, newProps);
-      // After patching, update the live node's `__props__` to the new props.
-      // This ensures that for the *next* render, we have the correct "old" state to compare against.
       targetNode.__props__ = newProps;
 
       // Recursively apply the same patching logic to all the children of the nodes.
@@ -150,36 +165,32 @@ module ProcessOut {
     }
 
     private _patchProps(element: PropsElement<HTMLElement>, oldProps: Props, newProps: Props) {
-      // If the props objects are identical, no work is needed.
       if (oldProps === newProps) return;
-      // Create a combined set of keys from both old and new props to ensure we process
-      // every property that was either added, removed, or changed.
       const allKeys = new Set([...Object.keys(oldProps), ...Object.keys(newProps)]);
 
       allKeys.forEach(key => {
         const oldValue = oldProps[key];
         const newValue = newProps[key];
 
-        // If the value for a key is unchanged, skip to the next key.
+        // The `ref` callback is handled here during updates.
+        if (key === 'ref') {
+          if (typeof newValue === 'function') {
+            newValue(element);
+          }
+          return;
+        }
+
         if (oldValue === newValue) return;
 
-        // Handle event listeners (e.g., `onclick`).
         if (key.startsWith('on')) {
           const eventName = key.slice(2).toLowerCase();
-          // Always remove the old listener before adding the new one to prevent duplicates.
           if (oldValue) element.removeEventListener(eventName, oldValue);
           if (newValue) element.addEventListener(eventName, newValue);
-          // Handle special DOM *properties* like `className`, `value`, and `checked`,
-          // which are more reliable to set directly on the element object.
         } else if (key === 'className' || key === 'class') {
           element.className = newValue || '';
         } else if (key === 'value' || key === 'checked') {
           if (element[key] !== newValue) element[key] = newValue;
-          // The `key` prop is a special directive for the reconciliation algorithm and should
-          // not be rendered as a DOM attribute.
         } else if (key !== 'key') {
-          // For all other attributes, either remove them if the new value is null/false,
-          // or set them using `setAttribute`.
           if (newValue == null || newValue === false) {
             element.removeAttribute(key);
           } else {
@@ -197,8 +208,10 @@ module ProcessOut {
       const map = {};
       for (let i = start; i <= end; i++) {
         const node = nodes[i];
-        const key = this._getKey(node);
-        if (key) map[key] = i;
+        if (node) {
+          const key = this._getKey(node);
+          if (key) map[key] = i;
+        }
       }
       return map;
     };
@@ -213,127 +226,74 @@ module ProcessOut {
       let newEndNode = newChildren[newEndIndex];
       let oldKeyMap = null;
 
-      /**
-       * This is the core of a highly efficient keyed reconciliation algorithm. It uses a
-       * two-pointer approach to diff the lists of children, minimizing DOM operations.
-       *
-       * ALGORITHM STRATEGY:
-       * 1. Two-Pointer Comparison: It uses four pointers (oldStart, oldEnd, newStart, newEnd)
-       *    to compare nodes at both ends of the lists simultaneously.
-       *
-       * 2. Optimistic Fast Paths: It first checks for the most common, low-cost scenarios
-       *    (e.g., matching nodes at the ends, nodes moving between ends). If a fast path
-       *    is found, it performs the update and continues to the next iteration.
-       *
-       * 3. Key-Based Fallback: If no fast path applies, it falls back to a key-based lookup.
-       *    - It lazily creates a map of keys from the remaining old children for fast searching.
-       *    - If the new node's key is not in the map, it's a new element and is created.
-       *    - If the key exists, the corresponding old node is patched and moved to the correct
-       *      position. Its old spot is marked as `undefined` to prevent reprocessing.
-       */
       while (oldStartIndex <= oldEndIndex && newStartIndex <= newEndIndex) {
-        // Skip over "holes" left by nodes that have been moved.
         if (oldStartNode === undefined) {
           oldStartNode = oldChildren[++oldStartIndex];
           continue;
         }
-
         if (oldEndNode === undefined) {
           oldEndNode = oldChildren[--oldEndIndex];
           continue;
         }
-
-        // Case 1: Nodes at the start of both lists are the same.
         if (this._isSameNode(oldStartNode, newStartNode)) {
           this._patch(parent, newStartNode, oldStartNode);
           oldStartNode = oldChildren[++oldStartIndex];
           newStartNode = newChildren[++newStartIndex];
           continue;
         }
-
-        // Case 2: Nodes at the end of both lists are the same.
         if (this._isSameNode(oldEndNode, newEndNode)) {
           this._patch(parent, newEndNode, oldEndNode);
           oldEndNode = oldChildren[--oldEndIndex];
           newEndNode = newChildren[--newEndIndex];
           continue;
         }
-
-        // Case 3: An item moved from the start of the old list to the end of the new list.
         if (this._isSameNode(oldStartNode, newEndNode)) {
           this._patch(parent, newEndNode, oldStartNode);
-          parent.insertBefore(oldStartNode, oldEndNode.nextSibling); // Move the node to the end.
+          parent.insertBefore(oldStartNode, oldEndNode.nextSibling);
           oldStartNode = oldChildren[++oldStartIndex];
           newEndNode = newChildren[--newEndIndex];
           continue;
         }
-
-        // Case 4: An item moved from the end of the old list to the start of the new list.
         if (this._isSameNode(oldEndNode, newStartNode)) {
           this._patch(parent, newStartNode, oldEndNode);
-          parent.insertBefore(oldEndNode, oldStartNode); // Move the node to the start.
+          parent.insertBefore(oldEndNode, oldStartNode);
           oldEndNode = oldChildren[--oldEndIndex];
           newStartNode = newChildren[++newStartIndex];
           continue;
         }
 
-        // If no optimistic checks worked, use the key map.
         if (!oldKeyMap) {
           oldKeyMap = this._createKeyMap(oldChildren, oldStartIndex, oldEndIndex);
         }
-
         const key = this._getKey(newStartNode);
         const indexInOld = oldKeyMap[key];
 
         if (indexInOld == null) {
-          // The new node is a new element. Create and insert it.
           parent.insertBefore(newStartNode, oldStartNode);
         } else {
-          // The new node exists but was moved.
           const nodeToMove = oldChildren[indexInOld];
-          // Patch its properties.
           this._patch(parent, newStartNode, nodeToMove);
-          // Move it to the correct position.
           parent.insertBefore(nodeToMove, oldStartNode);
-          // Mark its old position as a "hole".
           oldChildren[indexInOld] = undefined;
         }
-
         newStartNode = newChildren[++newStartIndex];
       }
 
-      /**
-       * We are now potentially in one of two possible states where cleanup is required:
-       *
-       * 1. We ran out of old children to compare (oldStartIndex > oldEndIndex): This means every original
-       *    child has been matched, moved, or patched. If there are still children left in the new list
-       *    (newStartIndex <= newEndIndex), they must be brand-new nodes that need to be added to the DOM.
-       *
-       * 2. We ran out of new children to compare (newStartIndex > newEndIndex): This means every child in
-       *    the new render has been reconciled against the DOM. If there are still children left in the old
-       *    list (oldStartIndex <= oldEndIndex), they must be nodes that were removed and now need to
-       *    be deleted from the DOM.
-       */
-
-      // If there are leftover new nodes, it means they need to be added.
       if (oldStartIndex > oldEndIndex) {
         const refNode = newChildren[newEndIndex + 1] ? oldChildren[oldChildren.length > 0 ? oldStartIndex : 0] : null;
         for (let i = newStartIndex; i <= newEndIndex; i++) {
           parent.insertBefore(newChildren[i], refNode);
         }
-        return
-      }
-
-      // If there are leftover old nodes, it means they were removed and need to be deleted from the DOM.
-      if (newStartIndex > newEndIndex) {
+      } else if (newStartIndex > newEndIndex) {
         for (let i = oldStartIndex; i <= oldEndIndex; i++) {
           if (oldChildren[i]) {
             parent.removeChild(oldChildren[i]);
           }
         }
-        return
       }
     }
+
+
 
     private _defaultView(){
       throw new Error('Not implemented')

@@ -1,11 +1,32 @@
 module ProcessOut {
 
-  export type FormEmailField = {
-    type: "email"
-    key: string
-    label: string
-    required: boolean
-  }
+  export type FormEmailField =
+    | {
+      type: "email" | "name"
+      key: string
+      label: string
+      required: boolean
+    }
+    | {
+      type: "phone"
+      key: string
+      label: string
+      required: boolean
+      dialing_codes: Array<{
+        region_code: string;
+        value: string;
+      }>
+    }
+    | {
+      type: "otp"
+      key: string
+      label: string
+      max_length: 6
+      min_length: 6
+      required: true
+      subtype: "digits" | "alphanumeric"
+    } & {}
+
   export type FormData = {
     type: 'form',
     parameters: {
@@ -188,7 +209,7 @@ module ProcessOut {
 
           if (apiResponse.state === 'PENDING') {
             if (internalOptions.retries && internalOptions.retries <= 0) {
-              options.onFailure?.({
+              internalOptions.onFailure?.({
                 success: false,
                 state: 'FAILURE',
                 error: {
@@ -206,10 +227,10 @@ module ProcessOut {
             return;
           }
 
-          options.onSuccess?.(apiResponse as D);
+          internalOptions.onSuccess?.(apiResponse as D);
         },
         (req, e, errorCode) => {
-          options.onFailure?.({
+          internalOptions.onFailure?.({
             success: false,
             state: 'FAILURE',
             error:
