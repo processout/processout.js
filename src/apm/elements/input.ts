@@ -1,14 +1,17 @@
 module ProcessOut {
-  const { div, span, input } = elements
+  const { div, label: labelEl, input } = elements
 
-  export interface InputProps extends Props<HTMLElementTagNameMap['input']> {
+  export interface InputProps extends Omit<Props<HTMLElementTagNameMap['input']>, 'oninput' | 'onblur' | 'name'> {
+    name: string
     label?: string;
     errored?: boolean;
+    oninput?: (key: string, value: string) => void,
+    onblur?: (key: string, value: string) => void,
   }
 
-  export const Input = ({ className, label, disabled, errored, value, id, type, ...props }: InputProps) => {
+  export const Input = ({ name, className, label, disabled, errored, value, id, type, oninput, onblur, ...props }: InputProps) => {
     const classNames = [
-      "input",
+      "field input",
       disabled && 'disabled',
       label && 'has-label',
       value && 'filled',
@@ -19,9 +22,20 @@ module ProcessOut {
     const el = input({
       type: type || "text",
       autocomplete: "on",
+      name,
       disabled,
       value,
-      id,
+      id: id || name,
+      oninput: (e) => {
+        const target = e.target as HTMLInputElement
+        const value = target.value
+        oninput && oninput(name, value)
+      },
+      onblur: (e) => {
+        const target = e.target as HTMLInputElement
+        const value = target.value
+        oninput && oninput(name, value)
+      },
       ...props,
     })
 
@@ -49,7 +63,7 @@ module ProcessOut {
       const target = e.target as HTMLInputElement
       target.parentElement.classList.remove("focused")
     })
-    const children = [label && span({ className: "label" }, label), el].filter(Boolean)
+    const children = [label && labelEl({ className: "label" }, label), el].filter(Boolean)
 
     return div({
       className: classNames,

@@ -1,15 +1,19 @@
 module ProcessOut {
+  interface PhoneState {
+    dialing_code: string
+    value: string
+  }
   export interface FormState {
     touched: Record<string, boolean>
-    values: Record<string, string | number | boolean>
+    values: Record<string, string | number | boolean | PhoneState>
     validation: Record<string, { required?: boolean, email?: boolean }>
     errors: Record<string, string>
   }
 
-  const { div, form } = elements
+  const { div, label, form } = elements
   const emailRegex = /^[\w\-\.+]+@([\w-]+\.)+[\w-]{2,4}$/
 
-  function validateField(state: ElementState, key: string, value: string | number | boolean): string | undefined {
+  function validateField(state: ElementState, key: string, value: string | number | boolean | PhoneState): string | undefined {
     const validation = state.form.validation[key]
 
     if (!validation) {
@@ -18,7 +22,7 @@ module ProcessOut {
 
     switch (true) {
       case validation.required &&
-        (typeof value === "undefined" || (typeof value === "string" && value.length === 0)): {
+        (typeof value === "undefined" || (typeof value === "string" && value.length === 0) || (isPlainObject(value) && 'value' in value && value.value.length === 0)): {
         return "This field is required"
       }
       case validation.email && typeof value === "string" && !value.match(emailRegex): {
@@ -27,11 +31,7 @@ module ProcessOut {
     }
   }
   function updateField(setState: SetState<ElementState>) {
-    return function(e: Event) {
-      const target = e.target as HTMLInputElement
-      const key = target.name
-      const value = target.value
-
+    return function(key: string, value: string | number | boolean | PhoneState) {
       setState((prevState) => {
         let errors = { ...prevState.form.errors }
 
@@ -56,11 +56,7 @@ module ProcessOut {
   }
 
   function onBlur(setState: SetState<ElementState>) {
-    return function(e: Event) {
-      const target = e.target as HTMLInputElement
-      const key = target.name
-      const value = target.value
-
+    return function(key: string, value: string | number | boolean | PhoneState) {
       setState((prevState) => {
         const errors = { ...prevState.form.errors };
         const touched = { ...prevState.form.touched };
@@ -99,8 +95,6 @@ module ProcessOut {
         return acc
       }, {});
 
-      console.log(errors);
-
       successful = isEmpty(errors)
 
       return {
@@ -116,25 +110,61 @@ module ProcessOut {
     return successful
   }
 
-  export function Form(props: any, state: ElementState, setState: SetState<ElementState>) {
-    const fields = props.parameters.parameter_definitions.map(({ type, label, key }) => {
-      const error = state.form.errors[key]
-      const value = state.form.values[key]
+  export function Form(props: FormData, state: ElementState, setState: SetState<ElementState>, onSubmit: () => void) {
+    const fields = props.parameters.parameter_definitions.map((field) => {
+      const error = state.form.errors[field.key]
+      const value = state.form.values[field.key]
+      let input
+      let labelHtmlFor = field.key;
 
-      const input = Input({
-        type,
-        label,
-        name: key,
-        errored: !!error,
-        disabled: state.loading,
-        value: value as string,
-        oninput: updateField(setState),
-        onblur: onBlur(setState),
-      })
+      switch (field.type) {
+        case "otp": {
+          input = OTP({
+            name: field.key,
+            length: field.min_length,
+            type: field.subtype === "digits" ? "numeric" : "text",
+            onComplete: updateField(setState),
+          })
+          break;
+        }
+        case 'phone': {
+          labelHtmlFor = `${field.key}.value`;
+          input = Phone({
+            name: field.key,
+            label: field.label,
+            dialingCodes: field.dialing_codes.map(({ region_code, value }) => ({ regionCode: region_code, value: value })),
+            oninput: updateField(setState),
+            onblur: onBlur(setState),
+            errored: !!error,
+            disabled: state.loading,
+          });
+          break;
+        }
+        default: {
+          input = Input({
+            type: field.type,
+            label: field.label,
+            name: field.key,
+            errored: !!error,
+            disabled: state.loading,
+            value: value as string,
+            oninput: updateField(setState),
+            onblur: onBlur(setState),
+          })
+        }
+      }
 
-      return div({ className: "field" }, input, error ? div({ className: "error" }, error) : null)
+
+
+      return div({ className: "field-container" }, input, error ? label({ htmlFor: labelHtmlFor, className: "error" }, error) : null)
     })
 
-    return form(...fields)
+    return form({
+      className: "form",
+      onsubmit: (e) => {
+        e.preventDefault()
+        onSubmit()
+      }
+    }, ...fields)
   }
 }
