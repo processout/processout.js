@@ -6,6 +6,7 @@ module ProcessOut {
     Partial<T> & {
     style?: never;
     class?: never;
+    ref?: (node: T | null) => void;
     [key: string]: any;
   };
 
@@ -129,7 +130,7 @@ module ProcessOut {
 
           const value = props[key];
 
-          if (value === null || value === undefined) {
+          if (value === null || value === undefined || key === 'ref') {
             continue;
           }
 
