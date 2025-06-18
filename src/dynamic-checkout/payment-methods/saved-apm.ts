@@ -102,15 +102,15 @@ module ProcessOut {
       this.setButtonLoading()
 
       if (apm_customer_token.redirect_url) {
-        DynamicCheckoutEventsUtils.dispatchApmPaymentSubmittedEvent({
-          gateway_name: apm.gateway_name,
+        DynamicCheckoutEventsUtils.dispatchPaymentSubmittedEvent({
+          payment_method_name: apm.gateway_name,
         })
 
         return this.processOutInstance.handleAction(
           apm_customer_token.redirect_url,
           paymentToken => {
-            DynamicCheckoutEventsUtils.dispatchApmPaymentPendingEvent(paymentToken, {
-              gateway_name: apm.gateway_name,
+            DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent(paymentToken, {
+              payment_method_name: apm.gateway_name,
             })
 
             this.processOutInstance.makeCardPayment(
@@ -149,10 +149,10 @@ module ProcessOut {
         )
       }
 
-      DynamicCheckoutEventsUtils.dispatchApmPaymentPendingEvent(
+      DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent(
         this.paymentMethod.apm_customer_token.customer_token_id,
         {
-          gateway_name: apm.gateway_name,
+          payment_method_name: apm.gateway_name,
         },
       )
 

@@ -19,8 +19,8 @@ module ProcessOut {
       "processout_dynamic_checkout_apple_pay_authorized_post_process",
     DELETE_PAYMENT_METHOD: "processout_dynamic_checkout_delete_payment_method",
     DELETE_PAYMENT_METHOD_ERROR: "processout_dynamic_checkout_delete_payment_method_error",
-    APM_PAYMENT_SUBMITTED: "processout_dynamic_checkout_apm_payment_submitted",
-    APM_PAYMENT_PENDING: "processout_dynamic_checkout_apm_payment_pending",
+    PAYMENT_SUBMITTED: "processout_dynamic_checkout_payment_submitted",
+    PAYMENT_PENDING: "processout_dynamic_checkout_payment_pending",
   }
 
   export class DynamicCheckoutEventsUtils {
@@ -132,18 +132,18 @@ module ProcessOut {
       return window.dispatchEvent(event)
     }
 
-    static dispatchApmPaymentSubmittedEvent(apm: { gateway_name: string }) {
-      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.APM_PAYMENT_SUBMITTED, {
-        apm,
+    static dispatchPaymentSubmittedEvent(details: { payment_method_name: string }) {
+      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.PAYMENT_SUBMITTED, {
+        details,
       })
 
       return window.dispatchEvent(event)
     }
 
-    static dispatchApmPaymentPendingEvent(token: string, apm: { gateway_name: string }) {
-      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.APM_PAYMENT_PENDING, {
+    static dispatchPaymentPendingEvent(token: string, details: { payment_method_name: string }) {
+      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.PAYMENT_PENDING, {
         token,
-        apm,
+        details,
       })
 
       return window.dispatchEvent(event)
