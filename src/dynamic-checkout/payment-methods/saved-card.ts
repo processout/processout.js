@@ -87,6 +87,10 @@ module ProcessOut {
     private handlePayment() {
       this.setButtonLoading()
 
+      DynamicCheckoutEventsUtils.dispatchPaymentSubmittedEvent({
+        payment_method_name: "card",
+      })
+
       this.processOutInstance.makeCardPayment(
         this.paymentConfig.invoiceId,
         this.paymentMethod.card_customer_token.customer_token_id,

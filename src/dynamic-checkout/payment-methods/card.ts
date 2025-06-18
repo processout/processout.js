@@ -86,6 +86,10 @@ module ProcessOut {
 
               this.setButtonLoading()
 
+              DynamicCheckoutEventsUtils.dispatchPaymentSubmittedEvent({
+                payment_method_name: "card",
+              })
+
               this.procesoutInstance.tokenize(
                 cardForm,
                 this.getAdditionalFormValues(form),
@@ -112,6 +116,10 @@ module ProcessOut {
       if (saveForFutureCheckbox) {
         cardPaymentOptions["save_source"] = saveForFutureCheckbox.checked
       }
+
+      DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent(cardToken, {
+        payment_method_name: "card",
+      })
 
       this.procesoutInstance.makeCardPayment(
         this.paymentConfig.invoiceId,
