@@ -13,7 +13,7 @@ module ProcessOut {
   const { div, label, form } = elements
   const emailRegex = /^[\w\-\.+]+@([\w-]+\.)+[\w-]{2,4}$/
 
-  function validateField(state: ElementState, key: string, value: string | number | boolean | PhoneState): string | undefined {
+  function validateField(state: NextStepState, key: string, value: string | number | boolean | PhoneState): string | undefined {
     const validation = state.form.validation[key]
 
     if (!validation) {
@@ -30,7 +30,7 @@ module ProcessOut {
       }
     }
   }
-  function updateField(setState: SetState<ElementState>) {
+  function updateField(setState: SetState<NextStepState>) {
     return function(key: string, value: string | number | boolean | PhoneState) {
       setState((prevState) => {
         let errors = { ...prevState.form.errors }
@@ -55,7 +55,7 @@ module ProcessOut {
     }
   }
 
-  function onBlur(setState: SetState<ElementState>) {
+  function onBlur(setState: SetState<NextStepState>) {
     return function(key: string, value: string | number | boolean | PhoneState) {
       setState((prevState) => {
         const errors = { ...prevState.form.errors };
@@ -80,7 +80,7 @@ module ProcessOut {
     }
   }
 
-  export function validateForm(setState: SetState<ElementState>): boolean {
+  export function validateForm(setState: SetState<NextStepState>): boolean {
     let successful = false;
 
     setState((prevState) => {
@@ -110,11 +110,11 @@ module ProcessOut {
     return successful
   }
 
-  export function Form(props: FormData, state: ElementState, setState: SetState<ElementState>, onSubmit: () => void) {
+  export function Form(props: FormData, state: NextStepState, setState: SetState<NextStepState>, onSubmit: () => void) {
     const fields = props.parameters.parameter_definitions.map((field) => {
       const error = state.form.errors[field.key]
       const value = state.form.values[field.key]
-      let input
+      let input: HTMLElement;
       let labelHtmlFor = field.key;
 
       switch (field.type) {
@@ -137,6 +137,7 @@ module ProcessOut {
             onblur: onBlur(setState),
             errored: !!error,
             disabled: state.loading,
+            value: value as PhoneState,
           });
           break;
         }
@@ -153,8 +154,6 @@ module ProcessOut {
           })
         }
       }
-
-
 
       return div({ className: "field-container" }, input, error ? label({ htmlFor: labelHtmlFor, className: "error" }, error) : null)
     })

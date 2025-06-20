@@ -1,5 +1,23 @@
 module ProcessOut {
-  export interface ElementState {
+  export interface NextStepProps {
+    elements: APIElements,
+    config:  {
+      success: boolean
+      state: string
+      invoice: APIInvoice
+      gateway: object
+      error?: {
+        code: string
+        message: string
+        invalid_fields?: Array<{
+          name: string
+          message: string
+        }>
+      }
+    }
+  }
+
+  export interface NextStepState {
     form?: FormState
     loading: boolean;
   }
@@ -61,8 +79,8 @@ module ProcessOut {
 
     return state
   }
-  const setInitialState = (elements: APIElements): ElementState => {
-    const state: ElementState = { loading: false };
+  const setInitialState = (elements: APIElements): NextStepState => {
+    const state: NextStepState = { loading: false };
     const form = setFormState(elements);
 
     if (form) {
@@ -72,25 +90,13 @@ module ProcessOut {
     return state
   }
 
-  export class APMViewElements extends APMViewImpl<{ elements: APIElements, config: Record<string, any>}, ElementState> {
+  export class APMViewNextSteps extends APMViewImpl<NextStepProps, NextStepState> {
     state = setInitialState(this.props.elements)
-
-    private renderElement(type: string, props: any) {
-      switch (type) {
-        case "form": {
-          return Form(props, this.state, this.setState.bind(this), this.handleSubmit.bind(this))
-        }
-        default: {
-          return null
-        }
-      }
-    }
 
     private handleSubmit() {
       const state = this.state
 
       if (state.form && !validateForm(this.setState.bind(this))) {
-        console.log("invalid form")
         return;
       }
 
@@ -99,11 +105,16 @@ module ProcessOut {
     }
 
     render() {
-      const elements = this.props.elements.map(({ type, ...props  }) => {
-        return this.renderElement(type, props)
-      })
-
-      return page(...elements, Button({ onClick: this.handleSubmit.bind(this), loading: this.state.loading }, 'Continue'))
+      return page(
+        ...renderElements(
+          this.props.elements,
+          {
+            state: this.state,
+            setState: this.setState.bind(this),
+            handleSubmit: this.handleSubmit.bind(this)
+          }
+        ),
+        Button({ onClick: this.handleSubmit.bind(this), loading: this.state.loading }, 'Continue'))
     }
   }
 }

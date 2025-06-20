@@ -29,40 +29,31 @@ module ProcessOut {
       oninput: (e) => {
         const target = e.target as HTMLInputElement
         const value = target.value
+
+        if (label) {
+          if (value.length === 0) {
+            target.parentElement.classList.remove("filled")
+          } else {
+            target.parentElement.classList.add("filled")
+          }
+        }
+
         oninput && oninput(name, value)
       },
       onblur: (e) => {
         const target = e.target as HTMLInputElement
         const value = target.value
-        oninput && oninput(name, value)
+
+        target.parentElement.classList.remove("focused")
+        onblur && onblur(name, value)
+      },
+      onfocus: (e) => {
+        const target = e.target as HTMLInputElement
+        target.parentElement.classList.add("focused")
       },
       ...props,
     })
 
-    el.addEventListener("input", e => {
-      if (!label) {
-        return
-      }
-
-      const target = e.target as HTMLInputElement
-      const value = target.value
-
-      if (value.length === 0) {
-        target.parentElement.classList.remove("filled")
-      } else {
-        target.parentElement.classList.add("filled")
-      }
-    })
-
-    el.addEventListener("focus", e => {
-      const target = e.target as HTMLInputElement
-      target.parentElement.classList.add("focused")
-    })
-
-    el.addEventListener("blur", e => {
-      const target = e.target as HTMLInputElement
-      target.parentElement.classList.remove("focused")
-    })
     const children = [label && labelEl({ className: "label" }, label), el].filter(Boolean)
 
     return div({

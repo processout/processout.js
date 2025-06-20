@@ -112,6 +112,7 @@ module ProcessOut {
     };
 
     const handleWrapperClick = (e: MouseEvent): void => {
+      e.preventDefault()
       if ((e.target as HTMLElement).tagName !== 'INPUT') {
         inputRefs[state.focusedIndex]?.focus();
       }

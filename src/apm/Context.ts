@@ -12,6 +12,7 @@ module ProcessOut {
   export type FlowData = {
     gatewayConfigurationId: `gway_conf_${string}`
     invoiceId: `iv_${string}`
+    requirePendingConfirmation?: boolean
     initialData?: Partial<InitialData>
   }
 
