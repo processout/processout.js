@@ -23,7 +23,7 @@ module ProcessOut {
         ContextImpl.instance.initialise({
           ...data,
           logger: {
-            error: (options: Omit<Parameters<TelemetryClient['reportError']>[0], 'stack'>) => {]
+            error: (options: Omit<Parameters<TelemetryClient['reportError']>[0], 'stack'>) => {
               if (DEBUG === true) {
                 console.error(options.message)
               }
@@ -37,7 +37,7 @@ module ProcessOut {
           events: new APMEventsImpl(),
           reload: () => {
             ContextImpl.context.page.render(APMViewLoading)
-            ContextImpl.context.page.load(APIImpl.getCurrentStep)
+            ContextImpl.context.page.load(APIImpl.initialise)
           },
           page: new APMPageImpl(containerEl),
           poClient: poClient,
@@ -46,7 +46,7 @@ module ProcessOut {
 
       public initialise() {
         ContextImpl.context.page.render(APMViewLoading)
-        ContextImpl.context.page.render(APMViewComponents)
+        ContextImpl.context.page.load(APIImpl.initialise)
       }
 
       public on<K extends keyof APMEvents>(key: K, handler: EventHandler<APMEvents, K>) {
