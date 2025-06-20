@@ -1,5 +1,6 @@
 /// <reference path="../references.ts" />
 
+
 // declare the IE specific XDomainRequest object
 declare var XDomainRequest: any
 
@@ -469,6 +470,29 @@ module ProcessOut {
         )
 
       return new NativeApm(this, config)
+    }
+
+    /**
+     * createTokenizationFlow creates an APM instance within the tokenization flow
+     * @param {Container} container
+     * @param {TokenizationUserOptions} options
+     * @return {APM}
+     */
+    public createTokenizationFlow(container: Container, options: TokenizationUserOptions) {
+      return new APMImpl(this, this.telemetryClient, container, {
+        ...options,
+        flow: 'tokenization',
+      })
+    }
+
+    /**
+     * createAuthorizationFlow creates an APM instance within the authorization flow
+     * @param {Container} container
+     * @param {AuthorizationUserOptions} options
+     * @return {APM}
+     */
+    public createAuthorizationFlow(container: Container, options: AuthorizationUserOptions) {
+      return new APMImpl(this, this.telemetryClient, container, { ...options, flow: 'authorization' })
     }
 
     /**
