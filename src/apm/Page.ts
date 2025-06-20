@@ -2,11 +2,13 @@ module ProcessOut {
   export interface APMPage {
     render<V extends APMViewConstructor>(view: V, props?: ExtractViewProps<V>): void
     load(request: APIRequest): void
+    cleanUp(): void
   }
 
   export class APMPageImpl implements APMPage {
     public wrapper: Element
     private shadow: ShadowRoot | Document
+    private state: 'SUCCESS' | 'PENDING' | 'NEXT_STEP_REQUIRED' | 'VALIDATION_ERROR' | 'UNKNOWN'
 
     constructor(container: Element) {
       this.createWrapper(container)
@@ -20,24 +22,29 @@ module ProcessOut {
 
     load<R extends APIRequest = APIRequest>(request: R) {
       (request.bind(APIImpl) as APIRequest)({
+        hasConfirmedPending: ContextImpl.context.requirePendingConfirmation
+          ? this.state === "PENDING"
+          : true,
         onSuccess: ({ elements, ...config }) => {
+          this.state = config.state
+
           if (elements && elements.length > 0) {
-            ContextImpl.context.page.render(APMViewElements, { elements, config })
+            ContextImpl.context.page.render(APMViewNextSteps, { elements, config })
+            return
           }
         },
-        onError: data => {
-          ContextImpl.context.page.render(APMViewError, {
-            code: data.error.code,
-            message: data.error.message,
-          })
+        onError: ({ elements, ...config }) => {
+          this.state = config.state
+          ContextImpl.context.page.render(APMViewNextSteps, { elements, config })
         },
         onFailure: data => {
           this.criticalFailure({
+            host: window?.location?.host || '',
             fileName: "Page.ts",
             lineNumber: 44,
             code: data.error.code,
             message: data.error.message,
-            title: "Unable to connect"
+            title: "Unable to connect",
           })
         },
       })
@@ -48,7 +55,7 @@ module ProcessOut {
       code,
       message,
       ...rest
-    }: Omit<ErrorReport, "stack"> & { code?: string, title?: string}) {
+    }: Omit<Parameters<TelemetryClient['reportError']>[0], "stack"> & { code?: string, title?: string}) {
       ContextImpl.context.events.emit("critical-failure", {
         code: code || 'processout-js.internal-error',
         message,
@@ -62,6 +69,43 @@ module ProcessOut {
         message: "An unexpected error occurred. We're working to fix this issue, please check back later or contact support if you need assistance.",
         hideRefresh: true
       })
+    }
+
+    getActiveElement() {
+      return this._getDeepActiveElement(document);
+    }
+
+    cleanUp() {
+      if (!this.wrapper) {
+        return
+      }
+
+      this.wrapper.remove()
+      this.shadow.parentElement.shadowRoot.removeChild(this.shadow)
+    }
+
+    private _getDeepActiveElement(root) {
+      const activeElement = root.activeElement;
+
+      // 1. Check if the active element is an iframe
+      if (activeElement && activeElement.tagName === 'IFRAME') {
+        try {
+          const iframeDocument = activeElement.contentDocument || activeElement.contentWindow.document;
+          return this._getDeepActiveElement(iframeDocument);
+        } catch (e) {
+          return null;
+        }
+      }
+
+      // 2. Check if the active element has an 'open' shadowRoot
+      // Note: 'closed' shadow roots are not accessible this way.
+      // IE11 does not natively support Shadow DOM, so this path is for modern browsers.
+      if (activeElement && activeElement.shadowRoot && activeElement.shadowRoot.mode === 'open') {
+        // Recursively call for the shadow root
+        return this._getDeepActiveElement(activeElement.shadowRoot);
+      }
+
+      return activeElement;
     }
 
 
@@ -118,6 +162,8 @@ module ProcessOut {
 
       this.shadow = shadow;
     }
+
+
 
     private setStylesheet(shadow: ShadowRoot | Document) {
       const stylesheet = ThemeImpl.instance.createStyles();

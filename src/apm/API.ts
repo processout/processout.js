@@ -36,18 +36,32 @@ module ProcessOut {
 
   export type APIElements = Array<FormData>
 
+  export type APIInvoice = {
+    currency: string,
+    amount: string
+  }
+
   export type APISuccessResponse = {
     success: true,
     state: "SUCCESS" | 'NEXT_STEP_REQUIRED',
     elements: APIElements
+    invoice: APIInvoice,
+    gateway: object
   }
 
-  export type APIErrorResponse = {
+  export type APIValidationResponse = {
     success: false,
-    state: "ERROR"
+    state: "VALIDATION_ERROR",
+    elements: APIElements,
+    invoice: APIInvoice,
+    gateway: object,
     error: {
       code: string,
       message: string,
+      invalid_fields: Array<{
+        name: string,
+        message: string
+      }>
     }
   }
 
@@ -64,6 +78,21 @@ module ProcessOut {
     success: true,
     state: "PENDING" | "SUCCESS" | 'NEXT_STEP_REQUIRED'
     elements: APIElements
+    invoice: APIInvoice,
+    gateway: object
+  }
+
+  type NetworkValidationResponse = {
+    success: false,
+    error_type: string,
+    message: string;
+    elements: APIElements
+    invoice: APIInvoice,
+    gateway: object
+    invalid_fields: Array<{
+      name: string,
+      message: string
+    }>
   }
 
   type NetworkErrorResponse = {
@@ -74,21 +103,29 @@ module ProcessOut {
 
   export type NetworkResponse =
     | NetworkSuccessResponse
+    | NetworkValidationResponse
     | NetworkErrorResponse
 
   export type APIOptions<D extends APISuccessResponse = APISuccessResponse> = {
-    retries?: number,
+    initialTimestamp?: number,
+    hasConfirmedPending?: boolean,
     onSuccess?: (data: D) => void,
     onFailure?: (data: APIFailureResponse) => void,
-    onError?: (data: APIErrorResponse) => void,
+    onError?: (data: APIValidationResponse) => void,
   }
 
   export interface APIRequest{
     <D extends APISuccessResponse>(options: APIOptions<D>): void
   }
 
+  const MIN_15 = 1000 * 60 * 15;
+
   const isErrorResponse = (data: NetworkResponse): data is NetworkErrorResponse => {
-    return data.success === false
+    return data.success === false && !('invalid_fields' in data)
+  }
+
+  const isValidationResponse = (data: NetworkResponse): data is NetworkValidationResponse => {
+    return data.success === false && 'invalid_fields' in data;
   }
 
   const handleError = (request: string, data: NetworkErrorResponse, options: APIOptions) => {
@@ -97,7 +134,7 @@ module ProcessOut {
         ContextImpl.context.logger.error({
           host: window.location?.hostname || '',
           fileName: 'API.ts',
-          lineNumber: 64,
+          lineNumber: 114,
           message: `${request} failed as route does not exist`,
           category: 'APM - API'
         })
@@ -110,20 +147,16 @@ module ProcessOut {
           }
         })
         break;
-      case 'resource.gateway-configuration.not-found':
+      default: {
+        ContextImpl.context.logger.error({
+          fileName: 'API.ts',
+          lineNumber: 114,
+          message: `${request} failed because of an error: ${data.message}`,
+          category: 'APM - API'
+        })
         options.onFailure?.({
           success: false,
           state: 'FAILURE',
-          error: {
-            code: data.error_type,
-            message: data.message,
-          }
-        })
-        break;
-      default: {
-        options.onError?.({
-          success: false,
-          state: 'ERROR',
           error: {
             code: data.error_type,
             message: data.message
@@ -180,7 +213,7 @@ module ProcessOut {
     ): void {
       let path: string;
       let internalOptions: APIOptions<D> = {
-        retries: 10,
+        initialTimestamp: Date.now(),
         ...options,
       };
 
@@ -207,20 +240,46 @@ module ProcessOut {
             return;
           }
 
+          if (isValidationResponse(apiResponse)) {
+            internalOptions.onError({
+              success: false,
+              state: 'VALIDATION_ERROR',
+              elements: (apiResponse as NetworkValidationResponse).elements,
+              gateway: (apiResponse as NetworkValidationResponse).gateway,
+              invoice: (apiResponse as NetworkValidationResponse).invoice,
+              error: {
+                code: 'processout-js.apm.validation-error',
+                message: 'Validation error',
+                invalid_fields: (apiResponse as NetworkValidationResponse).invalid_fields,
+              }
+            })
+            return;
+          }
+
           if (apiResponse.state === 'PENDING') {
-            if (internalOptions.retries && internalOptions.retries <= 0) {
-              internalOptions.onFailure?.({
-                success: false,
-                state: 'FAILURE',
-                error: {
-                  code: 'processout-js.apm.polling-reached',
-                  message: 'Timeout reached while polling for APM payment status',
-                },
-              });
-              return;
+            if (internalOptions.initialTimestamp) {
+              const currentTimestamp = Date.now();
+              const elapsedTime = currentTimestamp - internalOptions.initialTimestamp;
+              if (elapsedTime > MIN_15) {
+                internalOptions.onFailure?.({
+                  success: false,
+                  state: 'FAILURE',
+                  error: {
+                    code: 'processout-js.apm.polling-reached',
+                    message: 'Timeout reached while polling for APM payment status',
+                  },
+                });
+                return;
+              }
             }
 
-            internalOptions.retries--;
+            if (apiResponse.elements) {
+              internalOptions.onSuccess?.(apiResponse as D);
+              if (ContextImpl.context.requirePendingConfirmation && !internalOptions.hasConfirmedPending) {
+                return
+              }
+            }
+
             setTimeout(() => {
               this.makeRequest(method, path, data, internalOptions);
             }, 1000);
@@ -228,6 +287,7 @@ module ProcessOut {
           }
 
           internalOptions.onSuccess?.(apiResponse as D);
+          return;
         },
         (req, e, errorCode) => {
           internalOptions.onFailure?.({
@@ -236,7 +296,7 @@ module ProcessOut {
             error:
               req.response || {
                 code: errorCode || 'processout-js.internal-server-error',
-                message: '',
+                message: 'Internal server error. Please contact support.',
               },
           });
         }
