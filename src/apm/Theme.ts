@@ -1,48 +1,57 @@
 module ProcessOut {
-  const spacing = ['xs', 'sm', 'md', 'lg', 'xl'] as const
-  type Spacing = (typeof spacing)[number]
-
   interface Palette {
     background: string
     surface: {
-      primary: string
-      secondary: string
-      tertiary: string
-      success: string
-      danger: string
-      disabled: string
-      hover: {
+      button: {
         primary: string
         secondary: string
         tertiary: string
         success: string
         danger: string
+        disabled: string
+        hover: {
+          primary: string
+          secondary: string
+          tertiary: string
+          success: string
+          danger: string
+        }
       }
-    },
+      input: {
+        default: string,
+        disabled: string,
+      }
+    }
+    border: {
+      input: {
+        default: string,
+        errored: string,
+        disabled: string,
+      }
+    }
     text: {
-      primary: string
+      default: string
       disabled: string
+      label: string
+      errored: string
     }
     shadow: {
+      focus: string,
       l2: string
     }
   }
 
   export interface ThemeOptions {
-    spacing: Record<Spacing, string>
     palette: {
       light: Palette
       dark: Palette
-    }
-    rounded: {
-      button: string
     }
   }
 
   interface Theme {
     get(): ThemeOptions
     get<P extends Paths<ThemeOptions>>(path: P): PathValue<ThemeOptions, P>
-    getTextColor<P extends Paths<ThemeOptions>>(path: P): '#FFFFFF' | '#000000'
+    getTextColor<P extends Paths<ThemeOptions>>(path: P): string
     update(theme: DeepPartial<ThemeOptions>): void
 
     createStyles(): CSSText
@@ -54,66 +63,89 @@ module ProcessOut {
     private theme: ThemeOptions = {
       palette: {
         dark: {
-          background: "#000000",
+          background: "#26292F",
           surface: {
-            primary: "#FFFFFF",
-            secondary: "#555555",
-            tertiary: "#464646",
-            success: '#BAD8B1',
-            danger: '#FF8888',
-            disabled: '#2E3137',
-            hover: {
-              primary: '#bfc3c7',
-              secondary: '#5b5b5b',
-              tertiary: '#555555',
-              success: '#1bd163',
-              danger: '#ff4e4f'
+            button: {
+              primary: "#FFFFFF",
+              secondary: "#555555",
+              tertiary: "#464646",
+              success: '#BAD8B1',
+              danger: '#FF8888',
+              disabled: '#2E3137',
+              hover: {
+                primary: '#bfc3c7',
+                secondary: '#5b5b5b',
+                tertiary: '#555555',
+                success: '#1bd163',
+                danger: '#ff4e4f'
+              },
+            },
+            input: {
+              default: '#26292F',
+              disabled: '#2E3137',
+            }
+          },
+          border: {
+            input: {
+              default: '#484a50',
+              errored: '#FF8888',
+              disabled: '#2E3137',
+
             }
           },
           text: {
-            primary: '#FFFFFF',
-            disabled: '#707378'
+            default: '#FFFFFF',
+            disabled: '#707378',
+            label: '#A7A9AF',
+            errored: '#FF8888',
           },
           shadow: {
-            l2: '#353636'
+            focus: '#63656b',
+            l2: '#353636',
           }
         },
         light: {
           background: "#FFFFFF",
           surface: {
-            primary: "#000000",
-            secondary: "#f1f1f1",
-            tertiary: "#FFFFFF",
-            success: '#16AC50',
-            danger: '#BE011B',
-            disabled: '#f3f3f3',
-            hover: {
-              primary: '#2E3137',
-              secondary: '#dfdfdf',
-              tertiary: '#eeeeee',
-              success: '#0e7434',
-              danger: '#870011'
+            button: {
+              primary: "#000000",
+              secondary: "#f1f1f1",
+              tertiary: "#FFFFFF",
+              success: '#16AC50',
+              danger: '#BE011B',
+              disabled: '#f3f3f3',
+              hover: {
+                primary: '#2E3137',
+                secondary: '#dfdfdf',
+                tertiary: '#eeeeee',
+                success: '#0e7434',
+                danger: '#870011',
+              },
+            },
+            input: {
+              default: '#FFFFFF',
+              disabled: '#f1f1f1',
+            }
+          },
+          border: {
+            input: {
+              default: '#e3e3e3',
+              errored: '#BE011B',
+              disabled: '#f1f1f1',
             }
           },
           text: {
-            primary: '#000000',
-            disabled: '#C0C3C8'
+            default: '#000000',
+            disabled: '#C0C3C8',
+            label: '#707378',
+            errored: '#BE011B',
           },
           shadow: {
-            l2: '#b1b1b2'
+            focus: '#b1b1b2',
+            l2: '#b1b1b2',
           }
         }
       },
-      spacing: {
-        xs: "4px",
-        sm: "8px",
-        md: "12px",
-        lg: "20px",
-        xl: "30px",
-      },
-      rounded: {
-        button: '6px'
-      }
     }
 
     private constructor() {}
@@ -130,7 +162,7 @@ module ProcessOut {
       return this.recursiveFind(path, this.theme)
     }
 
-    public getTextColor<P extends Paths<ThemeOptions>>(path?: P): '#FFFFFF' | '#000000' {
+    public getTextColor<P extends Paths<ThemeOptions>>(path?: P): string {
       const color = this.get(path)
       if (!color) {
         return '#FFFFFF'
@@ -159,7 +191,7 @@ module ProcessOut {
       // 5. Decide on the text color based on a luminance threshold.
       // If the background is bright (luminance > 140), use black text.
       // If the background is dark (luminance <= 139), use white text.
-      return luminance > 140 ? '#000000' : '#FFFFFF';
+      return luminance > 140 ? ThemeImpl.instance.get('palette.light.text.default')  : ThemeImpl.instance.get('palette.dark.text.default') ;
     }
 
     public update(theme: DeepPartial<ThemeOptions>) {
@@ -167,39 +199,54 @@ module ProcessOut {
     }
 
     public createStyles() {
-      const buttonVariants = Object.keys(ThemeImpl.instance.get("palette.light.surface")).reduce((acc, key) => {
-        const color = key as keyof ThemeOptions['palette']['light']['surface']
+      const buttonVariants = Object.keys(ThemeImpl.instance.get("palette.light.surface.button")).reduce((acc, key) => {
+        const color = key as keyof ThemeOptions['palette']['light']['surface']['button']
 
         if (color === 'hover' || color === 'disabled') {
           return acc;
         }
 
         acc += css`
-          .button.${color}, .button.${color}.loading:hover {
-            background-color: ${ThemeImpl.instance.get(`palette.light.surface.${color}`)};
-            color: ${ThemeImpl.instance.getTextColor(`palette.light.surface.${color}`)};
+          .button.${color} {
+            background-color: ${ThemeImpl.instance.get(`palette.light.surface.button.${color}`)};
+            color: ${ThemeImpl.instance.getTextColor(`palette.light.surface.button.${color}`)};
 
             @media (prefers-color-scheme: dark) {
-              background-color: ${ThemeImpl.instance.get(`palette.dark.surface.${color}`)};
-              color: ${ThemeImpl.instance.getTextColor(`palette.dark.surface.${color}`)};
+              background-color: ${ThemeImpl.instance.get(`palette.dark.surface.button.${color}`)};
+              color: ${ThemeImpl.instance.getTextColor(`palette.dark.surface.button.${color}`)};
+            }
+          }
+          .button.${color}:not(.disabled):not(:hover):not(:focus) {
+            border-color: ${ThemeImpl.instance.get(`palette.light.surface.button.${color}`)};
+
+            @media (prefers-color-scheme: dark) {
+              border-color: ${ThemeImpl.instance.get(`palette.dark.surface.button.${color}`)};
+            }
+          }
+
+          .button.${color}:not(.disabled):not(:focus) {
+            border-color: ${ThemeImpl.instance.get(`palette.light.surface.button.hover.${color}`)};
+
+            @media (prefers-color-scheme: dark) {
+              border-color: ${ThemeImpl.instance.get(`palette.dark.surface.button.hover.${color}`)};
             }
           }
 
           .button.${color} .loader {
-            border-color: ${ThemeImpl.instance.getTextColor(`palette.light.surface.${color}`)};
+            border-color: ${ThemeImpl.instance.getTextColor(`palette.light.surface.button.${color}`)};
 
             @media (prefers-color-scheme: dark) {
-              border-color: ${ThemeImpl.instance.getTextColor(`palette.dark.surface.${color}`)};
+              border-color: ${ThemeImpl.instance.getTextColor(`palette.dark.surface.button.${color}`)};
             }
           }
 
-          .button.${color}:hover, .button.${color}:focus {
-            background-color: ${ThemeImpl.instance.get(`palette.light.surface.hover.${color}`)};
-            color: ${ThemeImpl.instance.getTextColor(`palette.light.surface.hover.${color}`)};
+          .button.${color}:not(.loading):not(.disabled):hover, .button.${color}:not(.loading):not(.disabled):focus {
+            background-color: ${ThemeImpl.instance.get(`palette.light.surface.button.hover.${color}`)};
+            color: ${ThemeImpl.instance.getTextColor(`palette.light.surface.button.hover.${color}`)};
 
             @media (prefers-color-scheme: dark) {
-              background-color: ${ThemeImpl.instance.get(`palette.dark.surface.hover.${color}`)};
-              color: ${color === 'danger' ? '#000000' : ThemeImpl.instance.getTextColor(`palette.dark.surface.hover.${color}`)};
+              background-color: ${ThemeImpl.instance.get(`palette.dark.surface.button.hover.${color}`)};
+              color: ${color === 'danger' ? ThemeImpl.instance.getTextColor('palette.light.text.default') : ThemeImpl.instance.getTextColor(`palette.dark.surface.button.hover.${color}`)};
             }
           }
         `()
@@ -220,11 +267,12 @@ module ProcessOut {
           flex-direction: column;
           width: 100%;
           min-height: 400px;
-          padding: ${ThemeImpl.instance.get('spacing.sm')};
-          color: ${ThemeImpl.instance.get('palette.light.text.primary')};
+          padding: 12px 20px;
+          gap: 16px;
+          color: ${ThemeImpl.instance.get('palette.light.text.default')};
           background-color: ${ThemeImpl.instance.get('palette.light.background')};
           @media (prefers-color-scheme: dark) {
-            color: ${ThemeImpl.instance.get('palette.dark.text.primary')};
+            color: ${ThemeImpl.instance.get('palette.dark.text.default')};
             background-color: ${ThemeImpl.instance.get('palette.dark.background')};
           }
         }
@@ -232,14 +280,14 @@ module ProcessOut {
         .loader {
           width: 30px;
           height: 30px;
-          border: 3px solid ${ThemeImpl.instance.get('palette.light.text.primary')};
+          border: 3px solid ${ThemeImpl.instance.get('palette.light.text.default')};
           border-bottom-color: transparent !important;
           border-radius: 50%;
           display: inline-block;
           box-sizing: border-box;
           animation: rotation 1s linear infinite;
           @media (prefers-color-scheme: dark) {
-            border-color: ${ThemeImpl.instance.get('palette.dark.text.primary')};
+            border-color: ${ThemeImpl.instance.get('palette.dark.text.default')};
             border-bottom-color: transparent;
           })
         }
@@ -255,21 +303,48 @@ module ProcessOut {
 
         .empty-title {
           text-align: center;
-          margin-bottom: 24px;
+          margin-top: 16px
         }
 
         .empty-subtitle {
           text-align: center;
-          margin-bottom: 18px;
         }
 
         .empty-controls {
           display: grid;
           gap: 12px;
-          grid-template-columns: repeat(3, 1fr);
-          padding: 8px;
           text-align: center;
-          margin-bottom: 24px;
+        }
+
+        .empty-controls.x3 {
+          grid-template-columns: repeat(3, 1fr);
+        }
+
+        .chevron {
+          display: inline-block;
+          width: 4.5px;
+          height: 3.5px;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 6' fill='none'%3E%3Cpath d='M1 2L4 5L7 2' stroke='${encodeURIComponent(ThemeImpl.instance.get('palette.light.border.input.default'))}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+          background-size: contain;
+          background-repeat: no-repeat;
+
+          transition: transform 0.2s ease-in-out;
+          @media (prefers-color-scheme: dark) {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 6' fill='none'%3E%3Cpath d='M1 2L4 5L7 2' stroke='${encodeURIComponent(ThemeImpl.instance.get('palette.dark.border.input.default'))}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+          }
+        }
+        .chevron.up {
+          transform: rotate(-180deg);
+        }
+        .chevron.left,.chevron.right {
+          width: 3.5px;
+          height: 4.5px;
+        }
+        .chevron.left {
+          transform: rotate(90deg);
+        }
+        .chevron.right {
+          transform: rotate(-90deg);
         }
 
         .button {
@@ -277,17 +352,20 @@ module ProcessOut {
           width: 100%;
           display: inline-block;
           appearance: none;
-          border: none;
           cursor: pointer;
           font-weight: 500;
-          border-radius: ${ThemeImpl.instance.get('rounded.button')};
+          border-radius: 6px;
           outline: none;
+          border-width: 2px;
+          border-style: solid;
         }
 
         .button:focus {
-          box-shadow: 0 0 0 1px ${ThemeImpl.instance.get('palette.light.background')}, 0 0 0 3px ${ThemeImpl.instance.get('palette.light.shadow.l2')};
+          box-shadow: inset 0 0 0 1px ${ThemeImpl.instance.get('palette.light.background')};
+          border-color: ${ThemeImpl.instance.get('palette.light.shadow.l2')};;
           @media (prefers-color-scheme: dark) {
-            box-shadow: 0 0 0 1px ${ThemeImpl.instance.get('palette.dark.background')}, 0 0 0 3px ${ThemeImpl.instance.get('palette.light.shadow.l2')};
+            box-shadow: inset 0 0 0 1px ${ThemeImpl.instance.get('palette.dark.background')};
+            border-color: ${ThemeImpl.instance.get('palette.light.shadow.l2')};
           }
         }
 
@@ -295,17 +373,20 @@ module ProcessOut {
 
         .button.disabled, .button.disabled:hover {
           cursor: not-allowed;
-          background-color: ${ThemeImpl.instance.get('palette.light.surface.disabled')};
+          background-color: ${ThemeImpl.instance.get('palette.light.surface.button.disabled')};
           color: ${ThemeImpl.instance.get('palette.light.text.disabled')};
+          border-color: ${ThemeImpl.instance.get('palette.light.surface.button.disabled')};
 
           @media (prefers-color-scheme: dark) {
-            background-color: ${ThemeImpl.instance.get('palette.dark.surface.disabled')};
+            background-color: ${ThemeImpl.instance.get('palette.dark.surface.button.disabled')};
             color: ${ThemeImpl.instance.get('palette.dark.text.disabled')};
+            border-color: ${ThemeImpl.instance.get('palette.dark.surface.button.disabled')};
           }
         }
 
         .button.loading {
-          cursor: wait;
+          cursor: default;
+          pointer-events: none;
         }
 
         .button.loading .loader {
@@ -331,6 +412,260 @@ module ProcessOut {
           height: 48px;
           font-size: 15px;
           line-height: 18px;
+        }
+
+        .form {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .field-container {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .field {
+          display: flex;
+          width: 100%;
+          background-color: ${ThemeImpl.instance.get('palette.light.surface.input.default')};
+          border: 2px solid ${ThemeImpl.instance.get('palette.light.border.input.default')};
+          border-radius: 6px;
+          height: 52px;
+          position: relative;
+          @media (prefers-color-scheme: dark) {
+            background-color: ${ThemeImpl.instance.get('palette.dark.surface.input.default')};
+            border-color: ${ThemeImpl.instance.get('palette.dark.border.input.default')};
+          }
+        }
+        .field.focused {
+          border-color: ${ThemeImpl.instance.get('palette.light.text.default')};
+          @media (prefers-color-scheme: dark) {
+            border-color: ${ThemeImpl.instance.get('palette.dark.text.default')};
+          }
+        }
+        .field .label {
+          font-family: inherit;
+          position: absolute;
+          top: 16px;
+          left: 14px;
+          font-weight: 500;
+          font-size: 15px;
+          line-height: 18px;
+          transition: font-size 0.1s ease-in-out, line-height 0.1s ease-in-out, top 0.1s ease-in-out;
+          color: ${ThemeImpl.instance.get('palette.light.text.label')};
+
+          @media (prefers-color-scheme: dark) {
+            color: ${ThemeImpl.instance.get('palette.dark.text.label')};
+          }
+        }
+        .field.filled.has-label .label {
+          font-size: 12px;
+          line-height: 14px;
+          top: 8px;
+        }
+        .field input {
+          font-family: inherit;
+          appearance: none;
+          background-color: transparent;
+          color: ${ThemeImpl.instance.get('palette.light.text.default')};
+          border: none;
+          outline: none;
+          width: calc(100% + 4px);
+          font-weight: 500;
+          font-size: 15px;
+          line-height: 18px;
+          padding: 18px 16px 16px;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: ${ThemeImpl.instance.get('palette.light.text.default')};
+
+          position: absolute;
+          top: -2px;
+          left: -2px;
+
+          @media (prefers-color-scheme: dark) {
+            color: ${ThemeImpl.instance.get('palette.dark.text.default')};
+            -webkit-text-fill-color: ${ThemeImpl.instance.get('palette.dark.text.default')};
+          }
+        }
+        .field.filled.has-label input {
+          padding: 25px 16px 10px;
+        }
+        .field.disabled {
+          border-color: ${ThemeImpl.instance.get('palette.light.border.input.disabled')};
+          @media (prefers-color-scheme: dark) {
+            border-color: ${ThemeImpl.instance.get('palette.dark.border.input.disabled')};
+          }
+        }
+        .field.disabled.filled {
+          background-color: ${ThemeImpl.instance.get('palette.light.surface.input.disabled')};
+          @media (prefers-color-scheme: dark) {
+            background-color: ${ThemeImpl.instance.get('palette.dark.surface.input.disabled')};
+          }
+        }
+        .field.disabled input {
+          pointer-events: none;
+        }
+        .field.errored:not(.disabled) {
+          border-color: ${ThemeImpl.instance.get('palette.light.text.errored')};
+          @media (prefers-color-scheme: dark) {
+            border-color: ${ThemeImpl.instance.get('palette.dark.text.errored')};
+          }
+        }
+        .field.errored:not(.disabled) .label {
+          color: ${ThemeImpl.instance.get('palette.light.text.errored')};
+          @media (prefers-color-scheme: dark) {
+            color: ${ThemeImpl.instance.get('palette.dark.text.errored')};
+          }
+        }
+
+        .otp {
+          cursor: text;
+        }
+        .otp .input {
+          width: 40px;
+          float: left;
+          margin-left: 12px;
+        }
+        .otp .input:first-child {
+          margin-left: 0;
+        }
+
+        .otp .input input {
+          text-align: center;
+          padding-left: 0;
+          padding-right: 0;
+        }
+
+        .phone .dialing-code {
+          display: flex;
+          justify-content: end;
+          align-items: center;
+          gap: 6px;
+          width: 58px;
+          height: 26px;
+          position: absolute;
+          top: 11px;
+          right: 16px;
+          border-left: 2px solid ${ThemeImpl.instance.get('palette.light.border.input.default')};;
+
+          @media (prefers-color-scheme: dark) {
+            border-color: ${ThemeImpl.instance.get('palette.dark.border.input.default')};
+          }
+        }
+        .phone .dialing-code.open {
+          padding-right: 18px;
+          width: 76px;
+          height: 52px;
+          top: -2px;
+          right: -2px;
+          border-left: 2px solid ${ThemeImpl.instance.get('palette.light.text.default')};
+          box-shadow: 0 0 0 3px ${ThemeImpl.instance.get('palette.light.shadow.focus')};
+          border-top-right-radius: 6px;
+          border-bottom-right-radius: 6px;
+
+          @media (prefers-color-scheme: dark) {
+            border-color: ${ThemeImpl.instance.get('palette.dark.text.default')};
+            box-shadow: 0 0 0 3px ${ThemeImpl.instance.get('palette.dark.shadow.focus')};
+          }
+        }
+
+        .phone .dialing-code.open:before,
+        .phone .dialing-code.open:after {
+          content: "";
+          display: block;
+          width: 3px;
+          height: 2px;
+          background-color: ${ThemeImpl.instance.get('palette.light.text.default')};
+          position: absolute;
+          left: -5px;
+          @media (prefers-color-scheme: dark) {
+            background-color: ${ThemeImpl.instance.get('palette.dark.text.default')};
+          }
+        }
+        .phone .dialing-code.open:before {
+          top: 0;
+        }
+        .phone .dialing-code.open:after {
+          bottom: 0;
+        }
+
+        .phone .dialing-code-label {
+          overflow: hidden;
+          border-radius: 2px;
+          justify-content: center;
+          display: flex;
+        }
+        .phone .dialing-code-chevrons {
+          width: 12px;
+          height: 12px;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          gap: 1px;
+        }
+
+        .phone .dialing-code.open .chevron {
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 6' fill='none'%3E%3Cpath d='M1 2L4 5L7 2' stroke='${encodeURIComponent(ThemeImpl.instance.get('palette.light.text.default'))}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+          @media (prefers-color-scheme: dark) {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 6' fill='none'%3E%3Cpath d='M1 2L4 5L7 2' stroke='${encodeURIComponent(ThemeImpl.instance.get('palette.dark.text.default'))}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+
+          }
+        }
+
+        .phone select {
+          width: 58px;
+          height: 26px;
+          position: absolute;
+          top: 11px;
+          right: 16px;
+          border: none;
+          text-align: right;
+          outline: none;
+          opacity: 0;
+        }
+
+        @keyframes select-caret {
+          0% {
+            text-decoration: none;
+          }
+          50% {
+            text-decoration: underline;
+          }
+          100% {
+            text-decoration: none;
+          }
+        }
+
+        .phone select:focus {
+          animation: select-caret 1s infinite;
+        }
+
+        .phone.errored:not(.disabled) .dialing-code.open {
+          border-color: ${ThemeImpl.instance.get('palette.light.text.errored')};
+          @media (prefers-color-scheme: dark) {
+            border-color: ${ThemeImpl.instance.get('palette.dark.text.errored')};
+          }
+        }
+        .phone.errored:not(.disabled) .dialing-code.open:before, .phone.errored:not(.disabled) .dialing-code.open:after {
+          background-color: ${ThemeImpl.instance.get('palette.light.text.errored')};
+
+          @media (prefers-color-scheme: dark) {
+            background-color: ${ThemeImpl.instance.get('palette.dark.text.errored')};
+          }
+        }
+
+        .error {
+          background-color: #FDE3DE;
+          padding: 8px 12px;
+          gap: 8px;
+          border-radius: 6px;
+          border: 1px solid #efd7d2;
+          color: #630407;
+          font-weight: 500;
+          font-size: 14px;
+          line-height: 20px;
         }
       `()
     }

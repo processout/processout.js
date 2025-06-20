@@ -13,14 +13,14 @@ module ProcessOut {
     render() {
       return div({ className: 'page' },
         h1({ className: 'empty-title' }, 'State'),
-        div({ className: 'empty-controls' },
+        div({ className: 'empty-controls x3' },
           div(),
           div(Button({ variant: 'primary', onclick: this.handleCountInc.bind(this) }, `Count: ${this.state.count}`)),
           div(),
         ),
         h1({ className: 'empty-title' }, 'Components'),
         h2({ className: 'empty-subtitle' }, 'Buttons'),
-        div({ className: 'empty-controls' },
+        div({ className: 'empty-controls x3' },
           h3("Primary"),
           h3("Secondary"),
           h3("Tertiary"),
@@ -40,7 +40,7 @@ module ProcessOut {
           div(Button({ size: 'md', variant: 'secondary', disabled: true }, 'Refresh')),
           div(Button({ size: 'md', variant: 'tertiary', disabled: true }, 'Refresh')),
         ),
-        div({ className: 'empty-controls' },
+        div({ className: 'empty-controls x3' },
           h3("Success"),
           h3("Danger"),
           div(),
@@ -56,6 +56,11 @@ module ProcessOut {
           div(Button({ size: 'md', variant: 'success', loading: true }, 'Refresh')),
           div(Button({ size: 'md', variant: 'danger', loading: true }, 'Refresh')),
           div(),
+        ),
+        div({ className: 'empty-controls' },
+          OTP({ name: 'otp', length: 6 }),
+          Phone({ label: 'Phone number (optional)', dialingCodes: [{ regionCode: 'FR', value: '+33' }, { regionCode: 'GB', value: '+44' }, { regionCode: 'PL', value: '+48' }] }),
+          Input({ name: 'full-name', label: 'Phone number', type: 'text', oninput: (key, value) => console.log(value) }),
         )
       )
     }
