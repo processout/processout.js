@@ -36,7 +36,8 @@ module ProcessOut {
     }
 
     protected render(): Element | DocumentFragment {
-      return this.defaultView();
+      this.defaultView();
+      return null
     }
 
     private applyStyles(): void {
@@ -51,8 +52,7 @@ module ProcessOut {
     }
 
     private defaultView() {
-      const { p } = elements;
-      return p({ className: 'empty-view' }, 'View not implemented')
+      throw new Error('Not implemented')
     }
   }
 }
