@@ -23,10 +23,10 @@ module ProcessOut {
     switch (true) {
       case validation.required &&
         (typeof value === "undefined" || (typeof value === "string" && value.length === 0) || (isPlainObject(value) && 'value' in value && value.value.length === 0)): {
-        return "This field is required"
+        return "Missing required value"
       }
       case validation.email && typeof value === "string" && !value.match(emailRegex): {
-        return "Please enter a valid email address"
+        return "Missing valid email address"
       }
     }
   }

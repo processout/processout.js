@@ -22,7 +22,14 @@ module ProcessOut {
     loading: boolean;
   }
 
-  const setFormState = (elements: APIElements): FormState => {
+  const setFormState = (elements: APIElements, error: {
+    code: string
+    message: string
+    invalid_fields?: Array<{
+      name: string
+      message: string
+    }>
+  } | undefined): FormState => {
     const forms = elements.filter(e => e.type === "form")
 
     if (forms.length === 0) {
@@ -33,7 +40,11 @@ module ProcessOut {
       touched: {},
       values: {},
       validation: {},
-      errors: {},
+      errors: error?.invalid_fields?.reduce((acc, item) => {
+        acc[item.name] = item.message
+        return acc;
+      }, {}) || {}
+
     }
 
     state.values = forms.reduce((acc, form) => {
@@ -79,9 +90,9 @@ module ProcessOut {
 
     return state
   }
-  const setInitialState = (elements: APIElements): NextStepState => {
+  const setInitialState = (elements: APIElements, errors: any | undefined): NextStepState => {
     const state: NextStepState = { loading: false };
-    const form = setFormState(elements);
+    const form = setFormState(elements, errors);
 
     if (form) {
       state.form = form;
@@ -91,7 +102,7 @@ module ProcessOut {
   }
 
   export class APMViewNextSteps extends APMViewImpl<NextStepProps, NextStepState> {
-    state = setInitialState(this.props.elements)
+    state = setInitialState(this.props.elements, this.props.config.error)
 
     private handleSubmit() {
       const state = this.state
@@ -105,6 +116,7 @@ module ProcessOut {
     }
 
     render() {
+      console.log(this.props);
       return page(
         ...renderElements(
           this.props.elements,

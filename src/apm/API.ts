@@ -121,11 +121,11 @@ module ProcessOut {
   const MIN_15 = 1000 * 60 * 15;
 
   const isErrorResponse = (data: NetworkResponse): data is NetworkErrorResponse => {
-    return data.success === false && !('invalid_fields' in data)
+    return data.success === false && (!('invalid_fields' in data) && !data.error_type.startsWith('request.validation.'))
   }
 
   const isValidationResponse = (data: NetworkResponse): data is NetworkValidationResponse => {
-    return data.success === false && 'invalid_fields' in data;
+    return data.success === false && ('invalid_fields' in data || data.error_type.startsWith('request.validation.'));
   }
 
   const handleError = (request: string, data: NetworkErrorResponse, options: APIOptions) => {
@@ -134,7 +134,7 @@ module ProcessOut {
         ContextImpl.context.logger.error({
           host: window.location?.hostname || '',
           fileName: 'API.ts',
-          lineNumber: 114,
+          lineNumber: 208,
           message: `${request} failed as route does not exist`,
           category: 'APM - API'
         })
@@ -151,7 +151,7 @@ module ProcessOut {
         ContextImpl.context.logger.error({
           host: window.location?.hostname ?? '',
           fileName: 'API.ts',
-          lineNumber: 114,
+          lineNumber: 208,
           message: `${request} failed because of an error: ${data.message}`,
           category: 'APM - API'
         })
@@ -251,7 +251,13 @@ module ProcessOut {
               error: {
                 code: 'processout-js.apm.validation-error',
                 message: 'Validation error',
-                invalid_fields: (apiResponse as NetworkValidationResponse).invalid_fields,
+                invalid_fields: (apiResponse as NetworkValidationResponse).invalid_fields || Object.keys((apiResponse as any).error.parameters).reduce((acc, name) => {
+                  acc.push({
+                    name,
+                    message: (apiResponse as any).error.parameters[name].detail
+                  })
+                  return acc;
+                }, []),
               }
             })
             return;

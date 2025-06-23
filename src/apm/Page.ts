@@ -39,9 +39,6 @@ module ProcessOut {
         },
         onFailure: data => {
           this.criticalFailure({
-            host: window?.location?.host || '',
-            fileName: "Page.ts",
-            lineNumber: 44,
             code: data.error.code,
             message: data.error.message,
             title: "Unable to connect",
@@ -54,14 +51,9 @@ module ProcessOut {
       title,
       code,
       message,
-      ...rest
-    }: Omit<Parameters<TelemetryClient['reportError']>[0], "stack"> & { code?: string, title?: string}) {
+    }: { message: string, title: string, code?: string, }) {
       ContextImpl.context.events.emit("critical-failure", {
         code: code || 'processout-js.internal-error',
-        message,
-      })
-      ContextImpl.context.logger.error({
-        ...rest,
         message,
       })
       ContextImpl.context.page.render(APMViewError, {

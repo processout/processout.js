@@ -302,23 +302,15 @@ module ProcessOut {
     private _handleRuntimeError(err: any) {
       if (err && err.name === 'UpdatedReadOnly') {
         ContextImpl.context.page.criticalFailure({
-          host: window.location?.hostname ?? '',
           title: 'Failed to update view',
-          fileName: 'View.ts',
-          lineNumber: 207,
           message: `Cannot modify state directly. Use setState() to update the property "${err.property}".`,
-          category: 'APM - View',
         })
         return
       }
 
       ContextImpl.context.page.criticalFailure({
-        host: window.location?.hostname ?? '',
         title: 'An unexpected error occurred in the view',
-        fileName: 'View.ts',
-        lineNumber: 0,
         message: err.message,
-        category: 'APM - View Runtime',
       });
     }
   }
