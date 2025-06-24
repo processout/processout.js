@@ -110,7 +110,7 @@ module ProcessOut {
     return successful
   }
 
-  export function Form(props: FormData, state: NextStepState, setState: SetState<NextStepState>, onSubmit: () => void) {
+  export function Form(props: FormData<FormFieldResult>, state: NextStepState, setState: SetState<NextStepState>, onSubmit: () => void) {
     const fields = props.parameters.parameter_definitions.map((field) => {
       const error = state.form.errors[field.key]
       const value = state.form.values[field.key]
@@ -132,13 +132,24 @@ module ProcessOut {
           input = Phone({
             name: field.key,
             label: field.label,
-            dialingCodes: field.dialing_codes.map(({ region_code, value }) => ({ regionCode: region_code, value: value })),
+            dialing_codes: field.dialing_codes,
             oninput: updateField(setState),
             onblur: onBlur(setState),
             errored: !!error,
             disabled: state.loading,
             value: value as PhoneState,
           });
+          break;
+        }
+        case "single-select": {
+          input = Select({
+            name: field.key,
+            label: field.label,
+            value: value as string || field.available_values.find(item => item.preselected)?.key || '',
+            options: field.available_values,
+            onchange: updateField(setState),
+            onblur: onBlur(setState),
+          })
           break;
         }
         default: {

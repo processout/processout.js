@@ -15,6 +15,7 @@
 /// <reference path="elements/phone.ts" />
 /// <reference path="elements/header.ts" />
 /// <reference path="elements/subheader.ts" />
+/// <reference path="elements/select.ts" />
 /// <reference path="views/View.ts" />
 /// <reference path="views/Error.ts" />
 /// <reference path="views/Loading.ts" />

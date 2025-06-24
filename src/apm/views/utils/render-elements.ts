@@ -1,5 +1,5 @@
 module ProcessOut {
-  const renderElement = <P extends APIElements[number] = APIElements[number], S extends NextStepState = NextStepState>(
+  const renderElement = <P extends APIElements<FormFieldResult>[number] = APIElements<FormFieldResult>[number], S extends NextStepState = NextStepState>(
     data: P & {
       setState: (setter: S | ((prevState: DeepReadonly<S>) => S)) => void
       handleSubmit: () => void
@@ -17,7 +17,7 @@ module ProcessOut {
     }
   }
 
-  export const renderElements = <S extends NextStepState = NextStepState>(elements: APIElements, options: {
+  export const renderElements = <S extends NextStepState = NextStepState>(elements: APIElements<FormFieldResult>, options: {
     state: S,
     setState: (setter: S | ((prevState: DeepReadonly<S>) => S)) => void
     handleSubmit: () => void
