@@ -103,6 +103,7 @@ module ProcessOut {
     }
 
     render() {
+      console.log(this.props);
       return page(
         ...renderElements(
           this.props.elements,
@@ -112,7 +113,8 @@ module ProcessOut {
             handleSubmit: this.handleSubmit.bind(this)
           }
         ),
-        Button({ onClick: this.handleSubmit.bind(this), loading: this.state.loading }, 'Continue'))
+        Button({ onclick:this.handleSubmit.bind(this), loading: this.state.loading }, 'Continue'),
+      )
     }
   }
 }

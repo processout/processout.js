@@ -1,16 +1,39 @@
 module ProcessOut {
-  export type Primitive = string | number | boolean;
-  export type Child = Primitive | Node | null | undefined | Child[];
+  // VNode represents a Virtual DOM node.
+  export interface VNode<Type extends (Tag | '#text' | null) = Tag> {
+    // 'type' is the HTML tag name, '#text' for text nodes, or null for DocumentFragment
+    type: Type | '#text' | null ;
+    // Props are conditionally typed: specific HTML props if 'Type' is an HTMLTag,
+    // otherwise an empty object as text/fragments don't have standard HTML element props.
+    props: Type extends Tag ? Props<Type> : object;
+    // Children can be any VNode, using 'any' to avoid circular type definitions.
+    children: VNode<any>[];
+    // Reference to the actual live DOM element (set during patching)
+    dom: Node | null;
+    // Optional key for child reconciliation in lists
+    key?: string | null;
+    // Specific for text VNodes (stores the string content)
+    value?: string;
+  }
 
-  export type Props<T extends HTMLElement = HTMLElement> =
-    Partial<T> & {
-    style?: never;
-    class?: never;
-    ref?: (node: T | null) => void;
-    [key: string]: any;
+  // Props for an HTML element, allowing any extra properties but restricting 'style' and 'class'
+  export type Props<T extends Tag> = Partial<HTMLElementTagNameMap[T]> & {
+    style?: never; // Disallow direct style attribute (use Tailwind or separate CSS)
+    class?: never; // Disallow direct class attribute (use className)
+    ref?: T extends Tag ? (node: HTMLElementTagNameMap[T] | null) => void : never;
+    key?: string; // Key for list reconciliation
+    [key: string]: any; // Allow other arbitrary properties
   };
 
-  export const TAGS = [
+  export type Tag = typeof TAGS[number]; // Union type of all allowed tags
+
+  export type Primitive = string | number | boolean;
+
+  // Child represents any valid child type for a VNode (primitive or another VNode)
+  export type Child = Primitive | VNode | null | undefined | Child[];
+
+  // Defines allowed HTML tags
+  const TAGS = [
     'div','span','p','h1','h2','h3','h4','h5','h6',
     'a','button','input','label', 'form',
     'ul','ol','li','img',
@@ -18,149 +41,85 @@ module ProcessOut {
     'pre','code','textarea','select','option',
   ] as const;
 
-  export type Tag = typeof TAGS[number];
-  export type GenerateFragment = (...children: Child[]) => DocumentFragment;
-  export type PropsElement<E extends HTMLElement> = E & { __props__: Props };
 
-  export type GenerateTagArgs<K extends Tag> = [childOrProps: Props<HTMLElementTagNameMap[K]> | Child, ...Child[]]
-  export interface GenerateTag<K extends Tag> {
-    (props: Props<HTMLElementTagNameMap[K]>, ...children: Child[]): PropsElement<HTMLElementTagNameMap[K]>;
-    (...children: Child[]): PropsElement<HTMLElementTagNameMap[K]>;
+  // Function type for creating a DocumentFragment VNode
+  type GenerateFragment = (...children: Child[]) => VNode;
+
+  // Argument types for tag generation functions (either props + children, or just children)
+  export type GenerateTagArgs<T extends Tag> = [childOrProps: Props<T> | Child, ...Child[]];
+
+  // Overloaded function type for tag generation (e.g., div(props, ...) or div(...))
+  export interface GenerateTag<T extends Tag> {
+    (props: Props<T>, ...children: Child[]): VNode<T>;
+    (...children: Child[]): VNode<T>;
   }
 
-
-  export type VanLite = {
-    mount(parent: Element, child: Node): Element;
-    fragment: GenerateFragment;
+  // The public API interface for the ProcessOut module
+  type VanLite = {
+    fragment: GenerateFragment;// Index signature for dynamic tag functions
   } & { [K in Tag]: GenerateTag<K> };
 
   /**
-   * A helper used in custom elements to merge props defined in the custom element with the props passed into it
+   * Recursively flattens and processes children into an array of VNodes.
+   * @param rawChildren - Raw children passed to a tag function.
+   * @returns Processed children array.
    */
-  export function mergeProps<T extends HTMLElement>(
-    base: Props<T>,
-    user: Props<T> = {}
-  ): Props<T> {
-    const out: any = { ...base, ...user };
+  function processChildren(rawChildren: Child[]): VNode[] {
+    const children: VNode[] = [];
 
-    const classes = [
-      base.className || base.class,
-      user.className || user.class,
-    ].filter(Boolean);
-    if (classes.length) out.className = classes.join(" ");
-
-    for (const k in base) {
-      if (k.startsWith("on") && typeof base[k] === "function" && typeof user[k] === "function") {
-        const b = base[k] as EventListener;
-        const u = user[k] as EventListener;
-        out[k] = function (this: any, ...args: any[]) {
-          b.apply(this, args);
-          u.apply(this, args);
-        };
+    for (let i = 0; i < rawChildren.length; i++) {
+      const child = rawChildren[i];
+      if (child == null || child === false) {
+        // Skip null, undefined, false
+        continue;
       }
+
+      if (Array.isArray(child)) {
+        // Flatten child arrays recursively
+        children.push(...processChildren(child));
+        continue;
+      }
+
+      if (typeof child === 'object' && child !== null && (typeof (child as VNode).type === 'string' || (child as VNode).type === null)) {
+        // It's already a VNode, add directly
+        children.push(child as VNode);
+        continue;
+      }
+
+      // It's a primitive (string, number, boolean), convert to VNode for consistent handling
+      children.push({ type: '#text', props: {}, children: [], dom: null, key: null, value: String(child) });
     }
 
-    return out;
+    return children;
   }
 
   /**
-   * Appends a child or a list of children to a target DOM element.
-   * It's a versatile helper that handles various types of children gracefully.
+   * Factory function that generates a function for creating a specific HTML element's Virtual DOM node.
+   * This function DOES NOT create actual DOM elements. It creates a plain JS object (VNode).
+   * @template T
+   * @param tag - The HTML tag name (e.g., 'div', 'button').
+   * @returns A function that creates a VNode of the specified tag.
    */
-  const appendChild = (target: Element | DocumentFragment, child: Child): void => {
-    if (child == null || child === false) return;
-    if (Array.isArray(child)) {
-      for (let i = 0; i < child.length; i++) appendChild(target, child[i]);
-      return;
-    }
-    target.append(child instanceof Node ? child : document.createTextNode(String(child)));
-  };
+  function makeTag<T extends Tag>(tag: T): GenerateTag<T> {
+    return ((...args: GenerateTagArgs<T>): VNode => {
+      let props: Props<T> = {};
+      let childrenArgs: Child[] = args as Child[];
 
-  /**
-   * Creates a DocumentFragment and appends all provided children to it.
-   */
-  const makeFrag: GenerateFragment = (...children) => {
-    // A DocumentFragment is a minimal, lightweight DOM container that isn't part of the main document tree.
-    // You can perform multiple operations on it (like appending many children) without triggering
-    // a browser reflow/repaint for each one. When you append the single fragment to the main DOM,
-    // all its children are added in one efficient operation.
-    const frag = document.createDocumentFragment();
-    for (let i = 0; i < children.length; i++) {
-      appendChild(frag, children[i]);
-    }
-    return frag;
-  };
-
-  /**
-   * A type guard to determine if the first argument to a tag function is a props object.
-   */
-  export const isProps = <K extends Tag>(item: GenerateTagArgs<K>[0]): item is Props<HTMLElementTagNameMap[K]> => {
-    // The tag functions are "overloaded" and can be called
-    // in two ways: `tag(props, ...children)` or `tag(...children)`. This function is the
-    // mechanism that reliably distinguishes between a props object and a child node.
-    return item && typeof item === 'object' && item.constructor === Object && !('nodeType' in item)
-  }
-
-  /**
-   * A factory function that generates a function for creating a specific HTML element.
-   */
-  const makeTag = <K extends Tag>(tag: K): GenerateTag<K>  => {
-    return ((...args) => {
-      const el = document.createElement(tag) as PropsElement<HTMLElementTagNameMap[K]>;
-
-      let i = 0;
-      const maybeProps = args[0];
-
-      if (isProps(maybeProps)) {
-        const props: Props = maybeProps;
-
-        i = 1;
-
-        // This is the key to enabling "smart" DOM patching for re-renders.
-        // A live DOM element doesn't expose all the information used to create it
-        // (like event handler functions). By "tagging" the element with its original
-        // props, we give our patching algorithm a reliable "source of truth" to
-        // compare against during state updates, allowing it to correctly update,
-        // add, or remove event listeners and properties.
-        el.__props__ = props;
-
-        for (const key in props) {
-          if (!Object.prototype.hasOwnProperty.call(props, key)) {
-            continue;
-          }
-
-          const value = props[key];
-
-          if (value === null || value === undefined || key === 'ref') {
-            continue;
-          }
-
-          const isEventHandler = key.startsWith('on') && typeof value === 'function';
-          const attributeExists = key in el;
-
-          switch (true) {
-            case isEventHandler: {
-              el.addEventListener(key.slice(2).toLowerCase(), value as EventListener);
-              break;
-            }
-            case attributeExists: {
-              el[key] = value;
-              break;
-            }
-            default: {
-              el.setAttribute(key, String(value));
-              break;
-            }
-          }
-        }
+      // Determine if the first argument is a props object
+      if (isProps(args[0])) {
+        props = args[0];
+        childrenArgs = args.slice(1) as Child[];
       }
 
-      for (; i < args.length; i++) {
-        appendChild(el, args[i] as Child);
-      }
-
-      return el;
-    }) satisfies GenerateTag<K>;
+      // Create the Virtual DOM node object
+      return {
+        type: tag,
+        props: props,
+        children: processChildren(childrenArgs),
+        dom: null, // This will hold a reference to the actual DOM node after patching
+        key: props.key // Store key directly for easier access
+      };
+    }) as GenerateTag<T>; // Type assertion to match the overloaded interface
   };
 
   const api: Partial<VanLite> = {} as Partial<VanLite>;
@@ -175,8 +134,53 @@ module ProcessOut {
     (api as any)[t] = makeTag(t);
   }
 
-  api.fragment = makeFrag
-  api.mount = (parent, child) => (parent.append(child), parent);
+  api.fragment = (...children: Child[]): VNode => ({
+    type: null,
+    props: {},
+    children: processChildren(children),
+    dom: null,
+    key: null
+  });
 
   export const elements = api as VanLite;
+
+  /**
+   * A type guard to determine if the first argument to a tag function is a props object.
+   */
+  export function isProps<T extends Tag>(item: GenerateTagArgs<T>[0]): item is Props<T> {
+    // A props object is a plain object, not a VNode (which has a 'type' property)
+    return item && typeof item === 'object' && item.constructor === Object && !('children' in item);
+  };
+
+  /**
+   * A helper used in custom elements to merge props defined in the custom element
+   * with the props passed into it, handling class names and event listeners specially.
+   * @template T
+   * @param base - Base props.
+   * @param user - User-provided props.
+   * @returns Merged props.
+   */
+  export function mergeProps<T extends Tag>(base: Props<T>, user: Props<T> = {} as Props<T>): Props<T> {
+    const out: Props<T> = { ...base, ...user };
+
+    // Combine class names
+    const classes = [
+      base.className || (base as any).class, // Access 'class' if it was used
+      user.className || (user as any).class,
+    ].filter(Boolean);
+    if (classes.length) (out as any).className = classes.join(" ");
+
+    // Merge event handlers: calling both base and user handlers
+    for (const k in base) {
+      if (k.startsWith("on") && typeof base[k] === "function" && typeof user[k] === "function") {
+        const b = base[k] as EventListener;
+        const u = user[k] as EventListener;
+        (out as any)[k] = function (this: any, ...args: any[]) {
+          b.apply(this, args);
+          u.apply(this, args);
+        };
+      }
+    }
+    return out;
+  }
 }

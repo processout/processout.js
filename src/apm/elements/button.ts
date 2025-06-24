@@ -1,6 +1,6 @@
 module ProcessOut {
   const { button } = elements
-  export interface ButtonProps extends Props<HTMLElementTagNameMap['button']> {
+  export interface ButtonProps extends Props<'button'> {
     variant?: 'primary' | 'secondary' | 'tertiary' | 'success' | 'danger'
     size?: 'sm' | 'md' | 'lg',
     loading?: boolean,
@@ -16,7 +16,7 @@ module ProcessOut {
 
     const classNames = ["button", size ?? 'lg', variant ?? 'primary', loading && 'loading', disabled && 'disabled', className, ].filter(Boolean)
 
-    const props = mergeProps<HTMLElement>({ className: classNames.join(' '), disabled: disabled || loading}, userProps);
+    const props = mergeProps<'button'>({ className: classNames.join(' '), disabled: disabled || loading}, userProps);
 
     return button(props, ...rest)
   }

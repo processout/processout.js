@@ -1,5 +1,5 @@
 module ProcessOut {
-  export interface PhoneProps extends Omit<Props<HTMLElementTagNameMap['input']>, 'value' | 'oninput' | 'onblur'> {
+  export interface PhoneProps extends Omit<Props<'input'>, 'value' | 'oninput' | 'onblur'> {
     label?: string;
     errored?: boolean;
     dialing_codes: Array<{
@@ -240,6 +240,7 @@ module ProcessOut {
         {
           name:`${name}.dialing_code`,
           disabled,
+          'aria-label': "Select country prefix",
           ref: el => (dialingCodesRef = el),
           onchange: handleSelectChange,
           onfocus: handleSelectFocus,

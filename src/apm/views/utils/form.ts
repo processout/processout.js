@@ -114,7 +114,7 @@ module ProcessOut {
     const fields = props.parameters.parameter_definitions.map((field) => {
       const error = state.form.errors[field.key]
       const value = state.form.values[field.key]
-      let input: HTMLElement;
+      let input: VNode;
       let labelHtmlFor = field.key;
 
       switch (field.type) {

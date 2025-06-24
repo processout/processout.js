@@ -15,7 +15,7 @@ module ProcessOut {
 
   let inputRefs: HTMLInputElement[] = [];
 
-  export const OTP = ({ name, length, type = 'text', onComplete }: OTPProps): HTMLElement => {
+  export const OTP = ({ name, length, type = 'text', onComplete }: OTPProps): VNode => {
     /**
      * Synchronizes the DOM to match the current state. This function is the single
      * source of truth for how the inputs should appear.
