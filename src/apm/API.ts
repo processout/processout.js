@@ -1,6 +1,5 @@
 module ProcessOut {
-
-  export type FormEmailField =
+  export type FormFieldResponse =
     | {
       type: "email" | "name"
       key: string
@@ -21,20 +20,70 @@ module ProcessOut {
       type: "otp"
       key: string
       label: string
-      max_length: 6
-      min_length: 6
+      max_length: number
+      min_length: number
       required: true
       subtype: "digits" | "alphanumeric"
+    }
+    | {
+      type: 'single-select'
+      key: string
+      label: string
+      required: boolean
+      available_values: Array<{
+        key: string;
+        label: string;
+        preselected: boolean
+      }>
     } & {}
 
-  export type FormData = {
+  export type FormFieldResult =
+    | {
+      type: "email" | "name"
+      key: string
+      label: string
+      required: boolean
+    }
+    | {
+      type: "phone"
+      key: string
+      label: string
+      required: boolean
+      dialing_codes: Array<{
+        region_code: string;
+        value: string;
+        name: string
+      }>
+    }
+    | {
+      type: "otp"
+      key: string
+      label: string
+      max_length: number
+      min_length: number
+      required: true
+      subtype: "digits" | "alphanumeric"
+    }
+    | {
+      type: 'single-select'
+      key: string
+      label: string
+      required: boolean
+      available_values: Array<{
+        key: string;
+        label: string;
+        preselected: boolean
+      }>
+    } & {}
+
+  export type FormData<O extends object> = {
     type: 'form',
     parameters: {
-      parameter_definitions: Array<FormEmailField>
+      parameter_definitions: Array<O>
     }
   }
 
-  export type APIElements = Array<FormData>
+  export type APIElements<FormObjects extends object> = Array<FormData<FormObjects>>
 
   export type APIInvoice = {
     currency: string,
@@ -44,7 +93,7 @@ module ProcessOut {
   export type APISuccessResponse = {
     success: true,
     state: "SUCCESS" | 'NEXT_STEP_REQUIRED',
-    elements: APIElements
+    elements: APIElements<FormFieldResult>
     invoice: APIInvoice,
     gateway: object
   }
@@ -52,7 +101,7 @@ module ProcessOut {
   export type APIValidationResponse = {
     success: false,
     state: "VALIDATION_ERROR",
-    elements: APIElements,
+    elements: APIElements<FormFieldResult>,
     invoice: APIInvoice,
     gateway: object,
     error: {
@@ -77,7 +126,7 @@ module ProcessOut {
   type NetworkSuccessResponse = {
     success: true,
     state: "PENDING" | "SUCCESS" | 'NEXT_STEP_REQUIRED'
-    elements: APIElements
+    elements: APIElements<FormFieldResponse>
     invoice: APIInvoice,
     gateway: object
   }
@@ -86,7 +135,7 @@ module ProcessOut {
     success: false,
     error_type: string,
     message: string;
-    elements: APIElements
+    elements: APIElements<FormFieldResponse>
     invoice: APIInvoice,
     gateway: object
     invalid_fields: Array<{
@@ -132,7 +181,7 @@ module ProcessOut {
     switch (data.error_type) {
       case 'request.route-not-found':
         ContextImpl.context.logger.error({
-          host: window.location?.hostname || '',
+          host: window?.location?.host ?? '',
           fileName: 'API.ts',
           lineNumber: 208,
           message: `${request} failed as route does not exist`,
@@ -149,7 +198,7 @@ module ProcessOut {
         break;
       default: {
         ContextImpl.context.logger.error({
-          host: window.location?.hostname ?? '',
+          host: window?.location?.host ?? '',
           fileName: 'API.ts',
           lineNumber: 208,
           message: `${request} failed because of an error: ${data.message}`,
@@ -242,12 +291,13 @@ module ProcessOut {
           }
 
           if (isValidationResponse(apiResponse)) {
+            const result = this.transformResponse(apiResponse);
             internalOptions.onError({
               success: false,
               state: 'VALIDATION_ERROR',
-              elements: (apiResponse as NetworkValidationResponse).elements,
-              gateway: (apiResponse as NetworkValidationResponse).gateway,
-              invoice: (apiResponse as NetworkValidationResponse).invoice,
+              elements: result.elements,
+              gateway: result.gateway,
+              invoice: result.invoice,
               error: {
                 code: 'processout-js.apm.validation-error',
                 message: 'Validation error',
@@ -281,7 +331,7 @@ module ProcessOut {
             }
 
             if (apiResponse.elements) {
-              internalOptions.onSuccess?.(apiResponse as D);
+              internalOptions.onSuccess?.(this.transformResponse(apiResponse));
               if (ContextImpl.context.requirePendingConfirmation && !internalOptions.hasConfirmedPending) {
                 return
               }
@@ -293,7 +343,7 @@ module ProcessOut {
             return;
           }
 
-          internalOptions.onSuccess?.(apiResponse as D);
+          internalOptions.onSuccess?.(this.transformResponse(apiResponse));
           return;
         },
         (req, e, errorCode) => {
@@ -308,6 +358,42 @@ module ProcessOut {
           });
         }
       );
+    }
+
+    private static transformResponse = <D extends APISuccessResponse = APISuccessResponse>(response: NetworkSuccessResponse): D => {
+      let result = response
+
+      if (result.elements) {
+        result.elements = response.elements.map(element => {
+          if (element.type === 'form') {
+            const fields = element.parameters.parameter_definitions.map(field => {
+              if (field.type === 'phone') {
+                return {
+                  ...field,
+                  dialing_codes: field.dialing_codes
+                    .map((codes) => ({
+                      ...codes,
+                      name: COUNTRY_DICT[codes.region_code] || codes.region_code
+                    }))
+                    .sort((a, b) => {
+                      if (a.name < b.name) { return -1; }
+                      if (a.name > b.name) { return 1; }
+                      return 0;
+                    })
+                }
+              }
+
+              return field
+            })
+
+            element.parameters.parameter_definitions = fields
+          }
+
+          return element
+        })
+      }
+
+      return result as D
     }
   }
 }

@@ -322,9 +322,9 @@ module ProcessOut {
 
         .chevron {
           display: inline-block;
-          width: 4.5px;
-          height: 3.5px;
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 6' fill='none'%3E%3Cpath d='M1 2L4 5L7 2' stroke='${encodeURIComponent(ThemeImpl.instance.get('palette.light.border.input.default'))}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+          width: 100%;
+          padding-top: 75%;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 6' fill='none'%3E%3Cpath d='M1 2L4 5L7 2' stroke='${encodeURIComponent(ThemeImpl.instance.get('palette.light.text.label'))}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
           background-size: contain;
           background-repeat: no-repeat;
 
@@ -336,10 +336,7 @@ module ProcessOut {
         .chevron.up {
           transform: rotate(-180deg);
         }
-        .chevron.left,.chevron.right {
-          width: 3.5px;
-          height: 4.5px;
-        }
+
         .chevron.left {
           transform: rotate(90deg);
         }
@@ -547,6 +544,52 @@ module ProcessOut {
           }
         }
 
+        .select-chevrons {
+          width: 5px;
+          height: 12px;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          gap: 1px;
+        }
+
+        .open .select-chevrons .chevron {
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 6' fill='none'%3E%3Cpath d='M1 2L4 5L7 2' stroke='${encodeURIComponent(ThemeImpl.instance.get('palette.light.text.default'))}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+          @media (prefers-color-scheme: dark) {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 6' fill='none'%3E%3Cpath d='M1 2L4 5L7 2' stroke='${encodeURIComponent(ThemeImpl.instance.get('palette.dark.text.default'))}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+          }
+        }
+
+        .select-chevrons.md {
+          width: 7px;
+          gap: 2px;
+        }
+
+        .select select {
+          width: 100%;
+          border: 0;
+          outline: none;
+          background-color: transparent;
+          appearance: none;
+          padding: 16px 14px 0;
+          font-weight: 500;
+          font-size: 15px;
+          line-height: 18px;
+          font-family: inherit;
+          color: ${ThemeImpl.instance.get('palette.light.text.default')};
+          @media (prefers-color-scheme: dark) {
+            color: ${ThemeImpl.instance.get('palette.dark.text.default')};
+          }
+        }
+
+        .select .select-chevrons {
+          position: absolute;
+          right: 16px;
+          top: 50%;
+          transform: translateY(-50%);
+        }
+
         .otp {
           cursor: text;
         }
@@ -569,12 +612,12 @@ module ProcessOut {
           display: flex;
           justify-content: end;
           align-items: center;
-          gap: 6px;
+          gap: 10px;
           width: 58px;
           height: 26px;
           position: absolute;
           top: 11px;
-          right: 16px;
+          right: 14px;
           border-left: 2px solid ${ThemeImpl.instance.get('palette.light.border.input.default')};;
 
           @media (prefers-color-scheme: dark) {
@@ -582,7 +625,7 @@ module ProcessOut {
           }
         }
         .phone .dialing-code.open {
-          padding-right: 18px;
+          padding-right: 16px;
           width: 76px;
           height: 52px;
           top: -2px;
@@ -623,23 +666,6 @@ module ProcessOut {
           border-radius: 2px;
           justify-content: center;
           display: flex;
-        }
-        .phone .dialing-code-chevrons {
-          width: 12px;
-          height: 12px;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          gap: 1px;
-        }
-
-        .phone .dialing-code.open .chevron {
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 6' fill='none'%3E%3Cpath d='M1 2L4 5L7 2' stroke='${encodeURIComponent(ThemeImpl.instance.get('palette.light.text.default'))}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-          @media (prefers-color-scheme: dark) {
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 6' fill='none'%3E%3Cpath d='M1 2L4 5L7 2' stroke='${encodeURIComponent(ThemeImpl.instance.get('palette.dark.text.default'))}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-
-          }
         }
 
         .phone select {

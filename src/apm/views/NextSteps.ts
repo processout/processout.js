@@ -1,6 +1,6 @@
 module ProcessOut {
   export interface NextStepProps {
-    elements: APIElements,
+    elements: APIElements<FormFieldResult>,
     config:  {
       success: boolean
       state: string
@@ -22,14 +22,7 @@ module ProcessOut {
     loading: boolean;
   }
 
-  const setFormState = (elements: APIElements, error: {
-    code: string
-    message: string
-    invalid_fields?: Array<{
-      name: string
-      message: string
-    }>
-  } | undefined): FormState => {
+  const setFormState = (elements: NextStepProps['elements'], error: NextStepProps['config']['error'] | undefined): FormState => {
     const forms = elements.filter(e => e.type === "form")
 
     if (forms.length === 0) {
@@ -48,26 +41,20 @@ module ProcessOut {
     }
 
     state.values = forms.reduce((acc, form) => {
-      return {
-        ...acc,
-        ...form.parameters.parameter_definitions.reduce((acc, param) => {
-          if (param.type === 'phone') {
-            return {
-              ...acc,
-              [param.key]: {
-                dialing_code: '',
-                value: '',
-              }
-            }
-          }
+      form.parameters.parameter_definitions.forEach(param => {
+        if (param.type === 'single-select') {
+          acc[param.key] = param.available_values.find(item => item.preselected)?.key || param.available_values[0].key
+        }
 
-          return {
-            ...acc,
-            [param.key]: undefined,
+        if (param.type === 'phone') {
+          acc[param.key] = {
+            dialing_code: param.dialing_codes[0].value,
+            value: '',
           }
-        }, {})
-      }
-    }, {})
+        }
+      })
+      return acc;
+    }, {});
 
     state.validation = forms.reduce((acc, form) => {
       return {
@@ -90,7 +77,7 @@ module ProcessOut {
 
     return state
   }
-  const setInitialState = (elements: APIElements, errors: any | undefined): NextStepState => {
+  const setInitialState = (elements: APIElements<FormFieldResult >, errors: any | undefined): NextStepState => {
     const state: NextStepState = { loading: false };
     const form = setFormState(elements, errors);
 
@@ -116,7 +103,6 @@ module ProcessOut {
     }
 
     render() {
-      console.log(this.props);
       return page(
         ...renderElements(
           this.props.elements,

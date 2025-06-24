@@ -2,9 +2,10 @@ module ProcessOut {
   export interface PhoneProps extends Omit<Props<HTMLElementTagNameMap['input']>, 'value' | 'oninput' | 'onblur'> {
     label?: string;
     errored?: boolean;
-    dialingCodes: Array<{
-      regionCode: string,
+    dialing_codes: Array<{
+      region_code: string,
       value: string,
+      name: string,
     }>
     oninput?: (key: string, value: { dialing_code: string, value: string }) => void,
     onblur?: (key: string, value: { dialing_code: string, value: string }) => void,
@@ -49,21 +50,11 @@ module ProcessOut {
     return `${getDialingCode(dialingCode)}${getNumber(number)}`
   }
 
-  export const Phone = ({ dialingCodes, name, oninput, onblur, disabled, label, errored, className, value, id, ...props }: PhoneProps) => {
-    const options = dialingCodes
-      .map((codes) => ({
-        ...codes,
-        name: COUNTRY_DICT[codes.regionCode] || codes.regionCode
-      }))
-      .sort((a, b) => {
-        if (a.name < b.name) { return -1; }
-        if (a.name > b.name) { return 1; }
-        return 0;
-      });
-
+  export const Phone = ({ dialing_codes, name, oninput, onblur, disabled, label, errored, className, value, id, ...props }: PhoneProps) => {
     state = value ? { ...value, iso: '' } : state
-    state.dialing_code = state.dialing_code || options[0].value;
-    state.iso = state.iso || dialingCodes.find(item => item.value === state.dialing_code).regionCode;
+
+    state.dialing_code = state.dialing_code || dialing_codes[0].value;
+    state.iso = state.iso || dialing_codes.find(item => item.value === state.dialing_code).region_code;
 
     const classNames = [
       "field phone filled",
@@ -108,24 +99,31 @@ module ProcessOut {
         newCursorPosition++;
       }
 
+      input.value = formattedValue;
+      if (label) {
+        updateFilledState(input);
+      }
+
+      if (currentValue.length < getDialingCode(dialingCode).length) {
+        dialingCodesRef.focus()
+        dialingCodesRef.showPicker()
+        return
+      }
+
       if (state.value !== cleanNumber) {
         state.value = cleanNumber;
         oninput && oninput(name, state);
       }
 
-      input.value = formattedValue;
       input.setSelectionRange(newCursorPosition, newCursorPosition);
-
-      if (label) {
-        updateFilledState(input);
-      }
     }
 
     const handleInputClick = e => {
       const target = e.target as HTMLInputElement
-      if (target.selectionStart < state.dialing_code.length + 1) {
-        target.selectionStart = state.dialing_code.length + 1;
-        target.selectionEnd = target.selectionEnd < state.dialing_code.length + 1 ? state.dialing_code.length + 1 : target.selectionEnd;
+
+      if (target.selectionStart <= state.dialing_code.length && target.selectionEnd === target.selectionStart) {
+        dialingCodesRef.focus();
+        dialingCodesRef.showPicker()
       }
     }
 
@@ -153,7 +151,7 @@ module ProcessOut {
       const currentValue = (e.target as HTMLSelectElement).value;
       const cleanNumber = state.value.replace(state.dialing_code, '').replace(/ /g, '');
 
-      state.dialing_code = dialingCodes.find(item => item.regionCode === currentValue).value
+      state.dialing_code = dialing_codes.find(item => item.region_code === currentValue).value
       state.iso = currentValue;
       phoneRef.value = getFullNumber(state.dialing_code, cleanNumber);
       phoneRef.focus();
@@ -177,7 +175,7 @@ module ProcessOut {
       }
     }
 
-    document.addEventListener('keydown', function(e) {
+    const handleKeyDown = (e) => {
       const isKeyTab = e.key === 'Tab' || e.keyCode === 9;
       const isKeyArrowLeft = e.key === 'ArrowLeft' || e.keyCode === 37;
       const isFocusedOnPhoneInput = ContextImpl.context.page.getActiveElement() === phoneRef;
@@ -190,11 +188,11 @@ module ProcessOut {
       if (isKeyArrowLeft && isFocusedOnPhoneInput && isSelectionOnDialingCode) {
         phoneRef.setSelectionRange(getDialingCode(state.dialing_code).length + 1, getDialingCode(state.dialing_code).length + 1);
       }
-    });
+    }
 
-    document.addEventListener('mousedown', function() {
+    const handleMouseDown = () => {
       focusMethod = 'mouse';
-    });
+    }
 
     return div(
       {
@@ -207,12 +205,12 @@ module ProcessOut {
           { className: "dialing-code-label" },
           img({
             width: 22,
-            alt: `Selected ${options.find(item => item.value === state.dialing_code).name} dialing code`,
-            src: `https://flagcdn.com/w80/${options.find(item => item.value === state.dialing_code).regionCode.toLowerCase()}.jpg`,
+            alt: `Selected ${dialing_codes.find(item => item.value === state.dialing_code).name} dialing code`,
+            src: `https://flagcdn.com/w80/${dialing_codes.find(item => item.value === state.dialing_code).region_code.toLowerCase()}.jpg`,
           }),
         ),
         div(
-          { className: "dialing-code-chevrons" },
+          { className: "select-chevrons" },
           div({
             className: "chevron up",
           }),
@@ -234,6 +232,8 @@ module ProcessOut {
         onfocus: handleInputFocus,
         onblur: handleInputBlur,
         onclick: handleInputClick,
+        onmousedown: handleMouseDown,
+        onkeydown: handleKeyDown,
         ...props,
       }),
       select(
@@ -252,11 +252,11 @@ module ProcessOut {
           },
           "Select number prefix",
         ),
-        ...options.map(({ name, value, regionCode }) =>
+        ...dialing_codes.map(({ name, value, region_code }) =>
           option(
             {
-              value: regionCode,
-              selected: state.iso === regionCode,
+              value: region_code,
+              selected: state.iso === region_code,
             },
             `${name} (${value})`,
           ),
@@ -265,7 +265,7 @@ module ProcessOut {
     )
   }
 
-  const COUNTRY_DICT = {
+  export const COUNTRY_DICT = {
     "AF": "Afghanistan",
     "AX": "Åland Islands",
     "AL": "Albania",

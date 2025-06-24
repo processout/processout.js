@@ -59,8 +59,9 @@ module ProcessOut {
         ),
         div({ className: 'empty-controls' },
           OTP({ name: 'otp', length: 6 }),
-          Phone({ label: 'Phone number (optional)', dialingCodes: [{ regionCode: 'FR', value: '+33' }, { regionCode: 'GB', value: '+44' }, { regionCode: 'PL', value: '+48' }] }),
+          Phone({ label: 'Phone number (optional)', dialing_codes: [{ region_code: 'FR', name: 'France', value: '+33' }, { region_code: 'GB', name: 'United Kingdom', value: '+44' }, { region_code: 'PL', name: 'Poland', value: '+48' }] }),
           Input({ name: 'full-name', label: 'Phone number', type: 'text', oninput: (key, value) => console.log(value) }),
+          Select({ label: 'Select', name: 'select', options: [{ key: '1', label: 'Option 1' }, { key: '2', label: 'Option 2' }] })
         )
       )
     }
