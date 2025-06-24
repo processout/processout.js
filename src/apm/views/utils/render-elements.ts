@@ -21,7 +21,7 @@ module ProcessOut {
     state: S,
     setState: (setter: S | ((prevState: DeepReadonly<S>) => S)) => void
     handleSubmit: () => void
-  }) => {
+  }): VNode[] => {
     return elements.map(element => renderElement(
       {
         ...element,

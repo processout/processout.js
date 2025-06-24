@@ -1,6 +1,6 @@
 module ProcessOut {
   type HeaderTag = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'
-  type HeaderTagProps<K extends HeaderTag> = Props<HTMLElementTagNameMap[K]>
+  type HeaderTagProps<K extends HeaderTag> = Props<K>
   type HeaderProps<K extends HeaderTag> = HeaderTagProps<K> & {
     tag: K
   }

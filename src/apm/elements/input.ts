@@ -1,7 +1,7 @@
 module ProcessOut {
   const { div, label: labelEl, input } = elements
 
-  export interface InputProps extends Omit<Props<HTMLElementTagNameMap['input']>, 'oninput' | 'onblur' | 'name'> {
+  export interface InputProps extends Omit<Props<'input'>, 'oninput' | 'onblur' | 'name'> {
     name: string
     label?: string;
     errored?: boolean;
