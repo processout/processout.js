@@ -10,9 +10,14 @@
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     // You need to replace these values with your own
-    const projectId = "test-proj_2yMu3kr1Xx75RtW1aI4bJTQzu32gxWiV"
-    const gatewayConfigurationId = "gway_conf_mcllxxya8c013330fhl62f0t628qy75f"
-    const invoiceId = "iv_hCECpTUKArd6I02TATtDkfeR0dLKGQzM"
+    // ProcessOut
+    const projectId = "test-proj_qEi1u5BwoYcZb6mOMKDWIm4mpqKCq6bN"
+    const gatewayConfigurationId = "gway_conf_2puMFv3iwrPSLqslIfVcvzhFWZzmTHTy.sandbox"
+    const invoiceId = "iv_PMIMKkaXcZXxnXPXzKQzHOu8jz10CQgW"
+    // PowaPay
+    // const projectId = "test-proj_2yMu3kr1Xx75RtW1aI4bJTQzu32gxWiV"
+    // const gatewayConfigurationId = "gway_conf_mcllxxya8c013330fhl62f0t628qy75f"
+    // const invoiceId = "iv_hCECpTUKArd6I02TATtDkfeR0dLKGQzM"
 
     const client = new ProcessOut.ProcessOut(projectId)
     const el = document.querySelector('#apm-container')
@@ -20,6 +25,11 @@
     const apm = client.createTokenizationFlow(el, {
       gatewayConfigurationId,
       invoiceId,
+    })
+
+    apm.on('success', () => {
+      console.log('apm done')
+      apm.cleanUp()
     })
 
     apm.on('critical-failure', ({ message }) => {

@@ -49,6 +49,10 @@ module ProcessOut {
         ContextImpl.context.page.load(APIImpl.initialise)
       }
 
+      public cleanUp() {
+        ContextImpl.context.page.cleanUp()
+      }
+
       public on<K extends keyof APMEvents>(key: K, handler: EventHandler<APMEvents, K>) {
         ContextImpl.context.events.on(key, handler);
       }
