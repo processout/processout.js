@@ -57,6 +57,7 @@ module ProcessOut {
     switch (data.error_type) {
       case 'request.route-not-found':
         ContextImpl.context.logger.error({
+          host: window.location?.hostname || '',
           fileName: 'API.ts',
           lineNumber: 64,
           message: `${request} failed as route does not exist`,
