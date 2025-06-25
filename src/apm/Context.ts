@@ -25,7 +25,7 @@ module ProcessOut {
 
   export type APMContext = APMUserData & {
     logger: {
-      error(message: Omit<ErrorReport, 'stack'>): void;
+      error(message: Omit<Parameters<TelemetryClient['reportError']>[0], 'stack'>): void;
     }
     events: APMEventsImpl,
     poClient: ProcessOut,
