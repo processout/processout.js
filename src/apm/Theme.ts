@@ -259,14 +259,14 @@ module ProcessOut {
 
         .main {
           font-family: "Work sans", Arial, sans-serif;
-          container: main / size;
+          container: main / inline-size;
         }
 
         .page {
           display: flex;
           flex-direction: column;
           width: 100%;
-          min-height: 400px;
+          min-height: 285px;
           padding: 12px 20px;
           gap: 16px;
           color: ${ThemeImpl.instance.get('palette.light.text.default')};
@@ -345,6 +345,34 @@ module ProcessOut {
         }
         .chevron.right {
           transform: rotate(-90deg);
+        }
+
+        .header-container {
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          padding-top: 16px;
+        }
+
+        .header {
+          font-weight: 600;
+          font-size: 20px;
+          line-height: 24px;
+        }
+
+        .sub-header {
+          font-weight: 400;
+          font-size: 16px;
+          line-height: 26px;
+        }
+
+        .button-container {
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          padding-top: 12px;
         }
 
         .button {

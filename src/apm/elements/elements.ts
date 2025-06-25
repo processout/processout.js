@@ -28,6 +28,7 @@ module ProcessOut {
     (...children: Child[]): PropsElement<HTMLElementTagNameMap[K]>;
   }
 
+
   export type VanLite = {
     mount(parent: Element, child: Node): Element;
     fragment: GenerateFragment;
@@ -66,7 +67,7 @@ module ProcessOut {
    * Appends a child or a list of children to a target DOM element.
    * It's a versatile helper that handles various types of children gracefully.
    */
-  const appendChild = (target, child) => {
+  const appendChild = (target: Element | DocumentFragment, child: Child): void => {
     if (child == null || child === false) return;
     if (Array.isArray(child)) {
       for (let i = 0; i < child.length; i++) appendChild(target, child[i]);
