@@ -149,6 +149,7 @@ module ProcessOut {
         break;
       default: {
         ContextImpl.context.logger.error({
+          host: window.location?.hostname ?? '',
           fileName: 'API.ts',
           lineNumber: 114,
           message: `${request} failed because of an error: ${data.message}`,

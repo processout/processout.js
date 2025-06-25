@@ -18,7 +18,7 @@ interface apiRequestOptions {
  */
 module ProcessOut {
   export const TestModePrefix = "test-"
-  export const DEBUG = false
+  export const DEBUG: boolean = false
   // This is set during the build process based on the version from package.json
   export const SCRIPT_VERSION = undefined
   // This is set during development to point to the staging API
