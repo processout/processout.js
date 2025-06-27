@@ -194,10 +194,16 @@ module ProcessOut {
         protected options: ActionHandlerOptions;
 
         /**
-         * listenerCount is the number of listener that were set
-         * @type {number}
+         * Action handler static counter to track events
+         * @var {number}
          */
-        protected static listenerCount = 0;
+        protected static listenerCount: number = 0;
+                
+        /**
+         * Unique identifier for this ActionHandler instance
+         * @var {string}
+         */
+        protected instanceUID: string;
 
         /**
          * newWindowName is the name of the new windows created by the
@@ -217,6 +223,11 @@ module ProcessOut {
             this.resourceID = resourceId;
 
             if (!this.options) this.options = new ActionHandlerOptions();
+
+            // Generate unique identifier for this instance to prevent cross-contamination
+            this.instanceUID = `action_${Math.random().toString(36).substring(7)}`;
+            
+            // Note: setResourceID() should be invoked when calling specific action methods
 
             // We need to create the wrapper beforehand
             if (this.options.flow == ActionFlow.IFrame) {
@@ -500,6 +511,11 @@ module ProcessOut {
                 if (data.namespace != Message.checkoutNamespace)
                     return;
 
+                // Validate the message is intended for this specific ActionHandler instance to prevent cross-contamination
+                if (data.frameID && data.frameID !== this.instanceUID) {
+                    return; // Message is for a different ActionHandler instance
+                }
+
                 // Not the latest listener anymore
                 if (ActionHandler.listenerCount != cur) {
                     // Reset the timer if it hasn't been done already
@@ -595,6 +611,24 @@ module ProcessOut {
          */
         public isCanceled(): boolean {
             return this.canceled;
+        }
+
+        /**
+         * Set the resource ID for this ActionHandler instance
+         * @param {string} resourceID
+         * @return {void}
+         */
+        public setResourceID(resourceID: string): void {
+            this.resourceID = resourceID;
+        }
+
+        /**
+         * Get the unique instance ID for this ActionHandler
+         * This can be used by checkout pages to include in postMessage responses
+         * @return {string}
+         */
+        public getInstanceUID(): string {
+            return this.instanceUID;
         }
 
     }
