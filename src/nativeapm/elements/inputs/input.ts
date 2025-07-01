@@ -1,26 +1,26 @@
 /// <reference path="../../references.ts" />
 
 interface INativeApmInput {
-  getInputElement(): HTMLElement;
-  validate(): boolean;
-  getValue(): any;
-  setErrorMessage(): void;
-  inputData: NativeApmInputData;
+  getInputElement(): HTMLElement
+  validate(): boolean
+  getValue(): any
+  setErrorMessage(): void
+  inputData: NativeApmInputData
 }
 
 type NativeApmInputData = {
-  key: string;
-  type: string;
-  required: boolean;
-  length: number | null;
-  max_length: number | null;
-  display_name: string;
+  key: string
+  type: string
+  required: boolean
+  length: number | null
+  max_length: number | null
+  display_name: string
   available_values?: Array<{
-    value: string;
-    display_name: string;
-    default: boolean;
-  }>;
-};
+    value: string
+    display_name: string
+    default: boolean
+  }>
+}
 
 /**
  * ProcessOut module/namespace
@@ -34,7 +34,7 @@ module ProcessOut {
      * Native APM input instance
      * @type {INativeApmInput}
      */
-    inputInstance: INativeApmInput;
+    inputInstance: INativeApmInput
 
     /**
      * Native APM Input constructor
@@ -42,34 +42,31 @@ module ProcessOut {
     constructor(
       inputData: NativeApmInputData,
       theme: NativeApmThemeConfigType,
-      prefilledValue?: string
+      prefilledValue?: string,
     ) {
-      this.inputInstance = this.createInputElement(
-        inputData,
-        theme,
-        prefilledValue
-      );
+      this.inputInstance = this.createInputElement(inputData, theme, prefilledValue)
     }
 
     /**
      * This function returns the input element
      */
     public getInputElement() {
-      return this.inputInstance.getInputElement();
+      return this.inputInstance.getInputElement()
     }
 
     /**
      * This function returns the input instance
      */
     public getInputInstance() {
-      return this.inputInstance;
+      return this.inputInstance
     }
 
     /**
      * This function returns the input value
      */
     public getInputValue() {
-      return this.inputInstance.getValue();
+      console.log(this.inputInstance.getValue())
+      return this.inputInstance.getValue()
     }
 
     /**
@@ -78,24 +75,25 @@ module ProcessOut {
     private createInputElement(
       inputData: NativeApmInputData,
       theme: NativeApmThemeConfigType,
-      prefilledValue: string
+      prefilledValue: string,
     ) {
       switch (inputData.type) {
-        case 'email':
-          return new NativeApmEmailInput(inputData, theme, prefilledValue);
-        case 'numeric':
+        case "email":
+          return new NativeApmEmailInput(inputData, theme, prefilledValue)
+        case "numeric":
           if (inputData.length <= 6) {
-            return new NativeApmNumericInput(inputData, theme);
+            return new NativeApmNumericInput(inputData, theme)
           } else {
-            return new NativeApmTextInput(inputData, theme, prefilledValue);
+            return new NativeApmTextInput(inputData, theme, prefilledValue)
           }
-        case 'phone':
-          return new NativeApmPhoneInput(inputData, theme, prefilledValue);
-        case 'single_select':
-        case 'single-select':
-          return new NativeApmSelectInput(inputData, theme);
+        case "phone":
+          return new NativeApmPhoneWithCountryInput(inputData, theme, prefilledValue)
+
+        case "single_select":
+        case "single-select":
+          return new NativeApmSelectInput(inputData, theme)
         default:
-          return new NativeApmTextInput(inputData, theme, prefilledValue);
+          return new NativeApmTextInput(inputData, theme, prefilledValue)
       }
     }
   }
