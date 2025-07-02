@@ -369,7 +369,7 @@ module ProcessOut {
 
       const defaultOption = document.createElement("option")
       defaultOption.value = ""
-      defaultOption.textContent = "Select country"
+      defaultOption.textContent = TextUtils.getText("selectCountryPlaceholder") || "Select country"
       defaultOption.disabled = true
       defaultOption.selected = true
       select.appendChild(defaultOption)

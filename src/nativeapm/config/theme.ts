@@ -132,7 +132,7 @@ const defaultTheme: NativeApmThemeConfigType = {
           outline: "none",
           background: "transparent",
           padding: "8px 6px",
-          width: "120px",
+          width: "130px",
           fontSize: "0.9rem",
           borderRight: "6px solid transparent",
           height: "3rem",
