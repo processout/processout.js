@@ -36,7 +36,16 @@ module ProcessOut {
         ...payload: M[K] extends never ? [] : [payload: M[K]]
       ) {
         const data = payload[0] as M[K];          // undefined for “no-payload” keys
+        // Emit to specific event handlers
         this.handlers[key]?.forEach(handler => (handler as any)(data));
+        
+        // Emit to '*' handlers with unified structure
+        if (key !== '*' && this.handlers['*']) {
+          const unifiedData = data === undefined 
+            ? { type: key }
+            : { type: key, ...data };
+          this.handlers['*'].forEach(handler => (handler as any)(unifiedData));
+        }
       }
     }
 }
