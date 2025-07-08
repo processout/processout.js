@@ -6,38 +6,147 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+<div>
+  <form id="initialise-apm">
+    <select name="gateway" id="apm-gateway">
+      <option value="gway_conf_as47maqbtonts9rnkuaskmf760fnmpm3">ProcessOut</option>
+      <option value="gway_conf_mcllxxya8c013330fhl62f0t628qy75f">PowaPay</option>
+      <option value="gway_conf_pl34ebzz5f75njop6lidskw5f00x9i7i">Forage</option>
+    </select>
+    <input type="text" id="invoice-id" name="invoice_id" placeholder="Invoice ID" />
+    <input type="text" id="customer-id" name="customer_id" placeholder="Customer ID" style="display: none" />
+    <input type="text" id="customer-token-id" name="customer_token_id" placeholder="Customer Token ID" style="display: none" />
+    <button type="submit">Initialise APM</button>
+  </form>
+</div>
 <div id="apm-container"></div>
 <script src="../../dist/processout.js" crossorigin="anonymous"></script>
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    // You need to replace these values with your own
-    // ProcessOut
-    const projectId = "test-proj_qEi1u5BwoYcZb6mOMKDWIm4mpqKCq6bN"
-    const gatewayConfigurationId = "gway_conf_2puMFv3iwrPSLqslIfVcvzhFWZzmTHTy.sandbox"
-    const invoiceId = "iv_PMIMKkaXcZXxnXPXzKQzHOu8jz10CQgW"
-    // PowaPay
-    // const projectId = "test-proj_2yMu3kr1Xx75RtW1aI4bJTQzu32gxWiV"
-    // const gatewayConfigurationId = "gway_conf_mcllxxya8c013330fhl62f0t628qy75f"
-    // const invoiceId = "iv_hCECpTUKArd6I02TATtDkfeR0dLKGQzM"
+    const projectId = 'test-proj_2yMu3kr1Xx75RtW1aI4bJTQzu32gxWiV';
+    const gatewayEl = document.querySelector('#apm-gateway');
+    
+    // Build gateway dictionary from select options
+    const gatewayDict = {};
+
+    Array.from(gatewayEl.options).forEach(option => {
+      gatewayDict[option.value] = option.textContent.trim();
+    });
+
+    const invoiceIdEl = document.querySelector('#invoice-id');
+    const customerIdEl = document.querySelector('#customer-id');
+    const customerTokenIdEl = document.querySelector('#customer-token-id');
+
+    let flow = 'authorization';
+
+    let previousId;
+    let previousGateway;
 
     const client = new ProcessOut.ProcessOut(projectId)
     const el = document.querySelector('#apm-container')
 
-    const apm = client.createTokenizationFlow(el, {
-      gatewayConfigurationId,
-      invoiceId,
+    gatewayEl.addEventListener('change', (e) => {
+      const value = e.target.value;
+      const gateway = gatewayDict[value];
+      
+      switch (gateway) {
+        case 'Forage':
+          flow = 'tokenization';
+          invoiceIdEl.style.display = 'none';
+          customerIdEl.style.display = 'inline-block';
+          customerTokenIdEl.style.display = 'inline-block';
+          break;
+        default:
+          flow = 'authorization';
+          invoiceIdEl.style.display = 'inline-block';
+          customerIdEl.style.display = 'none';
+          customerTokenIdEl.style.display = 'none';
+          break;
+      }
     })
 
-    apm.on('success', () => {
-      console.log('apm done')
-      apm.cleanUp()
-    })
+    document.querySelector('#initialise-apm').addEventListener('submit', (e) => {
+      e.preventDefault()
+      const gatewayConfigurationId = gatewayEl.value
+      const invoiceId = invoiceIdEl.value
+      const customerId = customerIdEl.value
+      const customerTokenId = customerTokenIdEl.value
 
-    apm.on('critical-failure', ({ message }) => {
-      console.log('apm', message)
-    })
+      let apm;
 
-    apm.initialise();
+      if (flow === 'authorization') {
+        if (!invoiceId) {
+          alert('Please enter an invoice ID')
+          return;
+        }
+
+        if (invoiceId.length !== 35 || invoiceId.slice(0, 3) !== 'iv_') {
+          alert('Please enter a valid invoice ID')
+          return
+        }
+
+        if (previousGateway !== gatewayConfigurationId && previousId === invoiceId) {
+          alert(`This invoice id is attached to ${gatewayDict[previousGateway]} and cannot be used with ${gatewayDict[gatewayConfigurationId]}.`)
+          return
+        }
+
+        if (previousId === invoiceId) {
+          const result = confirm("You're using a invoice id that has already been used. Are you sure you want to use it again?")
+          if (!result) {
+            return
+          }
+        }
+
+
+        previousId = invoiceId;
+        previousGateway = gatewayConfigurationId;
+        apm = client.apm.authorization(el, {
+          gatewayConfigurationId,
+          invoiceId,
+          confirmation: {
+            requiresAction: true,
+            duration: 0,
+          },
+          success: {
+            requiresAction: true,
+            manualDismissDuration: 0,
+          },
+        })
+      }
+
+      if (flow === 'tokenization') {
+        if (!customerId) {
+          alert('Please enter a customer ID')
+          return
+        }
+        if (!customerTokenId) {
+          alert('Please enter a customer token ID')
+          return
+        }
+
+        apm = client.apm.tokenization(el, {
+          gatewayConfigurationId,
+          customerId,
+          customerTokenId,
+        })
+      }
+
+      if (apm) {
+        apm.on('*', ({ type, ...rest }) => {
+          console.log(Date.now(), `apm event - ${type}`, rest)
+          if (type === 'success' || type === 'failure') {
+            apm.cleanUp()
+          }
+        })
+        
+        try {
+          apm.initialise()
+        } catch (e) {
+          console.log('apm catch', e)
+          apm.cleanUp()
+        }
+      }
+    })
   })
 </script>
 </body>
