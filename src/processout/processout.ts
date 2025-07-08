@@ -18,11 +18,11 @@ interface apiRequestOptions {
  */
 module ProcessOut {
   export const TestModePrefix = "test-"
-  export const DEBUG: boolean = false
+  export const DEBUG: boolean = true
   // This is set during the build process based on the version from package.json
   export const SCRIPT_VERSION = undefined
   // This is set during development to point to the staging API
-  export const DEBUG_HOST = undefined
+  export const DEBUG_HOST = 'processout.ninja'
 
   /**
    * ProcessOut main class
@@ -308,6 +308,8 @@ module ProcessOut {
 
       if (path.substring(0, 4) != "http" && path[0] != "/") path = this.endpoint("api", "/" + path)
 
+      const queryParams = [];
+
       var headers = {
         "Content-Type": "application/json",
         "API-Version": this.apiVersion,
@@ -330,27 +332,31 @@ module ProcessOut {
         // We need to hack our project ID in the URL itself so that
         // ProcessOut's load-balancers and routers can route the request
         // to the project's region
-        path += `?legacyrequest=true&project_id=${this.projectID}`
+        queryParams.push(`legacyrequest=true&project_id=${this.projectID}`);
       }
 
       // We also need to hack our request headers for legacy browsers to
       // work, but also for modern browsers with extensions playing with
       // headers (such as antiviruses)
       for (var k in headers) {
-        path += `&x-${k}=${headers[k]}`
+        queryParams.push(`x-${k}=${headers[k]}`)
       }
 
       for (var k in customHeaders) {
-        path += `&x-${k}=${customHeaders[k]}`
+        queryParams.push(`x-${k}=${customHeaders[k]}`);
         headers[`X-${k}`] = customHeaders[k]
       }
 
       if (method == "get") {
-        for (var key in data) path += `&${key}=${encodeURIComponent(data[key])}`
+        for (var key in data) {
+          queryParams.push(`${key}=${encodeURIComponent(data[key])}`);
+        }
       }
 
       var request = new XMLHttpRequest()
       if (window.XDomainRequest) request = new XDomainRequest()
+
+      path += "?" + queryParams.join("&")
       request.open(method, path, true)
 
       // We still want to push the headers when we can
@@ -473,27 +479,25 @@ module ProcessOut {
     }
 
     /**
-     * createTokenizationFlow creates an APM instance within the tokenization flow
-     * @param {Container} container
-     * @param {TokenizationUserOptions} options
-     * @return {APM}
+     * apm
      */
-    public createTokenizationFlow(container: Container, options: TokenizationUserOptions) {
-      return new APMImpl(this, this.telemetryClient, container, {
-        ...options,
-        flow: 'tokenization',
-      })
+    public get apm(){
+      return {
+        tokenization: (container: Container, options: TokenizationUserOptions) => {
+          return new APMImpl(this, this.telemetryClient, container, {
+            ...options,
+            flow: 'tokenization',
+          })
+        },
+        authorization: (container: Container, options: AuthorizationUserOptions) => {
+          return new APMImpl(this, this.telemetryClient, container, {
+            ...options,
+            flow: 'authorization'
+          })
+        }
+      }
     }
 
-    /**
-     * createAuthorizationFlow creates an APM instance within the authorization flow
-     * @param {Container} container
-     * @param {AuthorizationUserOptions} options
-     * @return {APM}
-     */
-    public createAuthorizationFlow(container: Container, options: AuthorizationUserOptions) {
-      return new APMImpl(this, this.telemetryClient, container, { ...options, flow: 'authorization' })
-    }
 
     /**
      * SetupDynamicCheckout creates a Dynamic Checkout instance
