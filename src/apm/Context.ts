@@ -1,19 +1,44 @@
 module ProcessOut {
   export type TokenizationFlowData = {
     flow: 'tokenization',
-    tokenizationId: string
+    customerId: string,
+    customerTokenId: string
+    invoiceId?: never
   }
 
   export type AuthorizationFlowData = {
     flow: 'authorization',
-    tokenizationId?: never
+    invoiceId: `iv_${string}`
+    customerId?: never,
+    customerTokenId?: never,
   }
 
   export type FlowData = {
     gatewayConfigurationId: `gway_conf_${string}`
-    invoiceId: `iv_${string}`
-    requirePendingConfirmation?: boolean
     initialData?: Partial<InitialData>
+    /** Whether user can cancel the payment (default: true) */
+    allowCancelation?: boolean
+    /** Payment confirmation configuration */
+    confirmation?: {
+      /** Whether user action is required for pending payments (default: false) */
+      requiresAction?: boolean
+      /** Timeout in seconds to wait for payment confirmation (default: 900 e.g. 15 minutes) */
+      timeout?: number
+      /** Whether user can cancel the payment during confirmation (default: true) */
+      allowCancelation?: boolean
+    }
+    
+    /** Success screen configuration */
+    success?: {
+      /** Whether to show success screen (default: true) */
+      enabled?: boolean
+      /** Duration in seconds when auto-dismissing (requiresAction: false) (default: 3) */
+      autoDismissDuration?: number
+      /** Duration in seconds when manual dismissal required (requiresAction: true) (default: 60) */
+      manualDismissDuration?: number
+      /** Whether user must take action to dismiss success screen (default: false) */
+      requiresAction?: boolean
+    }
   }
 
   export type TokenizationUserData = TokenizationFlowData & FlowData
@@ -24,9 +49,10 @@ module ProcessOut {
 
   export type APMUserData = TokenizationUserData | AuthorizationUserData
 
-  export type APMContext = APMUserData & {
+  export type APMContext = {  } & APMUserData & {
     logger: {
       error(message: Omit<Parameters<TelemetryClient['reportError']>[0], 'stack'>): void;
+      warn(message: Omit<Parameters<TelemetryClient['reportWarning']>[0], 'stack'>): void;
     }
     events: APMEventsImpl,
     poClient: ProcessOut,

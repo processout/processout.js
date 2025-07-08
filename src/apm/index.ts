@@ -22,10 +22,23 @@ module ProcessOut {
 
         ContextImpl.instance.initialise({
           ...data,
+          success: {
+            enabled: true,
+            requiresAction: false,
+            autoDismissDuration: 3,
+            manualDismissDuration: 60,
+            ...data.success,
+          },
+          confirmation: {
+            requiresAction: true,
+            timeout: MIN_15 / 1000,
+            ...data.confirmation,
+          },
           logger: {
             error: (options: Omit<Parameters<TelemetryClient['reportError']>[0], 'stack'>) => {
               if (DEBUG === true) {
                 console.error(options.message)
+                return;
               }
 
               logger.reportError({
@@ -33,6 +46,17 @@ module ProcessOut {
                 stack: new Error().stack
               });
             },
+            warn: (options: Omit<Parameters<TelemetryClient['reportWarning']>[0], 'stack'>) => {
+              if (DEBUG === true) {
+                console.warn(options.message)
+                return;
+              }
+
+              logger.reportWarning({
+                ...options,
+                stack: new Error().stack
+              });
+            }
           },
           events: new APMEventsImpl(),
           reload: () => {
@@ -45,11 +69,19 @@ module ProcessOut {
       }
 
       public initialise() {
+        ContextImpl.context.events.emit('initialised')
         ContextImpl.context.page.render(APMViewLoading)
-        ContextImpl.context.page.load(APIImpl.initialise)
+        
+        ContextImpl.context.page.load(APIImpl.initialise, (err, state) => {
+          ContextImpl.context.events.emit('start')
+          if (err) {
+            ContextImpl.context.events.emit('failure', { failure: { code: 'processout-js.internal-error', message: err.message } })
+          }
+        })
       }
 
       public cleanUp() {
+        clearAllOTPState();
         ContextImpl.context.page.cleanUp()
       }
 
