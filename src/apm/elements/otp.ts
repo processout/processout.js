@@ -1,21 +1,52 @@
 module ProcessOut {
-  const { div, label } = elements
+  const { div, label, input } = elements
 
   export interface OTPProps {
     name: string;
     length: number;
     type?: 'text' | 'numeric';
+    disabled?: boolean;
+    errored?: boolean;
+    value?: string;
     onComplete?: (key: string, otp: string) => void;
   }
 
-  const state = {
-    values: null,
-    focusedIndex: 0,
+  // Persistent state store keyed by OTP name to survive re-renders
+  const otpStateStore: Record<string, {
+    values: string[];
+    focusedIndex: number;
+    isComplete: boolean;
+  }> = {};
+
+  // Function to clear OTP state when field is removed
+  export const clearOTPState = (name: string): void => {
+    delete otpStateStore[name];
   };
 
-  let inputRefs: HTMLInputElement[] = [];
+  // Function to clear all OTP state
+  export const clearAllOTPState = (): void => {
+    Object.keys(otpStateStore).forEach(key => delete otpStateStore[key]);
+  };
 
-  export const OTP = ({ name, length, type = 'text', onComplete }: OTPProps): VNode => {
+  export const OTP = ({ name, length, type = 'text', disabled, errored, onComplete, value }: OTPProps): VNode => {
+    // Get or create persistent state for this OTP instance
+    if (!otpStateStore[name] || otpStateStore[name].values.length !== length) {
+      otpStateStore[name] = {
+        values: new Array<string>(length).fill(''),
+        focusedIndex: 0,
+        isComplete: false,
+      };
+    }
+
+    const state = otpStateStore[name];
+    let inputRefs: HTMLInputElement[] = [];
+  
+    // Check for completion - only call onComplete once per completion
+    const isCurrentlyComplete = state.values.every(v => v);
+
+    if (isCurrentlyComplete && !value) {
+      onComplete?.(name, state.values.join(''));
+    }
     /**
      * Synchronizes the DOM to match the current state. This function is the single
      * source of truth for how the inputs should appear.
@@ -51,9 +82,14 @@ module ProcessOut {
       // Set focus based on the state.
       inputRefs[state.focusedIndex]?.focus();
 
-      // Check for completion.
-      if (onComplete && state.values.every(v => v)) {
+      // Check for completion - only call onComplete once per completion
+      const isCurrentlyComplete = state.values.every(v => v);
+      if (onComplete && isCurrentlyComplete && !state.isComplete) {
+        state.isComplete = true;
         onComplete(name, state.values.join(''));
+      } else if (!isCurrentlyComplete && state.isComplete) {
+        // Reset completion flag if user clears the OTP
+        state.isComplete = false;
       }
     };
 
@@ -111,14 +147,11 @@ module ProcessOut {
       update();
     };
 
-    const handleWrapperClick = (e: MouseEvent): void => {
+    const handleHiddenFocus = (e: FocusEvent): void => {
       e.preventDefault()
-      if ((e.target as HTMLElement).tagName !== 'INPUT') {
-        inputRefs[state.focusedIndex]?.focus();
-      }
+      inputRefs[state.focusedIndex]?.focus();
     };
 
-    state.values = state.values || new Array<string>(length).fill('');
     inputRefs.length = 0;
 
     const inputs = new Array(length).fill(0).map((_, i) => {
@@ -126,7 +159,8 @@ module ProcessOut {
         name: `${name}-${i + 1}`,
         oninput: (_, value: string) => handleOnChange(i, value),
         onkeydown: (e: KeyboardEvent) => handleKeyDown(i, e),
-        disabled: i !== state.focusedIndex,
+        disabled: disabled || i !== state.focusedIndex,
+        errored: errored,
         value: state.values[i],
         id: `${name}-${i + 1}`,
         type: "text", // Use 'text' to allow single char input, pattern for numbers
@@ -142,6 +176,6 @@ module ProcessOut {
     });
 
     // Return the final element tree.
-    return div(label({ className: 'otp', onclick: handleWrapperClick }, ...inputs));
+    return div(label({ className: 'otp', htmlFor: name }, ...inputs, input({ className: 'hidden', type: 'text', name, id: name, tabindex: -1, onfocus: handleHiddenFocus })));
   };
 }
