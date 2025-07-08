@@ -1,11 +1,14 @@
 module ProcessOut {
+  // Track OTP fields across form changes to clean up removed ones
+  let previousOtpFields = new Set<string>();
+
   export interface NextStepProps {
     elements: APIElements<FormFieldResult>,
     config:  {
       success: boolean
       state: string
-      invoice: APIInvoice
-      gateway: object
+      invoice?: APIInvoice
+      gateway?: object
       error?: {
         code: string
         message: string
@@ -23,7 +26,7 @@ module ProcessOut {
   }
 
   const setFormState = (elements: NextStepProps['elements'], error: NextStepProps['config']['error'] | undefined): FormState => {
-    const forms = elements.filter(e => e.type === "form")
+    const forms = elements?.filter(e => e.type === "form") ?? []
 
     if (forms.length === 0) {
       return null
@@ -43,7 +46,7 @@ module ProcessOut {
     state.values = forms.reduce((acc, form) => {
       form.parameters.parameter_definitions.forEach(param => {
         if (param.type === 'single-select') {
-          acc[param.key] = param.available_values.find(item => item.preselected)?.key || param.available_values[0].key
+          acc[param.key] = param.available_values.find(item => item.preselected)?.value || param.available_values[0].value
         }
 
         if (param.type === 'phone') {
@@ -60,15 +63,13 @@ module ProcessOut {
       return {
         ...acc,
         ...form.parameters.parameter_definitions.reduce((acc, param) => {
-          if (typeof param.required === 'undefined') {
-            return acc;
-          }
-
           return {
             ...acc,
             [param.key]: {
               email: param.type === "email",
-              required: param.required,
+              required: param.required ?? false,
+              minLength: 'min_length' in param ? param.min_length : undefined,
+              maxLength: 'max_length' in param ? param.max_length : undefined,
             }
           }
         }, {})
@@ -94,17 +95,32 @@ module ProcessOut {
     private handleSubmit() {
       const state = this.state
 
-      if (state.form && !validateForm(this.setState.bind(this))) {
+      if (state.form && !validateForm(state, this.setState.bind(this))) {
         return;
       }
 
+      if (state.form) {
+        ContextImpl.context.events.emit('submit', { parameters: Object.keys(state.form.values).map(key => ({ key, value: state.form.values[key] })) })
+      }
+      
       this.setState({ loading: true });
-      ContextImpl.context.page.load(APIImpl.sendFormData(state.form?.values ?? {}))
+      ContextImpl.context.page.load(APIImpl.sendFormData(state.form?.values ?? {}), (err, state) => {
+        if (err) {
+          ContextImpl.context.events.emit('submit-error', { failure: { code: err.code, message: err.message } })
+        } else {
+          ContextImpl.context.events.emit('submit-success', { additionalParametersExpected: state === 'NEXT_STEP_REQUIRED' })
+        }
+      })
+    }
+
+    private handleCancelClick() {
+      ContextImpl.context.events.emit('request-cancel')
     }
 
     render() {
-      console.log(this.props);
-      return page(
+      const hasErrors = Object.keys(this.state.form?.errors ?? {}).some(key => this.state.form?.errors[key])
+
+      return Main({ config: this.props.config },
         ...renderElements(
           this.props.elements,
           {
@@ -113,7 +129,8 @@ module ProcessOut {
             handleSubmit: this.handleSubmit.bind(this)
           }
         ),
-        Button({ onclick:this.handleSubmit.bind(this), loading: this.state.loading }, 'Continue'),
+        Button({ onclick: this.handleSubmit.bind(this), disabled: hasErrors, loading: this.state.loading }, 'Continue'),
+        (ContextImpl.context.allowCancelation ? Button({ onclick: this.handleCancelClick.bind(this) }, 'Cancel') : null)
       )
     }
   }

@@ -12,7 +12,7 @@ module ProcessOut {
   export const Input = ({ name, className, label, disabled, errored, value, id, type, oninput, onblur, ...props }: InputProps) => {
     const classNames = [
       "field input",
-      disabled && 'disabled',
+      disabled && !errored && 'disabled',
       label && 'has-label',
       value && 'filled',
       errored && 'errored',

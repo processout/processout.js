@@ -1,6 +1,7 @@
 module ProcessOut {
   export type PlainObject = object;
-
+  export const MIN_15 = 1000 * 60 * 15;
+  
   export function formatCurrency(amount: string, currencyCode: string) {
     const formatter = new Intl.NumberFormat(navigator.language, {
       style: 'currency',
@@ -12,7 +13,8 @@ module ProcessOut {
 
   function dedent(strings: TemplateStringsArray, ...values: unknown[]): string {
     const raw = String.raw(strings, ...values);            // untouched text
-    const indent = raw.match(/^[ \t]*(?=\S)/m)[0].length;  // leading spaces of first non-blank line
+    const match = raw.match(/^[ \t]*(?=\S)/m);
+    const indent = match ? match[0].length : 0;            // handle empty strings
     const pattern = new RegExp(`^[ \\t]{0,${indent}}`, 'gm');
     return raw.replace(pattern, '').trim();                // strip & trim
   }

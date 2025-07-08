@@ -1,15 +1,15 @@
 module ProcessOut {
+  interface SuccessProps {
+    config: APISuccessBase & Partial<PaymentContext>,
+    elements?: APIElements<FormFieldResult>
+  }
+
   const { div } = elements;
 
-  const Tick = div({ className: "tick" },
-    div({ className: "tick-icon" }))
+  export class APMViewSuccess extends APMViewImpl<SuccessProps> {
+    private timeoutSet = false
 
-  export class APMViewSuccess extends APMViewImpl<{ config: { invoice: { amount: string, currency: string }, gateway: object }}> {
     styles = css`
-      .success-page {
-        align-items: center;
-      }
-
       .success-message {
         text-align: center;
         display: flex;
@@ -17,15 +17,20 @@ module ProcessOut {
         align-items: center;
         width: 100%;
       }
-      .tick {
+
+      .success-page .tick-container {
         width: 112px;
         height: 112px;
         display: flex;
         justify-content: center;
         align-items: center;
       }
+      .success-page .tick-background {
+        width: 76px;
+        height: 76px;
+      }
 
-      .tick:before {
+      .success-page .tick-container:before {
         content: "";
         position: absolute;
         width: 76px;
@@ -35,75 +40,45 @@ module ProcessOut {
         z-index: 0;
         animation: grow 1s ease-in-out infinite;
       }
-
-      .tick-icon {
-        position: relative;
-        width: 76px;
-        height: 76px;
-        border-radius: 76px;
-        background-color: #119947;
-        z-index: 1;
-        transform-origin: center;
-      }
-      .tick-icon:before, .tick-icon:after {
-        content: "";
-        position: absolute;
-        background-color: white;
-        transform-origin: bottom center;
-        width: 6px;
-        bottom: 20px;
-        border-radius: 6px;
-      }
-      .tick-icon:before {
-        height: 26px;
-        transform: rotate(-35deg);
-        left: calc(50% - 3px);
-      }
-      .tick-icon:after {
-        height: 43px;
-        transform: rotate(24deg);
-        left: calc(50% - 5px);
-      }
-
-      @keyframes grow {
-        0% {
-          transform: scale(0.8);
-          opacity: 1;
-        }
-        80% {
-          transform: scale(1.5);
-          opacity: 1;
-        }
-        85% {
-          transform: scale(1.5);
-          opacity: 1;
-        }
-        86% {
-          opacity: 0;
-          transform: scale(1.5);
-        }
-        100% {
-          opacity: 0;
-          transform: scale(0.8);
-        }
-      }
     `
 
+    private timeout = ContextImpl.context.success.requiresAction ? ContextImpl.context.success.manualDismissDuration : ContextImpl.context.success.autoDismissDuration
+
     handleDoneClick() {
-      ContextImpl.context.events.emit('success');
+      ContextImpl.context.events.emit('success', { trigger: 'user' });
     }
 
     render() {
-      return page({ className: "success-page" },
+      if (!this.props.config.invoice) {
+        ContextImpl.context.events.emit('success', { trigger: 'immediate' });
+        return null
+      }
+
+      if (!this.timeoutSet && this.timeout > 0)) {
+        this.timeoutSet = true
+        setTimeout(() => {
+          ContextImpl.context.events.emit('success', { trigger: 'timeout' });
+        }, this.timeout)
+      }
+
+      return Main({ config: this.props.config, className: "success-page", hideAmount: true },
         div({ className: 'success-message' },
-          Tick,
+          div({ className: 'tick-container' },
+            div({ className: 'tick-background' },
+            Tick({ state: 'completed' }),
+            )
+          ),
           div({ className: "header-container" },
             Header({ tag: 'h2' }, 'Payment approved!'),
             SubHeader({ tag: 'h3' }, `You paid ${formatCurrency(this.props.config.invoice.amount, this.props.config.invoice.currency)}`),
           ),
         ),
-        div({ className: "button-container" },
-          Button({ onclick: this.handleDoneClick.bind(this) }, 'Done')
+        ...(this.props.elements ? renderElements(this.props.elements) : []),
+        (ContextImpl.context.success.requiresAction
+          ? div({ className: "button-container" },
+              Button({ onclick: this.handleDoneClick.bind(this) }, 'Done')
+            )
+          : null
         )
       )
     }

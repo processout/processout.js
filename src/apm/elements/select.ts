@@ -3,7 +3,7 @@ module ProcessOut {
     name: string;
     label: string;
     options: Array<{
-      key: string;
+      value: string;
       label: string;
     }>
     value?: string;
@@ -45,7 +45,7 @@ module ProcessOut {
       }
     },
       ...options.map(item => {
-        return option({ value: item.key, selected: item.key === value }, item.label)
+        return option({ value: item.value, selected: item.value === value }, item.label)
       })
     )
 
