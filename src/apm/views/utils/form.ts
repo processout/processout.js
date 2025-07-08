@@ -6,7 +6,7 @@ module ProcessOut {
   export interface FormState {
     touched: Record<string, boolean>
     values: Record<string, string | number | boolean | PhoneState>
-    validation: Record<string, { required?: boolean, email?: boolean }>
+    validation: Record<string, { required?: boolean, email?: boolean, minLength?: number, maxLength?: number }>
     errors: Record<string, string>
   }
 
@@ -16,20 +16,33 @@ module ProcessOut {
   function validateField(state: NextStepState, key: string, value: string | number | boolean | PhoneState): string | undefined {
     const validation = state.form.validation[key]
 
+
     if (!validation) {
       return
     }
 
+    const actualValue = isPlainObject(value) && 'value' in value ? value.value : value
+
     switch (true) {
       case validation.required &&
-        (typeof value === "undefined" || (typeof value === "string" && value.length === 0) || (isPlainObject(value) && 'value' in value && value.value.length === 0)): {
+        (typeof value === "undefined" || (typeof actualValue === "string" && actualValue.length === 0)): {
         return "Missing required value"
       }
-      case validation.email && typeof value === "string" && !value.match(emailRegex): {
+      case validation.email && typeof actualValue === "string" && (!actualValue || !actualValue.match(emailRegex)): {
         return "Missing valid email address"
+      }
+      case validation.minLength && validation.maxLength && validation.minLength === validation.maxLength && (!actualValue || typeof actualValue === "string" && actualValue.length < validation.minLength): {
+        return `Must be exactly ${validation.minLength} characters`
+      }
+      case validation.minLength && typeof actualValue === "string" && (!actualValue || actualValue.length < validation.minLength): {
+        return `Must be at least ${validation.minLength} characters`
+      }
+      case validation.maxLength && typeof actualValue === "string" && actualValue.length > validation.maxLength: {
+        return `Must be no more than ${validation.maxLength} characters`
       }
     }
   }
+
   function updateField(setState: SetState<NextStepState>) {
     return function(key: string, value: string | number | boolean | PhoneState) {
       setState((prevState) => {
@@ -39,6 +52,8 @@ module ProcessOut {
           delete errors[key]
           errors[key] = validateField(prevState, key, value)
         }
+
+        ContextImpl.context.events.emit('field-change', { parameter: { key, value } })
 
         return {
           ...prevState,
@@ -80,23 +95,21 @@ module ProcessOut {
     }
   }
 
-  export function validateForm(setState: SetState<NextStepState>): boolean {
-    let successful = false;
+export function validateForm(state: NextStepState, setState: SetState<NextStepState>): boolean {
+    const touched = {}
+    const errors = Object.keys(state.form.validation).reduce((acc, key) => {
+      touched[key] = true
+      const error = validateField(state, key, state.form.values[key])
+      if (error) {
+        acc[key] = error;
+      }
+
+      return acc
+    }, {});
+
+    const successful = isEmpty(errors)
 
     setState((prevState) => {
-      const touched = {}
-      const errors = Object.keys(prevState.form.values).reduce((acc, key) => {
-        touched[key] = true
-        const error = validateField(prevState, key, prevState.form.values[key])
-        if (error) {
-          acc[key] = error;
-        }
-
-        return acc
-      }, {});
-
-      successful = isEmpty(errors)
-
       return {
         ...prevState,
         form: {
@@ -123,6 +136,9 @@ module ProcessOut {
             name: field.key,
             length: field.min_length,
             type: field.subtype === "digits" ? "numeric" : "text",
+            disabled: state.loading,
+            errored: !!error,
+            value: value as string,
             onComplete: updateField(setState),
           })
           break;
@@ -145,8 +161,10 @@ module ProcessOut {
           input = Select({
             name: field.key,
             label: field.label,
-            value: value as string || field.available_values.find(item => item.preselected)?.key || '',
+            value: value as string || field.available_values.find(item => item.preselected)?.value || '',
             options: field.available_values,
+            errored: !!error,
+            disabled: state.loading,
             onchange: updateField(setState),
             onblur: onBlur(setState),
           })
@@ -173,6 +191,8 @@ module ProcessOut {
       className: "form",
       onsubmit: (e) => {
         e.preventDefault()
+        clearAllOTPState()
+        ContextImpl.context.events.emit('submit', { parameters: Object.keys(state.form.values).map(key => ({ key, value: state.form.values[key] })) })
         onSubmit()
       }
     }, ...fields)
