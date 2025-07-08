@@ -24,7 +24,7 @@ module ProcessOut {
 
   type LogLevel = "error" | "warn" | "info" | "debug"
 
-  export class TelemetryClient {
+export class TelemetryClient {
     protected processOutInstance: ProcessOut
 
     constructor(processOutInstance: ProcessOut) {
@@ -39,7 +39,7 @@ module ProcessOut {
       return this.report(data, "warn")
     }
 
-    public report(data: TelemetryEventData, level: LogLevel) {
+  public report(data: TelemetryEventData, level: LogLevel) {
       if (!data) {
         return null
       }
