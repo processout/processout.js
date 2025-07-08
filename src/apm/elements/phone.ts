@@ -51,6 +51,8 @@ module ProcessOut {
   }
 
   export const Phone = ({ dialing_codes, name, oninput, onblur, disabled, label, errored, className, value, id, ...props }: PhoneProps) => {
+    ContextImpl.context.page.loadScript('libphonenumber', 'https://cdnjs.cloudflare.com/ajax/libs/google-libphonenumber/3.2.42/libphonenumber.min.js')
+
     state = value ? { ...value, iso: '' } : state
 
     state.dialing_code = state.dialing_code || dialing_codes[0].value;
@@ -66,12 +68,80 @@ module ProcessOut {
 
 
     const handleInputChange = e => {
-      const input = e.target as HTMLInputElement;
-      const dialingCode = state.dialing_code;
-      const numberStartIndex = dialingCode.length + 1;
+      const phoneUtil = (window as any).libphonenumber.PhoneNumberUtil.getInstance();
 
+      const input = e.target as HTMLInputElement;
       const currentValue = input.value;
       const cursorPosition = input.selectionStart;
+
+      // Helper function to update state and UI when country is detected
+      const updateDetectedCountry = (detectedCountry, nationalNumber: string) => {
+        // Update state with detected values
+        state.dialing_code = detectedCountry.dialingCode.value;
+        state.iso = detectedCountry.region;
+        state.value = nationalNumber;
+        
+        // Update the input with formatted value
+        const formattedValue = getFullNumber(state.dialing_code, nationalNumber);
+        input.value = formattedValue;
+        
+        // Update flag image
+        const flagImg = input.parentElement.querySelector('img');
+        if (flagImg) {
+          flagImg.src = `https://flagcdn.com/w80/${state.iso.toLowerCase()}.jpg`;
+          flagImg.alt = `Selected ${detectedCountry.dialingCode.name} dialing code`;
+        }
+        
+        // Update select value
+        if (dialingCodesRef) {
+          dialingCodesRef.value = state.iso;
+        }
+        
+        if (label) {
+          updateFilledState(input);
+        }
+        
+        // Trigger callback
+        oninput && oninput(name, state);
+        
+        // Set cursor at end
+        input.setSelectionRange(formattedValue.length, formattedValue.length);
+      };
+
+      // First remove the current prefix if it exists to check what was actually pasted
+      let valueWithoutCurrentPrefix = currentValue;
+      if (currentValue.startsWith(state.dialing_code)) {
+        valueWithoutCurrentPrefix = currentValue.substring(state.dialing_code.length).trim();
+      }
+
+      // Check if user pasted/autocompleted a full international number (starts with +)
+      if (valueWithoutCurrentPrefix.startsWith('+')) {
+        try {
+          const parsedNumber = phoneUtil.parseAndKeepRawInput(valueWithoutCurrentPrefix, '');
+          const countryCode = parsedNumber.getCountryCode();
+          const nationalNumber = parsedNumber.getNationalNumber().toString();
+          
+          // Find matching dialing code in our list
+          const matchingDialingCode = dialing_codes.find(code => 
+            code.value === `+${countryCode}`
+          );
+          
+          if (matchingDialingCode) {
+            const detectedCountry = {
+              dialingCode: matchingDialingCode,
+              region: matchingDialingCode.region_code
+            };
+            updateDetectedCountry(detectedCountry, nationalNumber);
+            return;
+          }
+        } catch (error) {
+
+        }
+      }
+
+      // Normal handling for non-international numbers
+      const dialingCode = state.dialing_code;
+      const numberStartIndex = dialingCode.length + 1;
 
       // --- 2. Calculate cursor's position within the numeric part ---
       // How many digits are to the left of the cursor, ignoring the prefix?
@@ -104,7 +174,9 @@ module ProcessOut {
         updateFilledState(input);
       }
 
+
       if (currentValue.length < getDialingCode(dialingCode).length) {
+        state.value = cleanNumber;
         dialingCodesRef.focus()
         dialingCodesRef.showPicker()
         return

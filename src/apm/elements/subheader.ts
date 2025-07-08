@@ -9,12 +9,12 @@ module ProcessOut {
   export const SubHeader = <K extends SubHeaderTag>(...args: HeaderArgs<K>) => {
     const first = args[0]
     const content: string = isProps<K>(first) ? args[1] : first;
-    const props: SubHeaderTagProps<K> = isProps<K>(first) ? first : {}
+    const props: SubHeaderTagProps<K> = isProps<K>(first) ? first : {} as SubHeaderTagProps<K>
     const tag: SubHeaderTag = props.tag || 'h1';
 
     delete props.tag
 
-    const className = ["sub-header", props.className].filter(Boolean)
+    const className = ["sub-heading", props.className].filter(Boolean)
 
     const el = elements[tag];
     return el({ ...props, className }, content)

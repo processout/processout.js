@@ -2,39 +2,74 @@ module ProcessOut {
   export interface APMPage {
     render<V extends APMViewConstructor>(view: V, props?: ExtractViewProps<V>): void
     load(request: APIRequest): void
+    loadScript(name: string, path: string, callback: (error?: Error) => void): void
     cleanUp(): void
   }
 
   export class APMPageImpl implements APMPage {
-    public wrapper: Element
-    private shadow: ShadowRoot | Document
+    private hostElement: Element;
+    private mainContentWrapper: HTMLDivElement | null = null;
+    private currentRoot: ShadowRoot | Document | null = null;
+    private currentView: APMView | null = null;
+    private isReady: boolean = false;
+    private pendingOperations: Array<() => void> = [];
+    private loadedScripts: Map<string, boolean> = new Map();
+    private loadingScripts: Map<string, Array<(error?: Error) => void>> = new Map();
+
     private state: 'SUCCESS' | 'PENDING' | 'NEXT_STEP_REQUIRED' | 'VALIDATION_ERROR' | 'UNKNOWN'
 
     constructor(container: Element) {
+      this.hostElement = container;
       this.createWrapper(container)
     }
 
     render<V extends APMViewConstructor>(View: V, props?: ExtractViewProps<V>) {
-      this.setStylesheet(this.shadow)
-      const view = new View(this.wrapper, this.shadow, props)
+      if (!this.isReady) {
+        // Queue the render operation until the page is ready
+        this.pendingOperations.push(() => this.render(View, props));
+        return;
+      }
+
+      if (this.currentView) {
+        this.currentView.unmount()
+      }
+
+      const view = new View(this.mainContentWrapper, this.currentRoot, props)
       view.mount()
+      this.currentView = view
     }
 
-    load<R extends APIRequest = APIRequest>(request: R) {
+    load<R extends APIRequest = APIRequest>(request: R, callback?: (err?: any, state?: string) => void) {
+      if (!this.isReady) {
+        // Queue the load operation until the page is ready
+        this.pendingOperations.push(() => this.load(request));
+        return;
+      }
+
       (request.bind(APIImpl) as APIRequest)({
         hasConfirmedPending: ContextImpl.context.requirePendingConfirmation
           ? this.state === "PENDING"
           : true,
         onSuccess: ({ elements, ...config }) => {
           this.state = config.state
+          callback?.(null, this.state);
 
-          if (elements && elements.length > 0) {
+          if (config.state === 'NEXT_STEP_REQUIRED') {
             ContextImpl.context.page.render(APMViewNextSteps, { elements, config })
             return
+          }
+
+          if (config.state === 'SUCCESS') {
+            ContextImpl.context.page.render(APMViewSuccess, { elements, config })
+          }
+
+          if (config.state === 'PENDING') {
+            ContextImpl.context.page.render(APMViewPending, { elements, config })
           }
         },
         onError: ({ elements, ...config }) => {
           this.state = config.state
+          callback?.(config.error);
           ContextImpl.context.page.render(APMViewNextSteps, { elements, config })
         },
         onFailure: data => {
@@ -52,12 +87,16 @@ module ProcessOut {
       code,
       message,
     }: { message: string, title: string, code?: string, }) {
-      ContextImpl.context.events.emit("critical-failure", {
-        code: code || 'processout-js.internal-error',
-        message,
+      ContextImpl.context.events.emit("failure", {
+        failure: {
+          code: code || 'processout-js.internal-error',
+          message,
+        },
+        paymentState: this.state
       })
+
       ContextImpl.context.page.render(APMViewError, {
-        title,
+        title: "Unable to connect",
         message: "An unexpected error occurred. We're working to fix this issue, please check back later or contact support if you need assistance.",
         hideRefresh: true
       })
@@ -68,12 +107,79 @@ module ProcessOut {
     }
 
     cleanUp() {
-      if (!this.wrapper) {
+      if (!this.hostElement.firstChild) {
         return
       }
 
-      this.wrapper.remove()
-      this.shadow.parentElement.shadowRoot.removeChild(this.shadow)
+      this.hostElement.removeChild(this.hostElement.firstChild);
+    }
+
+    loadScript(name: string, path: string, callback?: (error?: Error) => void): void {
+      // Check if script is already loaded
+      if (this.loadedScripts.get(name)) {
+        callback?.();
+        return;
+      }
+
+      // Check if script is currently being loaded
+      if (this.loadingScripts.has(name)) {
+        const callbacks = this.loadingScripts.get(name)!;
+
+        for (var i = 0; i < callbacks.length; i++) {
+          if (callbacks[i].toString() === callback.toString()) {
+            return;
+          }
+        }
+        
+        callbacks.push(callback);
+        return;
+      }
+
+      // Check if script already exists in the document
+      if (document.querySelector(`script[src*="${name}"]`)) {
+        this.loadedScripts.set(name, true);
+        callback?.();
+        return;
+      }
+
+      // Initialize callback queue for this script
+      this.loadingScripts.set(name, [callback || (() => {})]);
+
+      // Create and load the script
+      const script = document.createElement('script');
+      script.src = path.startsWith('https://') ? path : ContextImpl.context.poClient.endpoint("js", path);
+      
+      script.onload = () => {
+        this.loadedScripts.set(name, true);
+        const callbacks = this.loadingScripts.get(name) || [];
+        this.loadingScripts.delete(name);
+        
+        // Call all waiting callbacks
+        for (var i = 0; i < callbacks.length; i++) {
+          callbacks[i]();
+        }
+      };
+      
+      script.onerror = () => {
+        const error = new Error(`Failed to load script: ${name}`);
+        const callbacks = this.loadingScripts.get(name) || [];
+        this.loadingScripts.delete(name);
+        
+        // Call all waiting callbacks with error
+        for (var i = 0; i < callbacks.length; i++) {
+          callbacks[i](error);
+        }
+      };
+      
+      // Determine where to append the script based on current context
+      const targetDocument = this.currentRoot instanceof Document ? this.currentRoot : document;
+      targetDocument.head.appendChild(script);
+    }
+
+    private executePendingOperations() {
+      // Execute all queued operations now that the page is ready
+      const operations = this.pendingOperations.splice(0); // Clear the queue
+      operations.forEach(operation => operation());
     }
 
     private _getDeepActiveElement(root) {
@@ -102,60 +208,93 @@ module ProcessOut {
 
 
     private createWrapper(container: Element) {
-      if (this.wrapper) {
-        return;
-      }
+      this.cleanUp()
 
-      const supportsShadowDOM = (() => {
-        return !!(Element.prototype.attachShadow);
-      })();
+      // --- Determine if Shadow DOM is supported ---
+      const supportsShadowDOM = !!(Element.prototype.attachShadow);
 
-
+      // --- Create New Wrapper based on support ---
       if (!supportsShadowDOM) {
+        // Fallback: Use an iframe if Shadow DOM is not supported
         const iframe = document.createElement('iframe');
         iframe.setAttribute('frameBorder', '0');
         iframe.style.width = '100%';
         iframe.style.height = '400px';
+        iframe.title = 'Content Wrapper'; // Good practice for accessibility
 
-        container.appendChild(iframe);
+        container.appendChild(iframe); // Append iframe directly to the user's container
 
-        const doc = iframe.contentDocument ?? iframe.contentWindow?.document;
+        // Setup iframe content after it's loaded to avoid race conditions
+        const setupIframeContent = () => {
+          const doc = iframe.contentDocument ?? iframe.contentWindow?.document;
 
-        if (doc) {
-          if (!doc.body) {
-            doc.open();
-            doc.write(`<!DOCTYPE html><head></head><body></body>`);
-            doc.close();
+          if (doc) {
+            // Ensure the iframe has a basic HTML structure if it's not fully loaded
+            if (!doc.body) {
+              doc.open();
+              doc.write(`<!DOCTYPE html><html><head></head><body></body></html>`);
+              doc.close();
+            }
+
+            // Load fonts into the iframe's head explicitly
+            const fontLink1 = doc.createElement('link'); fontLink1.rel = 'preconnect'; fontLink1.href = 'https://fonts.googleapis.com'; doc.head.appendChild(fontLink1);
+            const fontLink2 = doc.createElement('link'); fontLink2.rel = 'preconnect'; fontLink2.href = 'https://fonts.gstatic.com'; fontLink2.crossOrigin = 'anonymous'; doc.head.appendChild(fontLink2);
+            const fontLink3 = doc.createElement('link'); fontLink3.href = 'https://fonts.googleapis.com/css2?family=Work+Sans:wght@100..900&display=swap'; fontLink3.rel = 'stylesheet'; doc.head.appendChild(fontLink3);
+
+            // Apply component-specific stylesheet within the iframe's document
+            this.setStylesheet(doc);
+
+            // Create the main content wrapper div inside the iframe's body
+            this.mainContentWrapper = doc.createElement('div');
+            this.mainContentWrapper.className = 'main';
+            doc.body.appendChild(this.mainContentWrapper);
+
+            this.currentRoot = doc; // In iframe case, this holds the iframe's Document
+
+            // Mark page as ready and execute any pending operations
+            this.isReady = true;
+            this.executePendingOperations();
           }
+        };
 
-          doc.head.innerHTML = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@100..900&display=swap" rel="stylesheet">';
-
-          this.setStylesheet(doc);
-
-          this.wrapper = doc.createElement('div');
-          this.wrapper.className = 'main';
-
-          doc.body.appendChild(this.wrapper)
+        // Check if iframe is already loaded, otherwise wait for load event
+        if (iframe.contentDocument && iframe.contentDocument.readyState === 'complete') {
+          setupIframeContent();
+        } else {
+          iframe.addEventListener('load', setupIframeContent, { once: true });
         }
 
-        this.shadow = doc;
         return;
       }
 
-      document.head.innerHTML += '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@100..900&display=swap" rel="stylesheet">';
+      // 1. Create a new host element for the Shadow DOM
+      // This element will be appended to the user-provided container.
+      const newShadowHost = document.createElement('div');
+      container.appendChild(newShadowHost); // Append the host element to the user's container
 
-      const shadow = container.attachShadow({ mode: 'open' })
-      this.setStylesheet(shadow)
+      // 2. Attach Shadow DOM to this newly created host element
+      const shadowRoot = newShadowHost.attachShadow({ mode: 'open' });
+      this.currentRoot = shadowRoot; // Store reference to the ShadowRoot
 
-      this.wrapper = document.createElement("div")
-      this.wrapper.setAttribute('class', 'main')
+      // 3. Add font link to the main document's head (only once)
+      if (!document.head.querySelector('link[href*="Work+Sans"]')) {
+        const fontLink1 = document.createElement('link'); fontLink1.rel = 'preconnect'; fontLink1.href = 'https://fonts.googleapis.com'; document.head.appendChild(fontLink1);
+        const fontLink2 = document.createElement('link'); fontLink2.rel = 'preconnect'; fontLink2.href = 'https://fonts.gstatic.com'; fontLink2.crossOrigin = 'anonymous'; document.head.appendChild(fontLink2);
+        const fontLink3 = document.createElement('link'); fontLink3.href = 'https://fonts.googleapis.com/css2?family=Work+Sans:wght@100..900&display=swap'; fontLink3.rel = 'stylesheet'; document.head.appendChild(fontLink3);
+      }
 
-      shadow.appendChild(this.wrapper)
+      // 4. Apply component-specific stylesheet within the Shadow DOM
+      this.setStylesheet(shadowRoot);
 
-      this.shadow = shadow;
+      // 5. Create the main content wrapper div inside the Shadow DOM
+      this.mainContentWrapper = document.createElement("div");
+      this.mainContentWrapper.setAttribute('class', 'main');
+      shadowRoot.appendChild(this.mainContentWrapper);
+
+      // For Shadow DOM, mark as ready immediately since it's synchronous
+      this.isReady = true;
+      this.executePendingOperations();
     }
-
-
 
     private setStylesheet(shadow: ShadowRoot | Document) {
       const stylesheet = ThemeImpl.instance.createStyles();

@@ -1,5 +1,5 @@
 module ProcessOut {
-  const { button } = elements
+  const { button, div } = elements
   export interface ButtonProps extends Props<'button'> {
     variant?: 'primary' | 'secondary' | 'tertiary' | 'success' | 'danger'
     size?: 'sm' | 'md' | 'lg',
@@ -8,7 +8,7 @@ module ProcessOut {
 
   export const Button = (first: ButtonProps | Child, ...children: Child[]) => {
     const { className, variant, size, loading, disabled, ...userProps } = isProps(first) ? first : {}
-    let rest = isProps(first) ? children : [first, ...children];
+    let rest = [div({ className: "content" }, isProps(first) ? children : [first, ...children])];
 
     if (loading) {
       rest = [Loader()]

@@ -34,6 +34,7 @@ module ProcessOut {
       disabled: string
       label: string
       errored: string
+      secondary: string
     }
     shadow: {
       focus: string,
@@ -98,6 +99,7 @@ module ProcessOut {
             disabled: '#707378',
             label: '#A7A9AF',
             errored: '#FF8888',
+            secondary: '#585A5F',
           },
           shadow: {
             focus: '#63656b',
@@ -139,6 +141,7 @@ module ProcessOut {
             disabled: '#C0C3C8',
             label: '#707378',
             errored: '#BE011B',
+            secondary: '#585A5F',
           },
           shadow: {
             focus: '#b1b1b2',
@@ -196,6 +199,56 @@ module ProcessOut {
 
     public update(theme: DeepPartial<ThemeOptions>) {
       this.theme = this.deepMerge(this.theme, theme)
+    }
+
+    private generateMarkdownSpacingRules(): string {
+      const headingTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']
+      const listTags = ['ul', 'ol']
+      
+      // Generate heading-to-heading combinations
+      const headingRules = []
+      for (let i = 0; i < headingTags.length; i++) {
+        for (let j = 0; j < headingTags.length; j++) {
+          headingRules.push(`.markdown ${headingTags[i]} + ${headingTags[j]}`)
+        }
+      }
+      
+      // Generate list-to-list combinations
+      const listRules = []
+      for (let i = 0; i < listTags.length; i++) {
+        for (let j = 0; j < listTags.length; j++) {
+          listRules.push(`.markdown ${listTags[i]} + ${listTags[j]}`)
+        }
+      }
+      
+      return `
+        /* Reset margins for all markdown elements */
+        .markdown > * {
+          margin-top: 0;
+          margin-bottom: 0;
+        }
+
+        /* Default spacing (32px) for all elements except the first one */
+        .markdown > * + * {
+          margin-top: 32px;
+        }
+
+        /* Same type elements: 16px spacing */
+        /* Heading to heading */
+        ${headingRules.join(',\n        ')} {
+          margin-top: 16px;
+        }
+
+        /* Paragraph to paragraph */
+        .markdown p + p {
+          margin-top: 16px;
+        }
+
+        /* List to list */
+        ${listRules.join(',\n        ')} {
+          margin-top: 16px;
+        }
+      `
     }
 
     public createStyles() {
@@ -313,10 +366,10 @@ module ProcessOut {
         .empty-controls {
           display: grid;
           gap: 12px;
-          text-align: center;
         }
 
         .empty-controls.x3 {
+          text-align: center;
           grid-template-columns: repeat(3, 1fr);
         }
 
@@ -344,7 +397,7 @@ module ProcessOut {
           transform: rotate(-90deg);
         }
 
-        .header-container {
+        .heading-container {
           width: 100%;
           display: flex;
           flex-direction: column;
@@ -352,13 +405,13 @@ module ProcessOut {
           padding-top: 16px;
         }
 
-        .header {
+        .heading {
           font-weight: 600;
           font-size: 20px;
           line-height: 24px;
         }
 
-        .sub-header {
+        .sub-heading {
           font-weight: 400;
           font-size: 16px;
           line-height: 26px;
@@ -376,6 +429,7 @@ module ProcessOut {
           font-family: inherit;
           width: 100%;
           display: inline-block;
+          text-wrap-mode: nowrap;
           appearance: none;
           cursor: pointer;
           font-weight: 500;
@@ -383,6 +437,7 @@ module ProcessOut {
           outline: none;
           border-width: 2px;
           border-style: solid;
+          position: relative;
         }
 
         .button:focus {
@@ -414,10 +469,17 @@ module ProcessOut {
           pointer-events: none;
         }
 
+        .button.loading .content {
+          opacity: 0;
+        }
+
         .button.loading .loader {
           width: 16px;
           height: 16px;
           border-width: 2px;
+          position: absolute;
+          top: calc(50% - 8px);
+          left: calc(50% - 8px);
         }
 
         .button.sm {
@@ -454,7 +516,7 @@ module ProcessOut {
           display: flex;
           width: 100%;
           background-color: ${ThemeImpl.instance.get('palette.light.surface.input.default')};
-          border: 2px solid ${ThemeImpl.instance.get('palette.light.border.input.default')};
+          border: 1.5px solid ${ThemeImpl.instance.get('palette.light.border.input.default')};
           border-radius: 6px;
           height: 52px;
           position: relative;
@@ -592,11 +654,23 @@ module ProcessOut {
 
         .otp {
           cursor: text;
+          position: relative;
+          display: inline-block;
         }
         .otp .input {
           width: 40px;
           float: left;
           margin-left: 12px;
+        }
+        .otp input.hidden {
+          display: block !important;
+          position: absolute;
+          width: 100%;
+          z-index: 1;
+          background: transparent;
+          border: none;
+          outline: none;
+          height: 100%;
         }
         .otp .input:first-child {
           margin-left: 0;
@@ -721,6 +795,385 @@ module ProcessOut {
           font-size: 14px;
           line-height: 20px;
         }
+
+        .header {
+          display: flex;
+          gap: 8px;
+          justify-content: space-between;
+          align-items: center;
+          padding: 16px 0;
+          border-bottom: 1px solid #dbdcdc;
+          margin-bottom: 16px;
+        }
+
+        .header.no-amount {
+          justify-content: center;
+        }
+
+        .header .amount {
+          font-weight: 600;
+          font-size: 16px;
+          line-height: 20px;
+        }
+
+        .markdown {
+          text-align: left;
+        }
+
+        .markdown-skeleton {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .skeleton-line {
+          background: linear-gradient(90deg, rgba(0, 0, 0, 0.1) 25%, rgba(0, 0, 0, 0.05) 50%, rgba(0, 0, 0, 0.1) 75%);
+          background-size: 200% 100%;
+          animation: skeleton-pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes skeleton-pulse {
+          0% {
+            background-position: 200% 0;
+          }
+          100% {
+            background-position: -200% 0;
+          }
+        }
+
+        .qr-code-container {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          align-items: center;
+        }
+
+        .qr-code {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          background-color: #fafaff;
+          padding: 4px;
+        }
+        
+        .qr-skeleton {
+          position: relative;
+          display: flex;
+          flex-wrap: wrap;
+          align-content: space-around;
+        }
+
+        .qr-dot {
+          height: 4px;
+          background-color: transparent;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          box-sizing: border-box;
+        }
+
+        .qr-dot:before {
+          content: '';
+          width: 4px;
+          height: 4px;
+          background-color: rgba(0, 0, 0, 0.3);
+          border-radius: 50%;
+          animation: dot-fade 1.5s ease-in-out infinite;
+          animation-delay: var(--animation-delay, 0s);
+        }
+
+        @keyframes dot-fade {
+          0%, 100% {
+            opacity: 0.2;
+            transform: scale(0.8);
+          }
+          50% {
+            opacity: 0.7;
+            transform: scale(1.2);
+          }
+        }
+
+        .qr-square {
+          display: none;
+        }
+
+        .qr-corner {
+          display: none;
+        }
+
+        .qr-skeleton-block {
+          display: none;
+        }
+        
+        .qr-code .loader {
+          width: 15px;
+          height: 15px;
+          border-width: 2px;
+        }
+
+        .qr-actions {
+          display: flex;
+          gap: 8px;
+          justify-content: center;
+          align-items: center;
+        }
+
+        .markdown h1 {
+          font-family: Work Sans;
+          font-weight: 600;
+          font-size: 24px;
+          line-height: 32px;
+        }
+
+        .markdown h2 {
+          font-family: Work Sans;
+          font-weight: 600;
+          font-size: 20px;
+          line-height: 24px;
+        }
+
+        .markdown h3 {
+          font-family: Work Sans;
+          font-weight: 600;
+          font-size: 18px;
+          line-height: 22px;
+        }
+
+        .markdown h4 {
+          font-family: Work Sans;
+          font-weight: 600;
+          font-size: 16px;
+          line-height: 20px;
+        }
+
+        .markdown h5 {
+          font-family: Work Sans;
+          font-weight: 600;
+          font-size: 15px;
+          line-height: 18px;
+        }
+
+        .markdown h6 {
+          font-family: Work Sans;
+          font-weight: 600;
+          font-size: 14px;
+          line-height: 20px;
+        }
+
+        .markdown p {
+          font-family: Work Sans;
+          font-weight: 400;
+          font-size: 16px;
+          line-height: 26px;
+        }
+
+        .markdown a {
+          font-family: Work Sans;
+          font-weight: 400;
+          font-size: 16px;
+          line-height: 26px;
+          text-decoration: underline;
+          color: ${ThemeImpl.instance.get('palette.light.text.default')};
+
+          @media (prefers-color-scheme: dark) {
+            color: ${ThemeImpl.instance.get('palette.dark.text.default')};
+          }
+        }
+
+        .markdown ul {
+          list-style-type: disc;
+          list-style-position: outside;
+          list-style-image: none;
+          padding-left: 20px;
+        }
+
+        .markdown ol {
+          list-style-type: decimal;
+          list-style-position: outside;
+          list-style-image: none;
+          padding-left: 20px;
+        }
+
+        .markdown li {
+          display: list-item;
+          text-align: match-parent;
+          line-height: 28px;
+        }
+
+        .markdown blockquote {
+          color: ${ThemeImpl.instance.get('palette.light.text.secondary')};
+          padding: 4px 8px 4px 16px;
+          gap: 8px;
+          border-left: 3px solid ${ThemeImpl.instance.get('palette.light.border.input.default')};
+          font-weight: 400;
+          font-size: 16px;
+          line-height: 26px;
+        }
+
+        .markdown strong {
+          font-weight: 500;
+        }
+
+        .markdown em {
+          font-style: italic;
+        }
+
+        ${this.generateMarkdownSpacingRules()}
+
+        .tick {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          position: relative;
+        }
+
+        .tick .tick-icon {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+          z-index: 1;
+          transform-origin: center;
+        }
+
+        .tick.pending .tick-icon  {
+          border: 2px solid #A3A3A3;    
+        }
+
+        .tick.idle .tick-icon {
+          border: 2px solid #CACACA;  
+        }
+
+        .tick.pending:before {
+          content: "";
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          border-radius: 200px;
+          background-color: #ededed;
+          z-index: 0;
+          animation: grow 1s ease-in-out infinite;
+        }
+        .tick.pending:after {
+          content: "";
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          border-radius: 200px;
+          background-color: #FFF;
+          z-index: 0;
+        }
+
+        @keyframes grow {
+          0% {
+            transform: scale(0.8);
+            opacity: 1;
+          }
+          80% {
+            transform: scale(1.5);
+            opacity: 1;
+          }
+          85% {
+            transform: scale(1.5);
+            opacity: 1;
+          }
+          86% {
+            opacity: 0;
+            transform: scale(1.5);
+          }
+          100% {
+            opacity: 0;
+            transform: scale(0.8);
+          }
+        }
+
+
+        .tick.completed .tick-icon {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+          background-color: #119947;
+          z-index: 1;
+          transform-origin: center;
+        }
+        .tick.completed .tick-icon:before, .tick.completed .tick-icon:after {
+          content: "";
+          position: absolute;
+          background-color: white;
+          transform-origin: bottom center;
+          width: 8%;
+          bottom: 24%;
+          border-radius: 100px;
+        }
+        .tick.completed .tick-icon:before {
+          height: 34%;
+          transform: rotate(-35deg);
+          left: calc(50% - 4%);
+        }
+        .tick.completed .tick-icon:after {
+          height: 57%;
+          transform: rotate(24deg);
+          left: calc(50% - 6%);
+        }
+
+
+        .copy-container {
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
+          padding: 16px;
+          border-radius: 6px;
+          border: 1.5px solid #e3e3e3;
+        }
+          
+        .copy-container .copy-instruction {
+          position: relative;
+        }
+
+        .copy-container .copy-instruction + .copy-instruction:before {
+          content: '';
+          display: block;
+          position: absolute;
+          width: calc(100% + 20px);
+          height: 1px;
+          background-color: #e3e3e3;
+          top: -12px;
+          left: -10px;
+        }
+
+        .copy-instruction {
+          display: flex;
+          gap: 8px;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .copy-instruction .label {
+          font-weight: 500;
+          font-size: 12px;
+          line-height: 14px;
+          color: #707378;
+          margin-bottom: 4px;
+          text-align: left
+        }
+
+        .copy-instruction .value {
+          font-weight: 500;
+          font-size: 15px;
+          line-height: 18px;
+        }
+
+        .copy-instruction .copied-text {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+        }
+
+        .copy-instruction .button {
+          width: auto;
       `()
     }
 

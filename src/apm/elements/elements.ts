@@ -1,139 +1,221 @@
 module ProcessOut {
-  // VNode represents a Virtual DOM node.
+  /**
+   * Virtual DOM Node - The Core Data Structure
+   * 
+   * A VNode is a lightweight JavaScript object that represents what the DOM should look like.
+   * It's like a blueprint that describes an element without actually creating it.
+   * 
+   * Examples:
+   * • Text: { type: '#text', value: 'Hello' }
+   * • Element: { type: 'div', props: { className: 'container' }, children: [...] }
+   * • Fragment: { type: null, children: [...] } // Groups elements without wrapper
+   */
   export interface VNode<Type extends (Tag | '#text' | null) = Tag> {
-    // 'type' is the HTML tag name, '#text' for text nodes, or null for DocumentFragment
-    type: Type | '#text' | null ;
-    // Props are conditionally typed: specific HTML props if 'Type' is an HTMLTag,
-    // otherwise an empty object as text/fragments don't have standard HTML element props.
-    props: Type extends Tag ? Props<Type> : object;
-    // Children can be any VNode, using 'any' to avoid circular type definitions.
-    children: VNode<any>[];
-    // Reference to the actual live DOM element (set during patching)
-    dom: Node | null;
-    // Optional key for child reconciliation in lists
-    key?: string | null;
-    // Specific for text VNodes (stores the string content)
-    value?: string;
+    type: Type | '#text' | null;           // What kind of element: 'div', '#text', or null for fragments
+    props: Type extends Tag ? Props<Type> : object; // Element properties (className, onclick, etc.)
+    children: VNode<any>[];                // Child elements (recursive structure)
+    dom: Node | null;                      // Reference to actual DOM node (set during rendering)
+    key?: string | null;                   // Unique identifier for efficient list updates
+    value?: string;                        // Text content (only for text nodes)
   }
 
-  // Props for an HTML element, allowing any extra properties but restricting 'style' and 'class'
-  export type Props<T extends Tag> = Partial<HTMLElementTagNameMap[T]> & {
-    style?: never; // Disallow direct style attribute (use Tailwind or separate CSS)
-    class?: never; // Disallow direct class attribute (use className)
-    ref?: T extends Tag ? (node: HTMLElementTagNameMap[T] | null) => void : never;
-    key?: string; // Key for list reconciliation
-    [key: string]: any; // Allow other arbitrary properties
+  /**
+   * Type-Safe Props System
+   * 
+   * This ensures you can only use valid HTML properties for each element type.
+   * For example, 'checked' only works on input elements, 'href' only on anchor tags.
+   * 
+   * Special handling:
+   * • style/class are forbidden (use className and CSS-in-JS instead)
+   * • ref provides direct DOM access when needed
+   * • key enables efficient list rendering
+   */
+  export type Props<T extends Tag> = Omit<Partial<HTMLElementTagNameMap[T]>, 'style' | 'class'> & {
+    style?: Partial<CSSStyleDeclaration>;
+    class?: never;  // Use className instead for React compatibility
+    ref?: (node: HTMLElementTagNameMap[T] | null) => void;
+    key?: string;
+    [key: string]: any;
   };
 
-  export type Tag = typeof TAGS[number]; // Union type of all allowed tags
-
+  export type Tag = typeof TAGS[number];
   export type Primitive = string | number | boolean;
 
-  // Child represents any valid child type for a VNode (primitive or another VNode)
+  /**
+   * Child Type System - Maximum Flexibility
+   * 
+   * Children can be anything that makes sense in JSX:
+   * • Primitives: "Hello", 42, true
+   * • VNodes: div(), span(), etc.
+   * • Arrays: [item1, item2, item3]
+   * • Null/undefined: conditional rendering
+   * • Nested arrays: [[item1, item2], item3] (flattened automatically)
+   */
   export type Child = Primitive | VNode | null | undefined | Child[];
 
-  // Defines allowed HTML tags
+  /**
+   * Allowed HTML Elements
+   * 
+   * We only support a curated list of HTML elements to:
+   * • Ensure type safety
+   * • Prevent XSS attacks
+   * • Keep bundle size reasonable
+   * • Focus on common use cases
+   */
   const TAGS = [
-    'div','span','p','h1','h2','h3','h4','h5','h6',
+    'div','span','p', 'em', 'strong', 
+    'h1','h2','h3','h4','h5','h6',
     'a','button','input','label', 'form',
     'ul','ol','li','img',
     'section','article','header','footer','nav','main',
     'pre','code','textarea','select','option',
   ] as const;
 
-
-  // Function type for creating a DocumentFragment VNode
   type GenerateFragment = (...children: Child[]) => VNode;
-
-  // Argument types for tag generation functions (either props + children, or just children)
   export type GenerateTagArgs<T extends Tag> = [childOrProps: Props<T> | Child, ...Child[]];
 
-  // Overloaded function type for tag generation (e.g., div(props, ...) or div(...))
+  /**
+   * Element Factory Function Interface
+   * 
+   * Each HTML element gets a function that can be called in two ways:
+   * • div({ className: 'container' }, 'Hello')  // With props
+   * • div('Hello', 'World')                     // Props-less
+   */
   export interface GenerateTag<T extends Tag> {
     (props: Props<T>, ...children: Child[]): VNode<T>;
     (...children: Child[]): VNode<T>;
   }
 
-  // The public API interface for the ProcessOut module
   type VanLite = {
-    fragment: GenerateFragment;// Index signature for dynamic tag functions
+    fragment: GenerateFragment;
   } & { [K in Tag]: GenerateTag<K> };
 
   /**
-   * Recursively flattens and processes children into an array of VNodes.
-   * @param rawChildren - Raw children passed to a tag function.
-   * @returns Processed children array.
+   * Child Processor - The Flattening Algorithm
+   * 
+   * Takes any mix of children types and converts them to a flat array of VNodes.
+   * This is where the magic happens that lets you write natural JSX-like code.
+   * 
+   * Transformations:
+   * • "Hello" → { type: '#text', value: 'Hello' }
+   * • [child1, child2] → [child1, child2] (flattened)
+   * • null/undefined/false → (skipped)
+   * • Already VNodes → (passed through)
+   * 
+   * Example: ['Hello', [span('World'), null], 42]
+   * Result: [TextNode('Hello'), SpanNode('World'), TextNode('42')]
    */
   function processChildren(rawChildren: Child[]): VNode[] {
     const children: VNode[] = [];
 
     for (let i = 0; i < rawChildren.length; i++) {
       const child = rawChildren[i];
+      
+      // Skip falsy values (enables conditional rendering)
       if (child == null || child === false) {
-        // Skip null, undefined, false
         continue;
       }
 
+      // Flatten nested arrays recursively
       if (Array.isArray(child)) {
-        // Flatten child arrays recursively
         children.push(...processChildren(child));
         continue;
       }
 
-      if (typeof child === 'object' && child !== null && (typeof (child as VNode).type === 'string' || (child as VNode).type === null)) {
-        // It's already a VNode, add directly
-        children.push(child as VNode);
-        continue;
+      // Detect existing VNodes (objects with VNode structure)
+      if (typeof child === 'object' && child !== null && 'type' in child && 'props' in child && 'children' in child) {
+        const vnode = child as VNode;
+        // Validate VNode type
+        if (typeof vnode.type === 'string' || vnode.type === '#text' || vnode.type === null) {
+          children.push(vnode);
+          continue;
+        }
       }
 
-      // It's a primitive (string, number, boolean), convert to VNode for consistent handling
-      children.push({ type: '#text', props: {}, children: [], dom: null, key: null, value: String(child) });
+      // Convert primitives to text nodes
+      children.push({ 
+        type: '#text', 
+        props: {}, 
+        children: [], 
+        dom: null, 
+        key: null, 
+        value: String(child) 
+      });
     }
 
     return children;
   }
 
   /**
-   * Factory function that generates a function for creating a specific HTML element's Virtual DOM node.
-   * This function DOES NOT create actual DOM elements. It creates a plain JS object (VNode).
-   * @template T
-   * @param tag - The HTML tag name (e.g., 'div', 'button').
-   * @returns A function that creates a VNode of the specified tag.
+   * Element Factory Generator - The Core API Builder
+   * 
+   * This is the heart of the elements system. It creates the functions like div(), span(), etc.
+   * Each function follows the same pattern but is customized for a specific HTML element.
+   * 
+   * The generated function:
+   * 1. Figures out if first argument is props or a child
+   * 2. Separates props from children
+   * 3. Processes children into VNodes
+   * 4. Returns a VNode object
+   * 
+   * Example: makeTag('button') creates a function that makes button VNodes
    */
   function makeTag<T extends Tag>(tag: T): GenerateTag<T> {
     return ((...args: GenerateTagArgs<T>): VNode => {
-      let props: Props<T> = {};
+      let props: Props<T> = {} as Props<T>;
       let childrenArgs: Child[] = args as Child[];
 
-      // Determine if the first argument is a props object
+      // Smart argument detection: is first arg props or children?
       if (isProps(args[0])) {
         props = args[0];
         childrenArgs = args.slice(1) as Child[];
       }
 
-      // Create the Virtual DOM node object
+      // Extract key safely without mutating original props
+      const { key, ...propsWithoutKey } = props;
+
+      // Build the Virtual DOM node
       return {
         type: tag,
-        props: props,
+        props: propsWithoutKey,
         children: processChildren(childrenArgs),
-        dom: null, // This will hold a reference to the actual DOM node after patching
-        key: props.key // Store key directly for easier access
+        dom: null,
+        key,
       };
-    }) as GenerateTag<T>; // Type assertion to match the overloaded interface
+    }) as GenerateTag<T>;
   };
 
   const api: Partial<VanLite> = {} as Partial<VanLite>;
 
   /**
-   * This loop iterates through all the HTML tags that we allow, as defined in the `TAGS`
-   * array. For each tag, it calls the `makeTag` factory to create an
-   * element-generating function (e.g., a function for creating `<div>`s).
+   * API Generation - Building the Element Functions
+   * 
+   * This loop creates all the element functions: div(), span(), button(), etc.
+   * Each function is a specialized version of makeTag() for that element type.
+   * 
+   * After this loop runs, you can call:
+   * • elements.div() to create div VNodes
+   * • elements.button() to create button VNodes
+   * • etc.
    */
   for (let i = 0 as const; i < TAGS.length; i++) {
     const t = TAGS[i];
     (api as any)[t] = makeTag(t);
   }
 
+  /**
+   * Fragment Factory - Grouping Without Wrappers
+   * 
+   * Fragments let you group multiple elements without adding an extra DOM node.
+   * Useful when you need to return multiple elements from a component.
+   * 
+   * Example:
+   * fragment(
+   *   h1('Title'),
+   *   p('Description')
+   * )
+   * // Renders as: <h1>Title</h1><p>Description</p> (no wrapper div)
+   */
   api.fragment = (...children: Child[]): VNode => ({
     type: null,
     props: {},
@@ -145,39 +227,61 @@ module ProcessOut {
   export const elements = api as VanLite;
 
   /**
-   * A type guard to determine if the first argument to a tag function is a props object.
+   * Props Detection - Smart Argument Parsing
+   * 
+   * Figures out if the first argument to an element function is a props object
+   * or the first child. This enables both calling styles:
+   * 
+   * • div({ className: 'box' }, 'content')  // Props first
+   * • div('content')                        // No props
+   * 
+   * The challenge: distinguish between props and VNode children
+   * Solution: Props are plain objects, VNodes have specific properties
    */
   export function isProps<T extends Tag>(item: GenerateTagArgs<T>[0]): item is Props<T> {
-    // A props object is a plain object, not a VNode (which has a 'type' property)
-    return item && typeof item === 'object' && item.constructor === Object && !('children' in item);
+    return item 
+      && typeof item === 'object' 
+      && item.constructor === Object 
+      && !('children' in item);  // VNodes have 'children', props don't
   };
 
   /**
-   * A helper used in custom elements to merge props defined in the custom element
-   * with the props passed into it, handling class names and event listeners specially.
-   * @template T
-   * @param base - Base props.
-   * @param user - User-provided props.
-   * @returns Merged props.
+   * Advanced Props Merging - Component Composition
+   * 
+   * Used for building reusable components that can accept user props
+   * while providing defaults. Handles tricky cases like event handlers
+   * and CSS classes that need special merging logic.
+   * 
+   * Example:
+   * const Button = (userProps) => {
+   *   const baseProps = { className: 'btn', onclick: logClick };
+   *   const merged = mergeProps(baseProps, userProps);
+   *   return button(merged, 'Click me');
+   * }
+   * 
+   * Smart merging:
+   * • Classes: 'btn' + 'btn-primary' → 'btn btn-primary'
+   * • Events: both base and user handlers are called
+   * • Other props: user props override base props
    */
   export function mergeProps<T extends Tag>(base: Props<T>, user: Props<T> = {} as Props<T>): Props<T> {
     const out: Props<T> = { ...base, ...user };
 
-    // Combine class names
+    // Combine CSS classes intelligently
     const classes = [
-      base.className || (base as any).class, // Access 'class' if it was used
+      base.className || (base as any).class,
       user.className || (user as any).class,
     ].filter(Boolean);
     if (classes.length) (out as any).className = classes.join(" ");
 
-    // Merge event handlers: calling both base and user handlers
+    // Chain event handlers so both base and user handlers run
     for (const k in base) {
       if (k.startsWith("on") && typeof base[k] === "function" && typeof user[k] === "function") {
         const b = base[k] as EventListener;
         const u = user[k] as EventListener;
         (out as any)[k] = function (this: any, ...args: any[]) {
-          b.apply(this, args);
-          u.apply(this, args);
+          b.apply(this, args);   // Base handler first
+          u.apply(this, args);   // Then user handler
         };
       }
     }
