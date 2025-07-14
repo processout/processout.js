@@ -15,29 +15,29 @@ module ProcessOut {
 
   export type FlowData = {
     gatewayConfigurationId: `gway_conf_${string}`
-    initialData?: Partial<InitialData>
+    initialData: Partial<InitialData>
     /** Whether user can cancel the payment (default: true) */
-    allowCancelation?: boolean
+    allowCancelation: boolean
     /** Payment confirmation configuration */
-    confirmation?: {
+    confirmation: {
       /** Whether user action is required for pending payments (default: false) */
-      requiresAction?: boolean
+      requiresAction: boolean
       /** Timeout in seconds to wait for payment confirmation (default: 900 e.g. 15 minutes) */
-      timeout?: number
+      timeout: number
       /** Whether user can cancel the payment during confirmation (default: true) */
       allowCancelation?: boolean
     }
     
     /** Success screen configuration */
-    success?: {
+    success: {
       /** Whether to show success screen (default: true) */
-      enabled?: boolean
+      enabled: boolean
       /** Duration in seconds when auto-dismissing (requiresAction: false) (default: 3) */
-      autoDismissDuration?: number
+      autoDismissDuration: number
       /** Duration in seconds when manual dismissal required (requiresAction: true) (default: 60) */
-      manualDismissDuration?: number
+      manualDismissDuration: number
       /** Whether user must take action to dismiss success screen (default: false) */
-      requiresAction?: boolean
+      requiresAction: boolean
     }
   }
 
