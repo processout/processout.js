@@ -9,9 +9,9 @@
 <div>
   <form id="initialise-apm">
     <select name="gateway" id="apm-gateway">
-      <option value="gway_conf_as47maqbtonts9rnkuaskmf760fnmpm3">ProcessOut</option>
-      <option value="gway_conf_mcllxxya8c013330fhl62f0t628qy75f">PowaPay</option>
-      <option value="gway_conf_pl34ebzz5f75njop6lidskw5f00x9i7i">Forage</option>
+      <option value="gway_conf_vupnl08h7hy1jxf3cz5z4dc2lw5py2ve">ProcessOut</option>
+      <option value="gway_conf_fh67c2llxupjhcqxxbr4cvlfosncdbr7">Forage</option>
+      <option value="gway_conf_zuo5iyryn390he7fx3rd50twwvhpcvob.adyenblik">Adyen Blik</option>
     </select>
     <input type="text" id="invoice-id" name="invoice_id" placeholder="Invoice ID" />
     <input type="text" id="customer-id" name="customer_id" placeholder="Customer ID" style="display: none" />
@@ -23,7 +23,7 @@
 <script src="../../dist/processout.js" crossorigin="anonymous"></script>
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    const projectId = 'test-proj_2yMu3kr1Xx75RtW1aI4bJTQzu32gxWiV';
+    const projectId = 'test-proj_IPW8DgC6yoI2YEUGmmkHERjbuMiGKBdx';
     const gatewayEl = document.querySelector('#apm-gateway');
     
     // Build gateway dictionary from select options
@@ -105,7 +105,6 @@
           invoiceId,
           confirmation: {
             requiresAction: true,
-            duration: 0,
           },
           success: {
             requiresAction: true,
@@ -134,7 +133,7 @@
       if (apm) {
         apm.on('*', ({ type, ...rest }) => {
           console.log(Date.now(), `apm event - ${type}`, rest)
-          if (type === 'success' || type === 'failure') {
+        if (type === 'success' || type === 'failure' || type === 'payment-cancelled') {
             apm.cleanUp()
           }
         })
