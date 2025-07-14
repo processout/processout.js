@@ -11,7 +11,7 @@ module ProcessOut {
 
   const { div } = elements
 
-  const setFormState = (elements: NextStepProps['elements'], config: NextStepProps['config']): FormState => {
+  const setFormState = (elements: NextStepProps['elements'], config: NextStepProps['config']): FormState | null => {
     const error = 'error' in config ? config.error : undefined;
     const forms = elements?.filter(e => e.type === "form") ?? []
 
@@ -109,7 +109,8 @@ module ProcessOut {
       }
 
       if (state.form) {
-        ContextImpl.context.events.emit('submit', { parameters: Object.keys(state.form.values).map(key => ({ key, value: state.form.values[key] })) })
+        const form = state.form; // Capture in local variable for type narrowing
+        ContextImpl.context.events.emit('submit', { parameters: Object.keys(form.values).map(key => ({ key, value: form.values[key] })) })
       }
       
       this.setState({ loading: true });
@@ -123,7 +124,9 @@ module ProcessOut {
     }
 
     render() {
-      const hasErrors = Object.keys(this.state.form?.errors ?? {}).some(key => this.state.form?.errors[key])
+      const hasErrors = this.state.form?.errors ? 
+        Object.keys(this.state.form.errors).some(key => this.state.form.errors[key]) : 
+        false;
 
       return Main({ 
         config: this.props.config,
