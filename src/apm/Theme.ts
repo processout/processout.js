@@ -330,6 +330,12 @@ module ProcessOut {
           }
         }
 
+        .page > .container {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
         .page > .buttons-container {
           margin-top: 40px;
         }
