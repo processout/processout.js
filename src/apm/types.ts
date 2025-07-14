@@ -38,7 +38,11 @@ module ProcessOut {
     export type Container = string | Element
 
     export interface InitialData {
-      email: string
+      email: string,
+      phone_number: {
+        dialing_code: string,
+        value: string,
+      }
     }
 }
 
