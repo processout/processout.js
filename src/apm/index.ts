@@ -21,6 +21,7 @@ module ProcessOut {
         }
 
         ContextImpl.instance.initialise({
+          allowCancelation: true,
           ...data,
           success: {
             enabled: true,
@@ -30,8 +31,9 @@ module ProcessOut {
             ...data.success,
           },
           confirmation: {
-            requiresAction: true,
+            requiresAction: false,
             timeout: MIN_15 / 1000,
+            allowCancelation: true,
             ...data.confirmation,
           },
           logger: {
@@ -61,7 +63,7 @@ module ProcessOut {
           events: new APMEventsImpl(),
           reload: () => {
             ContextImpl.context.page.render(APMViewLoading)
-            ContextImpl.context.page.load(APIImpl.initialise)
+            ContextImpl.context.page.load(APIImpl.getCurrentStep)
           },
           page: new APMPageImpl(containerEl),
           poClient: poClient,
@@ -72,7 +74,7 @@ module ProcessOut {
         ContextImpl.context.events.emit('initialised')
         ContextImpl.context.page.render(APMViewLoading)
         
-        ContextImpl.context.page.load(APIImpl.initialise, (err, state) => {
+        ContextImpl.context.page.load(APIImpl.initialise, (err) => {
           ContextImpl.context.events.emit('start')
           if (err) {
             ContextImpl.context.events.emit('failure', { failure: { code: 'processout-js.internal-error', message: err.message } })
@@ -81,7 +83,6 @@ module ProcessOut {
       }
 
       public cleanUp() {
-        clearAllOTPState();
         ContextImpl.context.page.cleanUp()
       }
 

@@ -42,6 +42,8 @@ module ProcessOut {
       // any required external action (if applicable). Once the event is triggered, the implementation
       // proceeds with the actual completion confirmation process
       "pending-confirmed": never
+
+      "payment-cancelled": never
       
       // Event is sent after payment was confirmed to be completed. This is a final event
       "success": {
@@ -57,6 +59,12 @@ module ProcessOut {
         // This provides additional context about where in the payment process the failure happened
         paymentState?: string
       }
+
+      "copy-to-clipboard": {
+        text: string
+      }
+
+      "download-image": never
         
       // Catch-all event that fires for every event with unified structure
       "*": {
@@ -79,8 +87,11 @@ module ProcessOut {
         super.off(key, handler);
       }
 
-      emit<K extends keyof APMEvents>(key: K, ...payload: APMEvents[K] extends never ? [] : [payload: APMEvents[K]]
+      emit<K extends keyof Omit<APMEvents, '*'>>(key: K, ...payload: APMEvents[K] extends never ? [] : [payload: APMEvents[K]]
       ) {
+        if (key === '*') {
+          return;
+        }
         super.emit(key, ...payload);
       }
     }

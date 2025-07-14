@@ -330,6 +330,19 @@ module ProcessOut {
           }
         }
 
+        .page > .buttons-container {
+          margin-top: 40px;
+        }
+        .page > form + .buttons-container {
+          margin-top: 16px;
+        }
+
+        .buttons-container {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
         .loader {
           width: 30px;
           height: 30px;
@@ -650,6 +663,11 @@ module ProcessOut {
           right: 16px;
           top: 50%;
           transform: translateY(-50%);
+        }
+        
+        .otp-container .otp-label {
+          margin-bottom: 12px;
+          display: inline-block;
         }
 
         .otp {
@@ -1019,7 +1037,38 @@ module ProcessOut {
 
         ${this.generateMarkdownSpacingRules()}
 
-        .tick {
+         .tick {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          z-index: 1;
+          transform-origin: center;
+        }
+
+        .tick:before, .tick:after {
+          content: "";
+          position: absolute;
+          background-color: white;
+          transform-origin: bottom center;
+          width: 8%;
+          bottom: 24%;
+          border-radius: 100px;
+        }
+
+        .tick:before {
+          height: 28%;
+          transform: rotate(-35deg);
+          left: calc(50% - 4%);
+          bottom: 24%;
+        }
+          
+        .tick:after {
+          height: 57%;
+          transform: rotate(24deg);
+          left: calc(50% - 7%);
+        }
+
+        .status-tick {
           width: 100%;
           height: 100%;
           display: flex;
@@ -1027,25 +1076,20 @@ module ProcessOut {
           align-items: center;
           position: relative;
         }
-
-        .tick .tick-icon {
-          position: relative;
-          width: 100%;
-          height: 100%;
+        
+        .status-tick .tick {
           border-radius: 50%;
-          z-index: 1;
-          transform-origin: center;
         }
 
-        .tick.pending .tick-icon  {
+        .status-tick.pending .tick  {
           border: 2px solid #A3A3A3;    
         }
 
-        .tick.idle .tick-icon {
+        .status-tick.idle .tick {
           border: 2px solid #CACACA;  
         }
 
-        .tick.pending:before {
+        .status-tick.pending:before {
           content: "";
           position: absolute;
           width: 100%;
@@ -1055,7 +1099,7 @@ module ProcessOut {
           z-index: 0;
           animation: grow 1s ease-in-out infinite;
         }
-        .tick.pending:after {
+        .status-tick.pending:after {
           content: "";
           position: absolute;
           width: 100%;
@@ -1068,15 +1112,15 @@ module ProcessOut {
         @keyframes grow {
           0% {
             transform: scale(0.8);
-            opacity: 1;
+            opacity: 0.8;
           }
           80% {
             transform: scale(1.5);
-            opacity: 1;
+            opacity: 0.8;
           }
           85% {
             transform: scale(1.5);
-            opacity: 1;
+            opacity: 0.8;
           }
           86% {
             opacity: 0;
@@ -1088,38 +1132,11 @@ module ProcessOut {
           }
         }
 
-
-        .tick.completed .tick-icon {
-          position: relative;
-          width: 100%;
-          height: 100%;
-          border-radius: 50%;
+        .status-tick.completed .tick {
           background-color: #119947;
-          z-index: 1;
-          transform-origin: center;
-        }
-        .tick.completed .tick-icon:before, .tick.completed .tick-icon:after {
-          content: "";
-          position: absolute;
-          background-color: white;
-          transform-origin: bottom center;
-          width: 8%;
-          bottom: 24%;
-          border-radius: 100px;
-        }
-        .tick.completed .tick-icon:before {
-          height: 34%;
-          transform: rotate(-35deg);
-          left: calc(50% - 4%);
-        }
-        .tick.completed .tick-icon:after {
-          height: 57%;
-          transform: rotate(24deg);
-          left: calc(50% - 6%);
         }
 
-
-        .copy-container {
+        .group {
           display: flex;
           flex-direction: column;
           gap: 24px;
@@ -1128,11 +1145,11 @@ module ProcessOut {
           border: 1.5px solid #e3e3e3;
         }
           
-        .copy-container .copy-instruction {
+        .group > div {
           position: relative;
         }
 
-        .copy-container .copy-instruction + .copy-instruction:before {
+        .group > div + div:before {
           content: '';
           display: block;
           position: absolute;
@@ -1141,6 +1158,15 @@ module ProcessOut {
           background-color: #e3e3e3;
           top: -12px;
           left: -10px;
+        }
+
+        .group.group-boolean {
+          padding: 4px;
+          gap: 4px;
+        }
+          
+        .group.group-boolean > div + div:before {
+          display: none;
         }
 
         .copy-instruction {
@@ -1174,6 +1200,58 @@ module ProcessOut {
 
         .copy-instruction .button {
           width: auto;
+        }
+
+        .checkbox {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          cursor: pointer;
+          padding: 16px 12px;
+          border-radius: 6px;
+        }
+
+        .checkbox:hover {
+          background-color: #f5f5f5;
+        }
+
+        .checkbox-input {
+          position: relative;
+          width: 16px;
+          height: 16px;
+        }
+
+        .checkbox-input input {
+          opacity: 0;
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          cursor: pointer;
+          z-index: 4;
+        }
+
+        .checkbox-indicator {
+          width: 16px;
+          height: 16px;
+          border-radius: 4px;
+          background-color: #fff;
+          border: 1px solid #bfc3c7;
+          z-index: 3;
+        }
+        .checkbox-input input + .checkbox-indicator .status-tick {
+          display: none;
+        }
+
+        .checkbox-input input:checked + .checkbox-indicator {
+          background-color: #000;
+          border-color: #000;
+        }
+
+        .checkbox-input input:checked + .checkbox-indicator .status-tick {
+          display: block;
+        }
       `()
     }
 

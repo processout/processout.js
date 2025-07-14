@@ -1,6 +1,8 @@
 module ProcessOut {
   export type PlainObject = object;
-  export const MIN_15 = 1000 * 60 * 15;
+  export const SECOND_1 = 1000;
+  export const MIN_1 = SECOND_1 * 60;
+  export const MIN_15 = MIN_1 * 15;
   
   export function formatCurrency(amount: string, currencyCode: string) {
     const formatter = new Intl.NumberFormat(navigator.language, {
@@ -9,6 +11,19 @@ module ProcessOut {
     });
 
     return formatter.format(parseFloat(amount));
+  }
+
+  /**
+   * Simple hash function for content comparison (djb2 algorithm)
+   * @param str - String to hash
+   * @returns Short hash string in base36 format
+   */
+  export function simpleHash(str: string): string {
+    let hash = 5381;
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) + hash) + str.charCodeAt(i);
+    }
+    return (hash >>> 0).toString(36); // Convert to base36 for shorter string
   }
 
   function dedent(strings: TemplateStringsArray, ...values: unknown[]): string {
@@ -117,7 +132,6 @@ module ProcessOut {
               return originalValue.apply(receiver, args);
             } catch (error) {
               errorHandler(error);
-              throw 'The above error was thrown and handled, please review the above error message for more details.'
             }
           };
         }
