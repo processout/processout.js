@@ -95,11 +95,30 @@ module ProcessOut {
      * 3. Generate new Virtual DOM tree
      * 4. Patch real DOM to match Virtual DOM (minimal changes)
      * 5. Update refs and styles
+     * 6. Clear StateManager change tracking for performance optimization
      */
     private _processUpdateBatch(): void {
       this._isUpdateScheduled = false;
 
       if (this._pendingStateUpdates.length === 0) {
+        // Force render even without state updates (for StateManager-triggered updates)
+        this.state = createReadonlyProxy(this.state as S);
+        this._applyStyles();
+
+        // Set view context for StateManager before rendering
+        setCurrentViewContext(this);
+
+        // Generate new Virtual DOM tree based on new state
+        const newVDom = this.render.call(this);
+
+        // Clear view context after rendering
+        setCurrentViewContext(null);
+
+        // The heart of the system: patch real DOM to match Virtual DOM
+        this._patch(this.container, newVDom, this._currentVDom, this.container.firstChild);
+
+        this._currentVDom = newVDom;
+
         return;
       }
 
@@ -127,8 +146,14 @@ module ProcessOut {
       this.state = createReadonlyProxy(newState);
       this._applyStyles();
 
+      // Set view context for StateManager before rendering
+      setCurrentViewContext(this);
+
       // Generate new Virtual DOM tree based on new state
       const newVDom = this.render.call(this);
+
+      // Clear view context after rendering
+      setCurrentViewContext(null);
 
       // The heart of the system: patch real DOM to match Virtual DOM
       this._patch(this.container, newVDom, this._currentVDom, this.container.firstChild);
@@ -148,7 +173,14 @@ module ProcessOut {
       }
 
       this._applyStyles();
+
+      // Set view context for StateManager before rendering
+      setCurrentViewContext(this);
+
       const initialVDom = this.render.call(this);
+
+      // Clear view context after rendering
+      setCurrentViewContext(null);
 
       this._patch(this.container, initialVDom, null, this.container.firstChild);
 
@@ -159,6 +191,14 @@ module ProcessOut {
 
     public unmount(): void {
       this.componentWillUnmount();
+      
+      // Clean up all components associated with this view
+      try {
+        const stateManager = getStateManager();
+        stateManager.destroyViewComponents(this);
+      } catch (error) {
+        console.error('Error cleaning up view components:', error);
+      }
     }
 
 
@@ -806,6 +846,7 @@ module ProcessOut {
      * instead of breaking the entire application.
      */
     private _handleRuntimeError(err: any) {
+      console.log('err', err)
       if (err && err.name === 'UpdatedReadOnly') {
         ContextImpl.context.page.criticalFailure({
           title: 'Failed to update view',
@@ -813,7 +854,6 @@ module ProcessOut {
         })
         return
       }
-
       ContextImpl.context.page.criticalFailure({
         title: 'An unexpected error occurred in the view',
         message: err.message,

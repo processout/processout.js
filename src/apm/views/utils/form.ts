@@ -10,6 +10,9 @@ module ProcessOut {
     errors: Record<string, string>
   }
 
+  export type FormFieldUpdate = (key: string, value: string | number | boolean | PhoneState, isInitial?: boolean) => void
+  export type FormFieldBlur = (key: string, value: string | number | boolean | PhoneState) => void
+
   const { div, label, form } = elements
   const emailRegex = /^[\w\-\.+]+@([\w-]+\.)+[\w-]{2,4}$/
 
@@ -43,8 +46,8 @@ module ProcessOut {
     }
   }
 
-  function updateField(setState: SetState<NextStepState>) {
-    return function(key: string, value: string | number | boolean | PhoneState) {
+  function updateField(setState: SetState<NextStepState>): FormFieldUpdate {
+    return function(key, value, isInitial = false) {
       setState((prevState) => {
         let errors = { ...prevState.form.errors }
 
@@ -52,8 +55,9 @@ module ProcessOut {
           delete errors[key]
           errors[key] = validateField(prevState, key, value)
         }
-
+        if (!isInitial) {
         ContextImpl.context.events.emit('field-change', { parameter: { key, value } })
+        }
 
         return {
           ...prevState,
@@ -95,7 +99,7 @@ module ProcessOut {
     }
   }
 
-export function validateForm(state: NextStepState, setState: SetState<NextStepState>): boolean {
+  export function validateForm(state: NextStepState, setState: SetState<NextStepState>): boolean {
     const touched = {}
     const errors = Object.keys(state.form.validation).reduce((acc, key) => {
       touched[key] = true
@@ -123,69 +127,104 @@ export function validateForm(state: NextStepState, setState: SetState<NextStepSt
     return successful
   }
 
-  export function Form(props: FormData<FormFieldResult>, state: NextStepState, setState: SetState<NextStepState>, onSubmit: () => void) {
-    const fields = props.parameters.parameter_definitions.map((field) => {
-      const error = state.form.errors[field.key]
-      const value = state.form.values[field.key]
-      let input: VNode;
-      let labelHtmlFor = field.key;
+    // Extract form field rendering into a reusable function
+  const renderFormField = (
+    field: FormFieldResult,
+    state: NextStepState,
+    setState: SetState<NextStepState>
+  ): VNode => {
+    const error = state.form.errors[field.key]
+    const value = state.form.values[field.key]
+    let input: VNode;
+    let labelHtmlFor = field.key;
 
-      switch (field.type) {
-        case "otp": {
-          input = OTP({
-            name: field.key,
-            length: field.min_length,
-            type: field.subtype === "digits" ? "numeric" : "text",
-            disabled: state.loading,
-            errored: !!error,
-            value: value as string,
-            onComplete: updateField(setState),
-          })
-          break;
-        }
-        case 'phone': {
-          labelHtmlFor = `${field.key}.value`;
-          input = Phone({
-            name: field.key,
-            label: field.label,
-            dialing_codes: field.dialing_codes,
-            oninput: updateField(setState),
-            onblur: onBlur(setState),
-            errored: !!error,
-            disabled: state.loading,
-            value: value as PhoneState,
-          });
-          break;
-        }
-        case "single-select": {
-          input = Select({
-            name: field.key,
-            label: field.label,
-            value: value as string || field.available_values.find(item => item.preselected)?.value || '',
-            options: field.available_values,
-            errored: !!error,
-            disabled: state.loading,
-            onchange: updateField(setState),
-            onblur: onBlur(setState),
-          })
-          break;
-        }
-        default: {
-          input = Input({
-            type: field.type,
-            label: field.label,
-            name: field.key,
-            errored: !!error,
-            disabled: state.loading,
-            value: value as string,
-            oninput: updateField(setState),
-            onblur: onBlur(setState),
-          })
-        }
+    switch (field.type) {
+      case "otp": {
+        input = OTP({
+          name: field.key,
+          label: field.label,
+          length: field.min_length,
+          type: field.subtype === "digits" ? "numeric" : "text",
+          disabled: state.loading,
+          errored: !!error,
+          value: value as string,
+          onComplete: updateField(setState),
+        })
+        break;
       }
+      case 'phone': {
+        labelHtmlFor = `${field.key}.value`;
+        input = Phone({
+          name: field.key,
+          label: field.label,
+          dialing_codes: field.dialing_codes,
+          oninput: updateField(setState),
+          onblur: onBlur(setState),
+          errored: !!error,
+          disabled: state.loading,
+          value: value as PhoneState,
+        });
+        break;
+      }
+      case "single-select": {
+        input = Select({
+          name: field.key,
+          label: field.label,
+          value: value as string || field.available_values.find(item => item.preselected)?.value || '',
+          options: field.available_values,
+          errored: !!error,
+          disabled: state.loading,
+          onchange: updateField(setState),
+          onblur: onBlur(setState),
+        })
+        break;
+      }
+      case 'boolean': {
+        input = Checkbox({
+          name: field.key,
+          label: field.label,
+          checked: value as boolean,
+          onchange: updateField(setState),
+          onblur: onBlur(setState),
+        })
+        break;
+      }
+      default: {
+        input = Input({
+          type: field.type,
+          label: field.label,
+          name: field.key,
+          errored: !!error,
+          disabled: state.loading,
+          value: value as string,
+          oninput: updateField(setState),
+          onblur: onBlur(setState),
+        })
+      }
+    }
 
-      return div({ className: "field-container" }, input, error ? label({ htmlFor: labelHtmlFor, className: "error" }, error) : null)
-    })
+    return div({ className: "field-container" }, input, error ? label({ htmlFor: labelHtmlFor, className: "error" }, error) : null)
+  }
+
+  // Grouping function for form fields
+  const getFormFieldGroupInfo = (field: FormFieldResult): { type: string, className?: string } | null => {
+    if (field.type === 'boolean') {
+      return {
+        type: 'boolean',
+        className: 'group-boolean'
+      }
+    }
+    
+    // Don't group other field types for now
+    return null
+  }
+
+export function Form(props: FormData<FormFieldResult>, state: NextStepState, setState: SetState<NextStepState>, onSubmit: () => void) {
+    const fields = createGroupedElements(
+      props.parameters.parameter_definitions,
+      getFormFieldGroupInfo,
+      (field) => renderFormField(field, state, setState)
+    )
 
     return form({
       className: "form",
