@@ -1,5 +1,5 @@
 module ProcessOut {
-  type HeaderTag = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'
+  type HeaderTag = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'label'
   type HeaderTagProps<K extends HeaderTag> = Props<K>
   type HeaderProps<K extends HeaderTag> = HeaderTagProps<K> & {
     tag: K
@@ -13,9 +13,9 @@ module ProcessOut {
 
     delete props.tag
 
-    const className = ["heading", props.className].filter(Boolean)
+    const className = ["heading", props.className].filter(Boolean).join(' ')
 
-    const el = elements[tag];
+    const el = elements[tag] as any;
     return el({ ...props, className }, content)
   }
 }
