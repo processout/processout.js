@@ -8,8 +8,8 @@ The new APM system introduces several key improvements:
 
 - **Flow-specific methods**: Separate methods for authorization (payments) vs tokenization (saving payment methods)
 - **Improved container handling**: Container is passed during initialization rather than mounting
-- **Enhanced event system**: Instance-level events instead of global window events
-- **Better configuration**: More granular options for success screens and timeouts
+- **Enhanced event system**: Instance-level events aligned with mobile implementation
+- **Better configuration**: Nested configuration objects for success screens and confirmation settings
 - **Explicit lifecycle management**: Clear initialization and cleanup methods
 
 ## API Comparison
@@ -35,7 +35,7 @@ apm.initialise();
 First, determine which flow you need:
 
 - **Use `apm.authorization`** for processing payments with invoices
-- **Use `apm.tokenization`** for saving payment methods without immediate payment
+- **Use `apm.tokenization`** for processing payments with already created customer tokens
 
 ```javascript
 // For payments (old setupNativeApm equivalent)
@@ -65,14 +65,16 @@ nativeApm.mount('#container');
 const apm = client.apm.authorization('#container', {
   gatewayConfigurationId: 'gway_conf_xxx',
   invoiceId: 'iv_xxx',
-  successScreenMaximumTimeout: 10000 // milliseconds instead of seconds
+  confirmation: {
+    timeout: 900, // 15 minutes in seconds
+  },
 });
 
 // Tokenization flow
 const apm = client.apm.tokenization('#container', {
   gatewayConfigurationId: 'gway_conf_xxx',
   customerId: 'cust_xxx',
-  customerTokenId: 'ctok_xxx'
+  customerTokenId: 'tok_xxx',
 });
 
 apm.initialise();
@@ -80,17 +82,19 @@ apm.initialise();
 
 ### 3. Update Configuration Options
 
-The configuration options have been updated and expanded:
+The configuration options have been restructured into nested objects:
 
 | Legacy Option | New Option | Notes |
 |---------------|------------|-------|
 | `returnUrl` | *(removed)* | Handled by invoice configuration |
-| `pollingMaxTimeout` | *(system managed)* | 15-minute timeout is automatic |
-| *(new)* | `successScreenMaximumTimeout` | Max time to show success screen (ms) |
-| *(new)* | `successScreenMinimumTimeout` | Min time to show success screen (ms) |
-| *(new)* | `successScreenConfirmation` | Require user confirmation on success |
-| *(new)* | `showSuccesScreen` | Whether to show success screen |
-| *(new)* | `requirePendingConfirmation` | Require confirmation for pending states |
+| `pollingMaxTimeout` | `confirmation.timeout` | Default 900 seconds (15 minutes) |
+| *(new)* | `confirmation.requiresAction` | Require user confirmation for pending (default: false) |
+| *(new)* | `confirmation.allowCancelation` | Allow cancellation during confirmation (default: true) |
+| *(new)* | `success.enabled` | Whether to show success screen (default: true) |
+| *(new)* | `success.autoDismissDuration` | Duration when auto-dismissing (default: 3s) |
+| *(new)* | `success.manualDismissDuration` | Duration when manual dismissal required (default: 60s) |
+| *(new)* | `success.requiresAction` | Whether user must dismiss manually (default: false) |
+| *(new)* | `allowCancelation` | Whether user can cancel payment (default: true) |
 | *(new)* | `initialData` | Prefilled form data |
 | *(new)* | `theme` | Theme configuration |
 
@@ -115,15 +119,23 @@ const apm = client.apm.authorization('#container', {
   gatewayConfigurationId: 'gway_conf_xxx',
   invoiceId: 'iv_xxx',
   theme: {
-    buttons: {
-      default: {
-        backgroundColor: 'green',
-        color: 'white'
+    palette: {
+      light: {
+        surface: {
+          button: {
+            primary: 'green'
+          }
+        },
+        text: {
+          default: 'white'  // Used for button text when background is dark enough
+        }
       }
     }
   }
 });
 ```
+
+**Note:** The new theme system uses text colors from the theme configuration. For buttons, it automatically selects between light and dark text colors based on the button's background color luminance to ensure proper contrast. You can customize both background colors and text colors in the theme.
 
 ### 5. Update Data Prefilling
 
@@ -148,7 +160,7 @@ const apm = client.apm.authorization('#container', {
 
 ### 6. Update Event Handling
 
-The event system has been completely redesigned for better encapsulation:
+The event system has been completely redesigned and aligned with the mobile team implementation:
 
 **Before:**
 ```javascript
@@ -175,22 +187,59 @@ window.addEventListener('processout_native_apm_payment_error', (e) => {
 
 **After:**
 ```javascript
-apm.on('loading', () => {
-  console.log('Widget loading');
+// New mobile-aligned event system
+apm.on('initialised', () => {
+  console.log('APM initialized');
+});
+
+apm.on('start', () => {
+  console.log('APM started, waiting for user input');
+});
+
+apm.on('field-change', (data) => {
+  console.log('Field changed:', data.parameter);
+});
+
+apm.on('submit', (data) => {
+  console.log('Form submitted:', data.parameters);
+});
+
+apm.on('submit-success', (data) => {
+  console.log('Submit successful, additional input needed:', data.additionalParametersExpected);
+});
+
+apm.on('submit-error', (data) => {
+  console.log('Submit error:', data.failure);
+});
+
+apm.on('payment-pending', () => {
+  console.log('Payment pending, waiting for confirmation');
+});
+
+apm.on('pending-confirmed', () => {
+  console.log('User confirmed pending payment action');
 });
 
 apm.on('success', (data) => {
-  console.log('Payment successful', data);
+  console.log('Payment successful, trigger:', data.trigger);
   apm.cleanUp(); // Important: clean up when done
 });
 
-apm.on('error', ({ message, code }) => {
-  console.log('Payment error', message, code);
+apm.on('failure', (data) => {
+  console.log('Payment failed:', data.failure);
+  if (data.paymentState) {
+    console.log('Payment state at failure:', data.paymentState);
+  }
+  apm.cleanUp(); // Important: clean up on failure
 });
 
-apm.on('critical-failure', ({ message, code }) => {
-  console.log('Critical failure', message, code);
-  apm.cleanUp(); // Important: clean up on failure
+apm.on('request-cancel', () => {
+  console.log('User requested payment cancellation');
+});
+
+// Universal event listener that fires for all events
+apm.on('*', (event) => {
+  console.log('Event fired:', event.type, event);
 });
 ```
 
@@ -204,7 +253,7 @@ apm.on('success', () => {
   apm.cleanUp(); // Clean up resources
 });
 
-apm.on('critical-failure', () => {
+apm.on('failure', () => {
   console.log('Payment failed');
   apm.cleanUp(); // Clean up resources
 });
@@ -251,8 +300,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   const apm = client.apm.authorization('#container', {
     gatewayConfigurationId: 'gway_conf_xxx',
-    invoiceId: 'iv_xxx',
-    successScreenMaximumTimeout: 5000
+    invoiceId: 'iv_xxx'
   });
 
   apm.on('success', (data) => {
@@ -261,13 +309,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle success (redirect handled by invoice configuration)
   });
 
-  apm.on('error', ({ message, code }) => {
-    console.error('Payment failed:', message, code);
+  apm.on('failure', (data) => {
+    console.error('Payment failed:', data.failure);
+    apm.cleanUp();
   });
 
-  apm.on('critical-failure', ({ message, code }) => {
-    console.error('Critical failure:', message, code);
-    apm.cleanUp();
+  apm.on('submit-error', (data) => {
+    console.error('Validation error:', data.failure);
   });
 
   try {
@@ -279,7 +327,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 ```
 
-### Example 2: With Custom Theme and Prefilled Data
+### Example 2: With Custom Configuration
 
 **Before:**
 ```javascript
@@ -311,14 +359,20 @@ nativeApm.mount('#payment-container');
 const apm = client.apm.authorization('#payment-container', {
   gatewayConfigurationId: 'gway_conf_xxx',
   invoiceId: 'iv_xxx',
-  successScreenMaximumTimeout: 7000,
-  successScreenConfirmation: true,
+  confirmation: {
+    timeout: 300
+  },
   theme: {
-    buttons: {
-      default: {
-        backgroundColor: '#007bff',
-        color: 'white',
-        fontWeight: 'bold'
+    palette: {
+      light: {
+        surface: {
+          button: {
+            primary: '#007bff'
+          }
+        },
+        text: {
+          default: 'white'
+        }
       }
     }
   },
@@ -331,7 +385,7 @@ apm.on('success', () => {
   apm.cleanUp();
 });
 
-apm.on('critical-failure', () => {
+apm.on('failure', () => {
   apm.cleanUp();
 });
 
@@ -346,9 +400,7 @@ The tokenization flow is new and wasn't available with `setupNativeApm`:
 const apm = client.apm.tokenization('#container', {
   gatewayConfigurationId: 'gway_conf_xxx',
   customerId: 'cust_xxx',
-  customerTokenId: 'ctok_xxx',
-  showSuccesScreen: true,
-  successScreenMinimumTimeout: 3000
+  customerTokenId: 'tok_xxx'
 });
 
 apm.on('success', (data) => {
@@ -356,16 +408,37 @@ apm.on('success', (data) => {
   apm.cleanUp();
 });
 
-apm.on('error', ({ message, code }) => {
-  console.error('Tokenization failed:', message, code);
-});
-
-apm.on('critical-failure', ({ message, code }) => {
-  console.error('Critical failure:', message, code);
+apm.on('failure', (data) => {
+  console.error('Tokenization failed:', data.failure);
   apm.cleanUp();
 });
 
 apm.initialise();
+```
+
+## New Event System Details
+
+The new event system is aligned with the mobile team implementation and provides comprehensive lifecycle events:
+
+### Event Flow
+1. **`initialised`** - Fired when APM is initialized
+2. **`start`** - Fired when initial data is loaded and waiting for user input
+3. **`field-change`** - Fired when user changes any form field
+4. **`submit`** - Fired when form is submitted
+5. **`submit-success`** - Fired when submission is successful
+6. **`submit-error`** - Fired when submission fails with validation errors
+7. **`payment-pending`** - Fired when payment is pending external confirmation
+8. **`pending-confirmed`** - Fired when user confirms pending action
+9. **`success`** - Fired when payment is successful (final event)
+10. **`failure`** - Fired when payment fails (final event)
+11. **`request-cancel`** - Fired when user requests cancellation
+
+### Universal Event Listener
+The `*` event fires for all events with a unified structure:
+```javascript
+apm.on('*', (event) => {
+  console.log(`Event: ${event.type}`, event);
+});
 ```
 
 ## Migration Checklist
@@ -375,8 +448,8 @@ Use this checklist to ensure you've completed all migration steps:
 - [ ] **Flow Selection**: Chosen between `apm.authorization` or `apm.tokenization`
 - [ ] **Method Signature**: Updated from `setupNativeApm(config)` to `apm.authorization(container, options)`
 - [ ] **Container Handling**: Moved container from `.mount()` to constructor
-- [ ] **Configuration**: Updated config options (timeouts, theme, initialData)
-- [ ] **Event Handlers**: Migrated from window events to instance events
+- [ ] **Configuration**: Updated to nested objects (`confirmation`, `success`)
+- [ ] **Event Handlers**: Migrated from window events to instance events with new event names
 - [ ] **Initialization**: Added explicit `.initialise()` call
 - [ ] **Cleanup**: Added `.cleanUp()` calls in success/failure handlers
 - [ ] **Error Handling**: Added try-catch around `.initialise()`
@@ -384,41 +457,196 @@ Use this checklist to ensure you've completed all migration steps:
 
 ## Troubleshooting
 
-### Common Issues
+### Common Migration Issues
 
-1. **"APM Context not initialised" Error**
-   - Ensure you're calling `.initialise()` after creating the APM instance
+#### 1. Container Not Found Error
 
-2. **Events Not Firing**
-   - Check that you're using instance events (`apm.on()`) instead of window events
-   - Ensure `.initialise()` has been called
+**Error Message:**
+```
+Cannot read properties of null (reading 'appendChild')
+TypeError: container is null
+```
 
-3. **Widget Not Appearing**
-   - Verify the container element exists before passing it to the constructor
-   - Check browser console for any JavaScript errors
+**Cause:** Container element doesn't exist when APM is created
 
-4. **Memory Leaks**
-   - Always call `.cleanUp()` when the payment flow completes
-   - Add cleanup in error handlers and page unload events
+**Solution:**
+```javascript
+// ❌ Wrong - container might not exist yet
+const apm = client.apm.authorization('#my-container', config);
 
-### Getting Help
+// ✅ Correct - ensure DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  const container = document.getElementById('my-container');
+  if (!container) {
+    console.error('Container element not found');
+    return;
+  }
+  const apm = client.apm.authorization(container, config);
+  apm.initialise();
+});
 
-If you encounter issues during migration:
+// ✅ Alternative - check container exists
+const container = document.querySelector('#my-container');
+if (container) {
+  const apm = client.apm.authorization(container, config);
+  apm.initialise();
+} else {
+  console.error('Payment container not found');
+}
+```
 
-1. Check the browser console for error messages
-2. Verify all required parameters are provided
-3. Ensure your project ID and gateway configuration are valid
-4. Test with the examples provided in this guide
+#### 2. Events Not Firing
+
+**Problem:** Old window events still in code, new events not working, or timing issues
+
+**Common causes:**
+
+1. **Using old window events:**
+```javascript
+// ❌ Old events won't work
+window.addEventListener('processout_native_apm_payment_success', handler);
+
+// ✅ Use new instance events
+apm.on('success', (data) => {
+  console.log('Payment successful:', data);
+  apm.cleanUp();
+});
+```
+
+2. **Adding events after initialise() - missing early events:**
+```javascript
+// ❌ Wrong order - misses 'initialised' and 'start' events
+const apm = client.apm.authorization(container, config);
+apm.initialise();
+apm.on('initialised', handler); // This won't fire - already happened!
+apm.on('start', handler); // This won't fire - already happened!
+
+// ✅ Correct order - add events before initialise()
+const apm = client.apm.authorization(container, config);
+apm.on('initialised', handler);
+apm.on('start', handler);
+apm.on('success', handler);
+apm.initialise(); // Now events will fire properly
+```
+
+3. **Debug with universal listener:**
+```javascript
+// ✅ Add this first to see all events
+apm.on('*', (event) => {
+  console.log('APM Event:', event.type, event);
+});
+```
+
+#### 3. Theme Not Applying
+
+**Problem:** Old theme structure doesn't work with new API
+
+**Solution:**
+```javascript
+// ❌ Old theme structure
+theme: {
+  buttons: {
+    default: { backgroundColor: 'blue' }
+  }
+}
+
+// ✅ New theme structure
+theme: {
+  palette: {
+    light: {
+      surface: {
+        button: {
+          primary: 'blue'
+        }
+      }
+    }
+  }
+}
+```
+
+**Note:** The payment widget may use Shadow DOM or iframe, so external CSS won't work. Always use the theme configuration for styling.
+
+### Runtime Issues
+
+#### 4. Widget Not Appearing
+
+**Common causes and solutions:**
+
+1. **Missing initialization:**
+```javascript
+// ❌ Forgot to call initialise()
+const apm = client.apm.authorization(container, config);
+apm.on('success', handler);
+// Missing: apm.initialise();
+
+// ✅ Always call initialise()
+const apm = client.apm.authorization(container, config);
+apm.on('success', handler);
+apm.initialise();
+```
+
+2. **Check browser console** for JavaScript errors and network issues
+
+#### 5. Network/API Errors
+
+**Common Error Messages:**
+```
+Failed to fetch
+CORS error
+404 Not Found on /invoices/iv_xxx/apm-payment
+```
+
+**Solutions:**
+
+```javascript
+// ✅ Verify correct gateway configuration ID format
+gatewayConfigurationId: 'gway_conf_xxx' // Must start with 'gway_conf_'
+
+// ✅ Verify correct invoice ID format
+invoiceId: 'iv_xxx' // Must start with 'iv_'
+
+// ✅ Check environment URLs
+// Development: https://api.processout.com
+// Production: https://api.processout.com
+```
+
+### Debugging Tips
+
+**Quick debugging checklist:**
+
+1. **Check browser console** for JavaScript errors
+2. **Verify container element** exists and is accessible
+3. **Test with minimal example** from this guide
+4. **Check network tab** for failed API requests  
+5. **Verify API credentials** and gateway configuration
+
+**Simple debugging code:**
+```javascript
+// Add universal event listener to see what's happening
+apm.on('*', (event) => {
+  console.log('APM Event:', event.type, event);
+});
+
+// Check if container exists
+const container = document.querySelector('#payment-container');
+console.log('Container exists:', !!container);
+```
+
+**When reporting issues, include:**
+
+- Browser and version
+- JavaScript framework and version (if any)
+- Exact error messages from console
+- Minimal code example that reproduces the issue
 
 ## Conclusion
 
-The new APM API provides a more robust and flexible foundation for alternative payment methods. While the migration requires some code changes, the improved error handling, better event system, and enhanced configuration options make it worthwhile.
+The new APM API provides a more robust and flexible foundation for alternative payment methods. The key improvements include:
 
-The key changes to remember:
-- Container passed during initialization, not mounting
-- Explicit `.initialise()` and `.cleanUp()` lifecycle methods
-- Instance-level events instead of global events
-- Expanded configuration options for better control
-- Separate flows for authorization vs tokenization
+- **Mobile-aligned event system** with comprehensive lifecycle events
+- **Nested configuration** for better organization and clarity
+- **Explicit lifecycle management** with initialization and cleanup
+- **Separate flows** for authorization vs tokenization
+- **Universal event listener** for comprehensive event monitoring
 
-Take your time with the migration and test thoroughly to ensure all functionality works as expected in your specific use case. 
+The migration requires updating event handlers, configuration structure, and adding proper cleanup, but the improved architecture and mobile alignment make it worthwhile for long-term maintainability and feature parity across platforms. 
