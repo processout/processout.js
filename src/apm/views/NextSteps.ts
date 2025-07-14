@@ -1,29 +1,15 @@
 module ProcessOut {
-  // Track OTP fields across form changes to clean up removed ones
-  let previousOtpFields = new Set<string>();
-
   export interface NextStepProps {
     elements: APIElements<FormFieldResult>,
-    config:  {
-      success: boolean
-      state: string
-      invoice?: APIInvoice
-      gateway?: object
-      error?: {
-        code: string
-        message: string
-        invalid_fields?: Array<{
-          name: string
-          message: string
-        }>
-      }
-    }
+    config:  APISuccessBase & Partial<PaymentContext>
   }
 
   export interface NextStepState {
     form?: FormState
     loading: boolean;
   }
+
+  const { div } = elements
 
   const setFormState = (elements: NextStepProps['elements'], error: NextStepProps['config']['error'] | undefined): FormState => {
     const forms = elements?.filter(e => e.type === "form") ?? []
@@ -45,15 +31,37 @@ module ProcessOut {
 
     state.values = forms.reduce((acc, form) => {
       form.parameters.parameter_definitions.forEach(param => {
-        if (param.type === 'single-select') {
-          acc[param.key] = param.available_values.find(item => item.preselected)?.value || param.available_values[0].value
+        // Check for prefilled data from initialData
+        const initialData = ContextImpl.context.initialData;
+        const prefilledValue = initialData?.[param.key];
+
+        // If we have prefilled data, use it and exit early
+        if (prefilledValue) {
+          // Special handling for phone numbers - convert string to expected object format
+          if (param.type === 'phone' && typeof prefilledValue === 'string') {
+            acc[param.key] = {
+              dialing_code: param.dialing_codes[0].value,
+              value: prefilledValue,
+            };
+          } else {
+            acc[param.key] = prefilledValue;
+          }
+          return;
         }
 
-        if (param.type === 'phone') {
-          acc[param.key] = {
-            dialing_code: param.dialing_codes[0].value,
-            value: '',
-          }
+        switch (param.type) {
+          case 'single-select':
+            acc[param.key] = param.available_values.find(item => item.preselected)?.value || param.available_values[0].value
+            break;
+          case 'phone':
+            acc[param.key] = {
+              dialing_code: param.dialing_codes[0].value,
+              value: '',
+            }
+            break;
+          default:
+            acc[param.key] = ''
+            break;
         }
       })
       return acc;
@@ -113,14 +121,16 @@ module ProcessOut {
       })
     }
 
-    private handleCancelClick() {
-      ContextImpl.context.events.emit('request-cancel')
-    }
-
     render() {
       const hasErrors = Object.keys(this.state.form?.errors ?? {}).some(key => this.state.form?.errors[key])
 
-      return Main({ config: this.props.config },
+      return Main({ 
+        config: this.props.config,
+        buttons: [
+          Button({ onclick: this.handleSubmit.bind(this), disabled: hasErrors, loading: this.state.loading }, 'Continue'),
+          (ContextImpl.context.allowCancelation ? CancelButton({ config: this.props.config }) : null)
+        ] 
+      },
         ...renderElements(
           this.props.elements,
           {
@@ -129,8 +139,6 @@ module ProcessOut {
             handleSubmit: this.handleSubmit.bind(this)
           }
         ),
-        Button({ onclick: this.handleSubmit.bind(this), disabled: hasErrors, loading: this.state.loading }, 'Continue'),
-        (ContextImpl.context.allowCancelation ? Button({ onclick: this.handleCancelClick.bind(this) }, 'Cancel') : null)
       )
     }
   }

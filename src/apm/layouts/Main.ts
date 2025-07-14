@@ -1,6 +1,13 @@
 module ProcessOut {
     const { div, img } = elements
-    export function Main({ config, hideAmount, ...props }: { config?: Partial<PaymentContext>, hideAmount?: boolean } & Props<'div'>, ...children: VNode[]) {
+
+    interface MainProps extends Props<'div'> {
+        config?: Partial<PaymentContext>,
+        hideAmount?: boolean,
+        buttons: VNode | VNode[],
+    }
+
+    export function Main({ config, hideAmount, buttons, ...props }: MainProps, ...children: VNode[]) {
         return (
             page(props,
                 config?.payment_method 
@@ -13,7 +20,12 @@ module ProcessOut {
                         ) : null
                     ) 
                     : null,
-                ...children
+                div({ className: 'container'},
+                    ...children
+                ),
+                buttons ? div({ className: 'buttons-container' },
+                    ...(Array.isArray(buttons) ? buttons : [buttons])
+                ) : null
             )
         )
     }

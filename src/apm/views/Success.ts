@@ -24,6 +24,7 @@ module ProcessOut {
         display: flex;
         justify-content: center;
         align-items: center;
+        margin-bottom: 8px
       }
       .success-page .tick-background {
         width: 76px;
@@ -40,6 +41,12 @@ module ProcessOut {
         z-index: 0;
         animation: grow 1s ease-in-out infinite;
       }
+      
+      .header-container {
+        display: flex;
+        flex-direction: column;
+        gap: 4px
+      }
     `
 
     private timeout = ContextImpl.context.success.requiresAction ? ContextImpl.context.success.manualDismissDuration : ContextImpl.context.success.autoDismissDuration
@@ -54,18 +61,24 @@ module ProcessOut {
         return null
       }
 
-      if (!this.timeoutSet && this.timeout > 0)) {
+      if (!this.timeoutSet && this.timeout > 0) {
         this.timeoutSet = true
         setTimeout(() => {
           ContextImpl.context.events.emit('success', { trigger: 'timeout' });
         }, this.timeout)
       }
 
-      return Main({ config: this.props.config, className: "success-page", hideAmount: true },
+      return Main({ 
+        config: this.props.config, 
+        className: "success-page", 
+        hideAmount: true,
+        buttons: ContextImpl.context.success.requiresAction
+        ? Button({ onclick: this.handleDoneClick.bind(this) }, 'Done') : null
+      },
         div({ className: 'success-message' },
           div({ className: 'tick-container' },
             div({ className: 'tick-background' },
-            Tick({ state: 'completed' }),
+            StatusTick({ state: 'completed' }),
             )
           ),
           div({ className: "header-container" },
@@ -75,9 +88,7 @@ module ProcessOut {
         ),
         ...(this.props.elements ? renderElements(this.props.elements) : []),
         (ContextImpl.context.success.requiresAction
-          ? div({ className: "button-container" },
-              Button({ onclick: this.handleDoneClick.bind(this) }, 'Done')
-            )
+          ? Button({ onclick: this.handleDoneClick.bind(this) }, 'Done')
           : null
         )
       )
