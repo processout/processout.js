@@ -1,5 +1,5 @@
 module ProcessOut {
-  type SubHeaderTag = 'h2' | 'h3' | 'h4' | 'h5' | 'h6'
+  type SubHeaderTag = 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'label'
   type SubHeaderTagProps<K extends SubHeaderTag> = Props<K>
   type SubHeaderProps<K extends SubHeaderTag> = SubHeaderTagProps<K> & {
     tag: K
@@ -14,9 +14,9 @@ module ProcessOut {
 
     delete props.tag
 
-    const className = ["sub-heading", props.className].filter(Boolean)
+    const className = ["sub-heading", props.className].filter(Boolean).join(' ')
 
-    const el = elements[tag];
+    const el = elements[tag] as any;
     return el({ ...props, className }, content)
   }
 }

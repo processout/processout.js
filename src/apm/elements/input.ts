@@ -5,8 +5,8 @@ module ProcessOut {
     name: string
     label?: string;
     errored?: boolean;
-    oninput?: (key: string, value: string) => void,
-    onblur?: (key: string, value: string) => void,
+    oninput?: FormFieldUpdate,
+    onblur?: FormFieldBlur,
   }
 
   export const Input = ({ name, className, label, disabled, errored, value, id, type, oninput, onblur, ...props }: InputProps) => {

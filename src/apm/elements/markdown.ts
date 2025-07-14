@@ -46,6 +46,16 @@ module ProcessOut {
       ref: (domElement: HTMLDivElement | null) => {
         if (!domElement) return
 
+        // Check if content has changed to prevent unnecessary re-renders
+        const contentHash = simpleHash(contentString)
+        const currentContentHash = domElement.getAttribute('data-content-hash')
+        if (currentContentHash === contentHash) {
+          return // Content hasn't changed, skip re-render
+        }
+
+        // Store current content hash for comparison
+        domElement.setAttribute('data-content-hash', contentHash)
+
         // Show skeleton immediately
         domElement.innerHTML = ''
         domElement.appendChild(createSkeleton())
@@ -78,7 +88,7 @@ module ProcessOut {
           if (error) {
             console.error("Failed to load markdown library:", error)
             domElement.innerHTML = ''
-          domElement.textContent = contentString
+            domElement.textContent = contentString
           } else {
             renderMarkdown()
           }

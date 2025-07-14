@@ -9,22 +9,12 @@ module ProcessOut {
     id?: string;
   }
 
-  // Persistent state store keyed by QR id to survive re-renders
-  const qrStateStore: Record<string, {
+  // QR component state interface
+  interface QRComponentState {
     isDownloading: boolean;
     isCopying: boolean;
     canvas: HTMLCanvasElement | null;
-  }> = {};
-
-  // Function to clear QR state when component is removed
-  export const clearQRState = (id: string): void => {
-    delete qrStateStore[id];
-  };
-
-  // Function to clear all QR state
-  export const clearAllQRState = (): void => {
-    Object.keys(qrStateStore).forEach(key => delete qrStateStore[key]);
-  };
+  }
 
   export const QR = ({ 
     data, 
@@ -39,16 +29,12 @@ module ProcessOut {
       return div({ className: ["qr-error", className].filter(Boolean).join(" ") }, "No QR code data provided")
     }
 
-    // Get or create persistent state for this QR instance
-    if (!qrStateStore[id]) {
-      qrStateStore[id] = {
-        isDownloading: false,
-        isCopying: false,
-        canvas: null,
-      };
-    }
-
-    const state = qrStateStore[id];
+    // Use the new component state system
+    const { state, setState } = useComponentState<QRComponentState>({
+      isDownloading: false,
+      isCopying: false,
+      canvas: null,
+    });
     const classNames = ["qr-code-container", className].filter(Boolean).join(" ")
     let downloadButtonRef: HTMLButtonElement | null = null;
     let copyButtonRef: HTMLButtonElement | null = null;
@@ -98,7 +84,8 @@ module ProcessOut {
           loader.className = 'loader';
           downloadButtonRef.appendChild(loader);
         } else {
-          downloadButtonRef.disabled = false;
+          // Only enable download button if canvas is available
+          downloadButtonRef.disabled = !state.canvas;
           downloadButtonRef.classList.remove('loading');
           downloadButtonRef.querySelector('.loader')?.remove();
         }
@@ -125,7 +112,7 @@ module ProcessOut {
       }
 
       // Update state to loading
-      state.isDownloading = true;
+      setState(prevState => ({ ...prevState, isDownloading: true }));
       update();
 
       try {
@@ -133,7 +120,7 @@ module ProcessOut {
         state.canvas.toBlob((blob) => {
           if (!blob) {
             console.error("Failed to create blob from canvas");
-            state.isDownloading = false;
+            setState(prevState => ({ ...prevState, isDownloading: false }));
             update();
             return;
           }
@@ -152,72 +139,18 @@ module ProcessOut {
           // Clean up
           URL.revokeObjectURL(url);
           
+          // Emit download-image event
+          ContextImpl.context.events.emit('download-image');
+          
           setTimeout(() => {
-            state.isDownloading = false;
+            setState(prevState => ({ ...prevState, isDownloading: false }));
             update();
           }, 1000);
 
         }, 'image/png');
       } catch (error) {
         console.error("Error downloading QR code:", error);
-        state.isDownloading = false;
-        update();
-      }
-    };
-
-    const copyQRCode = (): void => {
-      if (state.isCopying) {
-        return;
-      }
-
-      // Update state to copying
-      state.isCopying = true;
-      update();
-
-      try {
-        // Decode the base64 value to get the actual text
-        const text = atob(data);
-        
-        // Use the modern Clipboard API if available
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(text).then(() => {
-            setTimeout(() => {
-              state.isCopying = false;
-              update();
-            }, 1000);
-          }).catch((error) => {
-            console.error("Failed to copy text to clipboard:", error);
-            state.isCopying = false;
-            update();
-          });
-        } else {
-          // Fallback for older browsers
-          const textArea = document.createElement('textarea');
-          textArea.value = text;
-          textArea.style.position = 'fixed';
-          textArea.style.left = '-999999px';
-          textArea.style.top = '-999999px';
-          document.body.appendChild(textArea);
-          textArea.focus();
-          textArea.select();
-          
-          try {
-            document.execCommand('copy');
-            setTimeout(() => {
-              state.isCopying = false;
-              update();
-            }, 1000);
-          } catch (err) {
-            console.error("Fallback copy failed:", err);
-            state.isCopying = false;
-            update();
-          } finally {
-            document.body.removeChild(textArea);
-          }
-        }
-      } catch (error) {
-        console.error("Error copying QR code:", error);
-        state.isCopying = false;
+        setState(prevState => ({ ...prevState, isDownloading: false }));
         update();
       }
     };
@@ -235,6 +168,16 @@ module ProcessOut {
         },
         ref: (domElement: HTMLDivElement | null) => {
           if (!domElement) return
+
+          // Check if QR data has changed to prevent unnecessary re-renders
+          const dataHash = simpleHash(data + size.toString()) // Include size in hash
+          const currentDataHash = domElement.getAttribute('data-qr-hash')
+          if (currentDataHash === dataHash) {
+            return // Data hasn't changed, skip re-render
+          }
+
+          // Store current data hash for comparison
+          domElement.setAttribute('data-qr-hash', dataHash)
 
           // Show QR skeleton immediately
           domElement.innerHTML = ''
@@ -259,8 +202,9 @@ module ProcessOut {
                 // Store reference to the canvas in state
                 const canvas = domElement.querySelector('canvas')
                 if (canvas) {
-                  state.canvas = canvas;
+                  setState(prevState => ({ ...prevState, canvas }));
                 }
+                update();
               }
             } catch (error) {
               domElement.innerHTML = ''
@@ -282,19 +226,6 @@ module ProcessOut {
       }),
       
       div({ className: "qr-actions" }, [
-        Button({
-          variant: "secondary",
-          size: "sm",
-          type: "button",
-          onclick: copyQRCode,
-          ref: (element: HTMLButtonElement | null) => {
-            copyButtonRef = element;
-            
-            if (copyButtonRef) {
-              update();
-            }
-          }
-        }, "Copy code"),
         Button({
           variant: "secondary",
           size: "sm",

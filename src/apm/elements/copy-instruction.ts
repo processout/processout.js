@@ -56,6 +56,13 @@ module ProcessOut {
     state.isCopying = true;
     update();
 
+    // Emit copy-to-clipboard event immediately (synchronously)
+    try {
+      ContextImpl.context.events.emit('copy-to-clipboard', { text: instruction.value });
+    } catch (error) {
+      console.error("Failed to emit copy-to-clipboard event:", error);
+    }
+
     try {
       // Use the modern Clipboard API if available
       if (navigator.clipboard && navigator.clipboard.writeText) {
