@@ -230,7 +230,6 @@ export function Form(props: FormData<FormFieldResult>, state: NextStepState, set
       className: "form",
       onsubmit: (e) => {
         e.preventDefault()
-        clearAllOTPState()
         ContextImpl.context.events.emit('submit', { parameters: Object.keys(state.form.values).map(key => ({ key, value: state.form.values[key] })) })
         onSubmit()
       }

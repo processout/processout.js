@@ -87,10 +87,6 @@ module ProcessOut {
           ),
         ),
         ...(this.props.elements ? renderElements(this.props.elements) : []),
-        (ContextImpl.context.success.requiresAction
-          ? Button({ onclick: this.handleDoneClick.bind(this) }, 'Done')
-          : null
-        )
       )
     }
   }

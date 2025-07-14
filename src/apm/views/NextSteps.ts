@@ -1,7 +1,7 @@
 module ProcessOut {
   export interface NextStepProps {
     elements: APIElements<FormFieldResult>,
-    config:  APISuccessBase & Partial<PaymentContext>
+    config:  (APISuccessBase | APIValidationBase) & Partial<PaymentContext>
   }
 
   export interface NextStepState {
@@ -11,7 +11,8 @@ module ProcessOut {
 
   const { div } = elements
 
-  const setFormState = (elements: NextStepProps['elements'], error: NextStepProps['config']['error'] | undefined): FormState => {
+  const setFormState = (elements: NextStepProps['elements'], config: NextStepProps['config']): FormState => {
+    const error = 'error' in config ? config.error : undefined;
     const forms = elements?.filter(e => e.type === "form") ?? []
 
     if (forms.length === 0) {
@@ -86,9 +87,9 @@ module ProcessOut {
 
     return state
   }
-  const setInitialState = (elements: APIElements<FormFieldResult >, errors: any | undefined): NextStepState => {
+  const setInitialState = (elements: APIElements<FormFieldResult >, config: NextStepProps['config']): NextStepState => {
     const state: NextStepState = { loading: false };
-    const form = setFormState(elements, errors);
+    const form = setFormState(elements, config);
 
     if (form) {
       state.form = form;
@@ -98,7 +99,7 @@ module ProcessOut {
   }
 
   export class APMViewNextSteps extends APMViewImpl<NextStepProps, NextStepState> {
-    state = setInitialState(this.props.elements, this.props.config.error)
+    state = setInitialState(this.props.elements, this.props.config)
 
     private handleSubmit() {
       const state = this.state
@@ -128,7 +129,7 @@ module ProcessOut {
         config: this.props.config,
         buttons: [
           Button({ onclick: this.handleSubmit.bind(this), disabled: hasErrors, loading: this.state.loading }, 'Continue'),
-          (ContextImpl.context.allowCancelation ? CancelButton({ config: this.props.config }) : null)
+          (ContextImpl.context.allowCancelation ? CancelButton({ config: this.props.config as APISuccessBase & Partial<PaymentContext> }) : null)
         ] 
       },
         ...renderElements(
