@@ -1,5 +1,5 @@
 module ProcessOut {
-export type FormFieldResponse =
+  export type FormFieldResponse =
     | {
       type: "email" | "text"
       key: string
@@ -37,48 +37,26 @@ export type FormFieldResponse =
         label: string;
         preselected: boolean
       }>
+    }
+    | {
+      type: 'boolean'
+      key: string
+      label: string
+      required: boolean
     } & {}
 
-  export type FormFieldResult =
-    | {
-      type: "email" | "text"
-      key: string
-      label: string
-      required: boolean
-      max_length: number
-      min_length: number
-    }
-    | {
-      type: "phone"
-      key: string
-      label: string
-      required: boolean
-      dialing_codes: Array<{
-        region_code: string;
-        value: string;
-        name: string
-      }>
-    }
-    | {
-      type: "otp"
-      key: string
-      label: string
-      max_length: number
-      min_length: number
-      required: true
-      subtype: "digits" | "alphanumeric"
-    }
-    | {
-      type: 'single-select'
-      key: string
-      label: string
-      required: boolean
-      available_values: Array<{
-        value: string;
-        label: string;
-        preselected: boolean
-      }>
-    } & {}
+  // Helper type to make IntelliSense more readable
+  type Prettify<T> = {
+    [K in keyof T]: T[K]
+  } & {}
+
+  // Single conditional with multiple branches - much cleaner
+  type TransformFormField<T> = 
+    T extends { type: "phone" }
+      ? T & { dialing_codes: Array<{ region_code: string; value: string; name: string }> }
+    : T
+
+  export type FormFieldResult = Prettify<TransformFormField<FormFieldResponse>>
 
   export type FormData<O extends object> = {
     type: 'form',
@@ -213,6 +191,7 @@ export type FormFieldResponse =
   const TIMEOUT = 1000;
   let INITIAL_MAX_RETRIES = 0
   let POLLING_TIMEOUT_ID: number | null = null
+  let POLLING_CANCELLED = false // Add cancellation flag
 
   const isErrorResponse = (data: AuthorizationNetworkResponse | TokenizationNetworkResponse): data is NetworkErrorResponse => {
     return data.success === false && (!('invalid_fields' in data) && !data.error_type.startsWith('request.validation.'))
@@ -281,16 +260,31 @@ export type FormFieldResponse =
       const flow = context.flow;
 
       if (flow === 'authorization') {
+        return this.get(context.gatewayConfigurationId, {
+          ...options,
+          hasReturnedFirstPending: false,
+        });
+      }
+
+      return this.post({
+        gateway_configuration_id: context.gatewayConfigurationId,
+      }, {
+        ...options,
+        hasReturnedFirstPending: false,
+      })
+    }
+
+    public static getCurrentStep(options: APIOptions<AuthorizationSuccessResponse | TokenizationSuccessResponse, AuthorizationValidationResponse | TokenizationValidationResponse>) {
+      const context = ContextImpl.context;
+      const flow = context.flow;
+
+      if (flow === 'authorization') {
         return this.get(context.gatewayConfigurationId, options);
       }
 
       return this.post({
         gateway_configuration_id: context.gatewayConfigurationId,
       }, options)
-    }
-
-    public static getCurrentStep(options: APIOptions<AuthorizationSuccessResponse | TokenizationSuccessResponse, AuthorizationValidationResponse | TokenizationValidationResponse>) {
-      return this.get(options)
     }
     
     public static sendFormData<F extends Record<string, unknown> = Record<string, unknown>>(formData: F) {
@@ -330,6 +324,7 @@ export type FormFieldResponse =
       let internalOptions: APIOptions<AuthorizationSuccessResponse | TokenizationSuccessResponse, AuthorizationValidationResponse | TokenizationValidationResponse> = {
         initialTimestamp: Date.now(),
         serviceRetries: 5,
+        hasReturnedFirstPending: !!storage.get('pending.startTime'),
         ...options,
       };
 
@@ -410,6 +405,9 @@ export type FormFieldResponse =
           }
 
           if (apiResponse.state === 'PENDING') {
+            // Reset cancellation flag when we get a PENDING response - this is when we need to start/resume polling
+            POLLING_CANCELLED = false;
+            
             if (internalOptions.initialTimestamp) {
               const currentTimestamp = Date.now();
               const elapsedTime = currentTimestamp - internalOptions.initialTimestamp;
@@ -447,17 +445,22 @@ export type FormFieldResponse =
               }
               
               internalOptions.onSuccess?.(this.transformResponse(apiResponse));
-              if (ContextImpl.context.confirmation.requiresAction && !internalOptions.hasConfirmedPending) {
+              if (ContextImpl.context.confirmation.requiresAction && !storage.get('pending.startTime')) {
                 INITIAL_MAX_RETRIES = 0;
                 return
               }
             }
 
-            // Continue polling in background
-            POLLING_TIMEOUT_ID = window.setTimeout(() => {
-              internalOptions.serviceRetries = INITIAL_MAX_RETRIES
-              this.initialise(internalOptions);
-            }, TIMEOUT);
+            // Continue polling in background (only if not cancelled)
+            if (!POLLING_CANCELLED) {
+              POLLING_TIMEOUT_ID = window.setTimeout(() => {
+                // Double-check cancellation before continuing
+                if (!POLLING_CANCELLED) {
+                  internalOptions.serviceRetries = INITIAL_MAX_RETRIES
+                  this.getCurrentStep(internalOptions);
+                }
+              }, TIMEOUT);
+            }
             return;
           }
 
@@ -470,6 +473,7 @@ export type FormFieldResponse =
           }
           
           if (apiResponse.state === 'SUCCESS' && !ContextImpl.context.success.enabled) {
+            storage.remove('pending.startTime')
             ContextImpl.context.events.emit('success', { trigger: 'immediate' });
             return;
           }
@@ -550,6 +554,7 @@ export type FormFieldResponse =
     }
 
     public static cancelPolling(): void {
+      POLLING_CANCELLED = true; // Set cancellation flag
       if (POLLING_TIMEOUT_ID) {
         window.clearTimeout(POLLING_TIMEOUT_ID);
         POLLING_TIMEOUT_ID = null;
