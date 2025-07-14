@@ -47,7 +47,7 @@ module ProcessOut {
       }
 
       (request.bind(APIImpl) as APIRequest)({
-        hasConfirmedPending: ContextImpl.context.requirePendingConfirmation
+        hasConfirmedPending: ContextImpl.context.confirmation.requiresAction
           ? this.state === "PENDING"
           : true,
         onSuccess: ({ elements, ...config }) => {
