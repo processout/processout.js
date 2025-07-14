@@ -185,7 +185,7 @@ module ProcessOut {
                     '', 
                     '[logo]: https://github.com/adam-p/markdown-here/raw/master/src/common/images/icon48.png "Logo Title Text 2"',
                     '',
-                    '## Blockquotes',,
+                    '## Blockquotes',
                     '> Blockquotes are very handy in email to emulate reply text.',
                     '> This line is part of the same quote.',
                     '',

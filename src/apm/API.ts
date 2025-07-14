@@ -134,12 +134,12 @@ module ProcessOut {
     }
   }
 
-  export interface AuthorizationSuccessResponse extends APISuccessBase, PaymentContext {}
-  export interface AuthorizationValidationResponse extends APIValidationBase, PaymentContext {}
+  export type AuthorizationSuccessResponse = APISuccessBase & PaymentContext;
+  export type AuthorizationValidationResponse = APIValidationBase & PaymentContext;
 
   // Tokenization-specific response types (no PaymentContext)
-  export interface TokenizationSuccessResponse extends APISuccessBase {}
-  export interface TokenizationValidationResponse extends APIValidationBase {}
+  export type TokenizationSuccessResponse = APISuccessBase;
+  export type TokenizationValidationResponse = APIValidationBase;
 
   interface NetworkValidationBase extends APIResponseBase<FormFieldResponse> {
     success: false,
@@ -151,11 +151,11 @@ module ProcessOut {
     }>
   }
 
-  interface AuthorizationNetworkSuccessResponse extends APISuccessBase, PaymentContext {}
-  interface TokenizationNetworkSuccessResponse extends APISuccessBase {}
+  type AuthorizationNetworkSuccessResponse = APISuccessBase & PaymentContext;
+  type TokenizationNetworkSuccessResponse = APISuccessBase;
 
-  interface AuthorizationNetworkValidationResponse extends NetworkValidationBase,  PaymentContext {}
-  interface TokenizationNetworkValidationResponse extends NetworkValidationBase {}
+  type AuthorizationNetworkValidationResponse = NetworkValidationBase & PaymentContext;
+  type TokenizationNetworkValidationResponse = NetworkValidationBase;
 
 
   type NetworkErrorResponse = {
