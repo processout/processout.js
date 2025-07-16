@@ -11,6 +11,7 @@ module ProcessOut {
       "processout_dynamic_checkout_no_dynamic_checkout_configuration",
     PAYMENT_ERROR: "processout_dynamic_checkout_payment_error",
     PAYMENT_SUCCESS: "processout_dynamic_checkout_payment_success",
+    PAYMENT_CANCELLED: "processout_dynamic_checkout_payment_cancelled",
     TRANSACTION_ERROR: "processout_dynamic_checkout_transaction_error",
     GOOGLE_PAY_LOAD_ERROR: "processout_dynamic_checkout_google_pay_load_error",
     APPLE_PAY_NEW_SESSION: "processout_dynamic_checkout_apple_pay_new_session",
@@ -134,6 +135,13 @@ module ProcessOut {
 
     static dispatchPaymentSubmittedEvent(details: { payment_method_name: string }) {
       const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.PAYMENT_SUBMITTED, {
+        details,
+      })
+
+      return window.dispatchEvent(event)
+    }
+    static dispatchPaymentCancelledEvent(details: { payment_method_name: string }) {
+      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.PAYMENT_CANCELLED, {
         details,
       })
 
