@@ -32,7 +32,10 @@ module ProcessOut {
         line.style.width = `${width}%`
         line.style.height = '1em'
         line.style.marginBottom = '0.5em'
-        line.style.backgroundColor = 'rgba(0, 0, 0, 0.1)'
+        line.style.backgroundColor = ThemeImpl.mode === 'light' 
+          ? ThemeImpl.instance.get('palette.light.text.default')
+          : ThemeImpl.instance.get('palette.dark.text.default')
+        line.style.opacity = '0.1'
         line.style.borderRadius = '4px'
         line.style.animation = 'skeleton-pulse 1.5s ease-in-out infinite'
         skeletonContainer.appendChild(line)

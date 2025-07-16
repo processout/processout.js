@@ -49,8 +49,14 @@ module ProcessOut {
   function updateField(setState: SetState<NextStepState>): FormFieldUpdate {
     return function(key, value, isInitial = false) {
       setState((prevState) => {
-        let errors = { ...prevState.form.errors }
+        // Check if the value has actually changed to prevent unnecessary re-renders
+        const currentValue = prevState.form.values[key];
+        if (!isInitial && currentValue === value) {
+          return prevState; // No change, return the same state to prevent re-render
+        }
 
+        let errors = { ...prevState.form.errors }
+        console.log('updateField', key, value, isInitial)
         if (prevState.form.touched[key]) {
           delete errors[key]
           errors[key] = validateField(prevState, key, value)

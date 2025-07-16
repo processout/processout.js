@@ -66,7 +66,7 @@ module ProcessOut {
     'div','span','p', 'em', 'strong', 
     'h1','h2','h3','h4','h5','h6',
     'a','button','input','label', 'form',
-    'ul','ol','li','img',
+    'ul','ol','li','img','picture','source',
     'section','article','header','footer','nav','main',
     'pre','code','textarea','select','option',
   ] as const;

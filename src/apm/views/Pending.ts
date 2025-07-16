@@ -34,12 +34,19 @@ module ProcessOut {
           left: 13px;
           transform: translateX(-50%);
           width: 2px;
-          border-left: 2px dashed #D1D5DB;
+          border-left: 2px dashed;
           z-index: 2;
+          border-left-color: ${ThemeImpl.instance.get('palette.light.border.icon.tertiary')};
+          @media (prefers-color-scheme: dark) {
+            border-left-color: ${ThemeImpl.instance.get('palette.dark.border.icon.tertiary')};
+          }
         }
 
         .step.completed::after {
-          border-left-color: #4CAF50;
+          border-left-color: ${ThemeImpl.instance.get('palette.light.surface.success')};
+          @media (prefers-color-scheme: dark) {
+            border-left-color: ${ThemeImpl.instance.get('palette.dark.surface.success')};
+          }
         }
 
         .step:last-child::after {
@@ -63,7 +70,10 @@ module ProcessOut {
           font-weight: 500;
           font-size: 12px;
           line-height: 14px;
-          color: #585A5F;
+          color: ${ThemeImpl.instance.get('palette.light.text.secondary')};
+          @media (prefers-color-scheme: dark) {
+            color: ${ThemeImpl.instance.get('palette.dark.text.secondary')};
+          }
         }
       `
 

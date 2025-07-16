@@ -113,6 +113,10 @@ module ProcessOut {
     setState?: (setter: NextStepState | ((prevState: DeepReadonly<NextStepState>) => NextStepState)) => void
     handleSubmit?: () => void
   }): VNode[] => {
+    if (!elements || !Array.isArray(elements)) {
+      return []
+    }
+    
     return createGroupedElements(
       elements,
       getGroupInfo,

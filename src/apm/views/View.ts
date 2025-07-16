@@ -38,6 +38,9 @@ module ProcessOut {
     private _pendingStateUpdates: Array<S | ((prevState: DeepReadonly<S>) => S)> = [];
     private _isUpdateScheduled: boolean = false;
 
+    // Theme change listener cleanup function
+    private _themeChangeCleanup?: () => void;
+
     constructor(container: Element, shadow: ShadowRoot | Document, props: P) {
       this.container = container;
       this.shadow = shadow;
@@ -174,6 +177,20 @@ module ProcessOut {
 
       this._applyStyles();
 
+      this._themeChangeCleanup = ThemeImpl.onThemeChange(() => {
+        // Don't force update if an input is currently focused to prevent cursor position issues
+        const activeElement = document.activeElement;
+        const isInputFocused = activeElement && (
+          activeElement.tagName === 'INPUT' || 
+          activeElement.tagName === 'TEXTAREA' || 
+          (activeElement as HTMLElement).contentEditable === 'true'
+        );
+        
+        if (!isInputFocused) {
+          this.forceUpdate();
+        }
+      });
+
       // Set view context for StateManager before rendering
       setCurrentViewContext(this);
 
@@ -191,6 +208,12 @@ module ProcessOut {
 
     public unmount(): void {
       this.componentWillUnmount();
+      
+      // Clean up theme change listener
+      if (this._themeChangeCleanup) {
+        this._themeChangeCleanup();
+        this._themeChangeCleanup = undefined;
+      }
       
       // Clean up all components associated with this view
       try {
@@ -505,7 +528,34 @@ module ProcessOut {
 
         // Handle regular values: DOM properties vs HTML attributes
         if (key in element) {
-          (element as any)[key] = newValue;
+          // Special handling for input value to preserve cursor position
+          if (key === 'value' && element instanceof HTMLInputElement) {
+            const oldValue = element.value;
+            const newValueStr = String(newValue);
+            
+            // Only update if the value actually changed
+            if (oldValue !== newValueStr) {
+              // If the input is focused, preserve cursor position
+              if (element === document.activeElement) {
+                const cursorPosition = element.selectionStart;
+                const cursorEnd = element.selectionEnd;
+                
+                element.value = newValueStr;
+                
+                // Preserve cursor position if it was within the old value
+                if (cursorPosition !== null && cursorEnd !== null) {
+                  const newCursorPosition = Math.min(cursorPosition, newValueStr.length);
+                  const newCursorEnd = Math.min(cursorEnd, newValueStr.length);
+                  element.setSelectionRange(newCursorPosition, newCursorEnd);
+                }
+              } else {
+                // Input not focused, just update value
+                element.value = newValueStr;
+              }
+            }
+          } else {
+            (element as any)[key] = newValue;
+          }
         } else {
           element.setAttribute(key, String(newValue));
         }

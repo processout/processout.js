@@ -2,6 +2,7 @@ module ProcessOut {
   interface Palette {
     background: string
     surface: {
+      success: string,
       button: {
         primary: string
         secondary: string
@@ -20,6 +21,12 @@ module ProcessOut {
       input: {
         default: string,
         disabled: string,
+        hover: {
+          default: string,
+        }
+      }
+      toast: {
+        error: string,
       }
     }
     border: {
@@ -28,6 +35,16 @@ module ProcessOut {
         errored: string,
         disabled: string,
       }
+      icon: {
+        tertiary: string,
+        disabled: string,
+      }
+      checkbox: {
+        default: string,
+      }
+      toast: {
+        error: string,
+      }
     }
     text: {
       default: string
@@ -35,6 +52,9 @@ module ProcessOut {
       label: string
       errored: string
       secondary: string
+      toast: {
+        error: string,
+      }
     }
     shadow: {
       focus: string,
@@ -43,6 +63,7 @@ module ProcessOut {
   }
 
   export interface ThemeOptions {
+    fontFamily: string
     palette: {
       light: Palette
       dark: Palette
@@ -60,12 +81,15 @@ module ProcessOut {
 
   export class ThemeImpl implements Theme {
     static _instance: Theme;
+    static _mode: 'light' | 'dark' = 'light';
 
     private theme: ThemeOptions = {
+      fontFamily: '"Work sans", Arial, sans-serif',
       palette: {
         dark: {
           background: "#26292F",
           surface: {
+            success: '#28DE6B',
             button: {
               primary: "#FFFFFF",
               secondary: "#555555",
@@ -84,6 +108,12 @@ module ProcessOut {
             input: {
               default: '#26292F',
               disabled: '#2E3137',
+              hover: {
+                default: '#33353A',
+              },
+            },
+            toast: {
+              error: '#511511',
             }
           },
           border: {
@@ -91,15 +121,27 @@ module ProcessOut {
               default: '#484a50',
               errored: '#FF8888',
               disabled: '#2E3137',
-
+            },
+            icon: {
+              tertiary: '#707378',
+              disabled: '#585A5F',
+            },
+            checkbox: {
+              default: '#56585C',
+            },
+            toast: {
+              error: '#5E2724',
             }
           },
           text: {
             default: '#FFFFFF',
             disabled: '#707378',
             label: '#A7A9AF',
-            errored: '#FF8888',
-            secondary: '#585A5F',
+            errored: '#FF7D6C',
+            secondary: '#C0C3C8',
+            toast: {
+              error: '#F5D9D9',
+            }
           },
           shadow: {
             focus: '#63656b',
@@ -109,6 +151,7 @@ module ProcessOut {
         light: {
           background: "#FFFFFF",
           surface: {
+            success: '#0C7434',
             button: {
               primary: "#000000",
               secondary: "#f1f1f1",
@@ -127,6 +170,12 @@ module ProcessOut {
             input: {
               default: '#FFFFFF',
               disabled: '#f1f1f1',
+              hover: {
+                default: '#f5f5f5',
+              },
+            },
+            toast: {
+              error: '#FDE3DE',
             }
           },
           border: {
@@ -134,6 +183,16 @@ module ProcessOut {
               default: '#e3e3e3',
               errored: '#BE011B',
               disabled: '#f1f1f1',
+            },
+            icon: {
+              tertiary: '#8A8D93',
+              disabled: '#C0C3C8',
+            },
+            checkbox: {
+              default: '#C0C3C8',
+            },
+            toast: {
+              error: '#EFD7D2',
             }
           },
           text: {
@@ -142,6 +201,9 @@ module ProcessOut {
             label: '#707378',
             errored: '#BE011B',
             secondary: '#585A5F',
+            toast: {
+              error: '#630407',
+            }
           },
           shadow: {
             focus: '#b1b1b2',
@@ -151,18 +213,142 @@ module ProcessOut {
       },
     }
 
-    private constructor() {}
+    private static themeChangeCallbacks: Array<(mode: 'light' | 'dark') => void> = [];
+
+    private constructor() {
+      // Initialize mode based on current color scheme
+      ThemeImpl.updateMode();
+      
+      // Set up listener for color scheme changes
+      ThemeImpl.setupColorSchemeListener();
+    }
 
     public static get instance(): Theme {
-      if (!this._instance) {
-        this._instance = new ThemeImpl();
+      if (!ThemeImpl._instance) {
+        ThemeImpl._instance = new ThemeImpl();
+      }
+      return ThemeImpl._instance;
+    }
+
+    public static get mode(): 'light' | 'dark' {
+      return this._mode;
+    }
+
+    /**
+     * Register a callback to be called when theme mode changes
+     */
+    public static onThemeChange(callback: (mode: 'light' | 'dark') => void): () => void {
+      const index = ThemeImpl.themeChangeCallbacks.indexOf(callback);
+      
+      if (index === -1) {
+        this.themeChangeCallbacks.push(callback);
+      }
+      
+      // Return cleanup function to remove the callback
+      return () => {
+        const index = this.themeChangeCallbacks.indexOf(callback);
+        if (index > -1) {
+          this.themeChangeCallbacks.splice(index, 1);
+        }
+      };
+    }
+
+    /**
+     * Update the mode based on current color scheme
+     */
+    private static updateMode(): void {
+      const newMode = ThemeImpl.getCurrentColorScheme();
+      if (ThemeImpl._mode !== newMode) {
+        ThemeImpl._mode = newMode;
+        ThemeImpl.triggerModeChange();
+      }
+    }
+
+    /**
+     * Set up listener for color scheme changes
+     */
+    private static setupColorSchemeListener(): void {
+      if (typeof window === 'undefined' || !window.matchMedia) {
+        return;
       }
 
-      return this._instance;
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      
+      const handleChange = (e: MediaQueryListEvent) => {
+        ThemeImpl.updateMode();
+      };
+
+      mediaQuery.addEventListener('change', handleChange);
+    }
+
+    /**
+     * Trigger mode change callbacks
+     */
+    private static triggerModeChange(): void {
+      // Call all registered callbacks
+      ThemeImpl.themeChangeCallbacks.forEach(callback => {
+        try {
+          callback(ThemeImpl._mode);
+        } catch (error) {
+          console.error('Error in theme change callback:', error);
+        }
+      });
     }
 
     public get<P extends Paths<ThemeOptions>>(path?: P): PathValue<ThemeOptions, P> {
-      return this.recursiveFind(path, this.theme)
+      return this.recursiveFind(path, this.theme);
+    }
+
+    /**
+     * Get the current color scheme (light or dark)
+     */
+    public static getCurrentColorScheme(): 'light' | 'dark' {
+      if (typeof window !== 'undefined' && window.matchMedia) {
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      return 'light'; // Default fallback
+    }
+
+    /**
+     * Get a color value based on the current color scheme
+     */
+    public static getColorForCurrentScheme(path: string): string {
+      const scheme = ThemeImpl.getCurrentColorScheme();
+      const fullPath = `palette.${scheme}.${path}` as any;
+      const value = ThemeImpl.instance.get(fullPath);
+      return typeof value === 'string' ? value : '#000000';
+    }
+
+    /**
+     * Listen for color scheme changes and execute a callback
+     */
+    public onColorSchemeChange(callback: (scheme: 'light' | 'dark') => void): () => void {
+      if (typeof window === 'undefined' || !window.matchMedia) {
+        return () => {}; // No-op cleanup function
+      }
+
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      
+      const handleChange = (e: MediaQueryListEvent) => {
+        callback(e.matches ? 'dark' : 'light');
+      };
+
+      mediaQuery.addEventListener('change', handleChange);
+      
+      // Return cleanup function
+      return () => {
+        mediaQuery.removeEventListener('change', handleChange);
+      };
+    }
+
+    /**
+     * Manually set the theme mode
+     */
+    public setMode(mode: 'light' | 'dark'): void {
+      if (ThemeImpl._mode !== mode) {
+        ThemeImpl._mode = mode;
+        ThemeImpl.triggerModeChange();
+      }
     }
 
     public getTextColor<P extends Paths<ThemeOptions>>(path?: P): string {
@@ -221,7 +407,7 @@ module ProcessOut {
         }
       }
       
-      return `
+      return css`
         /* Reset margins for all markdown elements */
         .markdown > * {
           margin-top: 0;
@@ -235,7 +421,7 @@ module ProcessOut {
 
         /* Same type elements: 16px spacing */
         /* Heading to heading */
-        ${headingRules.join(',\n        ')} {
+        ${headingRules.join(', \n')} {
           margin-top: 16px;
         }
 
@@ -245,10 +431,10 @@ module ProcessOut {
         }
 
         /* List to list */
-        ${listRules.join(',\n        ')} {
+        ${listRules.join(', \n')} {
           margin-top: 16px;
         }
-      `
+      `()
     }
 
     public createStyles() {
@@ -311,7 +497,7 @@ module ProcessOut {
         ${this.resetCss}
 
         .main {
-          font-family: "Work sans", Arial, sans-serif;
+          font-family: ${ThemeImpl.instance.get('fontFamily')};
           container: main / inline-size;
         }
 
@@ -320,8 +506,7 @@ module ProcessOut {
           flex-direction: column;
           width: 100%;
           min-height: 285px;
-          padding: 12px 20px;
-          gap: 16px;
+          padding: 32px 40px;
           color: ${ThemeImpl.instance.get('palette.light.text.default')};
           background-color: ${ThemeImpl.instance.get('palette.light.background')};
           @media (prefers-color-scheme: dark) {
@@ -336,11 +521,11 @@ module ProcessOut {
           gap: 16px;
         }
 
-        .page > .buttons-container {
-          margin-top: 40px;
+        .page > .container > .buttons-container {
+          margin-top: 24px;
         }
-        .page > form + .buttons-container {
-          margin-top: 16px;
+        .page > .container > form + .buttons-container {
+          margin-top: 4px;
         }
 
         .buttons-container {
@@ -544,12 +729,13 @@ module ProcessOut {
             border-color: ${ThemeImpl.instance.get('palette.dark.border.input.default')};
           }
         }
-        .field.focused {
+        .field.focused, .field:focus-within {
           border-color: ${ThemeImpl.instance.get('palette.light.text.default')};
           @media (prefers-color-scheme: dark) {
             border-color: ${ThemeImpl.instance.get('palette.dark.text.default')};
           }
         }
+
         .field .label {
           font-family: inherit;
           position: absolute;
@@ -565,6 +751,7 @@ module ProcessOut {
             color: ${ThemeImpl.instance.get('palette.dark.text.label')};
           }
         }
+
         .field.filled.has-label .label {
           font-size: 12px;
           line-height: 14px;
@@ -613,9 +800,9 @@ module ProcessOut {
           pointer-events: none;
         }
         .field.errored:not(.disabled) {
-          border-color: ${ThemeImpl.instance.get('palette.light.text.errored')};
+          border-color: ${ThemeImpl.instance.get('palette.light.border.input.errored')};
           @media (prefers-color-scheme: dark) {
-            border-color: ${ThemeImpl.instance.get('palette.dark.text.errored')};
+            border-color: ${ThemeImpl.instance.get('palette.dark.border.input.errored')};
           }
         }
         .field.errored:not(.disabled) .label {
@@ -676,6 +863,10 @@ module ProcessOut {
           display: inline-block;
         }
 
+        .otp-container > div {
+          margin-bottom: 16px;
+        }
+          
         .otp {
           cursor: text;
           position: relative;
@@ -684,7 +875,7 @@ module ProcessOut {
         .otp .input {
           width: 40px;
           float: left;
-          margin-left: 12px;
+          margin-left: 16px;
         }
         .otp input.hidden {
           display: block !important;
@@ -809,15 +1000,22 @@ module ProcessOut {
         }
 
         .error {
-          background-color: #FDE3DE;
           padding: 8px 12px;
           gap: 8px;
           border-radius: 6px;
-          border: 1px solid #efd7d2;
-          color: #630407;
+          border: 1px solid;
           font-weight: 500;
           font-size: 14px;
           line-height: 20px;
+          background-color: ${ThemeImpl.instance.get('palette.light.surface.toast.error')};
+          border-color: ${ThemeImpl.instance.get('palette.light.border.toast.error')};
+          color: ${ThemeImpl.instance.get('palette.light.text.toast.error')};
+
+          @media (prefers-color-scheme: dark) {
+            background-color: ${ThemeImpl.instance.get('palette.dark.surface.toast.error')};
+            border-color: ${ThemeImpl.instance.get('palette.dark.border.toast.error')};
+            color: ${ThemeImpl.instance.get('palette.dark.text.toast.error')};
+          }
         }
 
         .header {
@@ -825,13 +1023,9 @@ module ProcessOut {
           gap: 8px;
           justify-content: space-between;
           align-items: center;
-          padding: 16px 0;
-          border-bottom: 1px solid #dbdcdc;
-          margin-bottom: 16px;
-        }
-
-        .header.no-amount {
-          justify-content: center;
+          padding: 0 0 32px;
+          border-bottom: 1px solid #f1f1f1;
+          margin-bottom: 32px;
         }
 
         .header .amount {
@@ -869,14 +1063,25 @@ module ProcessOut {
           flex-direction: column;
           gap: 12px;
           align-items: center;
+          max-width: 70%;
+          margin: 0 auto;
+          padding: 8px 0;
         }
 
         .qr-code {
           display: flex;
           justify-content: center;
           align-items: center;
-          background-color: #fafaff;
           padding: 4px;
+          background-color: ${ThemeImpl.instance.get('palette.light.background')};
+          @media (prefers-color-scheme: dark) {
+            background-color: ${ThemeImpl.instance.get('palette.dark.background')};
+          }
+        }
+
+        .qr-code img {
+          width: 100%;
+          height: 100%;
         }
         
         .qr-skeleton {
@@ -899,10 +1104,14 @@ module ProcessOut {
           content: '';
           width: 4px;
           height: 4px;
-          background-color: rgba(0, 0, 0, 0.3);
           border-radius: 50%;
           animation: dot-fade 1.5s ease-in-out infinite;
           animation-delay: var(--animation-delay, 0s);
+          opacity: 0.3;
+          background-color: ${ThemeImpl.instance.get('palette.light.text.default')};
+          @media (prefers-color-scheme: dark) {
+            background-color: ${ThemeImpl.instance.get('palette.dark.text.default')};
+          }
         }
 
         @keyframes dot-fade {
@@ -942,56 +1151,56 @@ module ProcessOut {
         }
 
         .markdown h1 {
-          font-family: Work Sans;
+          font-family: inherit;
           font-weight: 600;
           font-size: 24px;
           line-height: 32px;
         }
 
         .markdown h2 {
-          font-family: Work Sans;
+          font-family: inherit;
           font-weight: 600;
           font-size: 20px;
           line-height: 24px;
         }
 
         .markdown h3 {
-          font-family: Work Sans;
+          font-family: inherit;
           font-weight: 600;
           font-size: 18px;
           line-height: 22px;
         }
 
         .markdown h4 {
-          font-family: Work Sans;
+          font-family: inherit;
           font-weight: 600;
           font-size: 16px;
           line-height: 20px;
         }
 
         .markdown h5 {
-          font-family: Work Sans;
+          font-family: inherit;
           font-weight: 600;
           font-size: 15px;
           line-height: 18px;
         }
 
         .markdown h6 {
-          font-family: Work Sans;
+          font-family: inherit;
           font-weight: 600;
           font-size: 14px;
           line-height: 20px;
         }
 
         .markdown p {
-          font-family: Work Sans;
+          font-family:inherit;
           font-weight: 400;
           font-size: 16px;
           line-height: 26px;
         }
 
         .markdown a {
-          font-family: Work Sans;
+          font-family: inherit;
           font-weight: 400;
           font-size: 16px;
           line-height: 26px;
@@ -1024,13 +1233,18 @@ module ProcessOut {
         }
 
         .markdown blockquote {
-          color: ${ThemeImpl.instance.get('palette.light.text.secondary')};
           padding: 4px 8px 4px 16px;
           gap: 8px;
-          border-left: 3px solid ${ThemeImpl.instance.get('palette.light.border.input.default')};
+          border-left: 3px solid;
           font-weight: 400;
           font-size: 16px;
           line-height: 26px;
+          color: ${ThemeImpl.instance.get('palette.light.text.secondary')};
+          border-color: ${ThemeImpl.instance.get('palette.light.border.input.default')};
+          @media (prefers-color-scheme: dark) {
+            color: ${ThemeImpl.instance.get('palette.dark.text.secondary')};
+            border-color: ${ThemeImpl.instance.get('palette.dark.border.input.default')};
+          }
         }
 
         .markdown strong {
@@ -1043,7 +1257,7 @@ module ProcessOut {
 
         ${this.generateMarkdownSpacingRules()}
 
-         .tick {
+        .tick {
           position: relative;
           width: 100%;
           height: 100%;
@@ -1054,15 +1268,18 @@ module ProcessOut {
         .tick:before, .tick:after {
           content: "";
           position: absolute;
-          background-color: white;
           transform-origin: bottom center;
-          width: 8%;
+          width: 7%;
           bottom: 24%;
           border-radius: 100px;
+          background-color: ${ThemeImpl.instance.get('palette.light.background')};
+          @media (prefers-color-scheme: dark) {
+            background-color: ${ThemeImpl.instance.get('palette.dark.background')};
+          }
         }
 
         .tick:before {
-          height: 28%;
+          height: 33%;
           transform: rotate(-35deg);
           left: calc(50% - 4%);
           bottom: 24%;
@@ -1070,7 +1287,7 @@ module ProcessOut {
           
         .tick:after {
           height: 57%;
-          transform: rotate(24deg);
+          transform: rotate(30deg);
           left: calc(50% - 7%);
         }
 
@@ -1086,13 +1303,29 @@ module ProcessOut {
         .status-tick .tick {
           border-radius: 50%;
         }
+        
+        .status-tick .tick:before, .status-tick .tick:after {
+          display: none;
+        }
 
         .status-tick.pending .tick  {
-          border: 2px solid #A3A3A3;    
+          border: 2px solid;
+          border-color: ${ThemeImpl.instance.get('palette.light.border.icon.tertiary')};
+          @media (prefers-color-scheme: dark) {
+            border-color: ${ThemeImpl.instance.get('palette.dark.border.icon.tertiary')};
+          }
         }
 
         .status-tick.idle .tick {
-          border: 2px solid #CACACA;  
+          border: 2px solid;
+          border-color: ${ThemeImpl.instance.get('palette.light.border.icon.disabled')};
+          @media (prefers-color-scheme: dark) {
+            border-color: ${ThemeImpl.instance.get('palette.dark.border.icon.disabled')};
+          }  
+        }
+        
+        .status-tick.completed .tick:before, .status-tick.completed .tick:after {
+          display: block;
         }
 
         .status-tick.pending:before {
@@ -1101,9 +1334,13 @@ module ProcessOut {
           width: 100%;
           height: 100%;
           border-radius: 200px;
-          background-color: #ededed;
           z-index: 0;
-          animation: grow 1s ease-in-out infinite;
+          animation: grow 2s ease-in-out infinite;
+          opacity: 0.20;
+          background-color: ${ThemeImpl.instance.get('palette.light.border.icon.tertiary')};
+          @media (prefers-color-scheme: dark) {
+            background-color: ${ThemeImpl.instance.get('palette.dark.border.icon.tertiary')};
+          }
         }
         .status-tick.pending:after {
           content: "";
@@ -1111,26 +1348,25 @@ module ProcessOut {
           width: 100%;
           height: 100%;
           border-radius: 200px;
-          background-color: #FFF;
           z-index: 0;
+          background-color: ${ThemeImpl.instance.get('palette.light.background')};
+          @media (prefers-color-scheme: dark) {
+            background-color: ${ThemeImpl.instance.get('palette.dark.background')};
+          }
         }
 
         @keyframes grow {
           0% {
             transform: scale(0.8);
-            opacity: 0.8;
+            opacity: 0.08;
           }
-          80% {
+          72% {
             transform: scale(1.5);
-            opacity: 0.8;
+            opacity: 0.20;
           }
-          85% {
+          82% {
             transform: scale(1.5);
-            opacity: 0.8;
-          }
-          86% {
-            opacity: 0;
-            transform: scale(1.5);
+            opacity: 0.20;
           }
           100% {
             opacity: 0;
@@ -1139,7 +1375,10 @@ module ProcessOut {
         }
 
         .status-tick.completed .tick {
-          background-color: #119947;
+          background-color: ${ThemeImpl.instance.get('palette.light.surface.success')};
+          @media (prefers-color-scheme: dark) {
+            background-color: ${ThemeImpl.instance.get('palette.dark.surface.success')};
+          }
         }
 
         .group {
@@ -1148,7 +1387,11 @@ module ProcessOut {
           gap: 24px;
           padding: 16px;
           border-radius: 6px;
-          border: 1.5px solid #e3e3e3;
+          border: 1.5px solid;
+          border-color: ${ThemeImpl.instance.get('palette.light.border.input.default')};
+          @media (prefers-color-scheme: dark) {
+            border-color: ${ThemeImpl.instance.get('palette.dark.border.input.default')};
+          }
         }
           
         .group > div {
@@ -1161,9 +1404,13 @@ module ProcessOut {
           position: absolute;
           width: calc(100% + 20px);
           height: 1px;
-          background-color: #e3e3e3;
           top: -12px;
           left: -10px;
+          opacity: 0.5;
+          background-color: ${ThemeImpl.instance.get('palette.light.border.input.default')};
+          @media (prefers-color-scheme: dark) {
+            background-color: ${ThemeImpl.instance.get('palette.dark.border.input.default')};
+          }
         }
 
         .group.group-boolean {
@@ -1186,9 +1433,12 @@ module ProcessOut {
           font-weight: 500;
           font-size: 12px;
           line-height: 14px;
-          color: #707378;
           margin-bottom: 4px;
           text-align: left
+          color: ${ThemeImpl.instance.get('palette.light.text.label')};
+          @media (prefers-color-scheme: dark) {
+            color: ${ThemeImpl.instance.get('palette.dark.text.label')};
+          }
         }
 
         .copy-instruction .value {
@@ -1218,7 +1468,10 @@ module ProcessOut {
         }
 
         .checkbox:hover {
-          background-color: #f5f5f5;
+          background-color: ${ThemeImpl.instance.get('palette.light.surface.input.hover.default')};
+          @media (prefers-color-scheme: dark) {
+            background-color: ${ThemeImpl.instance.get('palette.dark.surface.input.hover.default')};
+          }
         }
 
         .checkbox-input {
@@ -1242,21 +1495,44 @@ module ProcessOut {
           width: 16px;
           height: 16px;
           border-radius: 4px;
-          background-color: #fff;
-          border: 1px solid #bfc3c7;
+          border: 1px solid;
           z-index: 3;
+          background-color: ${ThemeImpl.instance.get('palette.light.background')};
+          border-color: ${ThemeImpl.instance.get('palette.light.border.checkbox.default')};
+          @media (prefers-color-scheme: dark) {
+            background-color: ${ThemeImpl.instance.get('palette.dark.background')};
+            border-color: ${ThemeImpl.instance.get('palette.dark.border.checkbox.default')};
+          }
         }
         .checkbox-input input + .checkbox-indicator .status-tick {
           display: none;
         }
 
         .checkbox-input input:checked + .checkbox-indicator {
-          background-color: #000;
-          border-color: #000;
+          background-color: ${ThemeImpl.instance.get('palette.light.text.default')};
+          border-color: ${ThemeImpl.instance.get('palette.light.text.default')};
+          @media (prefers-color-scheme: dark) {
+            background-color: ${ThemeImpl.instance.get('palette.dark.text.default')};
+            border-color: ${ThemeImpl.instance.get('palette.dark.text.default')};
+          }
         }
 
         .checkbox-input input:checked + .checkbox-indicator .status-tick {
           display: block;
+        }
+
+        .logo img[data-dark-src] {
+          content: var(--logo-src);
+        }
+
+        .logo img[data-dark-src] {
+          --logo-src: url(attr(src url));
+        }
+
+        @media (prefers-color-scheme: dark) {
+          .logo img[data-dark-src] {
+            --logo-src: url(attr(data-dark-src url));
+          }
         }
       `()
     }
@@ -1282,7 +1558,7 @@ module ProcessOut {
             if (!target[key]) Object.assign(target, { [key]: {} });
             this.deepMerge(target[key], source[key]);
           } else {
-            Object.assign(target, { [key]: source[key] });
+            Object.assign(target, { [key]: source[key] || target[key] });
           }
         }
       }

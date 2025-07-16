@@ -1,5 +1,5 @@
 module ProcessOut {
-    const { div, img } = elements
+    const { div, img, picture, source } = elements
 
     interface MainProps extends Props<'div'> {
         config?: Partial<PaymentContext>,
@@ -11,9 +11,19 @@ module ProcessOut {
         return (
             page(props,
                 config?.payment_method 
-                    ? div({ className: ['header', hideAmount || !config.invoice  ? 'no-amount' : ''].filter(Boolean).join(' ') },
+                    ? div({ className: 'header' },
                         div({ className: 'logo' },
-                            img({ src: config.payment_method.logo.light_url.raster, alt: config.payment_method.display_name, height: 28 })
+                            picture({},
+                                source({ 
+                                    media: '(prefers-color-scheme: dark)',
+                                    srcset: config.payment_method.logo.dark_url.raster
+                                }),
+                                img({ 
+                                    src: config.payment_method.logo.light_url.raster, 
+                                    alt: config.payment_method.display_name, 
+                                    height: 34 
+                                })
+                            )
                         ),
                         !hideAmount && config.invoice ? div({ className: 'amount' },
                             `Pay ${formatCurrency(config.invoice.amount, config.invoice.currency)}`
@@ -21,11 +31,11 @@ module ProcessOut {
                     ) 
                     : null,
                 div({ className: 'container'},
-                    ...children
+                    ...children,
+                    buttons ? div({ className: 'buttons-container' },
+                        ...(Array.isArray(buttons) ? buttons : [buttons])
+                    ) : null
                 ),
-                buttons ? div({ className: 'buttons-container' },
-                    ...(Array.isArray(buttons) ? buttons : [buttons])
-                ) : null
             )
         )
     }

@@ -15,8 +15,8 @@ module ProcessOut {
 
     render() {
       return Main({ config: this.props.config, hideAmount: true, buttons: [
+        Button({ onclick: this.onBackClick.bind(this) }, 'Back to payment'),
         Button({ onclick: this.onCancelClick.bind(this), variant: 'secondary' }, 'Cancel payment'),
-        Button({ onclick: this.onBackClick.bind(this) }, 'Back to payment')
       ] },
         div({ className: 'cancel-request' },
           div({ className: 'cancel-request-message' }, 'Are you sure you want to cancel the payment?')

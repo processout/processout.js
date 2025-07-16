@@ -106,11 +106,24 @@ module ProcessOut {
 
   interface APIResponseBase<T extends FormFieldResponse | FormFieldResult> {
     elements?: APIElements<T>
+    redirect?: {
+      hint: string,
+      url: string,
+    }
   }
 
   export interface APISuccessBase extends APIResponseBase<FormFieldResult> {
     success: true,
-    state: "SUCCESS" | 'NEXT_STEP_REQUIRED' | 'PENDING',
+    state: "SUCCESS" | 'NEXT_STEP_REQUIRED' | 'PENDING' | 'REDIRECT',
+  }
+
+  export interface APIRedirectBase extends APIResponseBase<FormFieldResult> {
+    success: true,
+    state: 'REDIRECT',
+    redirect: {
+      hint: string,
+      url: string,
+    }
   }
 
   export interface APIValidationBase extends APIResponseBase<FormFieldResult> {
@@ -135,6 +148,7 @@ module ProcessOut {
   }
 
   export type AuthorizationSuccessResponse = APISuccessBase & PaymentContext;
+  export type AuthorizationRedirectResponse = APIRedirectBase & PaymentContext;
   export type AuthorizationValidationResponse = APIValidationBase & PaymentContext;
 
   // Tokenization-specific response types (no PaymentContext)
@@ -185,7 +199,10 @@ module ProcessOut {
   }
 
   export interface APIRequest{
-    (options: APIOptions<AuthorizationSuccessResponse | TokenizationSuccessResponse, AuthorizationValidationResponse | TokenizationValidationResponse>): void
+    (options: APIOptions<
+      AuthorizationSuccessResponse | TokenizationSuccessResponse | AuthorizationRedirectResponse,
+      AuthorizationValidationResponse | TokenizationValidationResponse
+    >): void
   }
 
   const TIMEOUT = 1000;
@@ -194,7 +211,13 @@ module ProcessOut {
   let POLLING_CANCELLED = false // Add cancellation flag
 
   const isErrorResponse = (data: AuthorizationNetworkResponse | TokenizationNetworkResponse): data is NetworkErrorResponse => {
-    return data.success === false && (!('invalid_fields' in data) && !data.error_type.startsWith('request.validation.'))
+    const hasInvalidFields = 'invalid_fields' in data;
+    const hasErrorType = 'error_type' in data;
+    const hasState = 'state' in data;
+    return (
+      (hasState && (data as any).state === 'FAILED') ||
+      (data.success === false && !hasInvalidFields && !(hasErrorType && data.error_type.startsWith('request.validation.')))
+    )
   }
 
   const isValidationResponse = (data: AuthorizationNetworkResponse): data is AuthorizationNetworkValidationResponse => {
@@ -206,6 +229,35 @@ module ProcessOut {
   }
 
   const handleError = (request: string, data: NetworkErrorResponse, options: APIOptions<AuthorizationSuccessResponse | TokenizationSuccessResponse, AuthorizationValidationResponse | TokenizationValidationResponse>) => {
+    if (!data.error_type) {
+      const isMismatch = (data as any).state === 'FAILED' && (data as any).success === true;
+      let message = `${request} failed`;
+      
+      if (isMismatch) {
+        message = `${request} failed, state and success are mismatched.`;
+      }
+
+      ContextImpl.context.logger.error({
+        host: window?.location?.host ?? '',
+        fileName: 'API.ts',
+        lineNumber: 208,
+        message,
+        category: 'APM - API'
+      })
+
+      const defaultError = {
+        success: false as const,
+        state: 'FAILURE' as const,
+        error: {
+          code: data.error_type,
+          message: data.message
+        }
+      };
+      
+      options.onFailure?.(defaultError);
+      return
+    }
+
     switch (data.error_type) {
       case 'request.route-not-found':
         ContextImpl.context.logger.error({
@@ -258,16 +310,11 @@ module ProcessOut {
     public static initialise(options: APIOptions<AuthorizationSuccessResponse | TokenizationSuccessResponse, AuthorizationValidationResponse | TokenizationValidationResponse>) {
       const context = ContextImpl.context;
       const flow = context.flow;
-
-      if (flow === 'authorization') {
-        return this.get(context.gatewayConfigurationId, {
-          ...options,
-          hasReturnedFirstPending: false,
-        });
-      }
+      const source = flow === 'authorization' ? context.customerTokenId : undefined;
 
       return this.post({
         gateway_configuration_id: context.gatewayConfigurationId,
+        source
       }, {
         ...options,
         hasReturnedFirstPending: false,
@@ -277,13 +324,11 @@ module ProcessOut {
     public static getCurrentStep(options: APIOptions<AuthorizationSuccessResponse | TokenizationSuccessResponse, AuthorizationValidationResponse | TokenizationValidationResponse>) {
       const context = ContextImpl.context;
       const flow = context.flow;
-
-      if (flow === 'authorization') {
-        return this.get(context.gatewayConfigurationId, options);
-      }
+      const source = flow === 'authorization' ? context.customerTokenId : undefined;
 
       return this.post({
         gateway_configuration_id: context.gatewayConfigurationId,
+        source,
       }, options)
     }
     
@@ -344,10 +389,14 @@ module ProcessOut {
       const context = ContextImpl.context;
       
       // Build endpoint based on flow type
-      const endpoint = context.flow === 'authorization'
+      let endpoint = context.flow === 'authorization'
         ? ['invoices', context.invoiceId, 'apm-payment', path].filter(part => !!part).join('/')
         : ['customers', context.customerId, 'apm-tokens', context.customerTokenId, 'tokenize'].join('/');
 
+      if (context.customerTokenId && context.flow === 'authorization' && method === 'GET') {
+        endpoint += `?source=${context.customerTokenId}`
+      }
+        
       ContextImpl.context.poClient.apiRequest(
         method,
         endpoint,
@@ -476,6 +525,16 @@ module ProcessOut {
             storage.remove('pending.startTime')
             ContextImpl.context.events.emit('success', { trigger: 'immediate' });
             return;
+          }
+
+          if (apiResponse.state === 'NEXT_STEP_REQUIRED' && apiResponse.redirect) {
+            internalOptions.onSuccess?.(this.transformResponse(
+              {
+                ...apiResponse,
+                state: 'REDIRECT',
+              }
+            ));
+            return
           }
 
           internalOptions.onSuccess?.(this.transformResponse(apiResponse));
