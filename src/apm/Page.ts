@@ -16,7 +16,7 @@ module ProcessOut {
     private loadedScripts: Map<string, boolean> = new Map();
     private loadingScripts: Map<string, Array<(error?: Error) => void>> = new Map();
 
-    private state: 'SUCCESS' | 'PENDING' | 'NEXT_STEP_REQUIRED' | 'VALIDATION_ERROR' | 'UNKNOWN'
+    private state: 'SUCCESS' | 'PENDING' | 'NEXT_STEP_REQUIRED' | 'REDIRECT' | 'VALIDATION_ERROR' | 'UNKNOWN'
 
     constructor(container: Element) {
       this.hostElement = container;
@@ -54,6 +54,11 @@ module ProcessOut {
           this.state = config.state
           callback?.(null, this.state);
 
+          if (config.state === 'REDIRECT') {
+            ContextImpl.context.page.render(APMViewRedirect, { elements, config: config as APIRedirectBase & Partial<PaymentContext> })
+            return
+          }
+
           if (config.state === 'NEXT_STEP_REQUIRED') {
             ContextImpl.context.page.render(APMViewNextSteps, { elements, config })
             return
@@ -90,7 +95,7 @@ module ProcessOut {
       ContextImpl.context.events.emit("failure", {
         failure: {
           code: code || 'processout-js.internal-error',
-          message,
+          message: message || "An unexpected error occurred. We're working to fix this issue, please check back later or contact support if you need assistance.",
         },
         paymentState: this.state
       })
@@ -236,10 +241,8 @@ module ProcessOut {
               doc.close();
             }
 
-            // Load fonts into the iframe's head explicitly
-            const fontLink1 = doc.createElement('link'); fontLink1.rel = 'preconnect'; fontLink1.href = 'https://fonts.googleapis.com'; doc.head.appendChild(fontLink1);
-            const fontLink2 = doc.createElement('link'); fontLink2.rel = 'preconnect'; fontLink2.href = 'https://fonts.gstatic.com'; fontLink2.crossOrigin = 'anonymous'; doc.head.appendChild(fontLink2);
-            const fontLink3 = doc.createElement('link'); fontLink3.href = 'https://fonts.googleapis.com/css2?family=Work+Sans:wght@100..900&display=swap'; fontLink3.rel = 'stylesheet'; doc.head.appendChild(fontLink3);
+            // Inherit fonts from parent document instead of loading Work Sans
+            this.inheritFontsFromParent(doc);
 
             // Apply component-specific stylesheet within the iframe's document
             this.setStylesheet(doc);
@@ -276,12 +279,8 @@ module ProcessOut {
       const shadowRoot = newShadowHost.attachShadow({ mode: 'open' });
       this.currentRoot = shadowRoot; // Store reference to the ShadowRoot
 
-      // 3. Add font link to the main document's head (only once)
-      if (!document.head.querySelector('link[href*="Work+Sans"]')) {
-        const fontLink1 = document.createElement('link'); fontLink1.rel = 'preconnect'; fontLink1.href = 'https://fonts.googleapis.com'; document.head.appendChild(fontLink1);
-        const fontLink2 = document.createElement('link'); fontLink2.rel = 'preconnect'; fontLink2.href = 'https://fonts.gstatic.com'; fontLink2.crossOrigin = 'anonymous'; document.head.appendChild(fontLink2);
-        const fontLink3 = document.createElement('link'); fontLink3.href = 'https://fonts.googleapis.com/css2?family=Work+Sans:wght@100..900&display=swap'; fontLink3.rel = 'stylesheet'; document.head.appendChild(fontLink3);
-      }
+      // 3. Ensure Work Sans is loaded if no custom fonts are detected
+      this.ensureWorkSansLoaded();
 
       // 4. Apply component-specific stylesheet within the Shadow DOM
       this.setStylesheet(shadowRoot);
@@ -299,6 +298,64 @@ module ProcessOut {
     private setStylesheet(shadow: ShadowRoot | Document) {
       const stylesheet = ThemeImpl.instance.createStyles();
       injectStyleTag(shadow, stylesheet)
+    }
+
+    private inheritFontsFromParent(doc: Document) {
+      // Check if theme fontFamily was explicitly set by user
+      const hasCustomFonts = this.hasCustomFonts();
+      
+      if (hasCustomFonts) {
+        // Copy all font-related stylesheets from parent document
+        const fontLinks = document.head.querySelectorAll('link[rel="stylesheet"], link[rel="preconnect"]');
+        
+        fontLinks.forEach(link => {
+          const href = link.getAttribute('href');
+          if (href && (
+            href.includes('fonts.googleapis.com') || 
+            href.includes('fonts.gstatic.com') || 
+            href.includes('font')
+          )) {
+            const clonedLink = link.cloneNode(true) as HTMLLinkElement;
+            doc.head.appendChild(clonedLink);
+          }
+        });
+      } else {
+        // Load default Work Sans font
+        if (!document.head.querySelector('link[href*="Work+Sans"]')) {
+          const fontLink1 = document.createElement('link'); fontLink1.rel = 'preconnect'; fontLink1.href = 'https://fonts.googleapis.com'; document.head.appendChild(fontLink1);
+          const fontLink2 = document.createElement('link'); fontLink2.rel = 'preconnect'; fontLink2.href = 'https://fonts.gstatic.com'; fontLink2.crossOrigin = 'anonymous'; document.head.appendChild(fontLink2);
+          const fontLink3 = document.createElement('link'); fontLink3.href = 'https://fonts.googleapis.com/css2?family=Work+Sans:wght@100..900&display=swap'; fontLink3.rel = 'stylesheet'; document.head.appendChild(fontLink3);
+        }
+        
+        // Copy Work Sans to iframe
+        const workSansLink = document.head.querySelector('link[href*="Work+Sans"]');
+        if (workSansLink) {
+          const clonedLink = workSansLink.cloneNode(true) as HTMLLinkElement;
+          doc.head.appendChild(clonedLink);
+        }
+      }
+    }
+
+    private hasCustomFonts(): boolean {
+      // Check if theme fontFamily was explicitly set by user
+      const themeFontFamily = ThemeImpl.instance.get('fontFamily');
+      const defaultFontFamily = '"Work sans", Arial, sans-serif';
+      
+      return themeFontFamily !== defaultFontFamily;
+    }
+
+    private ensureWorkSansLoaded(): void {
+      // Check if theme fontFamily was explicitly set by user
+      const hasCustomFonts = this.hasCustomFonts();
+      
+      if (!hasCustomFonts) {
+        // Load default Work Sans font if not already loaded
+        if (!document.head.querySelector('link[href*="Work+Sans"]')) {
+          const fontLink1 = document.createElement('link'); fontLink1.rel = 'preconnect'; fontLink1.href = 'https://fonts.googleapis.com'; document.head.appendChild(fontLink1);
+          const fontLink2 = document.createElement('link'); fontLink2.rel = 'preconnect'; fontLink2.href = 'https://fonts.gstatic.com'; fontLink2.crossOrigin = 'anonymous'; document.head.appendChild(fontLink2);
+          const fontLink3 = document.createElement('link'); fontLink3.href = 'https://fonts.googleapis.com/css2?family=Work+Sans:wght@100..900&display=swap'; fontLink3.rel = 'stylesheet'; document.head.appendChild(fontLink3);
+        }
+      }
     }
   }
 }

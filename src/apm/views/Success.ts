@@ -37,9 +37,12 @@ module ProcessOut {
         width: 76px;
         height: 76px;
         border-radius: 76px;
-        background-color: #e2f0e7;
         z-index: 0;
-        animation: grow 1s ease-in-out infinite;
+        animation: grow 2s ease-in-out infinite;
+        background-color: ${ThemeImpl.instance.get('palette.light.surface.success')};
+        @media (prefers-color-scheme: dark) {
+          background-color: ${ThemeImpl.instance.get('palette.dark.surface.success')};
+        }
       }
       
       .header-container {

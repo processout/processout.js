@@ -14,7 +14,7 @@ module ProcessOut {
       "field input",
       disabled && !errored && 'disabled',
       label && 'has-label',
-      value && 'filled',
+      (value && value.toString().length > 0) && 'filled',
       errored && 'errored',
       className
     ].filter(Boolean).join(" ")
@@ -29,6 +29,10 @@ module ProcessOut {
       oninput: (e) => {
         const target = e.target as HTMLInputElement
         const value = target.value
+
+        if (!target.parentElement.classList.contains("focused")) {
+          target.parentElement.classList.add("focused")
+        }
 
         if (label) {
           if (value.length === 0) {

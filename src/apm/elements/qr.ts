@@ -33,8 +33,10 @@ module ProcessOut {
     const { state, setState } = useComponentState<QRComponentState>({
       isDownloading: false,
       isCopying: false,
-      canvas: null,
+      canvas: null
     });
+
+
     const classNames = ["qr-code-container", className].filter(Boolean).join(" ")
     let downloadButtonRef: HTMLButtonElement | null = null;
     let copyButtonRef: HTMLButtonElement | null = null;
@@ -162,10 +164,6 @@ module ProcessOut {
       // QR Code Display
       div({
         className: "qr-code",
-        style: {
-          width: `${size + 8}px`,
-          height: `${size + 8}px`,
-        },
         ref: (domElement: HTMLDivElement | null) => {
           if (!domElement) return
 
@@ -197,6 +195,8 @@ module ProcessOut {
                   text,
                   width: size,
                   height: size,
+                  colorDark: ThemeImpl.mode === 'light' ? ThemeImpl.instance.get('palette.light.text.default') : ThemeImpl.instance.get('palette.dark.text.default'),
+                  colorLight: ThemeImpl.mode === 'light' ? ThemeImpl.instance.get('palette.light.background') : ThemeImpl.instance.get('palette.dark.background'),
                 })
 
                 // Store reference to the canvas in state

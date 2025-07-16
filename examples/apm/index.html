@@ -10,7 +10,8 @@
   <form id="initialise-apm">
     <select name="gateway" id="apm-gateway">
       <option value="gway_conf_vupnl08h7hy1jxf3cz5z4dc2lw5py2ve">ProcessOut</option>
-      <option value="gway_conf_fh67c2llxupjhcqxxbr4cvlfosncdbr7">Forage</option>
+      <option value="gway_conf_fh67c2llxupjhcqxxbr4cvlfosncdbr7:authorization">Forage Authorization</option>
+      <option value="gway_conf_fh67c2llxupjhcqxxbr4cvlfosncdbr7:tokenization">Forage Tokenization</option>
       <option value="gway_conf_zuo5iyryn390he7fx3rd50twwvhpcvob.adyenblik">Adyen Blik</option>
     </select>
     <input type="text" id="invoice-id" name="invoice_id" placeholder="Invoice ID" />
@@ -50,7 +51,13 @@
       const gateway = gatewayDict[value];
       
       switch (gateway) {
-        case 'Forage':
+        case 'Forage Authorization':
+          flow = 'authorization';
+          invoiceIdEl.style.display = 'inline-block';
+          customerIdEl.style.display = 'none';
+          customerTokenIdEl.style.display = 'inline-block';
+          break;
+        case 'Forage Tokenization':
           flow = 'tokenization';
           invoiceIdEl.style.display = 'none';
           customerIdEl.style.display = 'inline-block';
@@ -67,7 +74,7 @@
 
     document.querySelector('#initialise-apm').addEventListener('submit', (e) => {
       e.preventDefault()
-      const gatewayConfigurationId = gatewayEl.value
+      const gatewayConfigurationId = gatewayEl.value.split(':')[0]
       const invoiceId = invoiceIdEl.value
       const customerId = customerIdEl.value
       const customerTokenId = customerTokenIdEl.value
@@ -103,6 +110,7 @@
         apm = client.apm.authorization(el, {
           gatewayConfigurationId,
           invoiceId,
+          customerTokenId: customerTokenId || undefined,
           confirmation: {
             requiresAction: true,
           },

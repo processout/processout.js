@@ -12,7 +12,7 @@ module ProcessOut {
       }
       case "barcode": {
         if (instruction.subtype === "qr") {
-          return QR({ data: instruction.value })
+          return QR({ data: instruction.value, size: 600 })
         }
         return null
       }

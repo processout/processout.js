@@ -10,7 +10,7 @@ module ProcessOut {
     flow: 'authorization',
     invoiceId: `iv_${string}`
     customerId?: never,
-    customerTokenId?: never,
+    customerTokenId?: string,
   }
 
   export type FlowData = {
@@ -47,7 +47,7 @@ module ProcessOut {
   export type TokenizationUserOptions = Omit<TokenizationUserData, 'flow'>
   export type AuthorizationUserOptions = Omit<AuthorizationUserData, 'flow'>
 
-  export type APMUserData = TokenizationUserData | AuthorizationUserData
+export type APMUserData = TokenizationUserData | AuthorizationUserData
 
   export type APMContext = {  } & APMUserData & {
     logger: {

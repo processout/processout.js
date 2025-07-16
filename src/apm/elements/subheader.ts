@@ -10,7 +10,7 @@ module ProcessOut {
     const first = args[0]
     const content: string = isProps<K>(first) ? args[1] : first;
     const props: SubHeaderTagProps<K> = isProps<K>(first) ? first : {} as SubHeaderTagProps<K>
-    const tag: SubHeaderTag = props.tag || 'h1';
+    const tag: SubHeaderTag = props.tag || 'h2';
 
     delete props.tag
 
