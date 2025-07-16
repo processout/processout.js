@@ -16,6 +16,7 @@
 /// <reference path="payment-methods/native-apm.ts" />
 /// <reference path="payment-methods/apple-pay.ts" />
 /// <reference path="views/payment-error.ts" />
+/// <reference path="views/payment-cancelled.ts" />
 /// <reference path="styles/default.ts" />
 /// <reference path="config/assets.ts" />
 /// <reference path="config/billing-address.ts" />

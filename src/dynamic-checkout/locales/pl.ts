@@ -15,6 +15,7 @@ module ProcessOut {
     "cvc-error-message": "CVC jest nieprawidłowy",
     "cardholder-name-error-message": "Imię i nazwisko posiadacza karty jest nieprawidłowe",
     "payment-error-message": "Coś poszło nie tak. Spróbuj ponownie.",
+    "payment-cancelled-message": "Płatność została anulowana.",
     "express-checkout-header": "Szybka płatność",
     "other-payment-methods-header": "Inne metody płatności",
     "select-payment-method-label": "Wybierz metodę płatności",

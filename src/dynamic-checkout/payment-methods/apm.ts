@@ -124,12 +124,23 @@ module ProcessOut {
           )
         },
         error => {
-          this.resetContainerHtml().appendChild(
-            new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig)
-              .element,
-          )
+          if (error.code === "customer.canceled") {
+            this.resetContainerHtml().appendChild(
+              new DynamicCheckoutPaymentCancelledView(this.processOutInstance, this.paymentConfig)
+                .element,
+            )
 
-          DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error)
+            DynamicCheckoutEventsUtils.dispatchPaymentCancelledEvent({
+              payment_method_name: apm.gateway_name,
+            })
+          } else {
+            this.resetContainerHtml().appendChild(
+              new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig)
+                .element,
+            )
+
+            DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error)
+          }
         },
         actionHandlerOptions,
         this.paymentConfig.invoiceId,
