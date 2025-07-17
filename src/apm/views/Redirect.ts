@@ -7,21 +7,26 @@ module ProcessOut {
 
   export class APMViewRedirect extends APMViewImpl<RedirectProps> {
     handleRedirectClick() {
+      ContextImpl.context.events.emit('redirect-initiated')
       ContextImpl.context.poClient.handleAction(
         this.props.config.redirect.url, 
         () => {
+            ContextImpl.context.events.emit('redirect-completed')
             ContextImpl.context.page.load(APIImpl.getCurrentStep)
         },
-        () => {}
+        (err) => {
+          ContextImpl.context.events.emit('failure', {
+            failure: {
+              message: err.message,
+              code: err.code
+            }
+          })
+        }
       )
     }
 
-    handleCancelClick() {
-      ContextImpl.context.page.render(APMViewPending, { config: this.props.config });
-    }
-
     render() {
-        const redirectLabel = `Pay ${formatCurrency(this.props.config.invoice.amount, this.props.config.invoice.currency)}`;
+      const redirectLabel = `Pay ${formatCurrency(this.props.config.invoice.amount, this.props.config.invoice.currency)}`;
       return (
         Main({ 
             config: this.props.config, 
@@ -30,7 +35,7 @@ module ProcessOut {
             buttons: [
               Button({ onclick: this.handleRedirectClick.bind(this) }, redirectLabel),
               (ContextImpl.context.confirmation.allowCancelation
-                ? CancelButton({ onClick: this.handleCancelClick.bind(this), config: this.props.config })
+                ? CancelButton({ config: this.props.config })
                 : null
               )
             ]
