@@ -209,6 +209,8 @@ module ProcessOut {
    * @returns A unique string ID
    */
   export function generateUniqueId(prefix = 'id'): string {
+    // CodeQL: This function is used for component ID generation, not security purposes
+    // nosemgrep: javascript.security.audit.crypto-weak-random
     return `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
 }
