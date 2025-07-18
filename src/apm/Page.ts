@@ -310,13 +310,17 @@ module ProcessOut {
         
         fontLinks.forEach(link => {
           const href = link.getAttribute('href');
-          if (href && (
-            href.includes('fonts.googleapis.com') || 
-            href.includes('fonts.gstatic.com') || 
-            href.includes('font')
-          )) {
-            const clonedLink = link.cloneNode(true) as HTMLLinkElement;
-            doc.head.appendChild(clonedLink);
+          if (href) {
+            try {
+              const urlHost = new URL(href).host;
+              const allowedHosts = ['fonts.googleapis.com', 'fonts.gstatic.com'];
+              if (allowedHosts.includes(urlHost) || href.includes('font')) {
+                const clonedLink = link.cloneNode(true) as HTMLLinkElement;
+                doc.head.appendChild(clonedLink);
+              }
+            } catch (e) {
+              console.error('Invalid URL in font link:', href, e);
+            }
           }
         });
       } else {
