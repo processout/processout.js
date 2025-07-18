@@ -21,7 +21,7 @@ module ProcessOut {
     size = 128, 
     errorMessage = "Failed to decode QR code",
     downloadFilename = "qr-code.png",
-    id = `qr-${Math.random().toString(36).substr(2, 9)}`,
+    id = generateUniqueId('qr'),
     className, 
     ...props 
   }: QRProps) => {

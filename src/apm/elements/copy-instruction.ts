@@ -18,7 +18,7 @@ module ProcessOut {
 
   export const CopyInstruction = ({ 
     instruction, 
-    id = `copy-${Math.random().toString(36).substr(2, 9)}`, 
+    id = generateUniqueId('copy'), 
   }: { 
     instruction: InstructionData['instruction'] & { type: 'message' }, 
     id?: string 

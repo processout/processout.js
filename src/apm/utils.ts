@@ -201,4 +201,14 @@ module ProcessOut {
         .join('')}` as CSSText
     }
   }
+
+  /**
+   * Generate a unique ID for non-security-critical purposes (component IDs, DOM elements, etc.)
+   * This uses Math.random() which is acceptable for UI/component identification
+   * @param prefix - Optional prefix for the ID
+   * @returns A unique string ID
+   */
+  export function generateUniqueId(prefix = 'id'): string {
+    return `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  }
 }

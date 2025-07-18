@@ -495,7 +495,7 @@ module ProcessOut {
     
     if (!context.currentView) {
       // Fallback for components rendered outside of view context
-      return `no-view-comp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      return generateUniqueId('no-view-comp');
     }
     
     const viewId = getViewId(context.currentView);
