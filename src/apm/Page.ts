@@ -314,7 +314,7 @@ module ProcessOut {
             try {
               const urlHost = new URL(href).host;
               const allowedHosts = ['fonts.googleapis.com', 'fonts.gstatic.com'];
-              if (allowedHosts.includes(urlHost) || href.includes('font')) {
+              if (allowedHosts.indexOf(urlHost) !== -1 || href.indexOf('font') !== -1) {
                 const clonedLink = link.cloneNode(true) as HTMLLinkElement;
                 doc.head.appendChild(clonedLink);
               }
