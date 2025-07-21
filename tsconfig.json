@@ -3,4 +3,8 @@
     "target": "es5",
     "lib": ["dom", "es2015"],
   },
+  "include": [
+    "src/polyfills/string-includes.polyfill.js",
+    "src/**/*.ts"
+  ]
 }
