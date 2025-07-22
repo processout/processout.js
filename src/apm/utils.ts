@@ -1,12 +1,4 @@
 module ProcessOut {
-  // Comprehensive polyfill for globalThis (needed for IE11 and older browsers)
-  if (typeof globalThis === 'undefined') {
-    (window as any).globalThis = window;
-  }
-
-  if (typeof (globalThis as any) === 'undefined') {
-    (globalThis as any) = window;
-  }
 
   export type PlainObject = object;
   export const SECOND_1 = 1000;

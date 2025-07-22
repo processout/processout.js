@@ -2,11 +2,26 @@
 (function() {
   if (typeof globalThis === 'undefined') {
     if (typeof window !== 'undefined') {
-      window.globalThis = window;
+      // Use Object.defineProperty to avoid the no-global-assign lint error
+      Object.defineProperty(window, 'globalThis', {
+        value: window,
+        writable: true,
+        configurable: true
+      });
     } else if (typeof global !== 'undefined') {
-      global.globalThis = global;
+      // Use Object.defineProperty to avoid the no-global-assign lint error
+      Object.defineProperty(global, 'globalThis', {
+        value: global,
+        writable: true,
+        configurable: true
+      });
     } else if (typeof self !== 'undefined') {
-      self.globalThis = self;
+      // Use Object.defineProperty to avoid the no-global-assign lint error
+      Object.defineProperty(self, 'globalThis', {
+        value: self,
+        writable: true,
+        configurable: true
+      });
     }
   }
 })(); 
