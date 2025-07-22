@@ -176,8 +176,9 @@ module ProcessOut {
         }
       };
       
-      // Determine where to append the script based on current context
-      const targetDocument = this.currentRoot instanceof Document ? this.currentRoot : document;
+      // Always load scripts in the top-level document for global availability
+      // This ensures libraries like showdown are available in the main window context
+      const targetDocument = document;
       targetDocument.head.appendChild(script);
     }
 
@@ -203,7 +204,7 @@ module ProcessOut {
       // 2. Check if the active element has an 'open' shadowRoot
       // Note: 'closed' shadow roots are not accessible this way.
       // IE11 does not natively support Shadow DOM, so this path is for modern browsers.
-      if (activeElement && activeElement.shadowRoot && activeElement.shadowRoot.mode === 'open') {
+      if (activeElement && 'shadowRoot' in activeElement && activeElement.shadowRoot && activeElement.shadowRoot.mode === 'open') {
         // Recursively call for the shadow root
         return this._getDeepActiveElement(activeElement.shadowRoot);
       }
@@ -221,10 +222,11 @@ module ProcessOut {
       // --- Create New Wrapper based on support ---
       if (!supportsShadowDOM) {
         // Fallback: Use an iframe if Shadow DOM is not supported
+        const height = container.getBoundingClientRect().height;
         const iframe = document.createElement('iframe');
         iframe.setAttribute('frameBorder', '0');
         iframe.style.width = '100%';
-        iframe.style.height = '400px';
+        iframe.style.height = height < 400 ? '400px' : height + 'px';
         iframe.title = 'Content Wrapper'; // Good practice for accessibility
 
         container.appendChild(iframe); // Append iframe directly to the user's container
@@ -264,7 +266,24 @@ module ProcessOut {
         if (iframe.contentDocument && iframe.contentDocument.readyState === 'complete') {
           setupIframeContent();
         } else {
-          iframe.addEventListener('load', setupIframeContent, { once: true });
+          // Defensive check for addEventListener support and older browser compatibility
+          if (iframe && typeof iframe.addEventListener === 'function') {
+            try {
+              // Try modern once option first
+              iframe.addEventListener('load', setupIframeContent, { once: true });
+            } catch (e) {
+              // Fallback for browsers that don't support 'once' option
+              const loadHandler = () => {
+                setupIframeContent();
+                iframe.removeEventListener('load', loadHandler);
+              };
+              iframe.addEventListener('load', loadHandler);
+            }
+          } else {
+            // Fallback: try to setup content immediately or use a timeout
+            console.warn('iframe addEventListener not supported, attempting immediate setup');
+            setTimeout(setupIframeContent, 100);
+          }
         }
 
         return;
