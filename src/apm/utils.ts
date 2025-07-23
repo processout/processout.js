@@ -1,4 +1,5 @@
 module ProcessOut {
+
   export type PlainObject = object;
   export const SECOND_1 = 1000;
   export const MIN_1 = SECOND_1 * 60;
@@ -145,11 +146,16 @@ module ProcessOut {
   }
 
   export function injectStyleTag(root: Document | ShadowRoot, rules: string) {
-    const isIframe = !(root instanceof ShadowRoot) && root.baseURI !== root.documentURI
+    // Defensive check for ShadowRoot support
+    const isShadowRoot = typeof ShadowRoot !== 'undefined' && root instanceof ShadowRoot;
+    const isIframe = !isShadowRoot && (root as Document).baseURI !== (root as Document).documentURI
+
+    // Replace gap with compatible alternatives for older browsers
+    const compatibleRules = replaceGapWithCompatibleCSS(rules);
 
     if (!isIframe) {
       const sheet = new CSSStyleSheet();
-      sheet.replaceSync(rules);
+      sheet.replaceSync(compatibleRules);
 
       try {
         const current = root.adoptedStyleSheets;
@@ -160,32 +166,32 @@ module ProcessOut {
         if (!sheetAlreadyExist) {
           (root as any).adoptedStyleSheets = [...current, sheet];
         }
-      } catch (err) {
-        if (err instanceof DOMException && err.name === 'NotAllowedError') {
-          const styleEl = document.createElement('style');
-          styleEl.textContent = rules;
-          const host = root instanceof ShadowRoot ? root : root.head;
-          host.appendChild(styleEl);
-        } else {
-          throw err;
+              } catch (err) {
+          if (err instanceof DOMException && err.name === 'NotAllowedError') {
+            const styleEl = document.createElement('style');
+            styleEl.textContent = compatibleRules;
+            const host = isShadowRoot ? root : (root as Document).head;
+            host.appendChild(styleEl);
+          } else {
+            throw err;
+          }
         }
-      }
-    } else {
-      const current = root.head.getElementsByTagName('style')
+      } else {
+        const current = (root as Document).head.getElementsByTagName('style')
 
-      for (let i = 0; i < current.length; i++) {
-        const style = current.item(i);
+        for (let i = 0; i < current.length; i++) {
+          const style = current.item(i);
 
-        if (rules === style.innerText) {
-          return;
+          if (compatibleRules === style.innerText) {
+            return;
+          }
         }
-      }
 
-      const styleEl = root.createElement('style');
-      styleEl.textContent = rules;
-      const host = root instanceof ShadowRoot ? root : root.head;
-      host.appendChild(styleEl);
-    }
+        const styleEl = (root as Document).createElement('style');
+        styleEl.textContent = compatibleRules;
+        const host = isShadowRoot ? root : (root as Document).head;
+        host.appendChild(styleEl);
+      }
   }
 
   export type CSSText = string & { readonly __brand: 'CSSText' };
@@ -213,4 +219,261 @@ module ProcessOut {
     // nosemgrep: javascript.security.audit.crypto-weak-random
     return `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
+
+  /**
+   * Replace gap-x and gap-y properties with compatible alternatives for older browsers
+   * @param css - The CSS string to process
+   * @returns CSS with gap-x/gap-y replaced by margin-based alternatives
+   */
+  export function replaceGapWithCompatibleCSS(css: string): string {
+    let result = css;
+    const gapReplacements: string[] = [];
+
+    // Regex to find rules with gap-x or gap-y
+    const gapXRegex = /([^{}]+)\s*\{[^}]*gap-x:\s*([^;]+);[^}]*\}/g;
+    const gapYRegex = /([^{}]+)\s*\{[^}]*gap-y:\s*([^;]+);[^}]*\}/g;
+
+    // Handle gap-x
+    let match;
+    while ((match = gapXRegex.exec(css)) !== null) {
+      const selector = match[1].trim();
+      const gapValue = match[2].trim();
+      const replacementRule = `${selector} > * + * {\n  margin-left: ${gapValue};\n}`;
+      gapReplacements.push(replacementRule);
+      // Remove gap-x from the rule
+      result = result.replace(match[0], match[0].replace(/gap-x:\s*[^;]+;/, ''));
+    }
+
+    // Handle gap-y
+    while ((match = gapYRegex.exec(css)) !== null) {
+      const selector = match[1].trim();
+      const gapValue = match[2].trim();
+      const replacementRule = `${selector} > * + * {\n  margin-top: ${gapValue};\n}`;
+      gapReplacements.push(replacementRule);
+      // Remove gap-y from the rule
+      result = result.replace(match[0], match[0].replace(/gap-y:\s*[^;]+;/, ''));
+    }
+
+    // Add vendor prefixes for appearance property
+    result = result.replace(/appearance:\s*none;/g, `
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+    `);
+
+    // Add all replacement rules at the end
+    if (gapReplacements.length > 0) {
+      result += '\n/* Gap-x/y replacements for older browsers */\n' + gapReplacements.join('\n');
+    }
+
+    return result;
+  }
+
+  /**
+    * Scrolls to the first element matching the selector, with a 20px offset above it
+    * This function handles different embedding scenarios:
+    * - If in an iframe: scrolls the iframe to the element
+    * - If in shadow DOM: finds the nearest scrollable parent and scrolls it
+    * - If in regular document: scrolls the document to the element
+    * @param selector - Optional CSS selector to find the target element. Defaults to error field selectors
+    */
+
+  export function scrollTo(selectorOrOffset?: string | number, offset?: number): void {
+  try {
+    // Get the current context from the page
+    const currentRoot = ContextImpl.context.page['currentRoot'];
+    
+    // Check for Shadow DOM support before using ShadowRoot
+    const hasShadowDOM = typeof ShadowRoot !== 'undefined';
+    
+    if (typeof selectorOrOffset === 'number') {
+      scrollToTop(currentRoot, selectorOrOffset);
+      return;
+    }
+
+    const targetElement = findFirstElement(currentRoot, selectorOrOffset);
+    
+    if (!targetElement) {
+      scrollToTop(currentRoot, offset || 0);
+      return;
+    }
+    
+    scrollToElement(targetElement, currentRoot, offset);
+  } catch (error) {
+    console.error('Error in scrollTo:', error);
+    // If anything fails, fallback to document scroll
+    window.scrollTo(0, 0);
+  }
+}
+
+  /**
+ * Finds the first element matching the selector in the current context
+ */
+function findFirstElement(currentRoot: Document | ShadowRoot | null, selector: string): Element | null {
+  if (!currentRoot) {
+    // Search in main document
+    return document.querySelector(selector);
+  }
+
+  // Search in the current context (iframe document or shadow DOM)
+  return currentRoot.querySelector(selector);
+}
+
+  /**
+   * Scrolls to a specific element with offset
+   */
+  function scrollToElement(element: Element, currentRoot: Document | ShadowRoot | null, offset: number = 0): void {
+    if (!element) {
+      scrollToTop(currentRoot, offset);
+      return;
+    }
+    
+    if (currentRoot instanceof Document) {
+      // Iframe context - use direct calculation like before
+      const iframeWindow = currentRoot.defaultView;
+      if (iframeWindow) {
+        const elementRect = element.getBoundingClientRect();
+        const finalScrollTop = elementRect.top + (iframeWindow.pageYOffset || iframeWindow.scrollY) - offset;
+        iframeWindow.scrollTo(0, finalScrollTop);
+      } else {
+        // Fallback to document scroll
+        const rect = element.getBoundingClientRect();
+        const scrollTop = rect.top + (window.pageYOffset || window.scrollY) - offset;
+        window.scrollTo(0, scrollTop);
+      }
+      return;
+    }
+
+    // Check for Shadow DOM support before using ShadowRoot
+    if (typeof ShadowRoot !== 'undefined' && currentRoot instanceof ShadowRoot) {
+      // Shadow DOM context - use direct calculation like iframe
+      const scrollableElement = findNearestScrollableElement(currentRoot.host);
+      if (scrollableElement) {
+        const elementRect = element.getBoundingClientRect();
+        const containerRect = scrollableElement.getBoundingClientRect();
+        const relativeTop = elementRect.top - containerRect.top;
+        const finalScrollTop = relativeTop - offset;
+        scrollableElement.scrollTop = finalScrollTop;
+        return;
+      }
+      
+      // If no scrollable element found in shadow DOM, try the host element
+      if (currentRoot.host.scrollTop !== undefined) {
+        const elementRect = element.getBoundingClientRect();
+        const hostRect = currentRoot.host.getBoundingClientRect();
+        const relativeTop = elementRect.top - hostRect.top;
+        const finalScrollTop = relativeTop - offset;
+        currentRoot.host.scrollTop = finalScrollTop;
+        return;
+      }
+    }
+
+    // Regular document context - use direct calculation
+    const rect = element.getBoundingClientRect();
+    const scrollTop = rect.top + (window.pageYOffset || window.scrollY) - offset;
+    window.scrollTo(0, scrollTop);
+  }
+
+  /**
+    * Fallback function to scroll to top when no error field is found
+    */
+  function scrollToTop(currentRoot: Document | ShadowRoot | null, offset: number = 0): void {
+    if (!currentRoot) {
+      // Fallback to document
+      window.scrollTo(0, offset);
+      return;
+    }
+
+    // Check if we're in an iframe (currentRoot is a Document)
+    if (currentRoot instanceof Document) {
+      // We're in an iframe - scroll the iframe's window
+      const iframeWindow = currentRoot.defaultView;
+      if (iframeWindow) {
+        iframeWindow.scrollTo(0, offset);
+      }
+      return;
+    }
+
+    // Check if we're in a Shadow DOM (currentRoot is a ShadowRoot)
+    if (typeof ShadowRoot !== 'undefined' && currentRoot instanceof ShadowRoot) {
+      // Find the nearest scrollable element in the shadow DOM
+      const scrollableElement = findNearestScrollableElement(currentRoot.host);
+      if (scrollableElement) {
+        scrollableElement.scrollTop = offset;
+        return;
+      }
+      
+      // If no scrollable element found in shadow DOM, try the host element
+      if (currentRoot.host.scrollTop !== undefined) {
+        currentRoot.host.scrollTop = offset;
+        return;
+      }
+    }
+
+    // Fallback to document scroll
+    window.scrollTo(0, offset);
+  }
+
+  /**
+  * Gets the current scroll position for the given context
+   * @param currentRoot - The current context (Document, ShadowRoot, or null)
+   * @returns The current scroll position
+   */
+  export function getScrollPosition(currentRoot: Document | ShadowRoot | null): number {
+    if (currentRoot instanceof Document) {
+      // Iframe context
+      const iframeWindow = currentRoot.defaultView;
+      if (iframeWindow) {
+        return iframeWindow.pageYOffset || iframeWindow.scrollY;
+      }
+    }
+
+      if (typeof ShadowRoot !== 'undefined' && currentRoot instanceof ShadowRoot) {
+    // Shadow DOM context - find the scrollable container
+    const scrollableElement = findNearestScrollableElement(currentRoot.host);
+    if (scrollableElement) {
+      return scrollableElement.scrollTop;
+    }
+    
+    // If no scrollable element found in shadow DOM, try the host element
+    if (currentRoot.host.scrollTop !== undefined) {
+      return currentRoot.host.scrollTop;
+    }
+  }
+
+    // Regular document context
+    return window.pageYOffset || window.scrollY;
+  }
+
+/**
+ * Finds the nearest scrollable parent element
+ * @param element - The starting element
+ * @returns The nearest scrollable element or null if none found
+ */
+function findNearestScrollableElement(element: Element): Element | null {
+  if (!element) return null;
+
+  // Check if the current element is scrollable
+  const style = window.getComputedStyle(element);
+  const overflowY = style.overflowY;
+  const overflowX = style.overflowX;
+  
+  if (overflowY === 'auto' || overflowY === 'scroll' || 
+      overflowX === 'auto' || overflowX === 'scroll') {
+    return element;
+  }
+
+  // Check if element has scrollTop property and it's not 0
+  if (element.scrollTop !== undefined && element.scrollTop > 0) {
+    return element;
+  }
+
+  // Check parent element
+  const parent = element.parentElement;
+  if (parent) {
+    return findNearestScrollableElement(parent);
+  }
+
+  return null;
+}
 }

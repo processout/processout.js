@@ -65,7 +65,7 @@ module ProcessOut {
 
         const renderMarkdown = () => {
           try {
-            if (window.globalThis.showdown && window.globalThis.showdown.Converter) {
+            if (window.globalThis && window.globalThis.showdown && window.globalThis.showdown.Converter) {
               const converter = new window.globalThis.showdown.Converter()
 
               converter.setFlavor('github');

@@ -1,7 +1,7 @@
 module ProcessOut {
   export type FormFieldResponse =
     | {
-      type: "email" | "text"
+      type: "email" | "text" | "digits"
       key: string
       label: string
       required: boolean

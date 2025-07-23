@@ -278,7 +278,13 @@ module ProcessOut {
         ThemeImpl.updateMode();
       };
 
-      mediaQuery.addEventListener('change', handleChange);
+      if (mediaQuery && typeof mediaQuery.addEventListener === 'function') {
+        try {
+          mediaQuery.addEventListener('change', handleChange);
+        } catch (e) {
+          console.warn('Failed to add media query event listener:', e);
+        }
+      }
     }
 
     /**
@@ -333,11 +339,23 @@ module ProcessOut {
         callback(e.matches ? 'dark' : 'light');
       };
 
-      mediaQuery.addEventListener('change', handleChange);
+      if (mediaQuery && typeof mediaQuery.addEventListener === 'function') {
+        try {
+          mediaQuery.addEventListener('change', handleChange);
+        } catch (e) {
+          console.warn('Failed to add media query event listener:', e);
+        }
+      }
       
       // Return cleanup function
       return () => {
-        mediaQuery.removeEventListener('change', handleChange);
+        if (mediaQuery && typeof mediaQuery.removeEventListener === 'function') {
+          try {
+            mediaQuery.removeEventListener('change', handleChange);
+          } catch (e) {
+            console.warn('Failed to remove media query event listener:', e);
+          }
+        }
       };
     }
 
@@ -518,20 +536,20 @@ module ProcessOut {
         .page > .container {
           display: flex;
           flex-direction: column;
-          gap: 16px;
+          gap-y: 16px;
         }
 
         .page > .container > .buttons-container {
-          margin-top: 24px;
+          margin-top: 40px;
         }
         .page > .container > form + .buttons-container {
-          margin-top: 4px;
+          margin-top: 20px;
         }
 
         .buttons-container {
           display: flex;
           flex-direction: column;
-          gap: 12px;
+          gap-y: 12px;
         }
 
         .loader {
@@ -605,7 +623,7 @@ module ProcessOut {
           width: 100%;
           display: flex;
           flex-direction: column;
-          gap: 6px;
+          gap-y: 6px;
           padding-top: 16px;
         }
 
@@ -625,7 +643,7 @@ module ProcessOut {
           width: 100%;
           display: flex;
           flex-direction: column;
-          gap: 12px;
+          gap-y: 12px;
           padding-top: 12px;
         }
 
@@ -708,19 +726,19 @@ module ProcessOut {
         .form {
           display: flex;
           flex-direction: column;
-          gap: 16px;
+          gap-y: 16px;
         }
 
         .field-container {
           display: flex;
           flex-direction: column;
-          gap: 8px;
+          gap-y: 8px;
         }
         .field {
           display: flex;
           width: 100%;
           background-color: ${ThemeImpl.instance.get('palette.light.surface.input.default')};
-          border: 1.5px solid ${ThemeImpl.instance.get('palette.light.border.input.default')};
+          border: 2px solid ${ThemeImpl.instance.get('palette.light.border.input.default')};
           border-radius: 6px;
           height: 52px;
           position: relative;
@@ -819,7 +837,7 @@ module ProcessOut {
           flex-direction: column;
           justify-content: center;
           align-items: center;
-          gap: 1px;
+          gap-y: 1px;
         }
 
         .open .select-chevrons .chevron {
@@ -831,7 +849,7 @@ module ProcessOut {
 
         .select-chevrons.md {
           width: 7px;
-          gap: 2px;
+          gap-y: 2px;
         }
 
         .select select {
@@ -851,6 +869,18 @@ module ProcessOut {
           }
         }
 
+        .select select::-ms-expand {
+          display: none;
+        }
+
+        .select select:focus,
+        .select select::-moz-focus-inner,
+        .select select::-moz-focus-outer  {
+          border: 0;
+          outline: none;
+          -moz-outline-style: none; 
+        }
+
         .select .select-chevrons {
           position: absolute;
           right: 16px;
@@ -863,7 +893,7 @@ module ProcessOut {
           display: inline-block;
         }
 
-        .otp-container > div {
+        .field-container.otp-field {
           margin-bottom: 16px;
         }
           
@@ -901,7 +931,7 @@ module ProcessOut {
           display: flex;
           justify-content: end;
           align-items: center;
-          gap: 10px;
+          gap-x: 10px;
           width: 58px;
           height: 26px;
           position: absolute;
@@ -915,10 +945,10 @@ module ProcessOut {
         }
         .phone .dialing-code.open {
           padding-right: 16px;
-          width: 76px;
+          width: 73px;
           height: 52px;
-          top: -2px;
-          right: -2px;
+                  top: -2px;
+        right: -2px;
           border-left: 2px solid ${ThemeImpl.instance.get('palette.light.text.default')};
           box-shadow: 0 0 0 3px ${ThemeImpl.instance.get('palette.light.shadow.focus')};
           border-top-right-radius: 6px;
@@ -934,11 +964,11 @@ module ProcessOut {
         .phone .dialing-code.open:after {
           content: "";
           display: block;
-          width: 3px;
+          width: 8px;
           height: 2px;
           background-color: ${ThemeImpl.instance.get('palette.light.text.default')};
           position: absolute;
-          left: -5px;
+          left: -6px;
           @media (prefers-color-scheme: dark) {
             background-color: ${ThemeImpl.instance.get('palette.dark.text.default')};
           }
@@ -1001,7 +1031,7 @@ module ProcessOut {
 
         .error {
           padding: 8px 12px;
-          gap: 8px;
+          gap-x: 8px;
           border-radius: 6px;
           border: 1px solid;
           font-weight: 500;
@@ -1020,7 +1050,6 @@ module ProcessOut {
 
         .header {
           display: flex;
-          gap: 8px;
           justify-content: space-between;
           align-items: center;
           padding: 0 0 32px;
@@ -1061,7 +1090,7 @@ module ProcessOut {
         .qr-code-container {
           display: flex;
           flex-direction: column;
-          gap: 12px;
+          gap-y: 12px;
           align-items: center;
           max-width: 70%;
           margin: 0 auto;
@@ -1145,7 +1174,7 @@ module ProcessOut {
 
         .qr-actions {
           display: flex;
-          gap: 8px;
+          gap-x: 8px;
           justify-content: center;
           align-items: center;
         }
@@ -1384,10 +1413,10 @@ module ProcessOut {
         .group {
           display: flex;
           flex-direction: column;
-          gap: 24px;
+          gap-y: 24px;
           padding: 16px;
           border-radius: 6px;
-          border: 1.5px solid;
+          border: 2px solid;
           border-color: ${ThemeImpl.instance.get('palette.light.border.input.default')};
           @media (prefers-color-scheme: dark) {
             border-color: ${ThemeImpl.instance.get('palette.dark.border.input.default')};
@@ -1415,7 +1444,7 @@ module ProcessOut {
 
         .group.group-boolean {
           padding: 4px;
-          gap: 4px;
+          gap-y: 4px;
         }
           
         .group.group-boolean > div + div:before {
@@ -1424,7 +1453,7 @@ module ProcessOut {
 
         .copy-instruction {
           display: flex;
-          gap: 8px;
+          gap-x: 8px;
           align-items: center;
           justify-content: space-between;
         }
@@ -1461,7 +1490,7 @@ module ProcessOut {
         .checkbox {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap-x: 8px;
           cursor: pointer;
           padding: 16px 12px;
           border-radius: 6px;

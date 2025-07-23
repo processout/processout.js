@@ -56,7 +56,7 @@ module ProcessOut {
         }
 
         let errors = { ...prevState.form.errors }
-        console.log('updateField', key, value, isInitial)
+        
         if (prevState.form.touched[key]) {
           delete errors[key]
           errors[key] = validateField(prevState, key, value)
@@ -130,10 +130,22 @@ module ProcessOut {
       }
     })
 
+    // If there are validation errors, scroll to the first errored field
+    // Wait for the DOM patch to complete before scrolling
+    if (!successful) {
+      // Use requestAnimationFrame to wait for the next frame after DOM patch
+      requestAnimationFrame(() => {
+        // Add a small delay to ensure DOM is fully updated
+        setTimeout(() => {
+          scrollTo('.field.errored', 20);
+        }, 10);
+      });
+    }
+
     return successful
   }
 
-    // Extract form field rendering into a reusable function
+  // Extract form field rendering into a reusable function
   const renderFormField = (
     field: FormFieldResult,
     state: NextStepState,
@@ -195,6 +207,20 @@ module ProcessOut {
         })
         break;
       }
+      case 'digits': {
+        input = Input({
+          type: 'text',
+          inputmode: 'numeric',
+          label: field.label,
+          name: field.key,
+          errored: !!error,
+          disabled: state.loading,
+          value: value as string,
+          oninput: updateField(setState),
+          onblur: onBlur(setState),
+        })
+        break;
+      }
       default: {
         input = Input({
           type: field.type,
@@ -209,7 +235,7 @@ module ProcessOut {
       }
     }
 
-    return div({ className: "field-container" }, input, error ? label({ htmlFor: labelHtmlFor, className: "error" }, error) : null)
+    return div({ className: `field-container ${field.type}-field` }, input, error ? label({ htmlFor: labelHtmlFor, className: "error" }, error) : null)
   }
 
   // Grouping function for form fields
