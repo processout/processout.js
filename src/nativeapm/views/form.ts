@@ -1,13 +1,13 @@
 /// <reference path="../references.ts" />
 
 type NativeApmFormData = {
-  gateway: any;
-  parameters: NativeApmInputData[];
+  gateway: any
+  parameters: NativeApmInputData[]
   invoice: {
-    amount: string;
-    currency_code: string;
-  };
-};
+    amount: string
+    currency_code: string
+  }
+}
 
 /**
  * ProcessOut module/namespace
@@ -21,101 +21,109 @@ module ProcessOut {
      * Native APM form element
      * @type {HTMLFormElement}
      */
-    formElement: HTMLFormElement;
+    formElement: HTMLFormElement
 
     /**
      * Native APM submit button element
      * @type {NativeApmButton}
      */
-    submitButton: NativeApmButton;
+    submitButton: NativeApmButton
 
     /**
      * Native APM inputs of the form
      * @type {NativeApmInput[]}
      */
-    formInputs: NativeApmInput[];
+    formInputs: NativeApmInput[]
 
     /**
      * Theme of the Native APM widget
      * @type {NativeApmThemeConfigType}
      */
-    theme: NativeApmThemeConfigType;
+    theme: NativeApmThemeConfigType
 
     /**
      * Handler fuctnion which fires on form submit
      * @type {Function}
      */
-    onSubmitHandler: Function;
+    onSubmitHandler: Function
 
     /**
      * Form data like configuration of inputs etc
      * @type {NativeApmFormData}
      */
-    formData: NativeApmFormData;
+    formData: NativeApmFormData
 
     /**
      * Prefilled data of the user
      * @type {any}
      */
-    prefilledData: PrefilledData;
+    prefilledData: PrefilledData
+
+    /**
+     * ProcessOut instance
+     * @type {ProcessOut}
+     */
+    processOut: ProcessOut
 
     /**
      * Native APM Form constructor
      */
     constructor(
+      processOut: ProcessOut,
       formData: NativeApmFormData,
       onSubmitHandler: Function,
       theme: NativeApmThemeConfigType,
-      prefilledData: PrefilledData
+      prefilledData: PrefilledData,
     ) {
       if (!formData) {
         throw new Exception(
           "default",
-          "Form data is not defined. You must provide valid form data to create the form view."
-        );
+          "Form data is not defined. You must provide valid form data to create the form view.",
+        )
       }
 
-      this.theme = theme;
-      this.prefilledData = prefilledData;
-      this.formData = formData;
-      this.onSubmitHandler = onSubmitHandler;
-      this.formInputs = this.createFormInputs();
-      this.submitButton = this.createSubmitButton();
-      this.formElement = this.createFormElement();
+      this.theme = theme
+      this.processOut = processOut
+      this.prefilledData = prefilledData
+      this.formData = formData
+      this.onSubmitHandler = onSubmitHandler
+      this.formInputs = this.createFormInputs()
+      this.submitButton = this.createSubmitButton()
+      this.formElement = this.createFormElement()
     }
 
     /**
      * This function returns the form view element
      */
     public getViewElement() {
-      return this.formElement;
+      return this.formElement
     }
 
     /**
      * This function creates the form element
      */
     private createFormElement() {
-      const form = document.createElement("form");
-      const inputsWrapper = document.createElement("div");
-      const paymentProviderImage = this.createPaymentProviderImage();
+      const form = document.createElement("form")
+      const inputsWrapper = document.createElement("div")
+      const paymentProviderImage = this.createPaymentProviderImage()
 
-      form.setAttribute("class", "native-apm-form");
-      inputsWrapper.setAttribute("class", "native-apm-form-inputs-wrapper");
+      form.setAttribute("class", "native-apm-form")
+      inputsWrapper.setAttribute("class", "native-apm-form-inputs-wrapper")
 
-      StylesUtils.styleElement(form, this.theme.form);
-      this.styleInputsWrapper(inputsWrapper);
+      StylesUtils.styleElement(form, this.theme.form)
+      this.styleInputsWrapper(inputsWrapper)
 
-      this.formInputs.forEach((input) => {
-        inputsWrapper.appendChild(input.getInputElement());
-      });
+      this.formInputs.forEach(input => {
+        inputsWrapper.appendChild(input.getInputElement())
+      })
 
-      form.appendChild(paymentProviderImage);
-      form.appendChild(inputsWrapper);
-      form.appendChild(this.submitButton.getButtonElement());
+      form.appendChild(paymentProviderImage)
+      form.appendChild(inputsWrapper)
+      form.appendChild(this.submitButton.getButtonElement())
 
-      form.addEventListener("submit", this.submitForm.bind(this));
+      form.addEventListener("submit", this.submitForm.bind(this))
 
-      return form;
+      return form
     }
 
     /**
@@ -123,9 +131,9 @@ module ProcessOut {
      */
     private createFormInputs() {
       return this.formData.parameters.map((parameter: any) => {
-        const prefilledValue = this.prefilledData[parameter.key];
-        return new NativeApmInput(parameter, this.theme, prefilledValue);
-      });
+        const prefilledValue = this.prefilledData[parameter.key]
+        return new NativeApmInput(this.processOut, parameter, this.theme, prefilledValue)
+      })
     }
 
     /**
@@ -136,46 +144,43 @@ module ProcessOut {
       ${TextUtils.getText("submitButtonText")} 
       ${this.formData.invoice.amount} 
       ${this.formData.invoice.currency_code}
-      `;
+      `
 
-      return new NativeApmButton(buttonText, this.theme);
+      return new NativeApmButton(buttonText, this.theme)
     }
 
     /**
      * This function creates the payment provider image element
      */
     private createPaymentProviderImage() {
-      const merchantImg = document.createElement("img");
+      const merchantImg = document.createElement("img")
 
-      merchantImg.setAttribute("class", "native-apm-payment-provider-logo");
-      merchantImg.setAttribute("src", this.formData.gateway.logo_url);
+      merchantImg.setAttribute("class", "native-apm-payment-provider-logo")
+      merchantImg.setAttribute("src", this.formData.gateway.logo_url)
 
-      StylesUtils.styleElement(merchantImg, this.theme.logo);
+      StylesUtils.styleElement(merchantImg, this.theme.logo)
 
-      return merchantImg;
+      return merchantImg
     }
 
     /**
      * This function fires when the form is submitted
      */
     private submitForm(event: Event) {
-      event.preventDefault();
+      event.preventDefault()
 
-      const isFormValid = this.formInputs.every((input) =>
-        input.getInputInstance().validate()
-      );
+      const isFormValid = this.formInputs.every(input => input.getInputInstance().validate())
 
       if (isFormValid) {
-        const values = this.getValuesFromInputs();
+        const values = this.getValuesFromInputs()
 
-        this.submitButton.setLoadingState();
+        this.submitButton.setLoadingState()
 
         this.onSubmitHandler(
           values,
           () => this.submitButton.resetLoadingState(),
-          (invalid_fields: Array<any>) =>
-            this.handleApiValidationErrors(invalid_fields)
-        );
+          (invalid_fields: Array<any>) => this.handleApiValidationErrors(invalid_fields),
+        )
       }
     }
 
@@ -183,23 +188,18 @@ module ProcessOut {
      * This function sets error message for invalid inputs after API validation
      */
     private handleApiValidationErrors(invalid_fields) {
-      return invalid_fields.forEach((invalidField) =>
-        this.markInputAsNotValid(invalidField)
-      );
+      return invalid_fields.forEach(invalidField => this.markInputAsNotValid(invalidField))
     }
 
     /**
      * This function fires when the form is submitted
      */
-    private markInputAsNotValid(invalidInputData: {
-      name: string;
-      message: string;
-    }) {
-      this.formInputs.forEach((input) => {
+    private markInputAsNotValid(invalidInputData: { name: string; message: string }) {
+      this.formInputs.forEach(input => {
         if (input.getInputInstance().inputData.key === invalidInputData.name) {
-          input.getInputInstance().setErrorMessage();
+          input.getInputInstance().setErrorMessage()
         }
-      });
+      })
     }
 
     /**
@@ -207,8 +207,8 @@ module ProcessOut {
      */
     private getValuesFromInputs() {
       return this.formInputs.reduce((acc, input) => {
-        return { ...acc, ...input.getInputValue() };
-      }, {});
+        return { ...acc, ...input.getInputValue() }
+      }, {})
     }
 
     /**
@@ -222,9 +222,9 @@ module ProcessOut {
         StylesUtils.styleElement(inputsWrapper, {
           ...this.theme.form.inputsWrapper,
           width: "auto",
-        });
+        })
       } else {
-        StylesUtils.styleElement(inputsWrapper, this.theme.form.inputsWrapper);
+        StylesUtils.styleElement(inputsWrapper, this.theme.form.inputsWrapper)
       }
     }
   }

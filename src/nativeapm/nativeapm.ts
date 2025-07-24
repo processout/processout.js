@@ -112,6 +112,7 @@ module ProcessOut {
       this.theme = new NativeApmThemeConfig()
       this.loadMarkdownLibrary()
       this.loadQrCodesLibrary()
+      this.loadPhoneNumberInputLibrary()
     }
 
     /**
@@ -178,6 +179,7 @@ module ProcessOut {
         this.gatewayConfiguration.native_apm.parameters.length
       ) {
         const nativeApmFormView = new NativeApmFormView(
+          this.processOutInstance,
           this.gatewayConfiguration.native_apm,
           this.proceedPayment.bind(this),
           this.theme,
@@ -286,6 +288,7 @@ module ProcessOut {
 
       if (data.native_apm && data.native_apm.state === "CUSTOMER_INPUT") {
         const customerInputView = new NativeApmFormView(
+          this.processOutInstance,
           {
             gateway: this.gatewayConfiguration.native_apm.gateway,
             parameters: data.native_apm.parameterDefinitions,
@@ -514,6 +517,14 @@ module ProcessOut {
       const qrCodeScript = document.createElement("script")
       qrCodeScript.src = this.processOutInstance.endpoint("js", "/js/libraries/qrcode.min.js")
       document.head.appendChild(qrCodeScript)
+    }
+    private loadPhoneNumberInputLibrary() {
+      const phoneInputScript = document.createElement("script")
+      phoneInputScript.src = this.processOutInstance.endpoint(
+        "js",
+        "/js/libraries/libphonenumber-js.min.js",
+      )
+      document.head.appendChild(phoneInputScript)
     }
   }
 }
