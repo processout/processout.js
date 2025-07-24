@@ -179,6 +179,7 @@ module ProcessOut {
         this.gatewayConfiguration.native_apm.parameters.length
       ) {
         const nativeApmFormView = new NativeApmFormView(
+          this.processOutInstance,
           this.gatewayConfiguration.native_apm,
           this.proceedPayment.bind(this),
           this.theme,
@@ -287,6 +288,7 @@ module ProcessOut {
 
       if (data.native_apm && data.native_apm.state === "CUSTOMER_INPUT") {
         const customerInputView = new NativeApmFormView(
+          this.processOutInstance,
           {
             gateway: this.gatewayConfiguration.native_apm.gateway,
             parameters: data.native_apm.parameterDefinitions,

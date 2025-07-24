@@ -2,6 +2,7 @@
 
 module ProcessOut {
   export class NativeApmPhoneWithCountryInput implements INativeApmInput {
+    private processOut: ProcessOut
     private readonly countrySelectElement: HTMLSelectElement
     private readonly phoneNumberInputElement: HTMLInputElement
     private readonly errorMessageElement: HTMLElement
@@ -18,10 +19,12 @@ module ProcessOut {
     private static readonly DEFAULT_MAX_LENGTH = 15
 
     constructor(
+      processOut: ProcessOut,
       inputData: NativeApmInputData,
       theme: NativeApmThemeConfigType,
       prefilledValue?: string,
     ) {
+      this.processOut = processOut
       this.theme = theme
       this.inputData = inputData
       this.countrySelectElement = this.createCountrySelectElement()
@@ -762,8 +765,10 @@ module ProcessOut {
       defaultText: HTMLElement,
       countryCode: string,
     ) {
-      flagImg.src =
-        "https://js.processout.com/images/countries/" + countryCode.toLowerCase() + ".png"
+      flagImg.src = this.processOut.endpoint(
+        "js",
+        "images/countries/" + countryCode.toLowerCase() + ".png",
+      )
 
       StylesUtils.styleElement(flagImg, this.theme.form.inputs.phoneWithCountry.flagImageVisible)
 
