@@ -1,5 +1,5 @@
 module ProcessOut {
-    const { div } = elements;
+  const { div } = elements;
   interface RedirectProps {
     config: APIRedirectBase & Partial<PaymentContext>,
     elements?: APIElements<FormFieldResult>
