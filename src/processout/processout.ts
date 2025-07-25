@@ -308,8 +308,8 @@ module ProcessOut {
 
       if (path.substring(0, 4) != "http" && path[0] != "/") path = this.endpoint("api", "/" + path)
 
-      const queryParams = path.includes('?') ? path.split('?')[1].split('&') : [];
-      path = path.includes('?') ?  path.split('?')[0] : path
+      const queryParams = path.indexOf('?') !== -1 ? path.split('?')[1].split('&') : [];
+      path = path.indexOf('?') !== -1 ?  path.split('?')[0] : path
 
       var headers = {
         "Content-Type": "application/json",
