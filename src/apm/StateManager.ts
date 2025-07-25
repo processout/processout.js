@@ -98,13 +98,13 @@ module ProcessOut {
      * Get component state by ID
      */
     getComponentState<T = any>(id: string): T | null {
-      let component = this.componentStates[id] as T;
+      let component = this.componentStates[id];
 
       if (!component) {
         component = null
       }
 
-      return component;
+      return component.data;
     }
     
     /**
