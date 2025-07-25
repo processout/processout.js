@@ -473,6 +473,12 @@ class PaymentFormView extends APMViewImpl<{}, {
   
   render() {
     const { div, input, button, label } = elements;
+
+    let buttonText = 'Continue payment'
+
+    if (loading) {
+      buttonText = 'Processing...';
+    }
     
     return div({ className: 'payment-form' },
       div({ className: 'form-group' },
@@ -500,7 +506,7 @@ class PaymentFormView extends APMViewImpl<{}, {
         onclick: this.handleSubmit,
         disabled: this.state.loading || !this.state.email || !this.state.agreedToTerms
       }, 
-        this.state.loading ? 'Processing...' : 'Continue Payment'
+        buttonText
       )
     );
   }

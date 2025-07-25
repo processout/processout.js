@@ -5,8 +5,15 @@ module ProcessOut {
     const first = args[0];
     const children = args.slice(1) as Child[];
 
-    const userProps = isProps(first) ? first : {}
-    const rest  = isProps(first) ? children : [first, ...children];
+    let userProps, rest;
+
+    if (isProps(first)) {
+      userProps = first;
+      rest = children;
+    } else {
+      userProps = {};
+      rest = [first, ...children];
+    }
 
     const props = mergeProps<'div'>({ className: "page" }, userProps);
 

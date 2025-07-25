@@ -24,7 +24,12 @@ module ProcessOut {
       return
     }
 
-    const actualValue = isPlainObject(value) && 'value' in value ? value.value : value
+    let actualValue;
+    if (isPlainObject(value) && 'value' in value) {
+      actualValue = value.value;
+    } else {
+      actualValue = value;
+    }
 
     switch (true) {
       case validation.required &&
@@ -158,11 +163,18 @@ module ProcessOut {
 
     switch (field.type) {
       case "otp": {
+        let otpType;
+        if (field.subtype === "digits") {
+          otpType = "numeric";
+        } else {
+          otpType = "text";
+        }
+        
         input = OTP({
           name: field.key,
           label: field.label,
           length: field.min_length,
-          type: field.subtype === "digits" ? "numeric" : "text",
+          type: otpType,
           disabled: state.loading,
           errored: !!error,
           value: value as string,
@@ -188,7 +200,7 @@ module ProcessOut {
         input = Select({
           name: field.key,
           label: field.label,
-          value: value as string || field.available_values.find(item => item.preselected)?.value || '',
+          value: value as string || field.available_values.find(item => item.preselected) && field.available_values.find(item => item.preselected).value || field.available_values[0] && field.available_values[0].value || '',
           options: field.available_values,
           errored: !!error,
           disabled: state.loading,
@@ -235,7 +247,13 @@ module ProcessOut {
       }
     }
 
-    return div({ className: `field-container ${field.type}-field` }, input, error ? label({ htmlFor: labelHtmlFor, className: "error" }, error) : null)
+    let errorLabel = null;
+
+    if (error) {
+      errorLabel = label({ htmlFor: labelHtmlFor, className: "error" }, error)
+    }
+
+    return div({ className: `field-container ${field.type}-field` }, input, errorLabel)
   }
 
   // Grouping function for form fields

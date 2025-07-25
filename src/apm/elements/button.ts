@@ -7,16 +7,26 @@ module ProcessOut {
   }
 
   export const Button = (first: ButtonProps | Child, ...children: Child[]) => {
-    const { className, variant, size, loading, disabled, ...userProps } = isProps(first) ? first : {}
-    let rest = [div({ className: "content" }, isProps(first) ? children : [first, ...children])];
+    let userProps, buttonChildren;
+
+    if (isProps(first)) {
+      userProps = first;
+      buttonChildren = children;
+    } else {
+      userProps = {};
+      buttonChildren = [first, ...children];
+    }
+
+    const { className, variant, size, loading, disabled, ...otherProps } = userProps;
+    let rest = [div({ className: "content" }, buttonChildren)];
 
     if (loading) {
       rest = [Loader()]
     }
 
-    const classNames = ["button", size ?? 'lg', variant ?? 'primary', loading && 'loading', disabled && 'disabled', className, ].filter(Boolean)
+    const classNames = ["button", size || 'lg', variant || 'primary', loading && 'loading', disabled && 'disabled', className, ].filter(Boolean)
 
-    const props = mergeProps<'button'>({ className: classNames.join(' '), disabled: disabled || loading}, userProps);
+    const props = mergeProps<'button'>({ className: classNames.join(' '), disabled: disabled || loading}, otherProps);
 
     return button(props, ...rest)
   }

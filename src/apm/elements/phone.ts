@@ -60,8 +60,8 @@ module ProcessOut {
   export const Phone = ({ dialing_codes, name, oninput, onblur, disabled, label, errored, className, value, id, ...props }: PhoneProps) => {
     // Use StateManager for internal state management
     const { state, setState } = useComponentState({
-      dialing_code: value?.dialing_code || dialing_codes[0]?.value || '',
-      value: value?.value || '',
+      dialing_code: value && value.dialing_code || dialing_codes[0] && dialing_codes[0].value || '',
+      value: value && value.value || '',
       iso: ''
     });
     
@@ -73,19 +73,19 @@ module ProcessOut {
       
       // Set ISO code using libphonenumber
       if (!iso) {
-        const phoneUtil = (window as any).libphonenumber?.PhoneNumberUtil?.getInstance();
+        const phoneUtil = (window as any).libphonenumber && (window as any).libphonenumber.PhoneNumberUtil && (window as any).libphonenumber.PhoneNumberUtil.getInstance();
         if (phoneUtil) {
           try {
             const number = phoneUtil.parseAndKeepRawInput(getFullNumber(dialingCode, phoneNumber), '');
             const regionCode = phoneUtil.getRegionCodeForNumber(number);
-            iso = regionCode || dialing_codes.find(item => item.value === dialingCode)?.region_code || '';
+            iso = regionCode || dialing_codes.find(item => item.value === dialingCode) && dialing_codes.find(item => item.value === dialingCode).region_code || '';
           } catch (error) {
             // Fallback to manual lookup if parsing fails
-            iso = dialing_codes.find(item => item.value === state.dialing_code)?.region_code || '';
+            iso = dialing_codes.find(item => item.value === state.dialing_code) && dialing_codes.find(item => item.value === state.dialing_code).region_code || '';
           }
         } else {
           // Fallback if libphonenumber not available
-          iso = dialing_codes.find(item => item.value === state.dialing_code)?.region_code || '';
+          iso = dialing_codes.find(item => item.value === state.dialing_code) && dialing_codes.find(item => item.value === state.dialing_code).region_code || '';
         }
       }
       

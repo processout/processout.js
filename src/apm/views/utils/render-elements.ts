@@ -40,11 +40,19 @@ module ProcessOut {
       const nextItem = items[i + 1]
       
       const groupInfo = getGroup(item);
-      const groupType = groupInfo?.type;
+      const groupType = groupInfo && groupInfo.type;
       
-      const nextGroup = nextItem ? getGroup(nextItem) : null
-      const nextGroupType = nextGroup ? nextGroup.type : null
+      let nextGroup = null
+      let nextGroupType = null
 
+      if (nextItem) {
+        nextGroup = getGroup(nextItem)
+      }
+
+      if (nextGroup) {
+        nextGroupType = nextGroup.type
+      }
+ 
       const renderedElement = renderItem(item)
 
       if (!groupType) {
@@ -60,7 +68,7 @@ module ProcessOut {
         continue
       }
 
-      if (!inGroup || currentGroupInfo?.type !== groupType) {
+      if (!inGroup || currentGroupInfo && currentGroupInfo.type !== groupType) {
         // Close any existing group if we're starting a different group type
         if (inGroup) {
           result.push(div({ className: containerClassName }, ...currentGroup))
@@ -123,10 +131,10 @@ module ProcessOut {
       (element) => renderElement(
         {
           ...element,
-          setState: options?.setState || (() => {}),
-          handleSubmit: options?.handleSubmit || (() => {}),
+          setState: options && options.setState || (() => {}),
+          handleSubmit: options && options.handleSubmit || (() => {}),
         },
-        options?.state || { loading: false }
+        options && options.state || { loading: false }
       ),
     )
   }

@@ -84,7 +84,7 @@ module ProcessOut {
       private intervalId: number | null = null
 
       private get confirmed(): boolean {
-        if (!ContextImpl.context.confirmation.requiresAction || !this.props.elements?.length) {
+        if (!ContextImpl.context.confirmation.requiresAction || !this.props.elements || !this.props.elements.length) {
           return true
         }
 
@@ -145,7 +145,12 @@ module ProcessOut {
       formatCountdown(seconds: number): string {
         const minutes = Math.floor(seconds / 60)
         const remainingSeconds = seconds % 60
-        const formattedSeconds = remainingSeconds < 10 ? `0${remainingSeconds}` : remainingSeconds.toString()
+        let formattedSeconds;
+        if (remainingSeconds < 10) {
+          formattedSeconds = `0${remainingSeconds}`;
+        } else {
+          formattedSeconds = remainingSeconds.toString();
+        }
         return `${minutes}:${formattedSeconds}`
       }
 
@@ -167,42 +172,88 @@ module ProcessOut {
 
       render() {
         const confirmed = this.confirmed
+        let step1Status, step1Title, step2Status, step2Description;
+        
+        if (!confirmed) {
+          step1Status = 'pending';
+          step1Title = 'Waiting for payment';
+        } else {
+          step1Status = 'completed';
+          step1Title = 'Payment sent';
+        }
+        
+        if (!confirmed) {
+          step2Status = 'idle';
+        } else {
+          step2Status = 'pending';
+        }
+        
+        if (confirmed) {
+          step2Description = `Please wait up to ${this.formatCountdown(this.state.countdown)} minutes`;
+        } else {
+          step2Description = undefined;
+        }
+        
         const steps: Array<{ status: 'completed' | 'pending' | 'idle', title: string, description?: string, elements?: APIElements<FormFieldResult> }> = [
           {
-            status: !confirmed ? 'pending' : 'completed',
-            title: !confirmed ? 'Waiting for payment' : 'Payment sent',
+            status: step1Status,
+            title: step1Title,
           },
           {
-            status: !confirmed? 'idle' : 'pending',
+            status: step2Status,
             title: 'Waiting for confirmation',
-            description: confirmed ? `Please wait up to ${this.formatCountdown(this.state.countdown)} minutes` : undefined,
-            elements: this.props?.elements
+            description: step2Description,
+            elements: this.props && this.props.elements
           },
         ]
 
+        let confirmButton, cancelButton;
+        
+        if (!confirmed) {
+          confirmButton = Button({ onclick: this.handleConfirmClick.bind(this) }, 'I have sent the payment');
+        } else {
+          confirmButton = null;
+        }
+        
+        if (ContextImpl.context.confirmation.allowCancelation) {
+          cancelButton = CancelButton({ onClick: this.handleCancelClick.bind(this), config: this.props.config });
+        } else {
+          cancelButton = null;
+        }
+        
         return Main({ 
           config: this.props.config, 
           className: "pending-page",
           buttons: [
-            (!confirmed
-              ? Button({ onclick: this.handleConfirmClick.bind(this) }, 'I have sent the payment')
-              : null
-            ),
-            (ContextImpl.context.confirmation.allowCancelation
-              ? CancelButton({ onClick: this.handleCancelClick.bind(this), config: this.props.config })
-              : null
-            )
+            confirmButton,
+            cancelButton
           ]
         },
           div({ className: "steps" },
-            ...steps.map(step => div({ className: `step ${step.status}` },
-              div({ className: "step-status" }, StatusTick({ state: step.status })),
-              div({ className: "step-content" },
-                div({ className: "step-title" }, step.title),
-                step.description ? div({ className: "step-description" }, step.description) : null,
-                step.elements ? renderElements(step.elements) : null
-              )
-            ))
+            ...steps.map(step => {
+              let descriptionElement, elementsElement;
+              
+              if (step.description) {
+                descriptionElement = div({ className: "step-description" }, step.description);
+              } else {
+                descriptionElement = null;
+              }
+              
+              if (step.elements) {
+                elementsElement = renderElements(step.elements);
+              } else {
+                elementsElement = null;
+              }
+              
+              return div({ className: `step ${step.status}` },
+                div({ className: "step-status" }, StatusTick({ state: step.status })),
+                div({ className: "step-content" },
+                  div({ className: "step-title" }, step.title),
+                  descriptionElement,
+                  elementsElement
+                )
+              );
+            })
           )
         )
       }

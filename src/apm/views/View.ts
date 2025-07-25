@@ -486,7 +486,12 @@ module ProcessOut {
 
         // Handle style objects: { width: '100px', height: '100px' }
         if (key === 'style' && typeof newValue === 'object' && newValue !== null) {
-          const oldStyle = (typeof oldValue === 'object' && oldValue !== null) ? oldValue : {};
+          let oldStyle;
+          if (typeof oldValue === 'object' && oldValue !== null) {
+            oldStyle = oldValue;
+          } else {
+            oldStyle = {};
+          }
           
           // Remove old style properties that are no longer present
           for (const styleKey in oldStyle) {
@@ -824,7 +829,12 @@ module ProcessOut {
         }
         
         const key = this._getKey(newStartVNode);
-        const indexInOld = key != null ? oldKeyMap[key] : undefined;
+        let indexInOld;
+        if (key != null) {
+          indexInOld = oldKeyMap[key];
+        } else {
+          indexInOld = undefined;
+        }
 
         if (indexInOld == null) {
           // New element - create and insert

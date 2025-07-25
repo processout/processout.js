@@ -238,7 +238,7 @@ module ProcessOut {
       }
 
       ContextImpl.context.logger.error({
-        host: window?.location?.host ?? '',
+        host: window && window.location && window.location.host || '',
         fileName: 'API.ts',
         lineNumber: 208,
         message,
@@ -254,14 +254,14 @@ module ProcessOut {
         }
       };
       
-      options.onFailure?.(defaultError);
+      options.onFailure && options.onFailure(defaultError);
       return
     }
 
     switch (data.error_type) {
       case 'request.route-not-found':
         ContextImpl.context.logger.error({
-          host: window?.location?.host ?? '',
+          host: window && window.location && window.location.host || '',
           fileName: 'API.ts',
           lineNumber: 208,
           message: `${request} failed as route does not exist`,
@@ -277,11 +277,11 @@ module ProcessOut {
           }
         };
         
-        options.onFailure?.(routeNotFoundError);
+        options.onFailure && options.onFailure(routeNotFoundError);
         break;
       default: {
         ContextImpl.context.logger.error({
-          host: window?.location?.host ?? '',
+          host: window && window.location && window.location.host || '',
           fileName: 'API.ts',
           lineNumber: 208,
           message: `${request} failed because of an error: ${data.message}`,
@@ -297,7 +297,7 @@ module ProcessOut {
           }
         };
         
-        options.onFailure?.(defaultError);
+        options.onFailure && options.onFailure(defaultError);
         break;
       }
     }
@@ -310,7 +310,12 @@ module ProcessOut {
     public static initialise(options: APIOptions<AuthorizationSuccessResponse | TokenizationSuccessResponse, AuthorizationValidationResponse | TokenizationValidationResponse>) {
       const context = ContextImpl.context;
       const flow = context.flow;
-      const source = flow === 'authorization' ? context.customerTokenId : undefined;
+      let source = undefined;
+
+      if (flow === 'authorization') {
+        source = context.customerTokenId;
+      }
+      
 
       return this.post({
         gateway_configuration_id: context.gatewayConfigurationId,
@@ -324,7 +329,11 @@ module ProcessOut {
     public static getCurrentStep(options: APIOptions<AuthorizationSuccessResponse | TokenizationSuccessResponse, AuthorizationValidationResponse | TokenizationValidationResponse>) {
       const context = ContextImpl.context;
       const flow = context.flow;
-      const source = flow === 'authorization' ? context.customerTokenId : undefined;
+      let source = undefined;
+
+      if (flow === 'authorization') {
+        source = context.customerTokenId;
+      }
 
       return this.post({
         gateway_configuration_id: context.gatewayConfigurationId,
@@ -389,11 +398,14 @@ module ProcessOut {
       const context = ContextImpl.context;
       
       // Build endpoint based on flow type
-      let endpoint = context.flow === 'authorization'
-        ? ['invoices', context.invoiceId, 'apm-payment', path].filter(part => !!part).join('/')
-        : ['customers', context.customerId, 'apm-tokens', context.customerTokenId, 'tokenize'].join('/');
+      let endpoint = ['customers', context.customerId, 'apm-tokens', context.customerTokenId, 'tokenize'].join('/');
 
-      if (context.customerTokenId && context.flow === 'authorization' && method === 'GET') {
+      if (context.flow === 'authorization') {
+        endpoint = ['invoices', context.invoiceId, 'apm-payment', path].filter(part => !!part).join('/')
+      }
+
+
+      if (context.customerTokenId && method === 'GET') {
         endpoint += `?source=${context.customerTokenId}`
       }
         
@@ -416,10 +428,12 @@ module ProcessOut {
           }
 
           // Handle validation responses based on flow type
-          const isValidation = context.flow === 'authorization' 
-            ? isValidationResponse(apiResponse as AuthorizationNetworkResponse)
-            : isTokenizationValidationResponse(apiResponse as TokenizationNetworkResponse);
+          let isValidation = isTokenizationValidationResponse(apiResponse as TokenizationNetworkResponse);
 
+          if (context.flow === 'authorization') {
+            isValidation = isValidationResponse(apiResponse as AuthorizationNetworkResponse);
+          }
+          
           if (isValidation) {
             INITIAL_MAX_RETRIES = 0;
 
@@ -437,7 +451,7 @@ module ProcessOut {
               error: {
                 code: 'processout-js.apm.validation-error',
                 message: 'Validation error',
-                invalid_fields: (apiResponse as any).invalid_fields || Object.keys((apiResponse as any).error?.parameters || {}).reduce((acc, name) => {
+                invalid_fields: (apiResponse as any).invalid_fields || Object.keys((apiResponse as any).error && (apiResponse as any).error.parameters || {}).reduce((acc, name) => {
                   acc.push({
                     name,
                     message: (apiResponse as any).error.parameters[name].detail
@@ -449,7 +463,7 @@ module ProcessOut {
 
             // Add all payment fields (PaymentContext + payment data)
             const errorWithPaymentData = this.addPaymentFields(errorData, apiResponse);
-            internalOptions.onError?.(errorWithPaymentData as any);
+            internalOptions.onError && internalOptions.onError(errorWithPaymentData as any);
             return;
           }
 
@@ -480,7 +494,7 @@ module ProcessOut {
 
                 // Include payment data in timeout error
                 const timeoutErrorWithPaymentData = this.addPaymentFields(timeoutError, apiResponse);
-                internalOptions.onFailure?.(timeoutErrorWithPaymentData);
+                internalOptions.onFailure && internalOptions.onFailure(timeoutErrorWithPaymentData);
                 return;
               }
             }
@@ -493,7 +507,7 @@ module ProcessOut {
                 internalOptions.hasReturnedFirstPending = true;
               }
               
-              internalOptions.onSuccess?.(this.transformResponse(apiResponse));
+              internalOptions.onSuccess && internalOptions.onSuccess(this.transformResponse(apiResponse));
               if (ContextImpl.context.confirmation.requiresAction && !storage.get('pending.startTime')) {
                 INITIAL_MAX_RETRIES = 0;
                 return
@@ -528,7 +542,7 @@ module ProcessOut {
           }
 
           if (apiResponse.state === 'NEXT_STEP_REQUIRED' && apiResponse.redirect) {
-            internalOptions.onSuccess?.(this.transformResponse(
+            internalOptions.onSuccess && internalOptions.onSuccess(this.transformResponse(
               {
                 ...apiResponse,
                 state: 'REDIRECT',
@@ -537,7 +551,7 @@ module ProcessOut {
             return
           }
 
-          internalOptions.onSuccess?.(this.transformResponse(apiResponse));
+          internalOptions.onSuccess && internalOptions.onSuccess(this.transformResponse(apiResponse));
           return;
         },
         (req, _, errorCode) => {
@@ -568,10 +582,13 @@ module ProcessOut {
           };
 
           // Include payment data in network error if available
-          const networkErrorWithPaymentData = req.response
-            ? this.addPaymentFields(networkError, req.response)
-            : networkError;
-          internalOptions.onFailure?.(networkErrorWithPaymentData);
+          let networkErrorWithPaymentData = networkError;
+
+          if (req.response) {
+            networkErrorWithPaymentData = this.addPaymentFields(networkError, req.response)
+          }
+
+          internalOptions.onFailure && internalOptions.onFailure(networkErrorWithPaymentData);
         }
       );
     }

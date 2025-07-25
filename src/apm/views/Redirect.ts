@@ -34,10 +34,13 @@ module ProcessOut {
             hideAmount: true,
             buttons: [
               Button({ onclick: this.handleRedirectClick.bind(this) }, redirectLabel),
-              (ContextImpl.context.confirmation.allowCancelation
-                ? CancelButton({ config: this.props.config })
-                : null
-              )
+              (() => {
+                if (ContextImpl.context.confirmation.allowCancelation) {
+                  return CancelButton({ config: this.props.config });
+                } else {
+                  return null;
+                }
+              })()
             ]
           },
           div({ className: 'heading-container' },

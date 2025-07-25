@@ -30,7 +30,12 @@ module ProcessOut {
   function dedent(strings: TemplateStringsArray, ...values: unknown[]): string {
     const raw = String.raw(strings, ...values);            // untouched text
     const match = raw.match(/^[ \t]*(?=\S)/m);
-    const indent = match ? match[0].length : 0;            // handle empty strings
+    let indent;
+    if (match) {
+      indent = match[0].length;
+    } else {
+      indent = 0;
+    }
     const pattern = new RegExp(`^[ \\t]{0,${indent}}`, 'gm');
     return raw.replace(pattern, '').trim();                // strip & trim
   }
@@ -170,7 +175,12 @@ module ProcessOut {
           if (err instanceof DOMException && err.name === 'NotAllowedError') {
             const styleEl = document.createElement('style');
             styleEl.textContent = compatibleRules;
-            const host = isShadowRoot ? root : (root as Document).head;
+            let host;
+            if (isShadowRoot) {
+              host = root;
+            } else {
+              host = (root as Document).head;
+            }
             host.appendChild(styleEl);
           } else {
             throw err;
@@ -189,7 +199,12 @@ module ProcessOut {
 
         const styleEl = (root as Document).createElement('style');
         styleEl.textContent = compatibleRules;
-        const host = isShadowRoot ? root : (root as Document).head;
+        let host;
+        if (isShadowRoot) {
+          host = root;
+        } else {
+          host = (root as Document).head;
+        }
         host.appendChild(styleEl);
       }
   }
@@ -201,7 +216,12 @@ module ProcessOut {
       return dedent`${strings
         .map((str, i) => {
           const expr = exprs[i];
-          const value = typeof expr === 'function' ? expr.call(this) : expr ?? '';
+          let value;
+          if (typeof expr === 'function') {
+            value = expr.call(this);
+          } else {
+            value = expr || '';
+          }
           return str + value;
         })
         .join('')}` as CSSText

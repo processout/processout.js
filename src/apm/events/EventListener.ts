@@ -23,7 +23,10 @@ module ProcessOut {
       private handlers: { [K in keyof M]?: EventHandler<M, K>[] } = {};
 
       on<K extends keyof M>(key: K, handler: EventHandler<M, K>) {
-        (this.handlers[key] ??= []).push(handler);
+        if (!this.handlers[key]) {
+          this.handlers[key] = [];
+        }
+        this.handlers[key].push(handler);
       }
 
       off<K extends keyof M>(key: K, handler: EventHandler<M, K>) {
@@ -37,7 +40,7 @@ module ProcessOut {
       ) {
         const data = payload[0] as M[K];          // undefined for “no-payload” keys
         // Emit to specific event handlers
-        this.handlers[key]?.forEach(handler => (handler as any)(data));
+        this.handlers[key] && this.handlers[key].forEach(handler => (handler as any)(data));
         
         // Emit to '*' handlers with unified structure
         if (key !== '*' && this.handlers['*']) {

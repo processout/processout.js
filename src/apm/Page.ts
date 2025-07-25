@@ -46,13 +46,17 @@ module ProcessOut {
         return;
       }
 
+      let hasConfirmedPending = true;
+
+      if (ContextImpl.context.confirmation.requiresAction) {
+        hasConfirmedPending = this.state === "PENDING"
+      }
+
       (request.bind(APIImpl) as APIRequest)({
-        hasConfirmedPending: ContextImpl.context.confirmation.requiresAction
-          ? this.state === "PENDING"
-          : true,
+        hasConfirmedPending,
         onSuccess: ({ elements, ...config }) => {
           this.state = config.state
-          callback?.(null, this.state);
+          callback && callback(null, this.state);
 
           if (config.state === 'REDIRECT') {
             ContextImpl.context.page.render(APMViewRedirect, { elements, config: config as APIRedirectBase & Partial<PaymentContext> })
@@ -74,7 +78,7 @@ module ProcessOut {
         },
         onError: ({ elements, ...config }) => {
           this.state = config.state
-          callback?.(config.error);
+          callback && callback(config.error);
           ContextImpl.context.page.render(APMViewNextSteps, { elements, config })
         },
         onFailure: data => {
@@ -122,7 +126,7 @@ module ProcessOut {
     loadScript(name: string, path: string, callback?: (error?: Error) => void): void {
       // Check if script is already loaded
       if (this.loadedScripts.get(name)) {
-        callback?.();
+        callback && callback();
         return;
       }
 
@@ -143,7 +147,7 @@ module ProcessOut {
       // Check if script already exists in the document
       if (document.querySelector(`script[src*="${name}"]`)) {
         this.loadedScripts.set(name, true);
-        callback?.();
+        callback && callback();
         return;
       }
 
@@ -152,7 +156,14 @@ module ProcessOut {
 
       // Create and load the script
       const script = document.createElement('script');
-      script.src = path.startsWith('https://') ? path : ContextImpl.context.poClient.endpoint("js", path);
+
+      let scriptPath = path;
+
+      if (!path.startsWith('https://')) {
+        scriptPath = ContextImpl.context.poClient.endpoint("js", path);
+      }
+
+      script.src = scriptPath;
       
       script.onload = () => {
         this.loadedScripts.set(name, true);
@@ -222,18 +233,23 @@ module ProcessOut {
       // --- Create New Wrapper based on support ---
       if (!supportsShadowDOM) {
         // Fallback: Use an iframe if Shadow DOM is not supported
-        const height = container.getBoundingClientRect().height;
+        let height = container.getBoundingClientRect().height;
         const iframe = document.createElement('iframe');
+
+        if (height < 400) {
+          height = 400;
+        }
+
         iframe.setAttribute('frameBorder', '0');
         iframe.style.width = '100%';
-        iframe.style.height = height < 400 ? '400px' : height + 'px';
+        iframe.style.height = height + 'px';
         iframe.title = 'Content Wrapper'; // Good practice for accessibility
 
         container.appendChild(iframe); // Append iframe directly to the user's container
 
         // Setup iframe content after it's loaded to avoid race conditions
         const setupIframeContent = () => {
-          const doc = iframe.contentDocument ?? iframe.contentWindow?.document;
+          const doc = iframe.contentDocument || iframe.contentWindow && iframe.contentWindow.document;
 
           if (doc) {
             // Ensure the iframe has a basic HTML structure if it's not fully loaded
