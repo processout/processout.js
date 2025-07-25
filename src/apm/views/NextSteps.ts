@@ -12,8 +12,13 @@ module ProcessOut {
   const { div } = elements
 
   const setFormState = (elements: NextStepProps['elements'], config: NextStepProps['config']): FormState | null => {
-    const error = 'error' in config ? config.error : undefined;
-    const forms = elements?.filter(e => e.type === "form") ?? []
+    let error;
+    if ('error' in config) {
+      error = config.error;
+    } else {
+      error = undefined;
+    }
+    const forms = elements && elements.filter(e => e.type === "form") || []
 
     if (forms.length === 0) {
       return null
@@ -23,7 +28,7 @@ module ProcessOut {
       touched: {},
       values: {},
       validation: {},
-      errors: error?.invalid_fields?.reduce((acc, item) => {
+      errors: error && error.invalid_fields && error.invalid_fields.reduce((acc, item) => {
         acc[item.name] = item.message
         return acc;
       }, {}) || {}
@@ -34,7 +39,7 @@ module ProcessOut {
       form.parameters.parameter_definitions.forEach(param => {
         // Check for prefilled data from initialData
         const initialData = ContextImpl.context.initialData;
-        const prefilledValue = initialData?.[param.key];
+        const prefilledValue = initialData && initialData[param.key];
 
         // If we have prefilled data, use it and exit early
         if (prefilledValue) {
@@ -52,7 +57,7 @@ module ProcessOut {
 
         switch (param.type) {
           case 'single-select':
-            acc[param.key] = param.available_values.find(item => item.preselected)?.value || param.available_values[0].value
+            acc[param.key] = param.available_values.find(item => item.preselected) && param.available_values.find(item => item.preselected).value || param.available_values[0] && param.available_values[0].value || ''
             break;
           case 'phone':
             acc[param.key] = {
@@ -76,9 +81,21 @@ module ProcessOut {
             ...acc,
             [param.key]: {
               email: param.type === "email",
-              required: param.required ?? false,
-              minLength: 'min_length' in param ? param.min_length : undefined,
-              maxLength: 'max_length' in param ? param.max_length : undefined,
+              required: param.required || false,
+              minLength: (() => {
+                if ('min_length' in param) {
+                  return param.min_length;
+                } else {
+                  return undefined;
+                }
+              })(),
+              maxLength: (() => {
+                if ('max_length' in param) {
+                  return param.max_length;
+                } else {
+                  return undefined;
+                }
+              })(),
             }
           }
         }, {})
@@ -114,7 +131,7 @@ module ProcessOut {
       }
       
       this.setState({ loading: true });
-      ContextImpl.context.page.load(APIImpl.sendFormData(state.form?.values ?? {}), (err, state) => {
+      ContextImpl.context.page.load(APIImpl.sendFormData(state.form && state.form.values || {}), (err, state) => {
         if (err) {
           ContextImpl.context.events.emit('submit-error', { failure: { code: err.code, message: err.message } })
         } else {
@@ -124,15 +141,23 @@ module ProcessOut {
     }
 
     render() {
-      const hasErrors = this.state.form?.errors ? 
-        Object.keys(this.state.form.errors).some(key => this.state.form.errors[key]) : 
-        false;
+      let hasErrors = false;
+
+      if (this.state.form && this.state.form.errors) {
+        hasErrors = Object.keys(this.state.form.errors).some(key => this.state.form.errors[key])
+      }
 
       return Main({ 
         config: this.props.config,
         buttons: [
           Button({ onclick: this.handleSubmit.bind(this), disabled: hasErrors, loading: this.state.loading }, 'Continue'),
-          (ContextImpl.context.allowCancelation ? CancelButton({ config: this.props.config as APISuccessBase & Partial<PaymentContext> }) : null)
+          (() => {
+            if (ContextImpl.context.allowCancelation) {
+              return CancelButton({ config: this.props.config as APISuccessBase & Partial<PaymentContext> });
+            } else {
+              return null;
+            }
+          })()
         ] 
       },
         ...renderElements(

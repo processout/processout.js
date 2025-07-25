@@ -33,7 +33,7 @@ module ProcessOut {
     const isCurrentlyComplete = state.values.every(v => v);
 
     if (isCurrentlyComplete && !value) {
-      onComplete?.(name, state.values.join(''));
+      onComplete && onComplete(name, state.values.join(''));
     }
     /**
      * Synchronizes the DOM to match the current state. This function is the single
@@ -61,12 +61,17 @@ module ProcessOut {
      */
     const handlePaste = (index: number, e: ClipboardEvent): void => {
       e.preventDefault();
-      const pastedText = e.clipboardData?.getData('text') || '';
+      const pastedText = e.clipboardData && e.clipboardData.getData('text') || '';
       const currentValue = pastedText.trim();
       const isNumeric = type === 'numeric';
 
       // Handle pasting a full code
-      const cleaned = isNumeric ? currentValue.replace(/[^0-9]/g, '') : currentValue;
+      let cleaned;
+      if (isNumeric) {
+        cleaned = currentValue.replace(/[^0-9]/g, '');
+      } else {
+        cleaned = currentValue;
+      }
       
       if (cleaned.length === length) {
         update({
@@ -87,7 +92,12 @@ module ProcessOut {
 
       // Handle autocomplete/multiple characters (like SMS OTP autocomplete)
       if (currentValue.length === length) {
-        const cleaned = isNumeric ? currentValue.replace(/[^0-9]/g, '') : currentValue;
+        let cleaned;
+        if (isNumeric) {
+          cleaned = currentValue.replace(/[^0-9]/g, '');
+        } else {
+          cleaned = currentValue;
+        }
         
         // If it's a full OTP code, distribute it across all inputs
         if (cleaned.length === length) {
@@ -123,7 +133,12 @@ module ProcessOut {
 
       // Handle single character input
       const char = currentValue[0];
-      const isAllowed = isNumeric ? /^[0-9]$/.test(char) : true;
+      let isAllowed;
+      if (isNumeric) {
+        isAllowed = /^[0-9]$/.test(char);
+      } else {
+        isAllowed = true;
+      }
       let newValues = [...state.values];
       let newFocusedIndex = state.focusedIndex;
 
@@ -177,12 +192,30 @@ module ProcessOut {
 
     const handleHiddenFocus = (e: FocusEvent): void => {
       e.preventDefault()
-      inputRefs[state.focusedIndex]?.focus();
+      inputRefs[state.focusedIndex] && inputRefs[state.focusedIndex].focus();
     };
 
     inputRefs.length = 0;
 
     const inputs = new Array(length).fill(0).map((_, i) => {
+      let maxlength, pattern, autocomplete, inputMode;
+      
+      if (i === 0) {
+        maxlength = undefined;
+        autocomplete = "one-time-code";
+      } else {
+        maxlength = 1;
+        autocomplete = "off";
+      }
+      
+      if (type === "numeric") {
+        pattern = "\\d*";
+        inputMode = "numeric";
+      } else {
+        pattern = undefined;
+        inputMode = undefined;
+      }
+      
       return Input({
         name: `${name}-${i + 1}`,
         oninput: (_, value: string) => handleOnChange(i, value),
@@ -193,10 +226,10 @@ module ProcessOut {
         value: state.values[i],
         id: `${name}-${i + 1}`,
         type: "text", // Use 'text' to allow input, pattern for numbers
-        maxlength: i === 0 ? undefined : 1, // First input allows autocomplete, others limited to 1 char
-        pattern: type === "numeric" ? "\\d*" : undefined,
-        autocomplete: i === 0 ? "one-time-code" : "off",
-        inputMode: type === "numeric" ? "numeric" : undefined,
+        maxlength: maxlength,
+        pattern: pattern,
+        autocomplete: autocomplete,
+        inputMode: inputMode,
         ref: liveNode => {
           if (liveNode) {
             inputRefs[i] = liveNode
@@ -206,8 +239,15 @@ module ProcessOut {
     });
 
     // Return the final element tree.
+    let labelElement;
+    if (label) {
+      labelElement = Header({ title: label, tag: 'label', className: 'otp-label', htmlFor: name }, label);
+    } else {
+      labelElement = null;
+    }
+    
     return div({ className: 'otp-container' },
-      label ? Header({ title: label, tag: 'label', className: 'otp-label', htmlFor: name }, label) : null,
+      labelElement,
       div(
         labelEl(
           { className: 'otp', htmlFor: name }, 

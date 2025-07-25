@@ -98,8 +98,13 @@ module ProcessOut {
      * Get component state by ID
      */
     getComponentState<T = any>(id: string): T | null {
-      const component = this.componentStates[id];
-      return component ? component.data : null;
+      let component = this.componentStates[id] as T;
+
+      if (!component) {
+        component = null
+      }
+
+      return component;
     }
     
     /**
@@ -120,9 +125,11 @@ module ProcessOut {
       }
       
       // Calculate new state
-      const updatedState = typeof newState === 'function' 
-        ? (newState as (prevState: T) => T)(component.data)
-        : newState;
+      let updatedState = newState;
+
+      if (typeof updatedState === 'function') {
+        updatedState = (newState as (prevState: T) => T)(component.data)
+      }
       
       // Check if state actually changed (shallow comparison)
       const stateChanged = forceUpdate || !this.shallowEqual(component.data, updatedState);
@@ -164,10 +171,12 @@ module ProcessOut {
       this.isBatchScheduled = true;
       
       // Use requestAnimationFrame to batch updates, with fallback for IE 11
-      const scheduleFunction = (typeof requestAnimationFrame !== 'undefined') 
-        ? requestAnimationFrame 
-        : function(callback: () => void) { setTimeout(callback, 16); };
-      
+      let scheduleFunction = requestAnimationFrame;
+
+      if (!scheduleFunction) {
+        scheduleFunction = function(callback: FrameRequestCallback) { return setTimeout(() => callback(performance.now()), 16); };
+      }
+
       scheduleFunction(() => {
         this.processBatchUpdate();
       });
@@ -205,10 +214,12 @@ module ProcessOut {
       this.pendingCallbacks.length = 0;
       
       if (callbacks.length > 0) {
-        const scheduleFunction = (typeof requestAnimationFrame !== 'undefined') 
-          ? requestAnimationFrame 
-          : function(callback: () => void) { setTimeout(callback, 16); };
-        
+        let scheduleFunction = requestAnimationFrame
+
+        if (!scheduleFunction) {
+          scheduleFunction = function(callback: FrameRequestCallback) { return setTimeout(() => callback(performance.now()), 16); };
+        }
+
         scheduleFunction(() => {
           for (let i = 0; i < callbacks.length; i++) {
             try {
@@ -595,7 +606,11 @@ module ProcessOut {
       
       // Find the next available collision number
       let collisionNum = viewCounters[baseHash];
-      let candidateId = collisionNum === 0 ? baseHash : `${baseHash}-${collisionNum}`;
+      let candidateId = `${baseHash}-${collisionNum}`;
+
+      if (collisionNum === 0) {
+        candidateId = baseHash;
+      }
       
       // If this collision number is already taken, find next available
       while (existingIds.has(candidateId)) {
@@ -628,9 +643,11 @@ module ProcessOut {
     const stateManager = StateManager.getInstance();
     
     // Generate component ID - use content-based if signature provided, fallback to call order
-    const componentId = signature 
-      ? generateContentBasedComponentId(signature)
-      : generateAutoComponentId();
+    let componentId = generateAutoComponentId();
+
+    if (signature) {
+      componentId = generateContentBasedComponentId(signature);
+    }
     
     // Get current view from context
     const currentView = getCurrentViewContext().currentView;

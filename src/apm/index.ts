@@ -13,7 +13,12 @@ module ProcessOut {
 
     export class APMImpl implements APM {
       constructor(poClient: ProcessOut, logger: TelemetryClient, container: Container, options: APMOptions) {
-        let containerEl = typeof container === 'string' ? document.querySelector(container) : container
+        let containerEl = container
+
+        if (typeof containerEl === 'string') {
+          containerEl = document.querySelector(containerEl);
+        }
+
         const { theme, ...data } = options
 
         if (theme) {

@@ -89,7 +89,7 @@ module ProcessOut {
           // Only enable download button if canvas is available
           downloadButtonRef.disabled = !state.canvas;
           downloadButtonRef.classList.remove('loading');
-          downloadButtonRef.querySelector('.loader')?.remove();
+          downloadButtonRef.querySelector('.loader') && downloadButtonRef.querySelector('.loader').remove();
         }
       }
 
@@ -191,12 +191,21 @@ module ProcessOut {
                 // Clear skeleton and create QR code
                 domElement.innerHTML = ''
                 
+                let colorDark, colorLight;
+                if (ThemeImpl.mode === 'light') {
+                  colorDark = ThemeImpl.instance.get('palette.light.text.default');
+                  colorLight = ThemeImpl.instance.get('palette.light.background');
+                } else {
+                  colorDark = ThemeImpl.instance.get('palette.dark.text.default');
+                  colorLight = ThemeImpl.instance.get('palette.dark.background');
+                }
+                
                 new window.globalThis.QRCode(domElement, {
                   text,
                   width: size,
                   height: size,
-                  colorDark: ThemeImpl.mode === 'light' ? ThemeImpl.instance.get('palette.light.text.default') : ThemeImpl.instance.get('palette.dark.text.default'),
-                  colorLight: ThemeImpl.mode === 'light' ? ThemeImpl.instance.get('palette.light.background') : ThemeImpl.instance.get('palette.dark.background'),
+                  colorDark: colorDark,
+                  colorLight: colorLight,
                 })
 
                 // Store reference to the canvas in state

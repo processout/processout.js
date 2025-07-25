@@ -3,7 +3,7 @@ module ProcessOut {
 
   export const CancelButton = ({ onClick, config }: { onClick?: () => void, config: APISuccessBase & Partial<PaymentContext> }) => {
     const onCancelClick = () => {
-      onClick?.()
+      onClick && onClick()
       ContextImpl.context.events.emit('request-cancel')
       ContextImpl.context.page.render(APMViewCancelRequest, { config })
     }

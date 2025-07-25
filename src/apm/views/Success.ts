@@ -52,18 +52,23 @@ module ProcessOut {
       }
     `
 
-    private timeout = ContextImpl.context.success.requiresAction ? ContextImpl.context.success.manualDismissDuration : ContextImpl.context.success.autoDismissDuration
+    private timeout;
+
+    constructor(container: Element, shadow: ShadowRoot | Document, props: SuccessProps) {
+      super(container, shadow, props);
+
+      if (ContextImpl.context.success.requiresAction) {
+        this.timeout = ContextImpl.context.success.manualDismissDuration;
+      } else {
+        this.timeout = ContextImpl.context.success.autoDismissDuration;
+      }
+    }
 
     handleDoneClick() {
       ContextImpl.context.events.emit('success', { trigger: 'user' });
     }
 
     render() {
-      if (!this.props.config.invoice) {
-        ContextImpl.context.events.emit('success', { trigger: 'immediate' });
-        return null
-      }
-
       if (!this.timeoutSet && this.timeout > 0) {
         this.timeoutSet = true
         setTimeout(() => {
@@ -75,8 +80,13 @@ module ProcessOut {
         config: this.props.config, 
         className: "success-page", 
         hideAmount: true,
-        buttons: ContextImpl.context.success.requiresAction
-        ? Button({ onclick: this.handleDoneClick.bind(this) }, 'Done') : null
+        buttons: (() => {
+          if (ContextImpl.context.success.requiresAction) {
+            return Button({ onclick: this.handleDoneClick.bind(this) }, 'Done');
+          } else {
+            return null;
+          }
+        })()
       },
         div({ className: 'success-message' },
           div({ className: 'tick-container' },

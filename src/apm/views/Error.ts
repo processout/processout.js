@@ -42,9 +42,13 @@ module ProcessOut {
       return page({ className: "error-page"},
         h1({ className: 'error-title' }, this.props.title || 'Whoops! Something went wrong.'),
         p({ className: 'error-description' }, this.props.message || 'We apologize for the inconvenience.'),
-        !this.props.hideRefresh
-          ? Button({ className: 'error-refresh', onclick: this.onRefreshClick.bind(this) }, 'Refresh')
-          : null,
+        (() => {
+          if (!this.props.hideRefresh) {
+            return Button({ className: 'error-refresh', onclick: this.onRefreshClick.bind(this) }, 'Refresh');
+          } else {
+            return null;
+          }
+        })(),
       )
     }
   }

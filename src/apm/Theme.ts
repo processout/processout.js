@@ -310,9 +310,13 @@ module ProcessOut {
      */
     public static getCurrentColorScheme(): 'light' | 'dark' {
       if (typeof window !== 'undefined' && window.matchMedia) {
-        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        if (isDark) {
+          return 'dark';
+        }
       }
-      return 'light'; // Default fallback
+      return 'light';
     }
 
     /**
@@ -322,7 +326,11 @@ module ProcessOut {
       const scheme = ThemeImpl.getCurrentColorScheme();
       const fullPath = `palette.${scheme}.${path}` as any;
       const value = ThemeImpl.instance.get(fullPath);
-      return typeof value === 'string' ? value : '#000000';
+      if (typeof value === 'string') {
+        return value;
+      } else {
+        return '#000000';
+      }
     }
 
     /**
@@ -336,7 +344,11 @@ module ProcessOut {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       
       const handleChange = (e: MediaQueryListEvent) => {
-        callback(e.matches ? 'dark' : 'light');
+        if (e.matches) {
+          callback('dark');
+        } else {
+          callback('light');
+        }
       };
 
       if (mediaQuery && typeof mediaQuery.addEventListener === 'function') {
@@ -377,7 +389,12 @@ module ProcessOut {
 
       const hexColor = this.recursiveFind(path, this.theme)
       // 1. Remove the '#' if it's there
-      const sanitizedHex = hexColor.startsWith('#') ? hexColor.slice(1) : hexColor;
+      let sanitizedHex;
+      if (hexColor.startsWith('#')) {
+        sanitizedHex = hexColor.slice(1);
+      } else {
+        sanitizedHex = hexColor;
+      }
 
       // 2. Handle shorthand hex codes (e.g., "03F" -> "0033FF")
       const fullHex = sanitizedHex.length === 3
@@ -398,7 +415,11 @@ module ProcessOut {
       // 5. Decide on the text color based on a luminance threshold.
       // If the background is bright (luminance > 140), use black text.
       // If the background is dark (luminance <= 139), use white text.
-      return luminance > 140 ? ThemeImpl.instance.get('palette.light.text.default')  : ThemeImpl.instance.get('palette.dark.text.default') ;
+      if (luminance > 140) {
+        return ThemeImpl.instance.get('palette.light.text.default');
+      } else {
+        return ThemeImpl.instance.get('palette.dark.text.default');
+      }
     }
 
     public update(theme: DeepPartial<ThemeOptions>) {
@@ -503,7 +524,13 @@ module ProcessOut {
 
             @media (prefers-color-scheme: dark) {
               background-color: ${ThemeImpl.instance.get(`palette.dark.surface.button.hover.${color}`)};
-              color: ${color === 'danger' ? ThemeImpl.instance.getTextColor('palette.light.text.default') : ThemeImpl.instance.getTextColor(`palette.dark.surface.button.hover.${color}`)};
+              color: ${(() => {
+                if (color === 'danger') {
+                  return ThemeImpl.instance.getTextColor('palette.light.text.default');
+                } else {
+                  return ThemeImpl.instance.getTextColor(`palette.dark.surface.button.hover.${color}`);
+                }
+              })()};
             }
           }
         `()
