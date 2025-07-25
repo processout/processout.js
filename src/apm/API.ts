@@ -402,11 +402,10 @@ module ProcessOut {
 
       if (context.flow === 'authorization') {
         endpoint = ['invoices', context.invoiceId, 'apm-payment', path].filter(part => !!part).join('/')
-      }
 
-
-      if (context.customerTokenId && method === 'GET') {
-        endpoint += `?source=${context.customerTokenId}`
+        if (context.customerTokenId && method === 'GET') {
+          endpoint += `?source=${context.customerTokenId}`
+        }
       }
         
       ContextImpl.context.poClient.apiRequest(
