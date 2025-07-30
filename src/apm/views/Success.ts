@@ -76,6 +76,9 @@ module ProcessOut {
         }, this.timeout)
       }
 
+      const title = this.props.config.invoice ? 'Payment approved!' : "You're all set!"
+      const description = this.props.config.invoice ? `You paid ${formatCurrency(this.props.config.invoice.amount, this.props.config.invoice.currency)}` : null
+
       return Main({ 
         config: this.props.config, 
         className: "success-page", 
@@ -95,8 +98,8 @@ module ProcessOut {
             )
           ),
           div({ className: "header-container" },
-            Header({ tag: 'h2' }, 'Payment approved!'),
-            SubHeader({ tag: 'h3' }, `You paid ${formatCurrency(this.props.config.invoice.amount, this.props.config.invoice.currency)}`),
+            Header({ tag: 'h2' }, title),
+            description && SubHeader({ tag: 'h3' }, description),
           ),
         ),
         ...(this.props.elements ? renderElements(this.props.elements) : []),
