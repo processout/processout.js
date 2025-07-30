@@ -1,487 +1,681 @@
 /// <reference path="../../references.ts" />
 
-/**
- * ProcessOut module/namespace
- */
 module ProcessOut {
-  /**
-   * ProcessOut Native APM class for handling phone input with country code selection
-   */
   export class NativeApmPhoneWithCountryInput implements INativeApmInput {
-    /**
-     * Native APM country code select element
-     * @type {HTMLSelectElement}
-     */
-    countrySelectElement: HTMLSelectElement
+    private processOut: ProcessOut
+    private readonly countrySelectElement: HTMLSelectElement
+    private readonly phoneNumberInputElement: HTMLInputElement
+    private readonly errorMessageElement: HTMLElement
+    private readonly inputLabel: HTMLElement
+    private readonly theme: NativeApmThemeConfigType
+    private readonly flagDisplayElement: HTMLElement
+    private readonly selectWrapper: HTMLElement
+    private readonly chevronElement: HTMLElement
+    private phoneInputContainer: HTMLElement
 
-    /**
-     * Native APM phone prefix input element (auto-populated from country selection)
-     * @type {HTMLInputElement}
-     */
-    phonePrefixInputElement: HTMLInputElement
+    readonly inputData: NativeApmInputData
 
-    /**
-     * Native APM phone number input element
-     * @type {HTMLInputElement}
-     */
-    phoneNumberInputElement: HTMLInputElement
+    private static readonly PHONE_NUMBER_REGEX = /^[0-9]{7,15}$/
+    private static readonly DEFAULT_MAX_LENGTH = 15
 
-    /**
-     * Native APM input data
-     * @type {NativeApmInputData}
-     */
-    inputData: NativeApmInputData
-
-    /**
-     * Native APM error message element
-     * @type {HTMLElement}
-     */
-    errorMessageElement: HTMLElement
-
-    /**
-     * Native APM input label element
-     * @type {HTMLElement}
-     */
-    inputLabel: HTMLElement
-
-    /**
-     * Native APM phone input container element
-     * @type {HTMLElement}
-     */
-    phoneInputContainer: HTMLElement
-
-    /**
-     * Theme of the Native APM form
-     * @type {NativeApmThemeConfigType}
-     */
-    theme: NativeApmThemeConfigType
-
-    /**
-     * Phone number regex for validation
-     */
-    phoneNumberRegex = /^[0-9]{7,15}$/
-
-    /**
-     * Native APM Input constructor
-     */
     constructor(
+      processOut: ProcessOut,
       inputData: NativeApmInputData,
       theme: NativeApmThemeConfigType,
       prefilledValue?: string,
     ) {
+      this.processOut = processOut
       this.theme = theme
       this.inputData = inputData
       this.countrySelectElement = this.createCountrySelectElement()
-      this.phonePrefixInputElement = this.createPhonePrefixInputElement()
       this.phoneNumberInputElement = this.createPhoneNumberInputElement(prefilledValue)
       this.inputLabel = this.createInputLabel()
       this.errorMessageElement = this.createErrorMessageElement()
+      this.flagDisplayElement = this.createFlagDisplayElement()
+      this.selectWrapper = this.createSelectWrapper()
+      this.chevronElement = this.createChevronElement()
     }
 
-    /**
-     * This function returns the input element
-     */
     public getInputElement() {
-      const inputWrapper = document.createElement("div")
-      inputWrapper.setAttribute("class", "native-apm-phone-with-country-input-wrapper")
+      this.phoneInputContainer = this.createPhoneInputContainer()
+      const inputWrapper = this.createInputWrapper()
+      const countrySelectContainer = this.createCountrySelectContainer()
 
-      const phoneInputContainer = document.createElement("div")
-      phoneInputContainer.setAttribute("class", "native-apm-phone-input-container")
-      this.phoneInputContainer = phoneInputContainer
-
-      const countrySelectContainer = document.createElement("div")
-      countrySelectContainer.setAttribute("class", "native-apm-country-select-container")
-
-      const phoneInputsContainer = document.createElement("div")
-      phoneInputsContainer.setAttribute("class", "native-apm-phone-inputs-container")
-
-      StylesUtils.styleElement(inputWrapper, this.theme.form.inputs.wrapper)
-
-      StylesUtils.styleElement(
-        this.countrySelectElement,
-        this.theme.form.inputs.phoneWithCountry.countrySelect,
-      )
-
-      StylesUtils.styleElement(
-        this.phonePrefixInputElement,
-        this.theme.form.inputs.phoneWithCountry.phonePrefixInput,
-      )
-
-      StylesUtils.styleElement(
-        this.phoneNumberInputElement,
-        this.theme.form.inputs.phoneWithCountry.phoneNumberInput,
-      )
-
-      StylesUtils.styleElement(
-        phoneInputContainer,
-        this.theme.form.inputs.phoneWithCountry.container,
-      )
-
-      StylesUtils.styleElement(
-        countrySelectContainer,
-        this.theme.form.inputs.phoneWithCountry.countrySelectContainer,
-      )
-
-      StylesUtils.styleElement(
-        phoneInputsContainer,
-        this.theme.form.inputs.phoneWithCountry.phoneInputsContainer,
-      )
-
-      // Initially hide the prefix input and set phone input to full width
-      this.phonePrefixInputElement.style.display = "none"
-      this.updatePhoneInputLayout()
-
-      // Set up accessibility features
-      this.setupAccessibility()
-
-      this.countrySelectElement.addEventListener("change", () => this.handleCountrySelection())
-
-      countrySelectContainer.appendChild(this.countrySelectElement)
-      phoneInputsContainer.appendChild(this.phonePrefixInputElement)
-      phoneInputsContainer.appendChild(this.phoneNumberInputElement)
-
-      phoneInputContainer.appendChild(countrySelectContainer)
-      phoneInputContainer.appendChild(phoneInputsContainer)
-
-      inputWrapper.appendChild(this.inputLabel)
-      inputWrapper.appendChild(phoneInputContainer)
-      inputWrapper.appendChild(this.errorMessageElement)
+      this.applyStyles(inputWrapper, countrySelectContainer)
+      this.setAccessibilityAttributes()
+      this.setupFocusEventListeners()
+      this.setupKeyboardNavigation()
+      this.setupEventListeners()
+      this.assembleElements(inputWrapper, countrySelectContainer)
+      this.initializeFlagDisplay()
 
       return inputWrapper
     }
 
-    /**
-     * This function handles country selection and populates phone prefix
-     */
-    private handleCountrySelection() {
+    private initializeFlagDisplay() {
+      const phoneValue = this.phoneNumberInputElement.value
+
+      if (phoneValue) {
+        const detectedCountry = this.detectCountry(phoneValue)
+
+        this.updateCountrySelect(detectedCountry)
+      } else {
+        this.updateFlagDisplay(null)
+      }
+    }
+
+    private createInputWrapper() {
+      const wrapper = document.createElement("div")
+
+      wrapper.className = "native-apm-phone-with-country-input-wrapper"
+
+      return wrapper
+    }
+
+    private createPhoneInputContainer() {
+      const container = document.createElement("div")
+
+      container.className = "native-apm-phone-input-container"
+
+      return container
+    }
+
+    private createCountrySelectContainer() {
+      const container = document.createElement("div")
+
+      container.className = "native-apm-country-select-container"
+
+      return container
+    }
+
+    private applyStyles(inputWrapper: HTMLElement, countrySelectContainer: HTMLElement) {
+      const inputsStyles = this.theme.form.inputs
+
+      StylesUtils.styleElement(inputWrapper, inputsStyles.wrapper)
+
+      StylesUtils.styleElement(
+        this.countrySelectElement,
+        inputsStyles.phoneWithCountry.countrySelect,
+      )
+
+      StylesUtils.styleElement(
+        this.phoneNumberInputElement,
+        inputsStyles.phoneWithCountry.phoneNumberInput,
+      )
+
+      StylesUtils.styleElement(this.phoneInputContainer, inputsStyles.phoneWithCountry.container)
+
+      StylesUtils.styleElement(
+        countrySelectContainer,
+        inputsStyles.phoneWithCountry.countrySelectContainer,
+      )
+
+      StylesUtils.styleElement(this.selectWrapper, inputsStyles.phoneWithCountry.selectWrapper)
+
+      StylesUtils.styleElement(this.flagDisplayElement, inputsStyles.phoneWithCountry.flagDisplay)
+
+      const flagImg = this.flagDisplayElement.querySelector(".native-apm-flag-image") as HTMLElement
+
+      const flagText = this.flagDisplayElement.querySelector(
+        ".native-apm-flag-default-text",
+      ) as HTMLElement
+
+      if (flagImg) {
+        StylesUtils.styleElement(flagImg, inputsStyles.phoneWithCountry.flagImageHidden)
+      }
+
+      if (flagText) {
+        StylesUtils.styleElement(flagText, inputsStyles.phoneWithCountry.flagDefaultTextVisible)
+      }
+
+      StylesUtils.styleElement(this.chevronElement, inputsStyles.phoneWithCountry.selectChevron)
+    }
+
+    private setupEventListeners() {
+      this.phoneNumberInputElement.addEventListener("input", () => {
+        this.handlePhoneNumberInput()
+      })
+
+      this.countrySelectElement.addEventListener("change", () => {
+        this.handleCountryChange()
+      })
+    }
+
+    private handleCountryChange() {
       const selectedCountryCode = this.countrySelectElement.value
 
       if (selectedCountryCode) {
-        this.phonePrefixInputElement.value = `(${selectedCountryCode})`
-        this.phonePrefixInputElement.style.display = "block"
-
-        this.updatePhoneInputLayout()
-        this.updatePrefixInputWidth()
-
-        // Focus on phone number input after country selection
-        this.phoneNumberInputElement.focus()
+        this.applySelectedCountry(selectedCountryCode)
       } else {
-        this.phonePrefixInputElement.value = ""
-        this.phonePrefixInputElement.style.display = "none"
-        this.updatePhoneInputLayout()
+        this.clearCountrySelection()
       }
 
       this.resetErrorMessage()
+      this.phoneNumberInputElement.focus()
     }
 
-    /**
-     * This function updates the phone input layout based on whether prefix is shown
-     */
-    private updatePhoneInputLayout() {
-      const prefixVisible = this.phonePrefixInputElement.style.display !== "none"
+    private applySelectedCountry(countryCode: string) {
+      const countryData = COUNTRY_CODE_TO_PHONE_PREFIX[countryCode]
+      const prefix = countryData && countryData.prefix ? countryData.prefix : ""
 
-      if (prefixVisible) {
-        // Show prefix and phone number inputs side by side
-        this.phoneNumberInputElement.style.width = "100%"
+      // Apply the prefix of country after user manually selects the country
+      this.phoneNumberInputElement.value = prefix.replace(/[^+\d]/g, "")
+      this.updateFlagDisplay(countryCode)
+    }
 
-        // Hide placeholder when prefix is visible (country is selected)
-        this.phoneNumberInputElement.removeAttribute("placeholder")
-      } else {
-        // Show only phone number input with full width and placeholder
-        this.phoneNumberInputElement.style.width = "100%"
-        this.phoneNumberInputElement.setAttribute(
-          "placeholder",
-          TextUtils.getText("phoneNumberPlaceholder") || "Phone number",
-        )
+    private clearCountrySelection() {
+      this.phoneNumberInputElement.value = ""
+      this.updateFlagDisplay("")
+    }
+
+    private assembleElements(inputWrapper: HTMLElement, countrySelectContainer: HTMLElement) {
+      this.selectWrapper.appendChild(this.countrySelectElement)
+      this.selectWrapper.appendChild(this.flagDisplayElement)
+      this.selectWrapper.appendChild(this.chevronElement)
+
+      countrySelectContainer.appendChild(this.selectWrapper)
+      this.phoneInputContainer.appendChild(countrySelectContainer)
+      this.phoneInputContainer.appendChild(this.phoneNumberInputElement)
+
+      inputWrapper.appendChild(this.inputLabel)
+      inputWrapper.appendChild(this.phoneInputContainer)
+      inputWrapper.appendChild(this.errorMessageElement)
+    }
+
+    private handlePhoneNumberInput() {
+      // Prepend plus if user starts typing with a number
+      let phoneNumber = this.phoneNumberInputElement.value
+      phoneNumber = this.autoPrependPlusIfNeeded(phoneNumber)
+
+      this.processPhoneNumberInput(phoneNumber)
+      this.resetErrorMessage()
+    }
+
+    private autoPrependPlusIfNeeded(phoneNumber: string) {
+      if (phoneNumber.length === 1 && phoneNumber !== "+") {
+        const updatedNumber = "+" + phoneNumber
+
+        this.phoneNumberInputElement.value = updatedNumber
+
+        return updatedNumber
+      }
+
+      return phoneNumber
+    }
+
+    private processPhoneNumberInput(phoneNumber: string) {
+      const detectedCountry = this.detectCountry(phoneNumber)
+      this.updateCountrySelect(detectedCountry)
+
+      const maxLength = this.getMaxLengthForCountry(detectedCountry)
+      this.limitInputLength(phoneNumber, maxLength)
+    }
+
+    private detectCountry(phoneNumber: string) {
+      if (phoneNumber.indexOf("+") === 0) {
+        const detectedByPrefix = this.detectCountryByPrefix(phoneNumber)
+
+        if (detectedByPrefix) {
+          return detectedByPrefix
+        }
+      }
+
+      return this.detectCountryWithLibphonenumber(phoneNumber)
+    }
+
+    private detectCountryByPrefix(phoneNumber: string) {
+      const prefixMap = this.buildPrefixMap()
+      let bestMatch = { prefix: "", countries: [] as string[] }
+
+      Object.keys(prefixMap).forEach(function (prefix) {
+        if (phoneNumber.indexOf(prefix) === 0 && prefix.length > bestMatch.prefix.length) {
+          bestMatch = { prefix: prefix, countries: prefixMap[prefix] }
+        }
+      })
+
+      return bestMatch.countries.length > 0 ? bestMatch.countries[0] : null
+    }
+
+    private buildPrefixMap(): { [prefix: string]: string[] } {
+      const prefixMap: { [prefix: string]: string[] } = {}
+
+      Object.keys(COUNTRY_CODE_TO_PHONE_PREFIX).forEach(function (countryCode) {
+        const prefix = COUNTRY_CODE_TO_PHONE_PREFIX[countryCode].prefix
+
+        prefixMap[prefix] = prefixMap[prefix] || []
+        prefixMap[prefix].push(countryCode)
+      })
+
+      return prefixMap
+    }
+
+    private detectCountryWithLibphonenumber(phoneNumber: string) {
+      const libphonenumber = window && window.globalThis ? window.globalThis.libphonenumber : null
+
+      if (!libphonenumber || phoneNumber.length <= 1) {
+        return null
+      }
+
+      try {
+        const parsed = libphonenumber.parsePhoneNumber(phoneNumber)
+
+        return parsed?.country || null
+      } catch {
+        return null
       }
     }
 
-    /**
-     * This function updates the prefix input width based on its content
-     */
-    private updatePrefixInputWidth() {
-      const prefixValue = this.phonePrefixInputElement.value
+    private updateCountrySelect(detectedCountry: string | null) {
+      if (!detectedCountry) {
+        this.countrySelectElement.selectedIndex = 0
+        this.updateFlagDisplay("")
 
-      if (prefixValue) {
-        // Calculate width based on character count (approximate)
-        const charCount = prefixValue.length
-        this.phonePrefixInputElement.style.width = `${charCount}ch`
+        return
+      }
+
+      const options = Array.from(this.countrySelectElement.options)
+      options.forEach((option, index) => {
+        if (option.value === detectedCountry) {
+          this.countrySelectElement.selectedIndex = index
+          this.updateFlagDisplay(detectedCountry)
+        }
+      })
+    }
+
+    private getMaxLengthForCountry(detectedCountry: string | null) {
+      const libphonenumber = window.globalThis.libphonenumber
+
+      if (!detectedCountry) {
+        return NativeApmPhoneWithCountryInput.DEFAULT_MAX_LENGTH
+      }
+
+      if (!libphonenumber) {
+        return NativeApmPhoneWithCountryInput.DEFAULT_MAX_LENGTH
+      }
+
+      try {
+        const metadata = libphonenumber.getMetadata()
+        const countryMeta = metadata.countries[detectedCountry]
+
+        return countryMeta && countryMeta[2]
+          ? Math.max(...countryMeta[2])
+          : NativeApmPhoneWithCountryInput.DEFAULT_MAX_LENGTH
+      } catch {
+        return NativeApmPhoneWithCountryInput.DEFAULT_MAX_LENGTH
       }
     }
 
-    /**
-     * This function sets up accessibility features for the phone input
-     */
-    private setupAccessibility() {
-      // Make the container focusable and add ARIA attributes
+    private limitInputLength(phoneNumber: string, maxLength: number) {
+      const sanitized = this.sanitizePhoneNumber(phoneNumber)
+      const limited = this.applyLengthLimit(sanitized, maxLength)
+
+      if (limited !== phoneNumber) {
+        this.phoneNumberInputElement.value = limited
+      }
+    }
+
+    private sanitizePhoneNumber(phoneNumber: string) {
+      return phoneNumber[0] === "+"
+        ? "+" + phoneNumber.slice(1).replace(/[^\d-]/g, "")
+        : phoneNumber.replace(/[^\d-]/g, "")
+    }
+
+    private applyLengthLimit(phoneNumber: string, maxLength: number) {
+      if (phoneNumber[0] !== "+") {
+        return phoneNumber
+      }
+
+      const prefixMatch = phoneNumber.match(/^\+\d+/)
+      const prefixLength = prefixMatch ? prefixMatch[0].length : 1
+
+      const prefix = phoneNumber.slice(0, prefixLength)
+      const number = phoneNumber.slice(prefixLength, prefixLength + maxLength)
+
+      return prefix + number
+    }
+
+    private setAccessibilityAttributes() {
+      const { key } = this.inputData
+
       this.phoneInputContainer.setAttribute("tabindex", "0")
       this.phoneInputContainer.setAttribute("role", "group")
-      this.phoneInputContainer.setAttribute("aria-labelledby", `${this.inputData.key}_label`)
-      this.phoneInputContainer.setAttribute("aria-describedby", `${this.inputData.key}_error`)
-
-      // Add focus event listeners to all input elements
-      this.countrySelectElement.addEventListener("focus", () => this.handleInputFocus())
-      this.phonePrefixInputElement.addEventListener("focus", () => this.handleInputFocus())
-      this.phoneNumberInputElement.addEventListener("focus", () => this.handleInputFocus())
-
-      // Add blur event listeners to all input elements
-      this.countrySelectElement.addEventListener("blur", () => this.handleInputBlur())
-      this.phonePrefixInputElement.addEventListener("blur", () => this.handleInputBlur())
-      this.phoneNumberInputElement.addEventListener("blur", () => this.handleInputBlur())
-
-      // Add keyboard navigation to the container
-      this.phoneInputContainer.addEventListener("keydown", event =>
-        this.handleContainerKeyDown(event),
-      )
+      this.phoneInputContainer.setAttribute("aria-labelledby", key + "_label")
+      this.phoneInputContainer.setAttribute("aria-describedby", key + "_error")
     }
 
-    /**
-     * This function handles focus events on any input within the phone input group
-     */
+    private setupFocusEventListeners() {
+      const elements = [this.countrySelectElement, this.phoneNumberInputElement]
+
+      elements.forEach(element => {
+        element.addEventListener("focus", () => {
+          this.handleInputFocus()
+        })
+
+        element.addEventListener("blur", () => {
+          this.handleInputBlur()
+        })
+      })
+    }
+
+    private setupKeyboardNavigation() {
+      this.phoneInputContainer.addEventListener("keydown", event => {
+        this.handleContainerKeyDown(event)
+      })
+    }
+
     private handleInputFocus() {
-      // Add focused styles to the container
       StylesUtils.styleElement(
         this.phoneInputContainer,
         this.theme.form.inputs.phoneWithCountry.containerFocused,
       )
 
-      // Update ARIA attributes to indicate focus
       this.phoneInputContainer.setAttribute("aria-expanded", "true")
     }
 
-    /**
-     * This function handles blur events on any input within the phone input group
-     */
     private handleInputBlur() {
-      // Check if any child element is still focused
-      const activeElement = document.activeElement
-
-      const isAnyChildFocused =
-        activeElement === this.countrySelectElement ||
-        activeElement === this.phonePrefixInputElement ||
-        activeElement === this.phoneNumberInputElement ||
-        activeElement === this.phoneInputContainer
-
-      if (!isAnyChildFocused) {
-        // Remove focused styles from the container
+      if (!this.isAnyChildFocused()) {
         StylesUtils.styleElement(
           this.phoneInputContainer,
           this.theme.form.inputs.phoneWithCountry.container,
         )
 
-        // Update ARIA attributes
         this.phoneInputContainer.setAttribute("aria-expanded", "false")
       }
     }
 
-    /**
-     * This function handles keyboard navigation within the container
-     */
+    private isAnyChildFocused() {
+      const activeElement = document.activeElement
+
+      const focusableElements = [
+        this.countrySelectElement,
+        this.phoneNumberInputElement,
+        this.phoneInputContainer,
+      ]
+
+      let focusedElement = null
+
+      focusableElements.forEach(function (element) {
+        if (element === activeElement) {
+          focusedElement = element
+        }
+      })
+
+      return !!focusedElement
+    }
+
     private handleContainerKeyDown(event: KeyboardEvent) {
-      switch (event.key) {
-        case "Enter":
-          // Focus the country select when container is activated
-          event.preventDefault()
-          this.countrySelectElement.focus()
-          break
-        case "Tab":
-          // Allow normal tab navigation
-          break
-        default:
-          // For other keys, focus the phone number input
-          if (!this.phoneNumberInputElement.matches(":focus")) {
-            this.phoneNumberInputElement.focus()
-          }
-          break
+      if (event.key === "Enter") {
+        event.preventDefault()
+        this.countrySelectElement.focus()
+        return
+      }
+
+      if (event.key !== "Tab" && !this.phoneNumberInputElement.matches(":focus")) {
+        this.phoneNumberInputElement.focus()
       }
     }
 
-    /**
-     * This function validates the input
-     */
     public validate() {
-      const isRequiredPassed = this.inputData.required
-        ? this.phoneNumberInputElement.value.length > 0
-        : true
+      const validationResults = {
+        required: this.validateRequired(),
+        phone: this.validatePhoneNumber(),
+        country: this.validateCountrySelection(),
+      }
 
-      const isPhoneValid =
-        this.phoneNumberInputElement.value.length > 0
-          ? this.phoneNumberRegex.test(this.phoneNumberInputElement.value.replace(/\s/g, ""))
-          : true
+      this.handleValidationErrors(validationResults)
 
-      const isCountrySelected = this.countrySelectElement.value.length > 0
-      const isPrefixValid = this.phonePrefixInputElement.value.length > 0
+      return validationResults.required && validationResults.phone && validationResults.country
+    }
 
-      if (!(isRequiredPassed && isPhoneValid)) {
+    private handleValidationErrors(results: {
+      required: boolean
+      phone: boolean
+      country: boolean
+    }) {
+      if (!results.required || !results.phone) {
         this.setErrorMessage()
       }
 
-      if (!isCountrySelected) {
+      if (!results.country) {
         this.setErrorMessage(TextUtils.getText("invalidCountryCode") || "Invalid country code")
       }
-
-      return isRequiredPassed && isPhoneValid && isCountrySelected && isPrefixValid
     }
 
-    /**
-     * This function returns value of the input
-     */
-    public getValue() {
-      const phonePrefix =
-        this.phonePrefixInputElement.value && this.phonePrefixInputElement.value.length > 0
-          ? this.phonePrefixInputElement.value.replace(/[()]/g, "")
-          : ""
+    private validateRequired() {
+      return !this.inputData.required || this.phoneNumberInputElement.value.length > 0
+    }
 
-      const phoneNumber =
-        this.phoneNumberInputElement.value && this.phoneNumberInputElement.value.length > 0
-          ? this.phoneNumberInputElement.value.replace(/\s/g, "")
-          : ""
+    private validatePhoneNumber() {
+      const phoneValue = this.phoneNumberInputElement.value
 
-      return {
-        [this.inputData.key]: `${phonePrefix}${phoneNumber}`,
+      if (!phoneValue) {
+        return true
+      }
+
+      return this.validateWithLibphonenumber(phoneValue) ?? this.validateWithRegex(phoneValue)
+    }
+
+    private validateWithLibphonenumber(phoneValue: string) {
+      const libphonenumber = window.globalThis.libphonenumber
+
+      if (!libphonenumber) {
+        return null
+      }
+
+      try {
+        const parsed = libphonenumber.parsePhoneNumber(phoneValue)
+
+        return parsed.isValid()
+      } catch {
+        return false
       }
     }
 
-    /**
-     * This function returns the selected country code
-     */
+    private validateWithRegex(phoneValue: string) {
+      return NativeApmPhoneWithCountryInput.PHONE_NUMBER_REGEX.test(phoneValue.replace(/\s/g, ""))
+    }
+
+    private validateCountrySelection() {
+      return this.countrySelectElement.value.length > 0
+    }
+
+    public getValue(): { [key: string]: string } {
+      const phoneValue = this.getFormattedPhoneNumber()
+
+      return { [this.inputData.key]: phoneValue }
+    }
+
+    private getFormattedPhoneNumber() {
+      const libphonenumber = window.globalThis.libphonenumber
+      const phoneValue = this.phoneNumberInputElement.value
+
+      if (!libphonenumber || !phoneValue) {
+        return phoneValue
+      }
+
+      try {
+        const parsed = libphonenumber.parsePhoneNumber(phoneValue)
+
+        return parsed.number
+      } catch {
+        return phoneValue
+      }
+    }
+
     public getCountryCode() {
       return this.countrySelectElement.value
     }
 
-    /**
-     * This function returns the phone number
-     */
     public getPhoneNumber() {
       return this.phoneNumberInputElement.value
     }
 
-    /**
-     * This function creates country select element
-     */
     private createCountrySelectElement() {
       const select = document.createElement("select")
 
-      select.setAttribute("class", "native-apm-country-select")
-      select.setAttribute("name", `${this.inputData.key}_country_code`)
-      select.setAttribute("id", `${this.inputData.key}_country_code`)
-      select.setAttribute("aria-label", "Select country code")
-
-      const defaultOption = document.createElement("option")
-      defaultOption.value = ""
-      defaultOption.textContent = TextUtils.getText("selectCountryPlaceholder") || "Select country"
-      defaultOption.disabled = true
-      defaultOption.selected = true
-      select.appendChild(defaultOption)
-
-      // Add country options using country names as display text and country codes as values
-      Object.keys(COUNTRY_CODE_TO_PHONE_PREFIX).forEach(countryCode => {
-        const country = COUNTRY_CODE_TO_PHONE_PREFIX[countryCode]
-
-        if (country) {
-          const option = document.createElement("option")
-          option.value = country.prefix
-          option.textContent = country.name
-          select.appendChild(option)
-        }
-      })
-
-      select.addEventListener("change", this.resetErrorMessage.bind(this))
+      this.setCountrySelectAttributes(select)
+      this.addDefaultOption(select)
+      this.addCountryOptions(select)
 
       StylesUtils.styleElement(select, this.theme.form.inputs.select)
 
       return select
     }
 
-    /**
-     * This function creates phone prefix input element
-     */
-    private createPhonePrefixInputElement() {
-      const input = document.createElement("input")
+    private setCountrySelectAttributes(select: HTMLSelectElement) {
+      const { key } = this.inputData
 
-      input.setAttribute("class", "native-apm-phone-prefix-input")
-      input.setAttribute("name", `${this.inputData.key}_prefix`)
-      input.setAttribute("id", `${this.inputData.key}_prefix`)
-      input.setAttribute("type", "tel")
-      input.setAttribute("readonly", "readonly")
-      input.setAttribute("maxlength", "8")
-      input.setAttribute("aria-label", "Phone country code prefix")
-      input.setAttribute("aria-readonly", "true")
-
-      StylesUtils.styleElement(input, this.theme.form.inputs.text)
-
-      return input
+      select.className = "native-apm-country-select"
+      select.name = key + "_country_code"
+      select.id = key + "_country_code"
+      select.setAttribute("aria-label", "Select country code")
     }
 
-    /**
-     * This function creates phone number input element
-     */
+    private addDefaultOption(select: HTMLSelectElement) {
+      const defaultOption = document.createElement("option")
+
+      defaultOption.value = ""
+      defaultOption.disabled = false
+      defaultOption.selected = true
+
+      select.appendChild(defaultOption)
+    }
+
+    private addCountryOptions(select: HTMLSelectElement) {
+      Object.keys(COUNTRY_CODE_TO_PHONE_PREFIX).forEach(countryCode => {
+        const country = COUNTRY_CODE_TO_PHONE_PREFIX[countryCode]
+
+        if (country) {
+          const option = this.createCountryOption(countryCode, country)
+          select.appendChild(option)
+        }
+      })
+    }
+
+    private createCountryOption(countryCode: string, country: { prefix: string; name: string }) {
+      const option = document.createElement("option")
+
+      option.value = countryCode
+      option.textContent = country.name
+
+      return option
+    }
+
     private createPhoneNumberInputElement(prefilledValue?: string) {
       const input = document.createElement("input")
 
-      input.setAttribute("class", "native-apm-phone-number-input")
-      input.setAttribute("name", this.inputData.key)
-      input.setAttribute("id", this.inputData.key)
-      input.setAttribute("type", "tel")
-      input.setAttribute("maxlength", "15")
-      input.setAttribute("aria-label", "Phone number")
-      input.setAttribute(
-        "placeholder",
-        TextUtils.getText("phoneNumberPlaceholder") || "Phone number",
-      )
-
-      if (prefilledValue) {
-        input.value = prefilledValue
-      }
-
-      input.addEventListener("keypress", this.resetErrorMessage.bind(this))
-      input.addEventListener("input", this.resetErrorMessage.bind(this))
-
-      // Handle placeholder visibility when input changes
-      input.addEventListener("input", () => {
-        const prefixVisible = this.phonePrefixInputElement.style.display !== "none"
-
-        if (prefixVisible) {
-          // When prefix is visible (country selected), always hide placeholder
-          input.removeAttribute("placeholder")
-        }
-      })
+      this.setPhoneInputAttributes(input)
+      this.setPhoneInputValue(input, prefilledValue)
+      this.setupPhoneInputEventListeners(input)
 
       StylesUtils.styleElement(input, this.theme.form.inputs.text)
 
       return input
     }
 
-    /**
-     * This function creates error message element
-     */
-    private createErrorMessageElement() {
-      const errorMessageElement = document.createElement("span")
+    private setPhoneInputAttributes(input: HTMLInputElement) {
+      const { key } = this.inputData
 
-      errorMessageElement.setAttribute("class", "native-apm-input-error")
-      errorMessageElement.setAttribute("id", `${this.inputData.key}_error`)
-
-      StylesUtils.styleElement(errorMessageElement, this.theme.form.errors)
-
-      return errorMessageElement
+      input.className = "native-apm-phone-number-input"
+      input.name = key
+      input.id = key
+      input.type = "tel"
+      input.maxLength = 15
+      input.setAttribute("aria-label", "Phone number")
+      input.placeholder = TextUtils.getText("phoneNumberPlaceholder") || "Phone number"
     }
 
-    /**
-     * This function creates input label element
-     */
+    private setPhoneInputValue(input: HTMLInputElement, prefilledValue?: string) {
+      if (prefilledValue) {
+        input.value = prefilledValue
+      }
+    }
+
+    private setupPhoneInputEventListeners(input: HTMLInputElement) {
+      const resetErrorHandler = () => {
+        this.resetErrorMessage()
+      }
+
+      input.addEventListener("keypress", resetErrorHandler)
+      input.addEventListener("input", resetErrorHandler)
+      input.addEventListener("keydown", event => {
+        this.handleKeyDown(event)
+      })
+      input.addEventListener("paste", event => {
+        this.handlePaste(event)
+      })
+    }
+
+    private handleKeyDown(event: KeyboardEvent) {
+      const allowedKeys = [
+        "Backspace",
+        "Delete",
+        "Tab",
+        "Escape",
+        "Enter",
+        "Home",
+        "End",
+        "ArrowLeft",
+        "ArrowRight",
+        "ArrowUp",
+        "ArrowDown",
+      ]
+
+      const isAllowedKey = allowedKeys.indexOf(event.key) !== -1
+      const isValidInput = event.key === "+" || /^[0-9]$/.test(event.key)
+
+      if (!isAllowedKey && !isValidInput) {
+        event.preventDefault()
+      }
+    }
+
+    private handlePaste(event: ClipboardEvent) {
+      event.preventDefault()
+
+      const clipboardData =
+        event.clipboardData && event.clipboardData.getData
+          ? event.clipboardData.getData("text")
+          : ""
+
+      const filteredData = clipboardData.replace(/[^+0-9]/g, "")
+
+      const input = event.target as HTMLInputElement
+      const start = input.selectionStart || 0
+      const end = input.selectionEnd || 0
+      const currentValue = input.value
+
+      const newValue = currentValue.slice(0, start) + filteredData + currentValue.slice(end)
+      input.value = newValue
+
+      const newCursorPosition = start + filteredData.length
+
+      input.setSelectionRange(newCursorPosition, newCursorPosition)
+      input.dispatchEvent(new Event("input", { bubbles: true }))
+    }
+
+    private createErrorMessageElement() {
+      const errorElement = document.createElement("span")
+      const { key } = this.inputData
+
+      errorElement.className = "native-apm-input-error"
+      errorElement.id = key + "_error"
+
+      StylesUtils.styleElement(errorElement, this.theme.form.errors)
+
+      return errorElement
+    }
+
     private createInputLabel() {
       const label = document.createElement("label")
+      const { key, display_name, required } = this.inputData
 
-      label.setAttribute("class", "native-apm-input-label")
-      label.setAttribute("for", this.inputData.key)
-      label.setAttribute("id", `${this.inputData.key}_label`)
+      label.className = "native-apm-input-label"
+      label.setAttribute("for", key)
+      label.id = key + "_label"
+      label.textContent = display_name || TextUtils.getText("phoneNumberLabel") || "Phone Number"
 
-      label.textContent =
-        this.inputData.display_name || TextUtils.getText("phoneNumberLabel") || "Phone Number"
-
-      if (this.inputData.required) {
-        const requiredStar = this.createRequiredStar()
-        label.appendChild(requiredStar)
+      if (required) {
+        label.appendChild(this.createRequiredStar())
       }
 
       StylesUtils.styleElement(label, this.theme.form.labels)
@@ -489,9 +683,6 @@ module ProcessOut {
       return label
     }
 
-    /**
-     * This function creates required star element for label in required inputs
-     */
     private createRequiredStar() {
       const requiredStar = document.createElement("span")
       requiredStar.textContent = "*"
@@ -501,21 +692,99 @@ module ProcessOut {
       return requiredStar
     }
 
-    /**
-     * This function resets error message
-     */
     private resetErrorMessage() {
-      if (this.errorMessageElement.textContent.length) {
+      if (this.errorMessageElement.textContent) {
         this.errorMessageElement.textContent = ""
       }
     }
 
-    /**
-     * This function sets error message
-     */
     public setErrorMessage(message?: string) {
       this.errorMessageElement.textContent =
         message || TextUtils.getText("invalidPhoneNumber") || "Invalid phone number"
+    }
+
+    private createFlagDisplayElement() {
+      const flagContainer = document.createElement("div")
+      flagContainer.className = "native-apm-flag-display"
+
+      const flagImg = document.createElement("img")
+      flagImg.className = "native-apm-flag-image"
+      flagImg.alt = "Country flag"
+
+      const defaultText = document.createElement("span")
+      defaultText.className = "native-apm-flag-default-text"
+
+      flagContainer.appendChild(flagImg)
+      flagContainer.appendChild(defaultText)
+
+      return flagContainer
+    }
+
+    private createSelectWrapper() {
+      const wrapper = document.createElement("div")
+      wrapper.className = "native-apm-select-wrapper"
+
+      // Trigger the select dropdown by simulating a click
+      wrapper.addEventListener("click", () => {
+        this.countrySelectElement.focus()
+
+        if (this.countrySelectElement.click) {
+          this.countrySelectElement.click()
+        }
+      })
+
+      return wrapper
+    }
+
+    private createChevronElement() {
+      const chevron = document.createElement("div")
+
+      chevron.className = "native-apm-select-chevron"
+
+      return chevron
+    }
+
+    private updateFlagDisplay(countryCode: string | null) {
+      const flagImg = this.flagDisplayElement.querySelector(
+        ".native-apm-flag-image",
+      ) as HTMLImageElement
+
+      const defaultText = this.flagDisplayElement.querySelector(
+        ".native-apm-flag-default-text",
+      ) as HTMLElement
+
+      if (countryCode) {
+        this.showCountryFlag(flagImg, defaultText, countryCode)
+      } else {
+        this.showDefaultFlag(flagImg, defaultText)
+      }
+    }
+
+    private showCountryFlag(
+      flagImg: HTMLImageElement,
+      defaultText: HTMLElement,
+      countryCode: string,
+    ) {
+      flagImg.src = this.processOut.endpoint(
+        "js",
+        "images/countries/" + countryCode.toLowerCase() + ".png",
+      )
+
+      StylesUtils.styleElement(flagImg, this.theme.form.inputs.phoneWithCountry.flagImageVisible)
+
+      StylesUtils.styleElement(
+        defaultText,
+        this.theme.form.inputs.phoneWithCountry.flagDefaultTextHidden,
+      )
+    }
+
+    private showDefaultFlag(flagImg: HTMLImageElement, defaultText: HTMLElement) {
+      StylesUtils.styleElement(flagImg, this.theme.form.inputs.phoneWithCountry.flagImageHidden)
+
+      StylesUtils.styleElement(
+        defaultText,
+        this.theme.form.inputs.phoneWithCountry.flagDefaultTextVisible,
+      )
     }
   }
 }

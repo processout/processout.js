@@ -35,15 +35,18 @@ module ProcessOut {
      * @type {INativeApmInput}
      */
     inputInstance: INativeApmInput
+    processOut: ProcessOut
 
     /**
      * Native APM Input constructor
      */
     constructor(
+      processOut: ProcessOut,
       inputData: NativeApmInputData,
       theme: NativeApmThemeConfigType,
       prefilledValue?: string,
     ) {
+      this.processOut = processOut
       this.inputInstance = this.createInputElement(inputData, theme, prefilledValue)
     }
 
@@ -87,7 +90,12 @@ module ProcessOut {
             return new NativeApmTextInput(inputData, theme, prefilledValue)
           }
         case "phone":
-          return new NativeApmPhoneWithCountryInput(inputData, theme, prefilledValue)
+          return new NativeApmPhoneWithCountryInput(
+            this.processOut,
+            inputData,
+            theme,
+            prefilledValue,
+          )
 
         case "single_select":
         case "single-select":
