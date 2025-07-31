@@ -767,7 +767,7 @@ module ProcessOut {
     ) {
       flagImg.src = this.processOut.endpoint(
         "js",
-        "images/countries/" + countryCode.toLowerCase() + ".png",
+        "/images/countries/" + countryCode.toLowerCase() + ".png",
       )
 
       StylesUtils.styleElement(flagImg, this.theme.form.inputs.phoneWithCountry.flagImageVisible)
