@@ -58,7 +58,7 @@ module ProcessOut {
 
       this.processOutInstance.apiRequest(
         "GET",
-        `invoices/${this.paymentConfig.invoiceId}?expand=transaction`,
+        `invoices/${this.paymentConfig.invoiceId}?expand=payment_methods&expand=transaction`,
         {},
         onSuccess.bind(this),
         onError.bind(this),
