@@ -8,6 +8,7 @@
 /// <reference path="card.ts" />
 /// <reference path="cardfield.ts" />
 /// <reference path="cardform.ts" />
+/// <reference path="iindetails.ts" />
 /// <reference path="translator.ts" />
 /// <reference path="exception.ts" />
 /// <reference path="processout.ts" />

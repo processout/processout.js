@@ -521,6 +521,7 @@ module ProcessOut {
 
             window.addEventListener("message", function (event) {
                 var data = Message.parseEvent(event);
+                console.log("CardField tokenize response - data:", data);
                 if (data.messageID != id)
                     return;
                 if (data.action != "tokenize")
@@ -595,6 +596,19 @@ module ProcessOut {
                 default:
                     return Translator.translateMessage("cardfield.title")
             }
+        }
+
+        /**
+         * getIINDetails retrieves the IIN details using the IINDetails class
+         * @param {Callback} success
+         * @param {Callback} error
+         * @return {Promise<IINDetailsResponse>} Promise that resolves to the IIN details response
+         */
+        public getIINDetails(success: (data: IINDetailsResponse) => void,
+                            error: (err: Exception) => void): Promise<IINDetailsResponse> {
+            // Create an instance of IINDetails and delegate to it
+            const iinDetails = new IINDetails(this.instance);
+            return iinDetails.getIINDetails("", success, error);
         }
     }
 }

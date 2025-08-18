@@ -11,6 +11,7 @@ interface Window {
 interface apiRequestOptions {
   isLegacy?: boolean
   clientSecret?: string
+  basicAuth?: boolean
 }
 
 /**
@@ -302,6 +303,7 @@ module ProcessOut {
 
       method = method.toLowerCase()
 
+      const basicAuth = options && options.basicAuth !== undefined ? options.basicAuth : true
       const isLegacy = options && options.isLegacy !== undefined ? options.isLegacy : true
       const clientSecret =
         options && options.clientSecret !== undefined ? options.clientSecret : null
@@ -319,7 +321,7 @@ module ProcessOut {
 
       if (SCRIPT_VERSION) customHeaders["ProcessOut-JS-Version"] = SCRIPT_VERSION
 
-      if (this.projectID) headers["Authorization"] = `Basic ${btoa(this.projectID + ":")}`
+      if (this.projectID && basicAuth) headers["Authorization"] = `Basic ${btoa(this.projectID + ":")}`
 
       // We need the data to at least be an empty object
       if (!data) data = {}
@@ -551,6 +553,60 @@ module ProcessOut {
     }
 
     /**
+     * getIINDetails retrieves the IIN details
+     * for a given card form or card number. The IIN is truncated to 6 digits
+     * for lookup. If a CardForm is provided, attempts to extract the card number
+     * from the form's number field.
+     * @param  {CardForm | string} cardFormOrNumber
+     * @param  {callback} success
+     * @param  {callback} error
+     * @return {Promise<IINDetailsResponse>} Promise that resolves to the IIN details response containing card_information and success
+     */
+    public getIINDetails(
+      cardFormOrNumber: CardForm | string,
+      success: (data: IINDetailsResponse) => void,
+      error: (err: Exception) => void,
+    ): Promise<IINDetailsResponse> {
+      if (cardFormOrNumber instanceof CardForm)
+        return this.getIINDetailsForm(<CardForm>cardFormOrNumber, success, error)
+
+      return this.getIINDetailsString(<string>cardFormOrNumber, success, error)
+    }
+
+    /**
+     * getIINDetailsForm retrieves the IIN details using the given form to
+     * fetch the card number value
+     * @param  {CardForm} form
+     * @param  {callback} success
+     * @param  {callback} error
+     * @return {Promise<IINDetailsResponse>} Promise that resolves to the IIN details response
+     */
+    protected getIINDetailsForm(
+      form: CardForm,
+      success: (data: IINDetailsResponse) => void,
+      error: (err: Exception) => void,
+    ): Promise<IINDetailsResponse> {
+      return form.getIINDetails(success, error);
+    }
+
+    /**
+     * getIINDetailsString retrieves the IIN details for the given card number string
+     * @param  {string}   cardNumber
+     * @param  {callback} success
+     * @param  {callback} error
+     * @return {Promise<IINDetailsResponse>} Promise that resolves to the IIN details response
+     */
+    protected getIINDetailsString(
+      cardNumber: string,
+      success: (data: IINDetailsResponse) => void,
+      error: (err: Exception) => void,
+    ): Promise<IINDetailsResponse> {
+      // Create an instance of IINDetails and delegate to it
+      const iinDetails = new IINDetails(this);
+      return iinDetails.getIINDetails(cardNumber, success, error);
+    }
+
+    /**
      * tokenizePaymentToken takes the payment token payload
      * and encodes in base64. Then it creates a ProcessOut
      * token that can be sent to your server and used to charge your
@@ -696,6 +752,7 @@ module ProcessOut {
       success: (token: string, card: Card) => void,
       error: (err: Exception) => void,
     ): void {
+      console.log("tokenizeForm response - form:", form, "data:", data);
       form.validate(
         function () {
           form.tokenize(data, success, error)

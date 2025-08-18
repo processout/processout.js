@@ -25,8 +25,19 @@
             data-processout-placeholder="CVC"
           ></div>
         </div>
-        <button type="submit" class="submit-button">Pay</button>
-        <div className="form-messages">
+        <!-- Combo Card Types Section -->
+        <div id="combo-card-types" style="display: none; margin-top: 20px;">
+          <h3>Combo Card Types</h3>
+          <div id="combo-card-radio-group" style="margin-top: 10px;">
+            <!-- Radio buttons will be dynamically added here -->
+          </div>
+        </div>
+        <div class="form-input-group">
+          <button type="submit" class="submit-button">
+            Pay
+          </button>
+        </div>
+        <div class="form-messages">
           <div id="errors"></div>
           <div id="success"></div>
         </div>
@@ -36,7 +47,7 @@
     <script>
       document.addEventListener("DOMContentLoaded", function () {
         // You need to replace these values with your own
-        const projectId = "test-proj_qEi1u5BwoYcZb6mOMKDWIm4mpqKCq6bN"
+        const projectId = "proj_2ra13ORom2dWhiL6DUgMTdmJAwnOW6Ym"
         const invoiceId = "iv_5pKzE0HKcubbPLklZ7iAHvN2LThuzx8j"
 
         const client = new ProcessOut.ProcessOut(projectId)
@@ -53,6 +64,67 @@
             },
           },
           function (form) {
+            // Test with a dummy card number string
+            const dummyCardNumber = "4242424242424242";
+            console.log("Testing getIINDetails with dummy number:", dummyCardNumber);
+            client.getIINDetails(dummyCardNumber, function (response) {
+              console.log("IIN Details Response with dummy number:", response)
+              
+              // Handle combo card types if available
+              if (response.card_information && response.card_information.combo_card_types) {
+                console.log("displayingggg")
+                displayComboCardTypes(response.card_information.combo_card_types);
+              }
+            }, function (err) {
+              console.log("IIN Details Error with dummy number:", err)
+            })
+
+            // For testing: Always display dummy combo card types
+            const dummyComboTypes = ["prepaid", "debit"];
+            displayComboCardTypes(dummyComboTypes);
+
+            // Function to display combo card types
+            function displayComboCardTypes(comboTypes) {
+              const comboSection = document.getElementById("combo-card-types");
+              const comboRadioGroup = document.getElementById("combo-card-radio-group");
+              
+              // Clear existing radio buttons
+              comboRadioGroup.innerHTML = "";
+              
+              // Add radio buttons for each combo card type
+              comboTypes.forEach(function(type) {
+                const radioDiv = document.createElement("div");
+                radioDiv.style.marginBottom = "10px";
+                
+                const radio = document.createElement("input");
+                radio.type = "radio";
+                radio.name = "combo_card_type"; // Group all radio buttons
+                radio.value = type;
+                radio.id = `combo-card-${type}`;
+                
+                const label = document.createElement("label");
+                label.htmlFor = `combo-card-${type}`;
+                label.textContent = type.charAt(0).toUpperCase() + type.slice(1); // Capitalize first letter
+                label.style.marginLeft = "8px";
+                label.style.cursor = "pointer";
+                
+                radioDiv.appendChild(radio);
+                radioDiv.appendChild(label);
+                comboRadioGroup.appendChild(radioDiv);
+              });
+              
+              // Show the section
+              comboSection.style.display = "block";
+              
+              console.log("Combo card types displayed:", comboTypes);
+            }
+
+            // Function to get the selected combo card type
+            function getSelectedComboCardType() {
+              const selectedRadio = document.querySelector('input[name="combo_card_type"]:checked');
+              return selectedRadio ? selectedRadio.value : null;
+            }
+
             form.getNumberField().on("focus", function (e) {
               document.getElementById("errors").innerHTML = ""
             })
@@ -68,11 +140,16 @@
             form.addEventListener("submit", function (e) {
               e.preventDefault()
 
+              // Get the selected combo card type
+              const selectedComboType = getSelectedComboCardType();
+              console.log("Selected combo card type:", selectedComboType);
+
               client.tokenize(
                 form,
                 {
                   name: document.getElementById("card-form-name").value,
                   zip: "10018",
+                  preferred_card_type: selectedComboType // Pass the selected combo card type
                 },
                 function (token) {
                   console.log("Tokenization Success", token)

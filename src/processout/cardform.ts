@@ -355,5 +355,23 @@ module ProcessOut {
 
             this.cvc.refreshCVC(cardUID, success, error);
         }
+
+        /**
+         * getIINDetails retrieves the IIN details using the number field
+         * and calls the success callback with the IIN details when successful.
+         * If an error arises, the error callback is called
+         * @param {Callback} success
+         * @param {Callback} error
+         * @return {Promise<IINDetailsResponse>} Promise that resolves to the IIN details response
+         */
+        public getIINDetails(success: (data: IINDetailsResponse) => void,
+                            error: (err: Exception) => void): Promise<IINDetailsResponse> {
+
+            if (!this.number)
+                error(new Exception("processout-js.wrong-type-for-action", 
+                    "getIINDetails was called but the form has no number field initialized."));
+
+            return this.number.getIINDetails(success, error);
+        }
     }
 }
