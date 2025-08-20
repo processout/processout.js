@@ -1633,16 +1633,11 @@ module ProcessOut {
       const iin = cardNumber.substring(0, 6)
       const apiEndpoint = `iins/${iin}`
       
-      console.log("🔍 getCardInformation called with card number:", cardNumber)
-      console.log("📡 Calling API endpoint:", apiEndpoint)
-      console.log("🌐 Full URL will be:", this.endpoint("api", "/" + apiEndpoint))
-      
       this.apiRequest(
         "GET",
         apiEndpoint,
         {},
         function (data: any, req: XMLHttpRequest, e: Event): void {
-          console.log("✅ API Response received:", data)
           if (!data.success) {
             error(new Exception("request.validation.error"))
             return
@@ -1651,7 +1646,6 @@ module ProcessOut {
           success(data)
         },
         function (req: XMLHttpRequest, e: Event, errorCode: ApiRequestError): void {
-          console.log("❌ API Error:", errorCode)
           error(new Exception(errorCode))
         },
       )

@@ -55,26 +55,11 @@
           function (form) {
             form.getNumberField().on("input", function (e) {
               if (e.card_number_length == 6) {
-                console.log(e)
-                
-                // Call getCardInformation with hardcoded IIN for testing
-                const testIIN = "424242"
-                console.log("🎯 Card IIN detected (hardcoded for testing):", testIIN)
                 client.getCardInformation(
-                  testIIN,
+                  e.card_iin,
                   function(cardInfo) {
-                    console.log("✅ Card Information retrieved:", cardInfo)
-                    
-                    // Set default combo card types for testing
-                    if (!cardInfo.combo_card_types || !Array.isArray(cardInfo.combo_card_types) || cardInfo.combo_card_types.length === 0) {
-                      cardInfo.combo_card_types = ["credit", "debit"]
-                      console.log("🔄 Setting default combo card types for testing:", cardInfo.combo_card_types)
-                    }
-                    
                     // Check for combo card types and display radio buttons if they exist
                     if (cardInfo.combo_card_types && Array.isArray(cardInfo.combo_card_types) && cardInfo.combo_card_types.length > 0) {
-                      console.log("🔄 Combo card types detected:", cardInfo.combo_card_types)
-                      
                       // Create radio button group
                       const radioGroup = document.createElement('div')
                       radioGroup.className = 'combo-card-types'
@@ -99,19 +84,16 @@
                       radioButtons.forEach(radio => {
                         radio.addEventListener('change', function() {
                           window.preferred_card_type = this.value
-                          console.log("🎯 User selected card type:", window.preferred_card_type)
+                          console.log("User selected card type:", window.preferred_card_type)
                         })
                       })
                       
                       // Set initial value
                       window.preferred_card_type = null
-                      console.log("🎯 Initial card type set to:", window.preferred_card_type)
-                      
-                      console.log("✅ Radio buttons added for combo card types")
                     }
                   },
                   function(err) {
-                    console.log("❌ Card Information Error:", err)
+                    console.log("Something went wrong", err)
                   }
                 )
               }
