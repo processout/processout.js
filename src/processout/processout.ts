@@ -1689,6 +1689,7 @@ module ProcessOut {
         set_default: options.set_default,
         incremental: options.incremental,
         preferred_scheme: options.preferred_scheme,
+        preferred_card_type: options.preferred_card_type,
       }
       payload = this.injectDeviceData(payload)
 
