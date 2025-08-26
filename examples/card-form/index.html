@@ -53,6 +53,55 @@
             },
           },
           function (form) {
+            let preferredCardType = null;
+            form.getNumberField().on("input", function (e) {
+              if (e.card_number_length == 6) {
+                client.getCardInformation(
+                  e.card_iin,
+                  function(cardInfo) {
+                    // Check for combo card types and display radio buttons if they exist
+                    if (cardInfo.combo_card_types && Array.isArray(cardInfo.combo_card_types) && cardInfo.combo_card_types.length > 0) {
+                      // Create radio button group
+                      const radioGroup = document.createElement('div')
+                      radioGroup.className = 'combo-card-types'
+                      radioGroup.style.cssText = 'margin: 15px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background: #f9f9f9;'
+                      
+                      radioGroup.innerHTML = `
+                        <h4 style="margin: 0 0 10px 0; color: #333;">Select Card Type:</h4>
+                        ${cardInfo.combo_card_types.map((type, index) => `
+                          <label style="display: block; margin: 8px 0; cursor: pointer;">
+                            <input type="radio" name="cardType" value="${type}" ${index === 0 ? 'checked' : ''} style="margin-right: 8px;">
+                            <span style="text-transform: capitalize; font-weight: 500;">${type}</span>
+                          </label>
+                        `).join('')}
+                      `
+                      
+                      // Insert before the Pay button
+                      const payButton = document.querySelector('.submit-button')
+                      payButton.parentNode.insertBefore(radioGroup, payButton)
+                      
+                      // Add event listener to track selection changes
+                      const radioButtons = radioGroup.querySelectorAll('input[name="cardType"]')
+                      radioButtons.forEach(radio => {
+                        radio.addEventListener('change', function() {
+                          preferredCardType = this.value
+                          console.log("User selected card type:", preferredCardType)
+                        })
+                      })
+                      
+                      // Set initial value
+                      preferredCardType = null
+                    }
+                  },
+                  function(err) {
+                    console.log("Something went wrong", err)
+                  }
+                )
+              }
+    
+              document.getElementById("errors").innerHTML = ""
+            })
+
             form.getNumberField().on("focus", function (e) {
               document.getElementById("errors").innerHTML = ""
             })
@@ -73,6 +122,7 @@
                 {
                   name: document.getElementById("card-form-name").value,
                   zip: "10018",
+                  preferred_card_type: preferredCardType
                 },
                 function (token) {
                   console.log("Tokenization Success", token)

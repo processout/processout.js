@@ -13,6 +13,17 @@ interface apiRequestOptions {
   clientSecret?: string
 }
 
+interface CardInformation {
+  bank_name: string
+  brand: string
+  category: string
+  co_scheme: string | null
+  combo_card_types: string | null
+  country: string
+  scheme: string
+  type: string
+}
+
 /**
  * ProcessOut module/namespace
  */
@@ -1602,6 +1613,44 @@ module ProcessOut {
       )
     }
 
+    /**
+     * Get card information from IIN (Issuer Identification Number)
+     * @param  {string} cardNumber
+     * @param  {callback} success
+     * @param  {callback} error
+     * @return {void}
+     */
+    public getCardInformation(
+      cardNumber: string,
+      success: (cardInfo: CardInformation) => void,
+      error: (err: Exception) => void,
+    ): void {
+      if (!cardNumber || cardNumber.length < 6) {
+        error(new Exception("card.invalid-number"))
+        return
+      }
+
+      const iin = cardNumber.substring(0, 6)
+      const apiEndpoint = `iins/${iin}`
+      
+      this.apiRequest(
+        "GET",
+        apiEndpoint,
+        {},
+        function (data: any, req: XMLHttpRequest, e: Event): void {
+          if (!data.success) {
+            error(new Exception("request.validation.error"))
+            return
+          }
+
+          success(data)
+        },
+        function (req: XMLHttpRequest, e: Event, errorCode: ApiRequestError): void {
+          error(new Exception(errorCode))
+        },
+      )
+    }
+
     protected handleCardActions(
       method: string,
       endpoint: string,
@@ -1640,6 +1689,7 @@ module ProcessOut {
         set_default: options.set_default,
         incremental: options.incremental,
         preferred_scheme: options.preferred_scheme,
+        preferred_card_type: options.preferred_card_type,
       }
       payload = this.injectDeviceData(payload)
 
