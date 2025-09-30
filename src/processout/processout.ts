@@ -1680,6 +1680,7 @@ module ProcessOut {
         allow_fallback_to_sale: options.allow_fallback_to_sale,
         capture_amount: options.capture_amount,
         auto_capture_at: options.auto_capture_at,
+        capture_type: options.capture_type,
         source: source,
 
         enable_three_d_s_2: true,
