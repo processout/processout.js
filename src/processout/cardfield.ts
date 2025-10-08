@@ -44,6 +44,7 @@ module ProcessOut {
 
     export class CardFieldStyle {
         public color:                string;
+        public backgroundColor:      string;
         public fontFamily:           string;
         public loadCustomFontFamily: string;
         public fontSize:             string;
@@ -60,6 +61,10 @@ module ProcessOut {
         public transition:           string;
         public height:               string;
         public direction:            string;
+        public schemeSelection?:      {
+            selectedColor?: string;
+            hoverColor?: string;
+        };
 
         // pseudo class/elements:
         // :hover
