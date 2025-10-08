@@ -443,36 +443,54 @@ module ProcessOut {
       }
     }
 
-    /**
-     * SetupForm setups a new form and embed the credit cards fields
-     * to it, and returns the created card form
-     * @param {HTMLElement} form
-     * @param {callback} success
-     * @param {callback} error
-     * @return {CardForm}
-     */
     public setupForm(
       form: HTMLElement,
-      options: CardFieldOptions | ((form: CardForm) => void),
-      success: ((form: CardForm) => void) | ((err: Exception) => void),
-      error?: (err: Exception) => void,
+      options: CardFieldOptions,
+      onSuccess: (form: CardForm) => void,
+      onError: (err: Exception) => void
+    ): CardForm;
+
+    public setupForm(
+      form: HTMLElement,
+      onSuccess: (form: CardForm) => void,
+      onError: (err: Exception) => void
+    ): CardForm;
+
+    public setupForm(
+      form: HTMLElement,
+      optionsOrOnSuccess: CardFieldOptions | ((form: CardForm) => void),
+      onSuccessOrOnError: ((form: CardForm) => void) | ((err: Exception) => void),
+      onError?: (err: Exception) => void
     ): CardForm {
-      if (!this.projectID)
+      if (!this.projectID) {
         throw new Exception(
           "default",
           "You must instanciate ProcessOut.js with a valid project ID in order to use ProcessOut's hosted forms.",
         )
+      }
 
-      if (!form)
+      if (!form) {
         throw new Exception(
           "default",
           "The provided form element wasn't set. Make sure to provide setupForm with a valid form element.",
         )
+      }
 
-      if (typeof options == "function")
-        return new CardForm(this, form).setup(new CardFieldOptions(""), <any>options, <any>success)
+      let options: CardFieldOptions;
+      let onSuccess: ((form: CardForm) => void);
 
-      return new CardForm(this, form).setup(options, <any>success, error)
+      if (typeof optionsOrOnSuccess === 'function') {
+        // This is the setupForm(element, onSuccess, onError) signature
+        options = new CardFieldOptions("");
+        onSuccess = optionsOrOnSuccess;
+        onError = onSuccessOrOnError as (err: Exception) => void;
+      } else {
+        // This is the setupForm(element, options, onSuccess, onError) signature
+        options = optionsOrOnSuccess;
+        onSuccess = onSuccessOrOnError as (form: CardForm) => void;
+      }
+
+      return new CardForm(this, form).setup(options, onSuccess, onError)
     }
 
     /**

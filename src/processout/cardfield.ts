@@ -6,12 +6,13 @@
 module ProcessOut {
 
     export class CardFieldValue {
-        public number:      string = null;
-        public expiryMonth: number = null;
-        public expiryYear:  number = null;
-        public cvc:         string = null;
-        public name:        string = null;
-        public metadata:    string = null;
+        public number:          string = null;
+        public selected_scheme: string | null = null;
+        public expiryMonth:     number = null;
+        public expiryYear:      number = null;
+        public cvc:             string = null;
+        public name:            string = null;
+        public metadata:        string = null;
     }
 
     export class CardFieldOptions {
@@ -21,6 +22,8 @@ module ProcessOut {
         public requireCVC:  boolean;
         public expiryAutoNext: boolean = true;
         public cardNumberAutoNext: boolean = true;
+        public enableCardSchemeSelection: boolean = false;
+        public preferredSchemes: string[] = null;
 
         public constructor(type: string) {
             this.type = type;
@@ -32,6 +35,8 @@ module ProcessOut {
             if (o.requireCVC != null) this.requireCVC  = o.requireCVC;
             if (o.expiryAutoNext !== undefined && o.expiryAutoNext !== null) this.expiryAutoNext = o.expiryAutoNext; 
             if (o.cardNumberAutoNext !== undefined && o.cardNumberAutoNext !== null) this.cardNumberAutoNext = o.cardNumberAutoNext; 
+            if (o.enableCardSchemeSelection !== undefined && o.enableCardSchemeSelection !== null) this.enableCardSchemeSelection = o.enableCardSchemeSelection; 
+            if (o.preferredSchemes !== undefined && o.preferredSchemes !== null) this.preferredSchemes = o.preferredSchemes; 
 
             return this;
         }
