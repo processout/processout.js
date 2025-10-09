@@ -200,7 +200,7 @@ module ProcessOut {
          * @param listener 
          * @param useCapture 
          */
-        public addEventListener(type, listener, useCapture) {
+        public addEventListener(type, listener, useCapture = false) {
             return this.element.addEventListener(type, listener, useCapture);
         }
 
@@ -210,7 +210,7 @@ module ProcessOut {
          * @param listener 
          * @param useCapture 
          */
-        public on(type, listener, useCapture) {
+        public on(type, listener, useCapture = false) {
             return this.element.addEventListener(type, listener, useCapture);
         }
 
