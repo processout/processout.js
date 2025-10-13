@@ -6,12 +6,13 @@
 module ProcessOut {
 
     export class CardFieldValue {
-        public number:      string = null;
-        public expiryMonth: number = null;
-        public expiryYear:  number = null;
-        public cvc:         string = null;
-        public name:        string = null;
-        public metadata:    string = null;
+        public number:          string = null;
+        public selected_scheme: string | null = null;
+        public expiryMonth:     number = null;
+        public expiryYear:      number = null;
+        public cvc:             string = null;
+        public name:            string = null;
+        public metadata:        string = null;
     }
 
     export class CardFieldOptions {
@@ -21,6 +22,8 @@ module ProcessOut {
         public requireCVC:  boolean;
         public expiryAutoNext: boolean = true;
         public cardNumberAutoNext: boolean = true;
+        public enableCardSchemeSelection: boolean = false;
+        public preferredSchemes: string[] = null;
 
         public constructor(type: string) {
             this.type = type;
@@ -32,6 +35,8 @@ module ProcessOut {
             if (o.requireCVC != null) this.requireCVC  = o.requireCVC;
             if (o.expiryAutoNext !== undefined && o.expiryAutoNext !== null) this.expiryAutoNext = o.expiryAutoNext; 
             if (o.cardNumberAutoNext !== undefined && o.cardNumberAutoNext !== null) this.cardNumberAutoNext = o.cardNumberAutoNext; 
+            if (o.enableCardSchemeSelection !== undefined && o.enableCardSchemeSelection !== null) this.enableCardSchemeSelection = o.enableCardSchemeSelection; 
+            if (o.preferredSchemes !== undefined && o.preferredSchemes !== null) this.preferredSchemes = o.preferredSchemes; 
 
             return this;
         }
@@ -39,6 +44,7 @@ module ProcessOut {
 
     export class CardFieldStyle {
         public color:                string;
+        public backgroundColor:      string;
         public fontFamily:           string;
         public loadCustomFontFamily: string;
         public fontSize:             string;
@@ -55,6 +61,10 @@ module ProcessOut {
         public transition:           string;
         public height:               string;
         public direction:            string;
+        public schemeSelection?:      {
+            selectedColor?: string;
+            hoverColor?: string;
+        };
 
         // pseudo class/elements:
         // :hover
@@ -205,9 +215,10 @@ module ProcessOut {
          * @param {callback} error
          * @return {void}
          */
-        protected spawn(success: ()                 => void, 
-                        error:   (err:   Exception) => void): void {
-
+        protected spawn(
+            success: () => void, 
+            error:   (err:   Exception) => void
+        ): void {
             var tmp = Math.random().toString(36).substring(7);
             this.uid = `#${tmp}`;
             var endpoint = this.instance.getProcessOutFieldEndpoint(`?r=${tmp}${this.uid}`);
@@ -247,53 +258,63 @@ module ProcessOut {
                 if (errored)
                     return;
 
-                var data = Message.parseEvent(event);
+                try {
+                    var data = Message.parseEvent(event);
 
-                if (data.frameID != this.uid)
-                    return;
-                if (data.namespace != Message.fieldNamespace)
-                    return;
+                    if (data.frameID != this.uid)
+                        return;
+                    if (data.namespace != Message.fieldNamespace)
+                        return;
 
-                // We want to bind our event handler as well
-                this.handlEvent(data);
+                    // We want to bind our event handler as well
+                    this.handlEvent(data);
 
-                // We will first wait for an alive signal from the iframe.
-                // Once we've received it, we will send a setup action,
-                // and the iframe should reply with a ready state
+                    // We will first wait for an alive signal from the iframe.
+                    // Once we've received it, we will send a setup action,
+                    // and the iframe should reply with a ready state
 
-                if (data.action == "alive") {
-                    // The field's iframe is available, let's set it up
-                    this.iframe.contentWindow.postMessage(JSON.stringify({
-                        "namespace": Message.fieldNamespace,
-                        "projectID": this.instance.getProjectID(),
-                        "action":    "setup",
-                        "formID":    this.form.getUID(),
-                        "data":      this.options
-                    }), "*");
-                }
+                    if (data.action == "alive") {
+                        // The field's iframe is available, let's set it up
+                        this.iframe.contentWindow.postMessage(JSON.stringify({
+                            "namespace": Message.fieldNamespace,
+                            "projectID": this.instance.getProjectID(),
+                            "action":    "setup",
+                            "formID":    this.form.getUID(),
+                            "data":      this.options
+                        }), "*");
+                    }
 
-                if (data.action == "ready") {
-                    // It's now ready
-                    this.iframe.style.display = "block";
-                    clearTimeout(iframeError);
-                    success();
+                    if (data.action == "ready") {
+                        // It's now ready
+                        this.iframe.style.display = "block";
+                        clearTimeout(iframeError);
+                        success();
 
-                    // Finally we also want to request for a resize, as some
-                    // browser fail to compute the height of the iframe
-                    // if it isn't displayed yet
-                    this.iframe.contentWindow.postMessage(JSON.stringify({
-                        "namespace": Message.fieldNamespace,
-                        "projectID": this.instance.getProjectID(),
-                        "action":    "resize"
-                    }), "*");
+                        // Finally we also want to request for a resize, as some
+                        // browser fail to compute the height of the iframe
+                        // if it isn't displayed yet
+                        this.iframe.contentWindow.postMessage(JSON.stringify({
+                            "namespace": Message.fieldNamespace,
+                            "projectID": this.instance.getProjectID(),
+                            "action":    "resize"
+                        }), "*");
 
-                    // Hook an event listener for the focus event to focus
-                    // on the input when the user presses tab on older
-                    // browser: otherwise the iframe would get focused, but
-                    // not the field within it (hello IE)
-                    this.iframe.addEventListener("focus", function (event) {
-                        this.focus();
-                    }.bind(this));
+                        // Hook an event listener for the focus event to focus
+                        // on the input when the user presses tab on older
+                        // browser: otherwise the iframe would get focused, but
+                        // not the field within it (hello IE)
+                        this.iframe.addEventListener("focus", function (event) {
+                            this.focus();
+                        }.bind(this));
+                    }
+                } catch (e) {
+                    this.instance.telemetryClient.reportError({
+                        host: "processout-js",
+                        fileName: "cardfield.ts",
+                        lineNumber: 257,
+                        message: e.message,
+                        stack: e.stack,
+                    });
                 }
             }.bind(this));
 
@@ -348,7 +369,7 @@ module ProcessOut {
                 }
                 break;
             case "resize":
-                if (this.options.style.height) {
+                if (this.options.style?.height) {
                     this.iframe.height = this.options.style.height;
                 } else { 
                     this.iframe.height = data.data; 

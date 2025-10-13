@@ -1,0 +1,143 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+    <title>ProcessOut.js Card Form with Built-in Scheme Selection</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h2>Card Form with Built-in Card Scheme Selection</h2>
+      <p style="color: #666; margin-bottom: 20px;">
+        This example uses the built-in <code>enableCardSchemeSelection</code> option to automatically display 
+        card scheme selection UI when combo cards are detected. It also demonstrates the <code>preferredSchemes</code> 
+        option to preselect a preferred card scheme.
+      </p>
+      <div style="background: #f0f0f0; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+        <p style="margin: 0 0 10px 0; font-weight: bold;">Try it:</p>
+        <ul style="margin: 5px 0; padding-left: 20px; color: #666;">
+          <li>Enter a combo card number (e.g., a card that supports multiple schemes)</li>
+          <li>When multiple schemes are detected, clickable buttons will appear below the card field</li>
+          <li>Each button shows the scheme's initials (hover to see full name)</li>
+          <li>"Carte Bancaire" (CB) will be preselected if available (due to preferredSchemes option)</li>
+          <li>Click any button to select a different scheme - it will highlight in blue</li>
+        </ul>
+      </div>
+      <form action="" method="POST" id="card-form">
+        <input type="text" placeholder="John Smith" id="card-form-name" class="form-input" />
+        <div
+          class="form-input"
+          data-processout-input="cc-number"
+          data-processout-placeholder="4242 4242 4242 4242"
+        ></div>
+        <div class="form-input-group">
+          <div
+            class="form-input"
+            data-processout-input="cc-exp"
+            data-processout-placeholder="MM / YY"
+          ></div>
+          <div
+            class="form-input"
+            data-processout-input="cc-cvc"
+            data-processout-placeholder="CVC"
+          ></div>
+        </div>
+        <button type="submit" class="submit-button">Pay</button>
+        <div className="form-messages">
+          <div id="errors"></div>
+          <div id="success"></div>
+        </div>
+      </form>
+    </div>
+    <script src="../../dist/processout.js" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // You need to replace these values with your own
+        const projectId = "test-proj_qEi1u5BwoYcZb6mOMKDWIm4mpqKCq6bN"
+        const invoiceId = "iv_5pKzE0HKcubbPLklZ7iAHvN2LThuzx8j"
+
+        const client = new ProcessOut.ProcessOut(projectId)
+        const formElement = document.getElementById("card-form")
+
+        client.setupForm(
+          formElement,
+          {
+            style: {
+              fontSize: "14px",
+              "::placeholder": {
+                color: "#ababab",
+              },
+            },
+            // Enable built-in card scheme selection
+            enableCardSchemeSelection: true,
+            // Specify preferred schemes in priority order
+            // When combo cards are detected, the first matching scheme will be preselected
+            preferredSchemes: ["carte bancaire", "mastercard", "visa"],
+          },
+          function (form) {
+            // Clear errors on input
+            form.getNumberField().on("input", function (e) {
+              document.getElementById("errors").innerHTML = ""
+            })
+
+            form.getNumberField().on("focus", function (e) {
+              document.getElementById("errors").innerHTML = ""
+            })
+
+            form.getExpiryField().on("focus", function (e) {
+              document.getElementById("errors").innerHTML = ""
+            })
+
+            form.getCVCField().on("focus", function (e) {
+              document.getElementById("errors").innerHTML = ""
+            })
+
+            form.addEventListener("submit", function (e) {
+              e.preventDefault()
+
+              client.tokenize(
+                form,
+                {
+                  name: document.getElementById("card-form-name").value,
+                  zip: "10018",
+                  // Pass the selected card scheme to the tokenization
+                  preferred_card_type: selectedCardScheme
+                },
+                function (token) {
+                  console.log("Tokenization Success", token)
+
+                  client.makeCardPayment(
+                    invoiceId,
+                    token,
+                    {
+                      authorize_only: true,
+                    },
+                    function (iv) {
+                      console.log("Payment Success")
+                      document.getElementById("success").innerHTML = "Payment successful!"
+                      document.getElementById("errors").innerHTML = ""
+                    },
+                    function (err) {
+                      console.log("Payment Error", err)
+                      document.getElementById("errors").innerHTML = "Payment failed: " + err.message
+                    },
+                  )
+                },
+                function (err) {
+                  console.log("Tokenization Error", err)
+                  document.getElementById("errors").innerHTML = "Tokenization failed: " + err.message
+                },
+              )
+
+              return false
+            })
+          },
+          function (err) {
+            console.log("Setup Form Error", err)
+            document.getElementById("errors").innerHTML = "Form setup failed: " + err.message
+          },
+        )
+      })
+    </script>
+  </body>
+</html>
+
