@@ -1694,6 +1694,7 @@ module ProcessOut {
       if (options.gatewayRequestSource) source = options.gatewayRequestSource
 
       var payload = <any>{
+        authenticate_only: options.authenticate_only,
         authorize_only: options.authorize_only,
         allow_fallback_to_sale: options.allow_fallback_to_sale,
         capture_amount: options.capture_amount,
