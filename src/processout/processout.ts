@@ -1690,6 +1690,15 @@ module ProcessOut {
       }
 
       if (!options) options = {}
+      
+      // Validate split_allocations if provided
+      try {
+        this.validateSplitAllocations(options.split_allocations)
+      } catch (validationError) {
+        error(validationError)
+        return
+      }
+      
       let source: string = cardID
       if (options.gatewayRequestSource) source = options.gatewayRequestSource
 
@@ -1710,6 +1719,7 @@ module ProcessOut {
         incremental: options.incremental,
         preferred_scheme: options.preferred_scheme,
         preferred_card_type: options.preferred_card_type,
+        split_allocations: options.split_allocations,
       }
       payload = this.injectDeviceData(payload)
 
@@ -1837,6 +1847,52 @@ module ProcessOut {
         0,
         apiRequestOptions,
       )
+    }
+
+    /**
+     * Validates split_allocations array for proper structure and required fields
+     * @param {any} splitAllocations - The split allocations array to validate
+     * @throws {Exception} - Throws exception if validation fails
+     */
+    private validateSplitAllocations(splitAllocations: any): void {
+      if (!splitAllocations) {
+        return // Optional parameter, no validation needed if not provided
+      }
+
+      if (!Array.isArray(splitAllocations)) {
+        throw new Exception("invalid_request", "split_allocations must be an array")
+      }
+
+      const allowedTypes = ["PURCHASE", "FEE", "VAT", "COMMISSION", "MARKETPLACE", "SHIPPING"]
+      
+      splitAllocations.forEach((allocation: any, index: number) => {
+        if (!allocation || typeof allocation !== "object") {
+          throw new Exception("invalid_request", `split_allocations[${index}] must be an object`)
+        }
+
+        // Check required fields
+        const requiredFields = ["provider_recipient_reference", "type", "amount", "currency"]
+        requiredFields.forEach(field => {
+          if (!allocation[field]) {
+            throw new Exception("invalid_request", `split_allocations[${index}].${field} is required`)
+          }
+        })
+
+        // Validate type field
+        if (allowedTypes.indexOf(allocation.type) === -1) {
+          throw new Exception("invalid_request", `split_allocations[${index}].type must be one of: ${allowedTypes.join(", ")}`)
+        }
+
+        // Validate amount is a valid number string
+        if (typeof allocation.amount !== "string" || isNaN(parseFloat(allocation.amount))) {
+          throw new Exception("invalid_request", `split_allocations[${index}].amount must be a valid number string`)
+        }
+
+        // Validate currency is a string
+        if (typeof allocation.currency !== "string") {
+          throw new Exception("invalid_request", `split_allocations[${index}].currency must be a string`)
+        }
+      })
     }
   }
 }
