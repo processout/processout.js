@@ -364,8 +364,13 @@ module ProcessOut {
             case "event":
                 if (data.data.name in this.handlers) {
                     var handlers = this.handlers[data.data.name];
-                    for (var i = 0; i < handlers.length; i++)
-                        handlers[0](data.data.data);
+                    for (var i = 0; i < handlers.length; i++) {
+                        try {
+                            handlers[0](data.data.data);
+                        } catch (e) {
+                            // ignoring errors that come from the merchant's codebase
+                        }
+                    }
                 }
                 break;
             case "resize":
