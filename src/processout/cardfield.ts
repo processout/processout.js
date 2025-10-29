@@ -185,6 +185,7 @@ module ProcessOut {
             if (!container) {
                 throw new Exception("processout-js.undefined-field", `The card field for the ${options.type} does not exist in the given container.`);
             }
+
             if (container instanceof HTMLInputElement) {
                 throw new Exception("processout-js.invalid-field", `The card field for the ${options.type} must be an input field.`);
             }
@@ -209,6 +210,23 @@ module ProcessOut {
             this.spawn(success, error);
         }
 
+
+        private postMessage(message: any, retries: number = 3, delay: number = 50): void {
+            if (retries <= 0) {
+                throw new Exception("processout-js.field.unavailable", "Tried to locate the iframe content window but failed.");
+            }
+
+            if (!this.iframe || !this.iframe.contentWindow) {
+                setTimeout(() => this.postMessage(message, retries - 1, delay), delay);
+                return;
+            }
+
+            try {
+                this.iframe.contentWindow.postMessage(message, "*");
+            } catch (e) {
+                throw new Exception("processout-js.field.unavailable", "Iframe content window found but failed to post message: " + e.message);
+            }
+        }
         /**
          * Spawn spawns the iframe used to embed the field
          * @param {callback} success
@@ -248,7 +266,9 @@ module ProcessOut {
                     // Firefox from (wrongfully) caching the iframe
                     // content: https://bugzilla.mozilla.org/show_bug.cgi?id=354176          
                     if(navigator.userAgent.match(/firefox|fxios/i)) {
-                        this.iframe.contentWindow.location.replace(endpoint);
+                        if (this.iframe && this.iframe.contentWindow) {
+                            this.iframe.contentWindow.location.replace(endpoint);
+                        }
                     }                                 
                 } catch(e) { /* ... */ }
             }.bind(this);
@@ -274,14 +294,15 @@ module ProcessOut {
                     // and the iframe should reply with a ready state
 
                     if (data.action == "alive") {
+                        
                         // The field's iframe is available, let's set it up
-                        this.iframe.contentWindow.postMessage(JSON.stringify({
+                        this.postMessage(JSON.stringify({
                             "namespace": Message.fieldNamespace,
                             "projectID": this.instance.getProjectID(),
                             "action":    "setup",
                             "formID":    this.form.getUID(),
                             "data":      this.options
-                        }), "*");
+                        }));
                     }
 
                     if (data.action == "ready") {
@@ -293,17 +314,17 @@ module ProcessOut {
                         // Finally we also want to request for a resize, as some
                         // browser fail to compute the height of the iframe
                         // if it isn't displayed yet
-                        this.iframe.contentWindow.postMessage(JSON.stringify({
+                        this.postMessage(JSON.stringify({
                             "namespace": Message.fieldNamespace,
                             "projectID": this.instance.getProjectID(),
                             "action":    "resize"
-                        }), "*");
+                        }));
 
                         // Hook an event listener for the focus event to focus
                         // on the input when the user presses tab on older
                         // browser: otherwise the iframe would get focused, but
                         // not the field within it (hello IE)
-                        this.iframe.addEventListener("focus", function (event) {
+                        this.iframe.addEventListener("focus", function () {
                             this.focus();
                         }.bind(this));
                     }
@@ -364,8 +385,13 @@ module ProcessOut {
             case "event":
                 if (data.data.name in this.handlers) {
                     var handlers = this.handlers[data.data.name];
-                    for (var i = 0; i < handlers.length; i++)
-                        handlers[0](data.data.data);
+                    for (var i = 0; i < handlers.length; i++) {
+                        try {
+                            handlers[0](data.data.data);
+                        } catch (e) {
+                            // ignoring errors that come from the merchant's codebase
+                        }
+                    }
                 }
                 break;
             case "resize":
@@ -399,12 +425,12 @@ module ProcessOut {
                 this.options.style = (<any>Object).assign(
                     this.options.style, options.style);
 
-            this.iframe.contentWindow.postMessage(JSON.stringify({
+            this.postMessage(JSON.stringify({
                 "namespace": Message.fieldNamespace,
                 "projectID": this.instance.getProjectID(),
                 "action":    "update",
                 "data":      this.options
-            }), "*");
+            }));
         }
 
         /**
@@ -419,12 +445,12 @@ module ProcessOut {
                 this.handlers[e] = [];
 
             this.handlers[e].push(h);
-            this.iframe.contentWindow.postMessage(JSON.stringify({
+            this.postMessage(JSON.stringify({
                 "namespace": Message.fieldNamespace,
                 "projectID": this.instance.getProjectID(),
                 "action":    "registerEvent",
                 "data":      e
-            }), "*");
+            }));
         }
 
         /**
@@ -442,12 +468,12 @@ module ProcessOut {
          * @return {void}
          */
         public blur(): void {
-            this.iframe.contentWindow.postMessage(JSON.stringify({
+            this.postMessage(JSON.stringify({
                 "messageID": Math.random().toString(),
                 "namespace": Message.fieldNamespace,
                 "projectID": this.instance.getProjectID(),
                 "action":    "blur"
-            }), "*");
+            }));
         }
 
         /**
@@ -455,12 +481,12 @@ module ProcessOut {
          * @return {void}
          */
         public focus(): void {
-            this.iframe.contentWindow.postMessage(JSON.stringify({
+            this.postMessage(JSON.stringify({
                 "messageID": Math.random().toString(),
                 "namespace": Message.fieldNamespace,
                 "projectID": this.instance.getProjectID(),
                 "action":    "focus"
-            }), "*");
+            }));
         }
 
         /**
@@ -474,12 +500,12 @@ module ProcessOut {
             var id = Math.random().toString();
 
             // Ask the iframe for its value
-            this.iframe.contentWindow.postMessage(JSON.stringify({
+            this.postMessage(JSON.stringify({
                 "messageID": id,
                 "namespace": Message.fieldNamespace,
                 "projectID": this.instance.getProjectID(),
                 "action":    "validate"
-            }), "*");
+            }));
 
             // Our timeout, just in case
             var fetchingTimeout =
@@ -523,7 +549,7 @@ module ProcessOut {
             // Tell our field it should start the tokenization process and
             // expect a response
             var id = Math.random().toString();
-            this.iframe.contentWindow.postMessage(JSON.stringify({
+            this.postMessage(JSON.stringify({
                 "messageID": id,
                 "namespace": Message.fieldNamespace,
                 "projectID": this.instance.getProjectID(),
@@ -532,7 +558,7 @@ module ProcessOut {
                     "fields": fields,
                     "data":   data
                 }
-            }), "*");
+            }));
 
             // Our timeout, just in case
             var fetchingTimeout =
@@ -571,13 +597,13 @@ module ProcessOut {
             // Tell our field it should start the tokenization process and
             // expect a response
             var id = Math.random().toString();
-            this.iframe.contentWindow.postMessage(JSON.stringify({
+            this.postMessage(JSON.stringify({
                 "messageID": id,
                 "namespace": Message.fieldNamespace,
                 "projectID": this.instance.getProjectID(),
                 "action":    "refresh-cvc",
                 "data":      cardUID
-            }), "*");
+            }));
 
             // Our timeout, just in case
             var fetchingTimeout =
