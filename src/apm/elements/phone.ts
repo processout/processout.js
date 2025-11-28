@@ -8,7 +8,7 @@ module ProcessOut {
       name: string,
     }>
     oninput?: FormFieldUpdate,
-    onblur?: (key: string, value: { dialing_code: string, value: string }) => void,
+    onblur?: (key: string, value: { dialing_code: string, number: string }) => void,
     value?: { dialing_code: string, value: string },
   }
 
@@ -46,7 +46,7 @@ module ProcessOut {
 
   const parseCleanNumber = (currentValue: string, dialingCode: string, iso: string) => {
     const phoneUtil = (window as any).libphonenumber.PhoneNumberUtil.getInstance();
-    
+
     try {
       // Try to parse as international number first
       const parsedNumber = phoneUtil.parseAndKeepRawInput(currentValue, iso);
@@ -61,16 +61,16 @@ module ProcessOut {
     // Use StateManager for internal state management
     const { state, setState } = useComponentState({
       dialing_code: value && value.dialing_code || dialing_codes[0] && dialing_codes[0].value || '',
-      value: value && value.value || '',
+      number: value && value.value || '',
       iso: ''
     });
-    
+
     // Load libphonenumber and handle all state initialization in callback
     ContextImpl.context.page.loadScript('libphonenumber', 'https://cdnjs.cloudflare.com/ajax/libs/google-libphonenumber/3.2.42/libphonenumber.min.js', () => {
       let dialingCode = state.dialing_code || dialing_codes[0].value;
-      let phoneNumber = state.value || '';
+      let phoneNumber = state.number || '';
       let iso = state.iso;
-      
+
       // Set ISO code using libphonenumber
       if (!iso) {
         const phoneUtil = (window as any).libphonenumber && (window as any).libphonenumber.PhoneNumberUtil && (window as any).libphonenumber.PhoneNumberUtil.getInstance();
@@ -88,7 +88,7 @@ module ProcessOut {
           iso = dialing_codes.find(item => item.value === state.dialing_code) && dialing_codes.find(item => item.value === state.dialing_code).region_code || '';
         }
       }
-      
+
       // Update the UI if elements are available
       if (phoneRef) {
         phoneRef.value = getFullNumber(dialingCode, phoneNumber);
@@ -100,7 +100,7 @@ module ProcessOut {
       if (dialingCodesRef) {
         dialingCodesRef.value = iso;
       }
-      
+
       // Trigger callback to update form state if there's a value
       if (value) {
         oninput && oninput(name, state, true);
@@ -108,7 +108,7 @@ module ProcessOut {
 
       setState({
         dialing_code: dialingCode,
-        value: phoneNumber,
+        number: phoneNumber,
         iso: iso
       });
     });
@@ -130,7 +130,7 @@ module ProcessOut {
       const cursorPosition = input.selectionStart;
 
       let dialingCode = state.dialing_code;
-      let phoneNumber = state.value;
+      let phoneNumber = state.number;
       let iso = state.iso;
 
       // Helper function to update state and UI when country is detected
@@ -138,39 +138,39 @@ module ProcessOut {
         dialingCode = detectedCountry.dialingCode.value;
         phoneNumber = nationalNumber;
         iso = detectedCountry.region;
-    
+
         // Update the input with formatted value
         const formattedValue = getFullNumber(dialingCode, phoneNumber);
         input.value = formattedValue;
-        
+
         // Update flag image
         const flagImg = input.parentElement.querySelector('img');
         if (flagImg) {
           flagImg.src = `https://flagcdn.com/w80/${iso.toLowerCase()}.jpg`;
           flagImg.alt = `Selected ${detectedCountry.dialingCode.name} dialing code`;
         }
-        
+
         // Update select value
         if (dialingCodesRef) {
           dialingCodesRef.value = iso;
         }
-        
+
         if (label) {
           updateFilledState(input);
         }
-        
+
         // Trigger callback
         oninput && oninput(name, {
           dialing_code: dialingCode,
-          value: phoneNumber,
+          number: phoneNumber,
         });
-        
+
         // Set cursor at end
         input.setSelectionRange(formattedValue.length, formattedValue.length);
 
         setState({
           dialing_code: dialingCode,
-          value: phoneNumber,
+          number: phoneNumber,
           iso: iso
         });
       };
@@ -187,12 +187,12 @@ module ProcessOut {
           const parsedNumber = phoneUtil.parseAndKeepRawInput(valueWithoutCurrentPrefix, '');
           const countryCode = parsedNumber.getCountryCode();
           const nationalNumber = parsedNumber.getNationalNumber().toString();
-          
+
           // Find matching dialing code in our list
-          const matchingDialingCode = dialing_codes.find(code => 
+          const matchingDialingCode = dialing_codes.find(code =>
             code.value === `+${countryCode}`
           );
-          
+
           if (matchingDialingCode) {
             const detectedCountry = {
               dialingCode: matchingDialingCode,
@@ -219,7 +219,7 @@ module ProcessOut {
 
       // Use libphonenumber to properly parse the number
       const cleanNumber = parseCleanNumber(currentValue, dialingCode, iso);
-      
+
       const formattedValue = getFullNumber(dialingCode, cleanNumber);
 
       let newCursorPosition = numberStartIndex;
@@ -247,22 +247,22 @@ module ProcessOut {
         dialingCodesRef.showPicker()
         setState({
           dialing_code: dialingCode,
-          value: phoneNumber,
+          number: phoneNumber,
           iso: iso
         });
         return
       }
 
-      if (state.value !== cleanNumber) {
+      if (state.number !== cleanNumber) {
         phoneNumber = cleanNumber;
         oninput && oninput(name, {
           dialing_code: dialingCode,
-          value: phoneNumber,
+          number: phoneNumber,
         });
       }
       setState({
         dialing_code: dialingCode,
-        value: phoneNumber,
+        number: phoneNumber,
         iso: iso
       });
       input.setSelectionRange(newCursorPosition, newCursorPosition);
@@ -299,19 +299,19 @@ module ProcessOut {
 
     const handleSelectChange = e => {
       const currentValue = (e.target as HTMLSelectElement).value;
-      const cleanNumber = parseCleanNumber(getFullNumber(state.dialing_code, state.value), state.dialing_code, state.iso);
+      const cleanNumber = parseCleanNumber(getFullNumber(state.dialing_code, state.number), state.dialing_code, state.iso);
 
       const newDialingCode = dialing_codes.find(item => item.region_code === currentValue).value;
-      
+
       setState({
         dialing_code: newDialingCode,
         iso: currentValue,
-        value: cleanNumber
+        number: cleanNumber
       });
-      
+
       phoneRef.value = getFullNumber(newDialingCode, cleanNumber);
       phoneRef.focus();
-      oninput && oninput(name, { dialing_code: newDialingCode, value: cleanNumber });
+      oninput && oninput(name, { dialing_code: newDialingCode, number: cleanNumber });
 
       (e.target as HTMLSelectElement).parentElement.querySelector('img').src = `https://flagcdn.com/w80/${currentValue.toLowerCase()}.jpg`;
     }
@@ -349,7 +349,7 @@ module ProcessOut {
     const handleMouseDown = () => {
       focusMethod = 'mouse';
     }
-    
+
     if (!state.dialing_code) {
       return null
     }
@@ -382,7 +382,7 @@ module ProcessOut {
       input({
         type: "tel",
         autocomplete: "tel",
-        value: getFullNumber(state.dialing_code, state.value),
+        value: getFullNumber(state.dialing_code, state.number),
         inputMode: "tel",
         name: `${name}.value`,
         disabled,

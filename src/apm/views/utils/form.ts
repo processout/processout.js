@@ -1,7 +1,7 @@
 module ProcessOut {
   interface PhoneState {
     dialing_code: string
-    value: string
+    number: string
   }
   export interface FormState {
     touched: Record<string, boolean>
@@ -61,7 +61,7 @@ module ProcessOut {
         }
 
         let errors = { ...prevState.form.errors }
-        
+
         if (prevState.form.touched[key]) {
           delete errors[key]
           errors[key] = validateField(prevState, key, value)
@@ -169,7 +169,7 @@ module ProcessOut {
         } else {
           otpType = "text";
         }
-        
+
         input = OTP({
           name: field.key,
           label: field.label,
@@ -192,7 +192,7 @@ module ProcessOut {
           onblur: onBlur(setState),
           errored: !!error,
           disabled: state.loading,
-          value: value as PhoneState,
+          number: value as PhoneState,
         });
         break;
       }
@@ -264,7 +264,7 @@ module ProcessOut {
         className: 'group-boolean'
       }
     }
-    
+
     // Don't group other field types for now
     return null
   }
