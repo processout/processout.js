@@ -1,0 +1,21 @@
+{
+  "project_id": "test-proj_IPW8DgC6yoI2YEUGmmkHERjbuMiGKBdx",
+  "gateways": [
+    {
+      "value": "gway_conf_vupnl08h7hy1jxf3cz5z4dc2lw5py2ve",
+      "name": "ProcessOut"
+    },
+    {
+      "value": "gway_conf_fh67c2llxupjhcqxxbr4cvlfosncdbr7:authorization",
+      "name": "Forage Authorization"
+    },
+    {
+      "value": "gway_conf_fh67c2llxupjhcqxxbr4cvlfosncdbr7:tokenization",
+      "name": "Forage Tokenization"
+    },
+    {
+      "value": "gway_conf_zuo5iyryn390he7fx3rd50twwvhpcvob.adyenblik",
+      "name": "Adyen Blik"
+    }
+  ]
+}
