@@ -32,3 +32,6 @@ node_modules
 
 # Dist files
 dist
+
+# APM test config files
+examples/apm/config.json
