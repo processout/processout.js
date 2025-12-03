@@ -142,9 +142,11 @@ module ProcessOut {
     }
 
     private handleCardPaymentSuccess(invoiceId: string) {
-      this.resetContainerHtml().appendChild(
-        new DynamicCheckoutPaymentSuccessView(this.procesoutInstance, this.paymentConfig).element,
-      )
+      if (this.paymentConfig.showStatusMessage) {
+        this.resetContainerHtml().appendChild(
+          new DynamicCheckoutPaymentSuccessView(this.procesoutInstance, this.paymentConfig).element,
+        )
+      }
 
       DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
         invoiceId,
@@ -153,9 +155,11 @@ module ProcessOut {
     }
 
     private handleCardPaymentError(error) {
-      this.resetContainerHtml().appendChild(
-        new DynamicCheckoutPaymentErrorView(this.procesoutInstance, this.paymentConfig).element,
-      )
+      if (this.paymentConfig.showStatusMessage) {
+        this.resetContainerHtml().appendChild(
+          new DynamicCheckoutPaymentErrorView(this.procesoutInstance, this.paymentConfig).element,
+        )
+      }
 
       DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error)
     }

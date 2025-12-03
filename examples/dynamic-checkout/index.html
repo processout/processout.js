@@ -11,7 +11,7 @@
       document.addEventListener("DOMContentLoaded", function () {
         // You need to replace these values with your own
         const projectId = "test-proj_qEi1u5BwoYcZb6mOMKDWIm4mpqKCq6bN"
-        const invoiceId = "iv_30JJHCq6bN6TX1rV260OFo1oARdK0eQu"
+        const invoiceId = "iv_36LHtCq6bNj5JR3yggvgO4cSjR6XGBNB"
         const clientSecret = ""
 
         const client = new ProcessOut.ProcessOut(projectId)
@@ -21,6 +21,7 @@
           clientSecret,
           capturePayments: false,
           allowFallbackToSale: false,
+          showStatusMessage: false,
           locale: "en",
         })
 
