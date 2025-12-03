@@ -8,6 +8,7 @@ module ProcessOut {
     clientSecret?: string
     capturePayments?: boolean
     allowFallbackToSale?: boolean
+    showStatusMessage?: boolean
   }
 
   export type DynamicCheckoutInternalConfigType = {
@@ -24,10 +25,12 @@ module ProcessOut {
     locale: DynamicCheckoutPublicConfigType["locale"] = "en"
     capturePayments: DynamicCheckoutPublicConfigType["capturePayments"] = false
     allowFallbackToSale: DynamicCheckoutPublicConfigType["allowFallbackToSale"] = false
+    showStatusMessage: DynamicCheckoutPublicConfigType["showStatusMessage"] = true
     invoiceDetails: DynamicCheckoutInternalConfigType["invoiceDetails"]
 
     constructor(config: DynamicCheckoutPublicConfigType) {
       this.setInitialConfig(config)
+      console.log(this.showStatusMessage)
     }
 
     public getConfig(): DynamicCheckoutPublicConfigType & DynamicCheckoutInternalConfigType {
@@ -38,6 +41,7 @@ module ProcessOut {
         invoiceDetails: this.invoiceDetails,
         capturePayments: this.capturePayments,
         allowFallbackToSale: this.allowFallbackToSale,
+        showStatusMessage: this.showStatusMessage,
       }
     }
 
@@ -58,6 +62,12 @@ module ProcessOut {
       this.locale = config.locale || "en"
       this.capturePayments = config.capturePayments || false
       this.allowFallbackToSale = config.allowFallbackToSale || false
+
+      if (config.showStatusMessage !== undefined && config.showStatusMessage !== null) {
+        this.showStatusMessage = config.showStatusMessage
+      } else {
+        this.showStatusMessage = true
+      }
     }
 
     private isValidConfig(config: DynamicCheckoutPublicConfigType) {

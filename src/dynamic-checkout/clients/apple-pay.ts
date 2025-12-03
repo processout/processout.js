@@ -129,10 +129,12 @@ module ProcessOut {
           allow_fallback_to_sale: this.paymentConfig.allowFallbackToSale,
         },
         invoiceId => {
-          getViewContainer().appendChild(
-            new DynamicCheckoutPaymentSuccessView(this.processOutInstance, this.paymentConfig)
-              .element,
-          )
+          if (this.paymentConfig.showStatusMessage) {
+            getViewContainer().appendChild(
+              new DynamicCheckoutPaymentSuccessView(this.processOutInstance, this.paymentConfig)
+                .element,
+            )
+          }
 
           DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
             invoiceId,
@@ -140,10 +142,12 @@ module ProcessOut {
           })
         },
         error => {
-          getViewContainer().appendChild(
-            new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig)
-              .element,
-          )
+          if (this.paymentConfig.showStatusMessage) {
+            getViewContainer().appendChild(
+              new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig)
+                .element,
+            )
+          }
 
           DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error)
         },

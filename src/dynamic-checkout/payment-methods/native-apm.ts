@@ -63,10 +63,12 @@ module ProcessOut {
       })
 
       window.addEventListener(NATIVE_APM_EVENTS.PAYMENT_SUCCESS, () => {
-        this.resetContainerHtml().appendChild(
-          new DynamicCheckoutPaymentSuccessView(this.processOutInstance, this.paymentConfig)
-            .element,
-        )
+        if (this.paymentConfig.showStatusMessage) {
+          this.resetContainerHtml().appendChild(
+            new DynamicCheckoutPaymentSuccessView(this.processOutInstance, this.paymentConfig)
+              .element,
+          )
+        }
 
         DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
           invoiceId: this.paymentConfig.invoiceId,
@@ -75,9 +77,12 @@ module ProcessOut {
       })
 
       window.addEventListener(NATIVE_APM_EVENTS.PAYMENT_ERROR, e => {
-        this.resetContainerHtml().appendChild(
-          new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig).element,
-        )
+        if (this.paymentConfig.showStatusMessage) {
+          this.resetContainerHtml().appendChild(
+            new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig)
+              .element,
+          )
+        }
 
         DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(e)
       })

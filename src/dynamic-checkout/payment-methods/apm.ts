@@ -105,10 +105,12 @@ module ProcessOut {
             paymentToken,
             cardPaymentOptions,
             invoiceId => {
-              this.resetContainerHtml().appendChild(
-                new DynamicCheckoutPaymentSuccessView(this.processOutInstance, this.paymentConfig)
-                  .element,
-              )
+              if (this.paymentConfig.showStatusMessage) {
+                this.resetContainerHtml().appendChild(
+                  new DynamicCheckoutPaymentSuccessView(this.processOutInstance, this.paymentConfig)
+                    .element,
+                )
+              }
 
               DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent(invoiceId)
             },
@@ -174,20 +176,26 @@ module ProcessOut {
                 paymentToken,
                 options,
                 invoiceId => {
-                  this.resetContainerHtml().appendChild(
-                    new DynamicCheckoutPaymentSuccessView(
-                      this.processOutInstance,
-                      this.paymentConfig,
-                    ).element,
-                  )
+                  if (this.paymentConfig.showStatusMessage) {
+                    this.resetContainerHtml().appendChild(
+                      new DynamicCheckoutPaymentSuccessView(
+                        this.processOutInstance,
+                        this.paymentConfig,
+                      ).element,
+                    )
+                  }
 
                   DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent(invoiceId)
                 },
                 error => {
-                  this.resetContainerHtml().appendChild(
-                    new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig)
-                      .element,
-                  )
+                  if (this.paymentConfig.showStatusMessage) {
+                    this.resetContainerHtml().appendChild(
+                      new DynamicCheckoutPaymentErrorView(
+                        this.processOutInstance,
+                        this.paymentConfig,
+                      ).element,
+                    )
+                  }
 
                   DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error)
                 },
@@ -195,10 +203,12 @@ module ProcessOut {
               )
             },
             error => {
-              this.resetContainerHtml().appendChild(
-                new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig)
-                  .element,
-              )
+              if (this.paymentConfig.showStatusMessage) {
+                this.resetContainerHtml().appendChild(
+                  new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig)
+                    .element,
+                )
+              }
 
               DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error)
             },
@@ -207,10 +217,12 @@ module ProcessOut {
           )
         },
         error => {
-          this.resetContainerHtml().appendChild(
-            new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig)
-              .element,
-          )
+          if (this.paymentConfig.showStatusMessage) {
+            this.resetContainerHtml().appendChild(
+              new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig)
+                .element,
+            )
+          }
 
           DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error)
         },
