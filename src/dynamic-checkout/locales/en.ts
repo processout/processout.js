@@ -20,6 +20,7 @@ module ProcessOut {
     "other-payment-methods-header": "Other payment methods",
     "select-payment-method-label": "Select payment method",
     "payment-success-message": "This payment is completed.",
+    "payment-info-message": "We are processing your payment. You can now close this window.",
     "payment-error-generic-message": "We were unable to process your payment.",
     "street1-label": "Address line 1",
     "street2-label": "Address line 2",

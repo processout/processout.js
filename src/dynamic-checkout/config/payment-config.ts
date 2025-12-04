@@ -30,7 +30,6 @@ module ProcessOut {
 
     constructor(config: DynamicCheckoutPublicConfigType) {
       this.setInitialConfig(config)
-      console.log(this.showStatusMessage)
     }
 
     public getConfig(): DynamicCheckoutPublicConfigType & DynamicCheckoutInternalConfigType {

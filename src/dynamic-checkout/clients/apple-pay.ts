@@ -134,6 +134,11 @@ module ProcessOut {
               new DynamicCheckoutPaymentSuccessView(this.processOutInstance, this.paymentConfig)
                 .element,
             )
+          } else {
+            getViewContainer().appendChild(
+              new DynamicCheckoutPaymentInfoView(this.processOutInstance, this.paymentConfig)
+                .element,
+            )
           }
 
           DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
@@ -145,6 +150,11 @@ module ProcessOut {
           if (this.paymentConfig.showStatusMessage) {
             getViewContainer().appendChild(
               new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig)
+                .element,
+            )
+          } else {
+            getViewContainer().appendChild(
+              new DynamicCheckoutPaymentInfoView(this.processOutInstance, this.paymentConfig)
                 .element,
             )
           }

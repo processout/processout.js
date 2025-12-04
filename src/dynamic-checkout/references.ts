@@ -5,6 +5,7 @@
 /// <reference path="config/theme.ts" />
 /// <reference path="views/payment-methods.ts" />
 /// <reference path="views/payment-success.ts" />
+/// <reference path="views/payment-info.ts" />
 /// <reference path="views/invoice-loading.ts" />
 /// <reference path="elements/payment-method-button.ts" />
 /// <reference path="elements/payment-methods-manager.ts" />
