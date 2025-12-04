@@ -125,6 +125,11 @@ module ProcessOut {
                       this.paymentConfig,
                     ).element,
                   )
+                } else {
+                  this.resetContainerHtml().appendChild(
+                    new DynamicCheckoutPaymentInfoView(this.processOutInstance, this.paymentConfig)
+                      .element,
+                  )
                 }
 
                 DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent(invoiceId)
@@ -133,6 +138,11 @@ module ProcessOut {
                 if (this.paymentConfig.showStatusMessage) {
                   this.resetContainerHtml().appendChild(
                     new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig)
+                      .element,
+                  )
+                } else {
+                  this.resetContainerHtml().appendChild(
+                    new DynamicCheckoutPaymentInfoView(this.processOutInstance, this.paymentConfig)
                       .element,
                   )
                 }

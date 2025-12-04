@@ -20,6 +20,7 @@ module ProcessOut {
     "other-payment-methods-header": "Otros métodos de pago",
     "select-payment-method-label": "Seleccionar método de pago",
     "payment-success-message": "Este pago se ha completado.",
+    "payment-info-message": "Estamos procesando su pago. Puede cerrar esta ventana.",
     "payment-error-generic-message": "No pudimos procesar su pago.",
     "street1-label": "Dirección, línea 1",
     "street2-label": "Dirección, línea 2",
