@@ -146,7 +146,10 @@ module ProcessOut {
         this.resetContainerHtml().appendChild(
           new DynamicCheckoutPaymentSuccessView(this.procesoutInstance, this.paymentConfig).element,
         )
-      } else {
+      } else if (
+        !this.paymentConfig.showStatusMessage &&
+        !this.paymentConfig.invoiceDetails.return_url
+      ) {
         this.resetContainerHtml().appendChild(
           new DynamicCheckoutPaymentInfoView(this.processOutInstance, this.paymentConfig).element,
         )
@@ -163,7 +166,10 @@ module ProcessOut {
         this.resetContainerHtml().appendChild(
           new DynamicCheckoutPaymentErrorView(this.procesoutInstance, this.paymentConfig).element,
         )
-      } else {
+      } else if (
+        !this.paymentConfig.showStatusMessage &&
+        !this.paymentConfig.invoiceDetails.return_url
+      ) {
         this.resetContainerHtml().appendChild(
           new DynamicCheckoutPaymentInfoView(this.processOutInstance, this.paymentConfig).element,
         )

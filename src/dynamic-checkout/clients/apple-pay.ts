@@ -134,7 +134,10 @@ module ProcessOut {
               new DynamicCheckoutPaymentSuccessView(this.processOutInstance, this.paymentConfig)
                 .element,
             )
-          } else {
+          } else if (
+            !this.paymentConfig.showStatusMessage &&
+            !this.paymentConfig.invoiceDetails.return_url
+          ) {
             getViewContainer().appendChild(
               new DynamicCheckoutPaymentInfoView(this.processOutInstance, this.paymentConfig)
                 .element,
@@ -152,7 +155,10 @@ module ProcessOut {
               new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig)
                 .element,
             )
-          } else {
+          } else if (
+            !this.paymentConfig.showStatusMessage &&
+            !this.paymentConfig.invoiceDetails.return_url
+          ) {
             getViewContainer().appendChild(
               new DynamicCheckoutPaymentInfoView(this.processOutInstance, this.paymentConfig)
                 .element,
