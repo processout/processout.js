@@ -168,6 +168,24 @@ module ProcessOut {
         protected handlers: { [key: string]: ((e: any) => void)[] } = {} ;
 
         /**
+         * Whether this CardField instance has been destroyed/cleaned up
+         * @var {boolean}
+         */
+        protected destroyed: boolean = false;
+
+        /**
+         * Reference to the message event listener for cleanup
+         * @var {function}
+         */
+        protected messageListener: (event: MessageEvent) => void;
+
+        /**
+         * MutationObserver to detect iframe removal from DOM
+         * @var {MutationObserver}
+         */
+        protected mutationObserver: MutationObserver;
+
+        /**
          * CardField constructor
          * @param {ProcessOut} instance
          * @param {options} CardFieldOptions
@@ -212,6 +230,10 @@ module ProcessOut {
 
 
         private postMessage(message: any, retries: number = 3, delay: number = 50): void {
+            if (this.destroyed) {
+                return;
+            }
+
             if (retries <= 0) {
                 throw new Exception("processout-js.field.unavailable", "Tried to locate the iframe content window but failed.");
             }
@@ -252,12 +274,15 @@ module ProcessOut {
             // Hide the field until it's ready
             this.iframe.style.display = "none";
             this.iframe.height = "14px"; // Default height
+
+            if (typeof(error) !== typeof(Function)) {
+                error = function () {}
+            }
                         
             var errored = false;
             var iframeError = setTimeout(function() {
                 errored = true;
-                if (typeof(error) === typeof(Function))
-                    error(new Exception("processout-js.field.unavailable"));
+                error(new Exception("processout-js.field.unavailable"));
             }, CardField.timeout);
 
             this.iframe.onload = function() {
@@ -273,9 +298,9 @@ module ProcessOut {
                 } catch(e) { /* ... */ }
             }.bind(this);
 
-            // Hook the ok message
-            window.addEventListener("message", function (event) {
-                if (errored)
+            // Hook the ok message - store reference for cleanup
+            this.messageListener = function (event: MessageEvent) {
+                if (errored || this.destroyed)
                     return;
 
                 try {
@@ -336,10 +361,78 @@ module ProcessOut {
                         message: e.message,
                         stack: e.stack,
                     });
+                    error(e)
                 }
-            }.bind(this));
+            }.bind(this);
+            window.addEventListener("message", this.messageListener);
 
             this.el.appendChild(this.iframe);
+
+            // Set up MutationObserver to detect iframe removal and cleanup
+            this.setupUnmountObserver();
+        }
+
+        /**
+         * Sets up a MutationObserver to detect when the iframe is removed from the DOM
+         * and automatically cleans up event listeners to prevent memory leaks and errors
+         * @return {void}
+         */
+        protected setupUnmountObserver(): void {
+            // Check if MutationObserver is available (not in very old browsers)
+            if (typeof MutationObserver === 'undefined') {
+                return;
+            }
+
+            this.mutationObserver = new MutationObserver((mutations) => {
+                for (const mutation of mutations) {
+                    for (const removedNode of Array.from(mutation.removedNodes)) {
+                        // Check if our iframe was removed directly or as part of a parent
+                        if (removedNode === this.iframe || 
+                            (removedNode instanceof Element && removedNode.contains(this.iframe))) {
+                            this.destroy();
+                            return;
+                        }
+                    }
+                }
+            });
+            
+            // Observe the document body for child removals (subtree to catch parent removals)
+            this.mutationObserver.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        }
+
+        /**
+         * Destroys this CardField instance, removing all event listeners
+         * and cleaning up resources. Called automatically when iframe is
+         * removed from DOM, or can be called manually.
+         * @return {void}
+         */
+        public destroy(): void {
+            if (this.destroyed) {
+                return;
+            }
+
+            this.destroyed = true;
+
+            // Remove the message event listener
+            if (this.messageListener) {
+                window.removeEventListener("message", this.messageListener);
+                this.messageListener = null;
+            }
+
+            // Disconnect the MutationObserver
+            if (this.mutationObserver) {
+                this.mutationObserver.disconnect();
+                this.mutationObserver = null;
+            }
+
+            // Clear handlers
+            this.handlers = {};
+
+            // Clear references
+            this.iframe = null;
         }
 
         /**
@@ -425,12 +518,23 @@ module ProcessOut {
                 this.options.style = (<any>Object).assign(
                     this.options.style, options.style);
 
-            this.postMessage(JSON.stringify({
-                "namespace": Message.fieldNamespace,
-                "projectID": this.instance.getProjectID(),
-                "action":    "update",
-                "data":      this.options
-            }));
+            try {
+                this.postMessage(JSON.stringify({
+                    "namespace": Message.fieldNamespace,
+                    "projectID": this.instance.getProjectID(),
+                    "action":    "update",
+                    "data":      this.options
+                }));
+            } catch (err) {
+                this.instance.telemetryClient.reportError({
+                    host: "processout-js",
+                    fileName: "cardfield.ts",
+                    lineNumber: 533,
+                    message: err.message,
+                    stack: err.stack,
+                });
+                throw err;
+            }
         }
 
         /**
@@ -445,12 +549,23 @@ module ProcessOut {
                 this.handlers[e] = [];
 
             this.handlers[e].push(h);
-            this.postMessage(JSON.stringify({
-                "namespace": Message.fieldNamespace,
-                "projectID": this.instance.getProjectID(),
-                "action":    "registerEvent",
-                "data":      e
-            }));
+            try {
+                this.postMessage(JSON.stringify({
+                    "namespace": Message.fieldNamespace,
+                    "projectID": this.instance.getProjectID(),
+                    "action":    "registerEvent",
+                    "data":      e
+                }));
+            } catch (err) {
+                this.instance.telemetryClient.reportError({
+                    host: "processout-js",
+                    fileName: "cardfield.ts",
+                    lineNumber: 563,
+                    message: err.message,
+                    stack: err.stack,
+                });
+                throw err;
+            }
         }
 
         /**
@@ -468,12 +583,23 @@ module ProcessOut {
          * @return {void}
          */
         public blur(): void {
-            this.postMessage(JSON.stringify({
-                "messageID": Math.random().toString(),
-                "namespace": Message.fieldNamespace,
-                "projectID": this.instance.getProjectID(),
-                "action":    "blur"
-            }));
+            try {
+                this.postMessage(JSON.stringify({
+                    "messageID": Math.random().toString(),
+                    "namespace": Message.fieldNamespace,
+                    "projectID": this.instance.getProjectID(),
+                    "action":    "blur"
+                }));
+            } catch (err) {
+                this.instance.telemetryClient.reportError({
+                    host: "processout-js",
+                    fileName: "cardfield.ts",
+                    lineNumber: 596,
+                    message: err.message,
+                    stack: err.stack,
+                });
+                throw err;
+            }
         }
 
         /**
@@ -481,12 +607,23 @@ module ProcessOut {
          * @return {void}
          */
         public focus(): void {
-            this.postMessage(JSON.stringify({
-                "messageID": Math.random().toString(),
-                "namespace": Message.fieldNamespace,
-                "projectID": this.instance.getProjectID(),
-                "action":    "focus"
-            }));
+            try {
+                this.postMessage(JSON.stringify({
+                    "messageID": Math.random().toString(),
+                    "namespace": Message.fieldNamespace,
+                    "projectID": this.instance.getProjectID(),
+                    "action":    "focus"
+                }));
+            } catch (err) {
+                this.instance.telemetryClient.reportError({
+                    host: "processout-js",
+                    fileName: "cardfield.ts",
+                    lineNumber: 619,
+                    message: err.message,
+                    stack: err.stack,
+                });
+                throw err;
+            }
         }
 
         /**
@@ -499,13 +636,29 @@ module ProcessOut {
                         error:   (err: Exception) => void): void {
             var id = Math.random().toString();
 
+            if (typeof(error) !== typeof(Function)) {
+                error = () => {};
+            }
+
             // Ask the iframe for its value
-            this.postMessage(JSON.stringify({
-                "messageID": id,
-                "namespace": Message.fieldNamespace,
-                "projectID": this.instance.getProjectID(),
-                "action":    "validate"
-            }));
+            try {
+                this.postMessage(JSON.stringify({
+                    "messageID": id,
+                    "namespace": Message.fieldNamespace,
+                    "projectID": this.instance.getProjectID(),
+                    "action":    "validate"
+                }));
+            } catch (err) {
+                this.instance.telemetryClient.reportError({
+                    host: "processout-js",
+                    fileName: "cardfield.ts",
+                    lineNumber: 648,
+                    message: err.message,
+                    stack: err.stack,
+                });
+                error(err);
+                return;
+            }
 
             // Our timeout, just in case
             var fetchingTimeout =
@@ -546,19 +699,36 @@ module ProcessOut {
         public tokenize(fields: any[], data: any,  success: (token: string, card: Card)  => void,
                                                    error:   (err: Exception) => void): void {
 
+            if (typeof(error) !== typeof(Function)) {
+                error = () => {};
+            }
+            
             // Tell our field it should start the tokenization process and
             // expect a response
             var id = Math.random().toString();
-            this.postMessage(JSON.stringify({
-                "messageID": id,
-                "namespace": Message.fieldNamespace,
-                "projectID": this.instance.getProjectID(),
-                "action":    "tokenize",
-                "data": {
-                    "fields": fields,
-                    "data":   data
-                }
-            }));
+
+            try {
+                this.postMessage(JSON.stringify({
+                    "messageID": id,
+                    "namespace": Message.fieldNamespace,
+                    "projectID": this.instance.getProjectID(),
+                    "action":    "tokenize",
+                    "data": {
+                        "fields": fields,
+                        "data":   data
+                    }
+                }));
+            } catch (err) {
+                this.instance.telemetryClient.reportError({
+                    host: "processout-js",
+                    fileName: "cardfield.ts",
+                    lineNumber: 708,
+                    message: err.message,
+                    stack: err.stack,
+                });
+                error(err);
+                return;
+            }
 
             // Our timeout, just in case
             var fetchingTimeout =
@@ -594,16 +764,32 @@ module ProcessOut {
         public refreshCVC(cardUID: string, success: (token: string)  => void,
                                            error:   (err: Exception) => void): void {
 
+            if (typeof(error) !== typeof(Function)) {
+                error = () => {};
+            }
+
             // Tell our field it should start the tokenization process and
             // expect a response
             var id = Math.random().toString();
-            this.postMessage(JSON.stringify({
-                "messageID": id,
-                "namespace": Message.fieldNamespace,
-                "projectID": this.instance.getProjectID(),
-                "action":    "refresh-cvc",
-                "data":      cardUID
-            }));
+            try {
+                this.postMessage(JSON.stringify({
+                    "messageID": id,
+                    "namespace": Message.fieldNamespace,
+                    "projectID": this.instance.getProjectID(),
+                    "action":    "refresh-cvc",
+                    "data":      cardUID
+                }));
+            } catch (err) {
+                this.instance.telemetryClient.reportError({
+                    host: "processout-js",
+                    fileName: "cardfield.ts",
+                    lineNumber: 779,
+                    message: err.message,
+                    stack: err.stack,
+                });
+                error(err);
+                return;
+            }
 
             // Our timeout, just in case
             var fetchingTimeout =
