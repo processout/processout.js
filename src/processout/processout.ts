@@ -24,6 +24,18 @@ interface CardInformation {
   type: string
 }
 
+interface InstallmentPlan {
+  id: string
+  name: string
+  description: string
+  number_of_installments: number
+}
+
+interface FetchInstallmentPlansResponse {
+  installment_plans: InstallmentPlan[]
+  success: boolean
+}
+
 /**
  * ProcessOut module/namespace
  */
@@ -1669,6 +1681,34 @@ module ProcessOut {
       )
     }
 
+    /**
+     * Fetch active installment plans for the project
+     * @param  {callback} success
+     * @param  {callback} error
+     * @return {void}
+     */
+    public fetchActiveInstallmentPlans(
+      success: (data: FetchInstallmentPlansResponse) => void,
+      error: (err: Exception) => void,
+    ): void {
+      this.apiRequest(
+        "GET",
+        "installment-plans/active",
+        {},
+        function (data: any, req: XMLHttpRequest, e: Event): void {
+          if (!data.success) {
+            error(new Exception(data.error_type, data.message))
+            return
+          }
+
+          success(data)
+        },
+        function (req: XMLHttpRequest, e: Event, errorCode: ApiRequestError): void {
+          error(new Exception(errorCode))
+        },
+      )
+    }
+
     protected handleCardActions(
       method: string,
       endpoint: string,
@@ -1720,6 +1760,7 @@ module ProcessOut {
         preferred_scheme: options.preferred_scheme,
         preferred_card_type: options.preferred_card_type,
         split_allocations: options.split_allocations,
+        installment_plan_id: options.installment_plan_id,
       }
       payload = this.injectDeviceData(payload)
 
