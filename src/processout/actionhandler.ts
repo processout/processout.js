@@ -484,7 +484,7 @@ module ProcessOut {
             return wrapper;
         }
 
-        protected listenEvents(newWindow: Window, timer: number,
+        protected listenEvents(newWindow: Window, timer: ReturnType<typeof setTimeout>,
             refocus: ()                => void,
             success: (data: any)       => void,
             error:   (err:  Exception) => void): void {
