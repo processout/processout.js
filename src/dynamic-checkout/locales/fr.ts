@@ -33,6 +33,7 @@ module ProcessOut {
     "no-saved-payment-methods-header": "Aucune méthode de paiement enregistrée",
     "no-saved-payment-methods-message":
       "La prochaine fois que vous enregistrez une méthode de paiement, elle apparaîtra ici.",
+    "card-not-supported-error-message": "Cette carte n'est pas acceptée",
     "card-label": "Carte",
   }
 }

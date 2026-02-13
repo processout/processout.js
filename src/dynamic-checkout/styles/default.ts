@@ -301,6 +301,11 @@ const defaultStyles = `
     font-weight: 500;
   }
 
+  .dco-payment-method-button-pay-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
   .dco-payment-method-button-save-for-future-wrapper {
     display: flex;
     align-items: center;

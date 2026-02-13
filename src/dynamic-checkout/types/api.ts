@@ -75,6 +75,8 @@ type Card = {
   scheme_selection_allowed: boolean
   saving_allowed: boolean
   billing_address: BillingAddress
+  restrict_to_iins: string[] | null
+  restrict_to_schemes: string[] | null
 }
 
 type BillingAddress = {

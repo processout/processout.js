@@ -32,6 +32,7 @@ module ProcessOut {
     "no-saved-payment-methods-header": "Brak zapisanych metod płatności",
     "no-saved-payment-methods-message":
       "Gdy następnym razem zapiszesz metodę płatności, pojawi się tutaj.",
+    "card-not-supported-error-message": "Ta karta nie jest obsługiwana",
     "card-label": "Karta płatnicza",
   }
 }

@@ -32,6 +32,7 @@ module ProcessOut {
     "no-saved-payment-methods-header": "No saved payment methods",
     "no-saved-payment-methods-message":
       "The next time you save a payment method, it will appear here.",
+    "card-not-supported-error-message": "This card is not supported",
     "card-label": "Card",
   }
 }
