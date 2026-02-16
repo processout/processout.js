@@ -734,6 +734,7 @@ module ProcessOut {
       restrictToIins.forEach(function (blockedIin) {
         if (blockedIin === iin) {
           isBlockedIin = true
+          return
         }
       })
 
@@ -758,6 +759,7 @@ module ProcessOut {
         schemes.forEach(function (scheme) {
           if (blockedScheme === scheme) {
             isBlockedScheme = true
+            return
           }
         })
       })
