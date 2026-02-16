@@ -7,6 +7,7 @@ module ProcessOut {
     private paymentConfig: DynamicCheckoutPaymentConfig
     private theme: DynamicCheckoutThemeType
     private resetContainerHtml: () => HTMLElement
+    private isCardRestricted: boolean = false
 
     constructor(
       procesoutInstance: ProcessOut,
@@ -64,6 +65,8 @@ module ProcessOut {
             } else {
               cardSchemeLogo.setAttribute("hidden", "true")
             }
+
+            this.validateCardRestrictions(e.schemes || [])
           })
 
           cardForm.addEventListener("submit", e => {
@@ -484,6 +487,10 @@ module ProcessOut {
           const eventData = e.data ? JSON.parse(e.data) : {}
 
           if (eventData.action === "inputEvent") {
+            if (eventData.data && eventData.data.card_iin !== undefined) {
+              this.handleIinRestrictionFromMessage(eventData.data)
+            }
+
             this.cleanErrorMessages()
           }
         }
@@ -709,6 +716,85 @@ module ProcessOut {
       return cardholderNameValid
     }
 
+    private handleIinRestrictionFromMessage(data: any) {
+      const restrictToIins = this.paymentMethod.card.restrict_to_iins
+
+      if (!restrictToIins || restrictToIins.length === 0 || !data) {
+        return
+      }
+      const iin = data.card_iin || ""
+
+      if (iin.length === 0) {
+        this.setCardRestrictionState(false)
+        return
+      }
+
+      var isBlockedIin = false
+
+      restrictToIins.forEach(function (blockedIin) {
+        if (blockedIin === iin) {
+          isBlockedIin = true
+          return
+        }
+      })
+
+      this.setCardRestrictionState(isBlockedIin)
+    }
+
+    private validateCardRestrictions(schemes: string[]) {
+      const restrictToSchemes = this.paymentMethod.card.restrict_to_schemes
+
+      if (!restrictToSchemes || restrictToSchemes.length === 0) {
+        return
+      }
+
+      if (schemes.length === 0) {
+        this.setCardRestrictionState(false)
+        return
+      }
+
+      var isBlockedScheme = false
+
+      restrictToSchemes.forEach(function (blockedScheme) {
+        schemes.forEach(function (scheme) {
+          if (blockedScheme === scheme) {
+            isBlockedScheme = true
+            return
+          }
+        })
+      })
+
+      this.setCardRestrictionState(isBlockedScheme)
+    }
+
+    private setCardRestrictionState(isRestricted: boolean) {
+      this.isCardRestricted = isRestricted
+
+      const payButton = document.getElementById("dco-card-pay-button") as HTMLButtonElement
+      const errorMessage = document.getElementById("card-number-error-message")
+
+      if (isRestricted) {
+        if (payButton) {
+          payButton.disabled = true
+        }
+
+        if (errorMessage) {
+          errorMessage.textContent = Translations.getText(
+            "card-not-supported-error-message",
+            this.paymentConfig.locale,
+          )
+        }
+      } else {
+        if (payButton) {
+          payButton.disabled = false
+        }
+
+        if (errorMessage) {
+          errorMessage.textContent = ""
+        }
+      }
+    }
+
     private handleValidationError(error) {
       switch (error.code) {
         case "card.invalid-number":
@@ -764,8 +850,18 @@ module ProcessOut {
       cardForm
         .querySelectorAll(".dco-payment-method-card-form-input-error-message")
         .forEach(errorMessage => {
+          if (this.isCardRestricted && errorMessage.id === "card-number-error-message") {
+            return
+          }
+
           errorMessage.textContent = ""
         })
+
+      const payButton = document.getElementById("dco-card-pay-button") as HTMLButtonElement
+
+      if (payButton) {
+        payButton.disabled = this.isCardRestricted
+      }
     }
 
     private getDefaultSelectOption(text: string) {
