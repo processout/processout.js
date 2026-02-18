@@ -50,20 +50,22 @@ module ProcessOut {
         cardForm => {
           this.getCardDetailsSectionEventListeners()
 
-          // Dynamically change scheme logo based on the card number
           cardForm.getNumberField().addEventListener("input", e => {
-            const scheme = e.schemes[0]
-            const cardSchemeLogo = document.querySelector(".dco-card-scheme-logo")
+            if (!this.paymentMethod.card.scheme_selection_enabled) {
+              // Dynamically change scheme logo based on the card number
+              const scheme = e.schemes[0]
+              const cardSchemeLogo = document.querySelector(".dco-card-scheme-logo")
 
-            if (scheme && CARD_SCHEMES_ASSETS[scheme]) {
-              cardSchemeLogo.removeAttribute("hidden")
+              if (scheme && CARD_SCHEMES_ASSETS[scheme]) {
+                cardSchemeLogo.removeAttribute("hidden")
 
-              cardSchemeLogo.setAttribute(
-                "src",
-                this.procesoutInstance.endpoint("js", CARD_SCHEMES_ASSETS[scheme]),
-              )
-            } else {
-              cardSchemeLogo.setAttribute("hidden", "true")
+                cardSchemeLogo.setAttribute(
+                  "src",
+                  this.procesoutInstance.endpoint("js", CARD_SCHEMES_ASSETS[scheme]),
+                )
+              } else {
+                cardSchemeLogo.setAttribute("hidden", "true")
+              }
             }
 
             this.validateCardRestrictions(e.schemes || [])
@@ -193,6 +195,8 @@ module ProcessOut {
       options.expiryAutoNext = false
       options.cardNumberAutoNext = true
       options.requireCVC = this.paymentMethod.card.cvc_required
+      options.enableCardSchemeSelection = this.paymentMethod.card.scheme_selection_enabled
+      options.preferredSchemes = this.paymentMethod.card.scheme_selection_default_order
 
       return options
     }
@@ -434,7 +438,9 @@ module ProcessOut {
         },
       ])
 
-      HTMLElements.appendChildren(cardNumberInput, [cardSchemeLogo])
+      if (!this.paymentMethod.card.scheme_selection_enabled) {
+        HTMLElements.appendChildren(cardNumberInput, [cardSchemeLogo])
+      }
 
       HTMLElements.appendChildren(cardNumberInputWrapper, [
         cardNumberInput,
@@ -722,6 +728,7 @@ module ProcessOut {
       if (!restrictToIins || restrictToIins.length === 0 || !data) {
         return
       }
+
       const iin = data.card_iin || ""
 
       if (iin.length === 0) {
@@ -729,16 +736,9 @@ module ProcessOut {
         return
       }
 
-      var isBlockedIin = false
+      const isAllowedIin = restrictToIins.indexOf(iin) !== -1
 
-      restrictToIins.forEach(function (blockedIin) {
-        if (blockedIin === iin) {
-          isBlockedIin = true
-          return
-        }
-      })
-
-      this.setCardRestrictionState(isBlockedIin)
+      this.setCardRestrictionState(!isAllowedIin)
     }
 
     private validateCardRestrictions(schemes: string[]) {
@@ -753,18 +753,15 @@ module ProcessOut {
         return
       }
 
-      var isBlockedScheme = false
+      var hasAllowedScheme = false
 
-      restrictToSchemes.forEach(function (blockedScheme) {
-        schemes.forEach(function (scheme) {
-          if (blockedScheme === scheme) {
-            isBlockedScheme = true
-            return
-          }
-        })
+      schemes.forEach(function (scheme) {
+        if (restrictToSchemes.indexOf(scheme) !== -1) {
+          hasAllowedScheme = true
+        }
       })
 
-      this.setCardRestrictionState(isBlockedScheme)
+      this.setCardRestrictionState(!hasAllowedScheme)
     }
 
     private setCardRestrictionState(isRestricted: boolean) {
