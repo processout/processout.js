@@ -73,6 +73,8 @@ type Card = {
   cvc_required: boolean
   cardholder_name_required: boolean
   scheme_selection_allowed: boolean
+  scheme_selection_enabled: boolean
+  scheme_selection_default_order: string[]
   saving_allowed: boolean
   billing_address: BillingAddress
   restrict_to_iins: string[] | null
