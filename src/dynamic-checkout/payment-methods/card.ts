@@ -434,6 +434,7 @@ module ProcessOut {
           classNames: ["dco-card-scheme-logo"],
           attributes: {
             src: this.procesoutInstance.endpoint("js", CARD_SCHEMES_ASSETS.visa),
+            hidden: "true",
           },
         },
       ])
