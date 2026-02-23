@@ -224,10 +224,11 @@ module ProcessOut {
     }
 
     private getChildrenElement() {
-      const payButtonText = `${Translations.getText(
-        "pay-button-text",
-        this.paymentConfig.locale,
-      )} ${this.paymentConfig.invoiceDetails.amount} ${this.paymentConfig.invoiceDetails.currency}`
+      const payButtonText = this.paymentConfig.payButtonText
+        || `${Translations.getText(
+          "pay-button-text",
+          this.paymentConfig.locale,
+        )} ${this.paymentConfig.invoiceDetails.amount} ${this.paymentConfig.invoiceDetails.currency}`
 
       const [
         cardFormWrapper,
@@ -242,6 +243,7 @@ module ProcessOut {
           classNames: ["dco-payment-method-card-form-wrapper"],
           attributes: {
             id: "card-form",
+            "aria-label": Translations.getText("card-form-label", this.paymentConfig.locale),
           },
         },
         {
@@ -313,16 +315,20 @@ module ProcessOut {
         cardDetailsSectionTitle,
         cardDetailsSectionInputsWrapper,
         cardNumberInputWrapper,
+        cardNumberLabel,
         cardNumberInput,
         cardNumberInputErrorMessage,
         splitCardInputRow,
         expiryDateInputWrapper,
+        expiryDateLabel,
         expiryDateInput,
         expiryDateInputErrorMessage,
         cvcInputWrapper,
+        cvcLabel,
         cvcInput,
         cvcInputErrorMessage,
         cardHolderNameInputWrapper,
+        cardHolderNameLabel,
         cardHolderNameInput,
         cardHolderNameInputErrorMessage,
         cardSchemeLogo,
@@ -348,6 +354,11 @@ module ProcessOut {
           classNames: ["dco-payment-method-card-form-input-wrapper"],
         },
         {
+          tagName: "label",
+          classNames: ["dco-input-label"],
+          textContent: Translations.getText("card-number-label", this.paymentConfig.locale),
+        },
+        {
           tagName: "div",
           classNames: ["dco-payment-method-card-form-input"],
           attributes: {
@@ -360,6 +371,7 @@ module ProcessOut {
           classNames: ["dco-payment-method-card-form-input-error-message"],
           attributes: {
             id: "card-number-error-message",
+            role: "alert",
           },
         },
         {
@@ -369,6 +381,11 @@ module ProcessOut {
         {
           tagName: "div",
           classNames: ["dco-payment-method-card-form-input-wrapper"],
+        },
+        {
+          tagName: "label",
+          classNames: ["dco-input-label"],
+          textContent: Translations.getText("expiry-date-label", this.paymentConfig.locale),
         },
         {
           tagName: "div",
@@ -383,11 +400,17 @@ module ProcessOut {
           classNames: ["dco-payment-method-card-form-input-error-message"],
           attributes: {
             id: "expiry-date-error-message",
+            role: "alert",
           },
         },
         {
           tagName: "div",
           classNames: ["dco-payment-method-card-form-input-wrapper"],
+        },
+        {
+          tagName: "label",
+          classNames: ["dco-input-label"],
+          textContent: Translations.getText("cvc-label", this.paymentConfig.locale),
         },
         {
           tagName: "div",
@@ -405,11 +428,20 @@ module ProcessOut {
           classNames: ["dco-payment-method-card-form-input-error-message"],
           attributes: {
             id: "cvc-error-message",
+            role: "alert",
           },
         },
         {
           tagName: "div",
           classNames: ["dco-payment-method-card-form-input-wrapper"],
+        },
+        {
+          tagName: "label",
+          classNames: ["dco-input-label"],
+          attributes: {
+            for: "cardholder-name-input",
+          },
+          textContent: Translations.getText("cardholder-name-label", this.paymentConfig.locale),
         },
         {
           tagName: "input",
@@ -418,8 +450,10 @@ module ProcessOut {
             "dco-payment-method-card-form-input-cardholder-name",
           ],
           attributes: {
+            id: "cardholder-name-input",
             name: "cardholder-name",
             placeholder: Translations.getText("cardholder-name-label", this.paymentConfig.locale),
+            autocomplete: "cc-name",
           },
         },
         {
@@ -427,6 +461,7 @@ module ProcessOut {
           classNames: ["dco-payment-method-card-form-input-error-message"],
           attributes: {
             id: "cardholder-name-error-message",
+            role: "alert",
           },
         },
         {
@@ -444,6 +479,7 @@ module ProcessOut {
       }
 
       HTMLElements.appendChildren(cardNumberInputWrapper, [
+        cardNumberLabel,
         cardNumberInput,
         cardNumberInputErrorMessage,
       ])
@@ -454,15 +490,17 @@ module ProcessOut {
       ])
 
       HTMLElements.appendChildren(expiryDateInputWrapper, [
+        expiryDateLabel,
         expiryDateInput,
         expiryDateInputErrorMessage,
       ])
 
-      HTMLElements.appendChildren(cvcInputWrapper, [cvcInput, cvcInputErrorMessage])
+      HTMLElements.appendChildren(cvcInputWrapper, [cvcLabel, cvcInput, cvcInputErrorMessage])
 
       HTMLElements.appendChildren(splitCardInputRow, [expiryDateInputWrapper, cvcInputWrapper])
 
       HTMLElements.appendChildren(cardHolderNameInputWrapper, [
+        cardHolderNameLabel,
         cardHolderNameInput,
         cardHolderNameInputErrorMessage,
       ])
@@ -555,10 +593,17 @@ module ProcessOut {
 
       payButton.disabled = true
       payButton.textContent = ""
+      payButton.setAttribute(
+        "aria-label",
+        Translations.getText("processing-payment-label", this.paymentConfig.locale),
+      )
 
       const spinner = HTMLElements.createElement({
         tagName: "span",
         classNames: ["dco-payment-method-button-pay-button-spinner"],
+        attributes: {
+          "aria-hidden": "true",
+        },
       })
 
       HTMLElements.appendChildren(payButton, [spinner])
@@ -569,8 +614,10 @@ module ProcessOut {
         tagName: "select",
         classNames: ["dco-payment-method-card-form-input"],
         attributes: {
+          id: "country-select",
           name: "country",
           placeholder: Translations.getText("country-label", this.paymentConfig.locale),
+          "aria-label": Translations.getText("country-label", this.paymentConfig.locale),
         },
       })
 
@@ -634,13 +681,16 @@ module ProcessOut {
       }
 
       if (automaticMode && shouldShowPostcodeForAutomaticMode) {
+        const postcodeLabel = billingAddressUnitsData(this.paymentConfig).postcode.placeholder
+
         return [
           HTMLElements.createElement({
             tagName: "input",
             classNames: ["dco-payment-method-card-form-input"],
             attributes: {
               name: "postcode",
-              placeholder: billingAddressUnitsData(this.paymentConfig).postcode.placeholder,
+              placeholder: postcodeLabel,
+              "aria-label": postcodeLabel,
             },
           }),
         ]
@@ -657,6 +707,7 @@ module ProcessOut {
             classNames: ["dco-payment-method-card-form-input"],
             attributes: {
               name: unit,
+              "aria-label": Translations.getText("state-label", this.paymentConfig.locale),
             },
           })
 
@@ -678,12 +729,15 @@ module ProcessOut {
             HTMLElements.appendChildren(input, [stateOption])
           })
         } else {
+          const unitLabel = billingAddressUnitsData(this.paymentConfig)[unit].placeholder
+
           input = HTMLElements.createElement({
             tagName: "input",
             classNames: ["dco-payment-method-card-form-input"],
             attributes: {
               name: unit,
-              placeholder: billingAddressUnitsData(this.paymentConfig)[unit].placeholder,
+              placeholder: unitLabel,
+              "aria-label": unitLabel,
             },
           })
         }

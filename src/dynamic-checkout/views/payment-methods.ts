@@ -68,6 +68,30 @@ module ProcessOut {
         wrapper.appendChild(regularPaymentMethodsSectionWrapper)
       }
 
+      if (regularPaymentMethods.length === 1) {
+        const radioButton = regularPaymentMethods[0].element.querySelector(
+          ".dco-payment-method-button-radio-button",
+        ) as HTMLInputElement
+
+        if (radioButton) {
+          radioButton.checked = true
+          radioButton.style.display = "none"
+        }
+
+        const hasExpressPaymentMethods =
+          walletPaymentMethods.length > 0 || expressPaymentMethods.length > 0
+
+        if (!hasExpressPaymentMethods) {
+          const header = regularPaymentMethodsSectionWrapper.querySelector(
+            ".dco-regular-payment-methods-section-header",
+          ) as HTMLElement
+
+          if (header) {
+            header.style.display = "none"
+          }
+        }
+      }
+
       return wrapper
     }
 
@@ -127,6 +151,10 @@ module ProcessOut {
         {
           tagName: "div",
           classNames: ["dco-express-checkout-payment-methods-wrapper"],
+          attributes: {
+            role: "radiogroup",
+            "aria-label": Translations.getText("express-checkout-header", this.paymentConfig.locale),
+          },
         },
       ])
 
@@ -189,6 +217,15 @@ module ProcessOut {
         {
           tagName: "div",
           classNames: ["dco-regular-payment-methods-list-wrapper"],
+          attributes: {
+            role: "radiogroup",
+            "aria-label": Translations.getText(
+              expressPaymentMethods.length > 0
+                ? "other-payment-methods-header"
+                : "select-payment-method-label",
+              this.paymentConfig.locale,
+            ),
+          },
         },
       ])
 
@@ -387,6 +424,14 @@ module ProcessOut {
       }
 
       this.createPaymentMethodsManager(expressCheckoutHeader)
+
+      const nextFocusTarget =
+        (paymentManagerMethodsList.querySelector(".dco-delete-payment-method-button") as HTMLElement) ||
+        (document.querySelector(".close-modal-btn") as HTMLElement)
+
+      if (nextFocusTarget) {
+        nextFocusTarget.focus()
+      }
     }
 
     private createPaymentsManagerEmptyState(paymentsManagerMethodsList: Element) {

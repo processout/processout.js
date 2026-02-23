@@ -32,7 +32,15 @@ module ProcessOut {
     "no-saved-payment-methods-header": "No saved payment methods",
     "no-saved-payment-methods-message":
       "The next time you save a payment method, it will appear here.",
+    "card-number-label": "Card number",
+    "expiry-date-label": "Expiry date",
+    "cvc-label": "CVC",
     "card-not-supported-error-message": "This card is not supported",
     "card-label": "Card",
+    "delete-payment-method-label": "Delete payment method",
+    "settings-button-label": "Manage saved payment methods",
+    "loading-label": "Loading",
+    "processing-payment-label": "Processing payment",
+    "card-form-label": "Card payment form",
   }
 }

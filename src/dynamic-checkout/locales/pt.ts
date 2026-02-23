@@ -33,7 +33,15 @@ module ProcessOut {
     "no-saved-payment-methods-header": "Nenhum método de pagamento salvo",
     "no-saved-payment-methods-message":
       "Depois de guardar uma forma de pagamento, ela aparecerá aqui. ",
+    "card-number-label": "Número do cartão",
+    "expiry-date-label": "Data de validade",
+    "cvc-label": "CVC",
     "card-not-supported-error-message": "Este cartão não é suportado",
     "card-label": "Cartão",
+    "delete-payment-method-label": "Excluir método de pagamento",
+    "settings-button-label": "Gerenciar métodos de pagamento salvos",
+    "loading-label": "Carregando",
+    "processing-payment-label": "Processando pagamento",
+    "card-form-label": "Formulário de pagamento com cartão",
   }
 }
