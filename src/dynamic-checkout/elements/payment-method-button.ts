@@ -14,6 +14,7 @@ module ProcessOut {
       deleteMode: boolean = false,
       deletingAllowed: boolean = false,
       handleDeletePaymentMethod?: () => void,
+      locale: string = "en",
     ) {
       this.processOutInstance = processOutInstance
 
@@ -25,6 +26,7 @@ module ProcessOut {
         deletingAllowed,
         rightContent,
         handleDeletePaymentMethod,
+        locale,
       )
     }
 
@@ -36,6 +38,7 @@ module ProcessOut {
       deletingAllowed: boolean,
       rightContent?: HTMLElement,
       handleDeletePaymentMethod?: () => void,
+      locale: string = "en",
     ) {
       const [
         element,
@@ -56,6 +59,7 @@ module ProcessOut {
           ],
           attributes: {
             "data-id": id,
+            for: `payment-method-${id}`,
           },
         },
         {
@@ -88,17 +92,23 @@ module ProcessOut {
           attributes: {
             type: "radio",
             name: "payment-method",
+            id: `payment-method-${id}`,
+            value: id,
           },
         },
         {
           tagName: "button",
           classNames: ["dco-delete-payment-method-button"],
+          attributes: {
+            "aria-label": Translations.getText("delete-payment-method-label", locale),
+          },
         },
         {
           tagName: "img",
           classNames: ["dco-delete-payment-method-icon"],
           attributes: {
             src: this.processOutInstance.endpoint("js", TRASH_ICON),
+            alt: "",
           },
         },
       ])

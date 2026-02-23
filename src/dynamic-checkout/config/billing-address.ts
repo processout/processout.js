@@ -978,7 +978,7 @@ module ProcessOut {
       name: "United States",
       postcodeUnit: "zip",
       stateUnit: "state",
-      units: ["state"],
+      units: ["street1", "street2", "city", "state", "postcode"],
       states: [
         {
           abbreviation: "AL",

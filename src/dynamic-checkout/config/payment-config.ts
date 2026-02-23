@@ -9,6 +9,7 @@ module ProcessOut {
     capturePayments?: boolean
     allowFallbackToSale?: boolean
     showStatusMessage?: boolean
+    payButtonText?: string
   }
 
   export type DynamicCheckoutInternalConfigType = {
@@ -26,6 +27,7 @@ module ProcessOut {
     capturePayments: DynamicCheckoutPublicConfigType["capturePayments"] = false
     allowFallbackToSale: DynamicCheckoutPublicConfigType["allowFallbackToSale"] = false
     showStatusMessage: DynamicCheckoutPublicConfigType["showStatusMessage"] = true
+    payButtonText: DynamicCheckoutPublicConfigType["payButtonText"] = ""
     invoiceDetails: DynamicCheckoutInternalConfigType["invoiceDetails"]
 
     constructor(config: DynamicCheckoutPublicConfigType) {
@@ -61,6 +63,7 @@ module ProcessOut {
       this.locale = config.locale || "en"
       this.capturePayments = config.capturePayments || false
       this.allowFallbackToSale = config.allowFallbackToSale || false
+      this.payButtonText = config.payButtonText || ""
 
       if (config.showStatusMessage !== undefined && config.showStatusMessage !== null) {
         this.showStatusMessage = config.showStatusMessage

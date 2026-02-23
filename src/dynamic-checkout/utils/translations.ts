@@ -3,9 +3,13 @@
 module ProcessOut {
   export class Translations {
     static localeTranslationsMap = {
+      de: de,
       en: en,
       es: es,
       fr: fr,
+      it: it,
+      ja: ja,
+      ko: ko,
       pl: pl,
       pt: pt,
     }

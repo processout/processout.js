@@ -500,8 +500,8 @@ const defaultStyles = `
   }
     
   .dco-express-checkout-header-settings-button {
-    width: 32px;
-    height: 32px;
+    min-width: 44px;
+    min-height: 44px;
     padding: 0;
     display: flex;
     justify-content: center;
@@ -509,14 +509,13 @@ const defaultStyles = `
     background-color: transparent;
     border: none;
     cursor: pointer;
-    padding: 0;
     transition: all .4s;
     border-radius: 4px;
   }
 
   .dco-delete-payment-method-button {
-    width: 32px;
-    height: 32px;
+    min-width: 44px;
+    min-height: 44px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -811,4 +810,58 @@ const defaultStyles = `
   padding: 12px;
   background-color: #1213140a;
 }
+
+.dco-input-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: #696F79;
+  margin-bottom: 4px;
+}
+
+  .dco-payment-method-button-radio-button:focus-visible {
+    outline: 2px solid #242C38;
+    outline-offset: 2px;
+  }
+
+  .dco-payment-method-button-pay-button:focus-visible {
+    outline: 2px solid #242C38;
+    outline-offset: 2px;
+  }
+
+  .dco-delete-payment-method-button:focus-visible,
+  .dco-express-checkout-header-settings-button:focus-visible {
+    outline: 2px solid #242C38;
+    outline-offset: 2px;
+  }
+
+  .dco-payment-method-card-form-input:focus-visible,
+  .dco-payment-method-card-form-input-cardholder-name:focus-visible {
+    outline: 2px solid #242C38;
+    outline-offset: -1px;
+    border-color: #242C38;
+  }
+
+  select.dco-payment-method-card-form-input:focus-visible {
+    outline: 2px solid #242C38;
+    outline-offset: -1px;
+    border-color: #242C38;
+  }
+
+  .close-modal-btn:focus-visible {
+    outline: 2px solid #242C38;
+    outline-offset: 2px;
+  }
+
+  .dco-payment-method-button-save-for-future-checkbox:focus-visible {
+    outline: 2px solid #242C38;
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dco-invoice-loading,
+    .dco-payment-method-button-pay-button-spinner {
+      animation: none;
+    }
+  }
 `

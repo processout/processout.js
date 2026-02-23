@@ -71,7 +71,7 @@ module ProcessOut {
     }
 
     private onGetInvoiceLoading() {
-      this.loadView(new DynamicCheckoutInvoiceLoadingView().element)
+      this.loadView(new DynamicCheckoutInvoiceLoadingView(this.paymentConfig.locale).element)
 
       DynamicCheckoutEventsUtils.dispatchWidgetLoadingEvent()
     }

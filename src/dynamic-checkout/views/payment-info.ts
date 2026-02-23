@@ -9,6 +9,9 @@ module ProcessOut {
         {
           tagName: "div",
           classNames: ["dco-card-payment-success"],
+          attributes: {
+            role: "status",
+          },
         },
         {
           tagName: "p",
