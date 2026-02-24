@@ -10,6 +10,7 @@
 /// <reference path="cardform.ts" />
 /// <reference path="translator.ts" />
 /// <reference path="exception.ts" />
+/// <reference path="outcome.ts" />
 /// <reference path="processout.ts" />
 /// <reference path="modal.ts" />
 /// <reference path="messagehub.ts" />

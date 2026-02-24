@@ -111,10 +111,6 @@ module ProcessOut {
         return this.processOutInstance.handleAction(
           apm_customer_token.redirect_url,
           paymentToken => {
-            DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent(paymentToken, {
-              payment_method_name: apm.gateway_name,
-            })
-
             this.processOutInstance.makeCardPayment(
               invoiceId,
               paymentToken,
@@ -158,6 +154,17 @@ module ProcessOut {
                 DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error)
               },
               requestOptions,
+              invoiceId => {
+                if (this.paymentConfig.showStatusMessage) {
+                  this.resetContainerHtml().appendChild(
+                    new DynamicCheckoutPaymentPendingView(this.processOutInstance, this.paymentConfig).element,
+                  )
+                }
+
+                DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent(invoiceId, {
+                  payment_method_name: apm.gateway_name,
+                })
+              },
             )
           },
           error => {
@@ -173,13 +180,6 @@ module ProcessOut {
         )
       }
 
-      DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent(
-        this.paymentMethod.apm_customer_token.customer_token_id,
-        {
-          payment_method_name: apm.gateway_name,
-        },
-      )
-
       this.processOutInstance.makeCardPayment(
         this.paymentConfig.invoiceId,
         this.paymentMethod.apm_customer_token.customer_token_id,
@@ -187,6 +187,7 @@ module ProcessOut {
         this.handlePaymentSuccess.bind(this),
         this.handlePaymentError.bind(this),
         requestOptions,
+        this.handlePaymentPending.bind(this),
       )
     }
 
@@ -198,6 +199,20 @@ module ProcessOut {
       DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
         invoiceId,
         returnUrl: this.paymentConfig.invoiceDetails.return_url,
+      })
+    }
+
+    private handlePaymentPending(invoiceId: string) {
+      if (this.paymentConfig.showStatusMessage) {
+        this.resetContainerHtml().appendChild(
+          new DynamicCheckoutPaymentPendingView(this.processOutInstance, this.paymentConfig).element,
+        )
+      }
+
+      DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent(invoiceId, {
+        payment_method_name: this.paymentMethod.apm
+          ? this.paymentMethod.apm.gateway_name
+          : "apm",
       })
     }
 
