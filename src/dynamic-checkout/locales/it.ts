@@ -22,6 +22,7 @@ module ProcessOut {
     "payment-success-message": "Il pagamento è stato completato.",
     "payment-info-message":
       "Stiamo elaborando il tuo pagamento. Ora puoi chiudere questa finestra.",
+    "payment-pending-message": "Il tuo pagamento è in sospeso.",
     "payment-error-generic-message": "Non è stato possibile elaborare il pagamento.",
     "street1-label": "Indirizzo riga 1",
     "street2-label": "Indirizzo riga 2",

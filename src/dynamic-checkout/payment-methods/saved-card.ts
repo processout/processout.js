@@ -100,6 +100,8 @@ module ProcessOut {
         },
         this.handlePaymentSuccess.bind(this),
         this.handlePaymentError.bind(this),
+        undefined,
+        this.handlePaymentPending.bind(this),
       )
     }
 
@@ -121,6 +123,18 @@ module ProcessOut {
       DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
         invoiceId,
         returnUrl: this.paymentConfig.invoiceDetails.return_url,
+      })
+    }
+
+    private handlePaymentPending(invoiceId: string) {
+      if (this.paymentConfig.showStatusMessage) {
+        this.resetContainerHtml().appendChild(
+          new DynamicCheckoutPaymentPendingView(this.processOutInstance, this.paymentConfig).element,
+        )
+      }
+
+      DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent(invoiceId, {
+        payment_method_name: "card",
       })
     }
 

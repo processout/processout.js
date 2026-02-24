@@ -77,7 +77,7 @@ module ProcessOut {
     }
 
     private onGetInvoiceSuccess(data: any) {
-      if (!data.success) {
+      if (resolveOutcome(data) === OUTCOME.Failed) {
         this.loadView(
           new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig).element,
         )

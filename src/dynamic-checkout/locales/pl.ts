@@ -21,6 +21,7 @@ module ProcessOut {
     "select-payment-method-label": "Wybierz metodę płatności",
     "payment-success-message": "Płatność została zakończona pomyślnie.",
     "payment-info-message": "Przetwarzamy Twoją płatność. Możesz teraz zamknąć tę okno.",
+    "payment-pending-message": "Twoja płatność oczekuje na realizację.",
     "payment-error-generic-message": "Nie udało nam się przetworzyć Twojej płatności.",
     "street1-label": "Adres, linia 1",
     "street2-label": "Adres, linia 2",

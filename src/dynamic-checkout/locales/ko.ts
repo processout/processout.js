@@ -22,6 +22,7 @@ module ProcessOut {
     "payment-success-message": "결제가 완료되었습니다.",
     "payment-info-message":
       "결제를 처리하고 있습니다. 이 창을 닫으셔도 됩니다.",
+    "payment-pending-message": "결제가 대기 중입니다.",
     "payment-error-generic-message": "결제를 처리할 수 없습니다.",
     "street1-label": "주소 1",
     "street2-label": "주소 2",

@@ -22,6 +22,7 @@ module ProcessOut {
     "payment-success-message": "Ce paiement a été effectué avec succès.",
     "payment-info-message":
       "Nous travaillons sur votre paiement. Vous pouvez maintenant fermer cette fenêtre.",
+    "payment-pending-message": "Votre paiement est en attente.",
     "payment-error-generic-message": "Nous n'avons pas pu traiter votre paiement.",
     "street1-label": "Adresse, ligne 1",
     "street2-label": "Adresse, ligne 2",
