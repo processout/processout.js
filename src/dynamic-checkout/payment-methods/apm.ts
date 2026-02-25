@@ -94,7 +94,7 @@ module ProcessOut {
       this.processOutInstance.handleAction(
         apm.redirect_url,
         paymentToken => {
-          this.resetContainerHtml().appendChild(new DynamicCheckoutInvoiceLoadingView().element)
+          this.resetContainerHtml().appendChild(new DynamicCheckoutInvoiceLoadingView(this.paymentConfig.locale).element)
 
           DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent(paymentToken, {
             payment_method_name: apm.gateway_name,
@@ -177,7 +177,7 @@ module ProcessOut {
           this.processOutInstance.handleAction(
             data.customer_action.value,
             paymentToken => {
-              this.resetContainerHtml().appendChild(new DynamicCheckoutInvoiceLoadingView().element)
+              this.resetContainerHtml().appendChild(new DynamicCheckoutInvoiceLoadingView(this.paymentConfig.locale).element)
 
               this.processOutInstance.makeCardPayment(
                 this.paymentConfig.invoiceId,
@@ -302,6 +302,7 @@ module ProcessOut {
               "js",
               "/images/dynamic-checkout-assets/apm-redirect-arrow.svg",
             ),
+            alt: "",
           },
         },
         {
@@ -325,7 +326,7 @@ module ProcessOut {
           tagName: "label",
           classNames: ["dco-payment-method-button-save-for-future-label"],
           attributes: {
-            for: `save-apm-for-future-${this.paymentMethod.display.name}`,
+            for: `save-apm-for-future-${this.paymentMethod.apm.gateway_name}`,
           },
           textContent: Translations.getText("save-for-future-label", this.paymentConfig.locale),
         },

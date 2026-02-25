@@ -33,6 +33,15 @@ module ProcessOut {
     "no-saved-payment-methods-header": "Aucune méthode de paiement enregistrée",
     "no-saved-payment-methods-message":
       "La prochaine fois que vous enregistrez une méthode de paiement, elle apparaîtra ici.",
+    "card-number-label": "Numéro de carte",
+    "expiry-date-label": "Date d'expiration",
+    "cvc-label": "CVC",
+    "card-not-supported-error-message": "Cette carte n'est pas acceptée",
     "card-label": "Carte",
+    "delete-payment-method-label": "Supprimer le moyen de paiement",
+    "settings-button-label": "Gérer les moyens de paiement enregistrés",
+    "loading-label": "Chargement",
+    "processing-payment-label": "Traitement du paiement",
+    "card-form-label": "Formulaire de paiement par carte",
   }
 }

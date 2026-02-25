@@ -32,6 +32,15 @@ module ProcessOut {
     "no-saved-payment-methods-header": "Brak zapisanych metod płatności",
     "no-saved-payment-methods-message":
       "Gdy następnym razem zapiszesz metodę płatności, pojawi się tutaj.",
+    "card-number-label": "Numer karty",
+    "expiry-date-label": "Data ważności",
+    "cvc-label": "CVC",
+    "card-not-supported-error-message": "Ta karta nie jest obsługiwana",
     "card-label": "Karta płatnicza",
+    "delete-payment-method-label": "Usuń metodę płatności",
+    "settings-button-label": "Zarządzaj zapisanymi metodami płatności",
+    "loading-label": "Ładowanie",
+    "processing-payment-label": "Przetwarzanie płatności",
+    "card-form-label": "Formularz płatności kartą",
   }
 }

@@ -9,12 +9,16 @@ module ProcessOut {
         {
           tagName: "div",
           classNames: ["dco-card-payment-success"],
+          attributes: {
+            role: "alert",
+          },
         },
         {
           tagName: "img",
           classNames: ["dco-card-payment-success-image"],
           attributes: {
             src: processOutInstance.endpoint("js", PAYMENT_ERROR_IMAGE_ASSET),
+            alt: "",
           },
         },
         {

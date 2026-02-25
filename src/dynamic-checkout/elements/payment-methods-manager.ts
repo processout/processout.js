@@ -25,12 +25,19 @@ module ProcessOut {
           {
             tagName: "button",
             classNames: ["dco-express-checkout-header-settings-button"],
+            attributes: {
+              "aria-label": Translations.getText(
+                "settings-button-label",
+                this.paymentConfig.locale,
+              ),
+            },
           },
           {
             tagName: "img",
             classNames: ["dco-express-checkout-cog-icon"],
             attributes: {
               src: this.processOutInstance.endpoint("js", COG_ICON),
+              alt: "",
             },
           },
         ])
@@ -58,6 +65,9 @@ module ProcessOut {
               stickyFooter: true,
               closeMethods: ["overlay", "button", "escape"],
               closeLabel: closeLabel,
+              onClose: () => {
+                this.element.focus()
+              },
             })
           : null
 

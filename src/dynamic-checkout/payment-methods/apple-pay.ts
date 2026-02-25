@@ -21,7 +21,7 @@ module ProcessOut {
         tagName: "div",
         classNames: ["dco-wallet-checkout-button"],
         attributes: {
-          id: "google-pay-button-container",
+          id: "apple-pay-button-container",
         },
       })
 

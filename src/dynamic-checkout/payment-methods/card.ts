@@ -7,6 +7,7 @@ module ProcessOut {
     private paymentConfig: DynamicCheckoutPaymentConfig
     private theme: DynamicCheckoutThemeType
     private resetContainerHtml: () => HTMLElement
+    private isCardRestricted: boolean = false
 
     constructor(
       procesoutInstance: ProcessOut,
@@ -49,21 +50,25 @@ module ProcessOut {
         cardForm => {
           this.getCardDetailsSectionEventListeners()
 
-          // Dynamically change scheme logo based on the card number
           cardForm.getNumberField().addEventListener("input", e => {
-            const scheme = e.schemes[0]
-            const cardSchemeLogo = document.querySelector(".dco-card-scheme-logo")
+            if (!this.paymentMethod.card.scheme_selection_enabled) {
+              // Dynamically change scheme logo based on the card number
+              const scheme = e.schemes[0]
+              const cardSchemeLogo = document.querySelector(".dco-card-scheme-logo")
 
-            if (scheme && CARD_SCHEMES_ASSETS[scheme]) {
-              cardSchemeLogo.removeAttribute("hidden")
+              if (scheme && CARD_SCHEMES_ASSETS[scheme]) {
+                cardSchemeLogo.removeAttribute("hidden")
 
-              cardSchemeLogo.setAttribute(
-                "src",
-                this.procesoutInstance.endpoint("js", CARD_SCHEMES_ASSETS[scheme]),
-              )
-            } else {
-              cardSchemeLogo.setAttribute("hidden", "true")
+                cardSchemeLogo.setAttribute(
+                  "src",
+                  this.procesoutInstance.endpoint("js", CARD_SCHEMES_ASSETS[scheme]),
+                )
+              } else {
+                cardSchemeLogo.setAttribute("hidden", "true")
+              }
             }
+
+            this.validateCardRestrictions(e.schemes || [])
           })
 
           cardForm.addEventListener("submit", e => {
@@ -190,6 +195,8 @@ module ProcessOut {
       options.expiryAutoNext = false
       options.cardNumberAutoNext = true
       options.requireCVC = this.paymentMethod.card.cvc_required
+      options.enableCardSchemeSelection = this.paymentMethod.card.scheme_selection_enabled
+      options.preferredSchemes = this.paymentMethod.card.scheme_selection_default_order
 
       return options
     }
@@ -217,10 +224,11 @@ module ProcessOut {
     }
 
     private getChildrenElement() {
-      const payButtonText = `${Translations.getText(
-        "pay-button-text",
-        this.paymentConfig.locale,
-      )} ${this.paymentConfig.invoiceDetails.amount} ${this.paymentConfig.invoiceDetails.currency}`
+      const payButtonText = this.paymentConfig.payButtonText
+        || `${Translations.getText(
+          "pay-button-text",
+          this.paymentConfig.locale,
+        )} ${this.paymentConfig.invoiceDetails.amount} ${this.paymentConfig.invoiceDetails.currency}`
 
       const [
         cardFormWrapper,
@@ -235,6 +243,7 @@ module ProcessOut {
           classNames: ["dco-payment-method-card-form-wrapper"],
           attributes: {
             id: "card-form",
+            "aria-label": Translations.getText("card-form-label", this.paymentConfig.locale),
           },
         },
         {
@@ -306,16 +315,20 @@ module ProcessOut {
         cardDetailsSectionTitle,
         cardDetailsSectionInputsWrapper,
         cardNumberInputWrapper,
+        cardNumberLabel,
         cardNumberInput,
         cardNumberInputErrorMessage,
         splitCardInputRow,
         expiryDateInputWrapper,
+        expiryDateLabel,
         expiryDateInput,
         expiryDateInputErrorMessage,
         cvcInputWrapper,
+        cvcLabel,
         cvcInput,
         cvcInputErrorMessage,
         cardHolderNameInputWrapper,
+        cardHolderNameLabel,
         cardHolderNameInput,
         cardHolderNameInputErrorMessage,
         cardSchemeLogo,
@@ -341,6 +354,11 @@ module ProcessOut {
           classNames: ["dco-payment-method-card-form-input-wrapper"],
         },
         {
+          tagName: "label",
+          classNames: ["dco-input-label"],
+          textContent: Translations.getText("card-number-label", this.paymentConfig.locale),
+        },
+        {
           tagName: "div",
           classNames: ["dco-payment-method-card-form-input"],
           attributes: {
@@ -353,6 +371,7 @@ module ProcessOut {
           classNames: ["dco-payment-method-card-form-input-error-message"],
           attributes: {
             id: "card-number-error-message",
+            role: "alert",
           },
         },
         {
@@ -362,6 +381,11 @@ module ProcessOut {
         {
           tagName: "div",
           classNames: ["dco-payment-method-card-form-input-wrapper"],
+        },
+        {
+          tagName: "label",
+          classNames: ["dco-input-label"],
+          textContent: Translations.getText("expiry-date-label", this.paymentConfig.locale),
         },
         {
           tagName: "div",
@@ -376,11 +400,17 @@ module ProcessOut {
           classNames: ["dco-payment-method-card-form-input-error-message"],
           attributes: {
             id: "expiry-date-error-message",
+            role: "alert",
           },
         },
         {
           tagName: "div",
           classNames: ["dco-payment-method-card-form-input-wrapper"],
+        },
+        {
+          tagName: "label",
+          classNames: ["dco-input-label"],
+          textContent: Translations.getText("cvc-label", this.paymentConfig.locale),
         },
         {
           tagName: "div",
@@ -398,11 +428,20 @@ module ProcessOut {
           classNames: ["dco-payment-method-card-form-input-error-message"],
           attributes: {
             id: "cvc-error-message",
+            role: "alert",
           },
         },
         {
           tagName: "div",
           classNames: ["dco-payment-method-card-form-input-wrapper"],
+        },
+        {
+          tagName: "label",
+          classNames: ["dco-input-label"],
+          attributes: {
+            for: "cardholder-name-input",
+          },
+          textContent: Translations.getText("cardholder-name-label", this.paymentConfig.locale),
         },
         {
           tagName: "input",
@@ -411,8 +450,10 @@ module ProcessOut {
             "dco-payment-method-card-form-input-cardholder-name",
           ],
           attributes: {
+            id: "cardholder-name-input",
             name: "cardholder-name",
             placeholder: Translations.getText("cardholder-name-label", this.paymentConfig.locale),
+            autocomplete: "cc-name",
           },
         },
         {
@@ -420,6 +461,7 @@ module ProcessOut {
           classNames: ["dco-payment-method-card-form-input-error-message"],
           attributes: {
             id: "cardholder-name-error-message",
+            role: "alert",
           },
         },
         {
@@ -427,13 +469,17 @@ module ProcessOut {
           classNames: ["dco-card-scheme-logo"],
           attributes: {
             src: this.procesoutInstance.endpoint("js", CARD_SCHEMES_ASSETS.visa),
+            hidden: "true",
           },
         },
       ])
 
-      HTMLElements.appendChildren(cardNumberInput, [cardSchemeLogo])
+      if (!this.paymentMethod.card.scheme_selection_enabled) {
+        HTMLElements.appendChildren(cardNumberInput, [cardSchemeLogo])
+      }
 
       HTMLElements.appendChildren(cardNumberInputWrapper, [
+        cardNumberLabel,
         cardNumberInput,
         cardNumberInputErrorMessage,
       ])
@@ -444,15 +490,17 @@ module ProcessOut {
       ])
 
       HTMLElements.appendChildren(expiryDateInputWrapper, [
+        expiryDateLabel,
         expiryDateInput,
         expiryDateInputErrorMessage,
       ])
 
-      HTMLElements.appendChildren(cvcInputWrapper, [cvcInput, cvcInputErrorMessage])
+      HTMLElements.appendChildren(cvcInputWrapper, [cvcLabel, cvcInput, cvcInputErrorMessage])
 
       HTMLElements.appendChildren(splitCardInputRow, [expiryDateInputWrapper, cvcInputWrapper])
 
       HTMLElements.appendChildren(cardHolderNameInputWrapper, [
+        cardHolderNameLabel,
         cardHolderNameInput,
         cardHolderNameInputErrorMessage,
       ])
@@ -484,6 +532,10 @@ module ProcessOut {
           const eventData = e.data ? JSON.parse(e.data) : {}
 
           if (eventData.action === "inputEvent") {
+            if (eventData.data && eventData.data.card_iin !== undefined) {
+              this.handleIinRestrictionFromMessage(eventData.data)
+            }
+
             this.cleanErrorMessages()
           }
         }
@@ -541,10 +593,17 @@ module ProcessOut {
 
       payButton.disabled = true
       payButton.textContent = ""
+      payButton.setAttribute(
+        "aria-label",
+        Translations.getText("processing-payment-label", this.paymentConfig.locale),
+      )
 
       const spinner = HTMLElements.createElement({
         tagName: "span",
         classNames: ["dco-payment-method-button-pay-button-spinner"],
+        attributes: {
+          "aria-hidden": "true",
+        },
       })
 
       HTMLElements.appendChildren(payButton, [spinner])
@@ -555,8 +614,10 @@ module ProcessOut {
         tagName: "select",
         classNames: ["dco-payment-method-card-form-input"],
         attributes: {
+          id: "country-select",
           name: "country",
           placeholder: Translations.getText("country-label", this.paymentConfig.locale),
+          "aria-label": Translations.getText("country-label", this.paymentConfig.locale),
         },
       })
 
@@ -620,13 +681,16 @@ module ProcessOut {
       }
 
       if (automaticMode && shouldShowPostcodeForAutomaticMode) {
+        const postcodeLabel = billingAddressUnitsData(this.paymentConfig).postcode.placeholder
+
         return [
           HTMLElements.createElement({
             tagName: "input",
             classNames: ["dco-payment-method-card-form-input"],
             attributes: {
               name: "postcode",
-              placeholder: billingAddressUnitsData(this.paymentConfig).postcode.placeholder,
+              placeholder: postcodeLabel,
+              "aria-label": postcodeLabel,
             },
           }),
         ]
@@ -643,6 +707,7 @@ module ProcessOut {
             classNames: ["dco-payment-method-card-form-input"],
             attributes: {
               name: unit,
+              "aria-label": Translations.getText("state-label", this.paymentConfig.locale),
             },
           })
 
@@ -664,12 +729,15 @@ module ProcessOut {
             HTMLElements.appendChildren(input, [stateOption])
           })
         } else {
+          const unitLabel = billingAddressUnitsData(this.paymentConfig)[unit].placeholder
+
           input = HTMLElements.createElement({
             tagName: "input",
             classNames: ["dco-payment-method-card-form-input"],
             attributes: {
               name: unit,
-              placeholder: billingAddressUnitsData(this.paymentConfig)[unit].placeholder,
+              placeholder: unitLabel,
+              "aria-label": unitLabel,
             },
           })
         }
@@ -707,6 +775,76 @@ module ProcessOut {
       }
 
       return cardholderNameValid
+    }
+
+    private handleIinRestrictionFromMessage(data: any) {
+      const restrictToIins = this.paymentMethod.card.restrict_to_iins
+
+      if (!restrictToIins || restrictToIins.length === 0 || !data) {
+        return
+      }
+
+      const iin = data.card_iin || ""
+
+      if (iin.length === 0) {
+        this.setCardRestrictionState(false)
+        return
+      }
+
+      const isAllowedIin = restrictToIins.indexOf(iin) !== -1
+
+      this.setCardRestrictionState(!isAllowedIin)
+    }
+
+    private validateCardRestrictions(schemes: string[]) {
+      const restrictToSchemes = this.paymentMethod.card.restrict_to_schemes
+
+      if (!restrictToSchemes || restrictToSchemes.length === 0) {
+        return
+      }
+
+      if (schemes.length === 0) {
+        this.setCardRestrictionState(false)
+        return
+      }
+
+      var hasAllowedScheme = false
+
+      schemes.forEach(function (scheme) {
+        if (restrictToSchemes.indexOf(scheme) !== -1) {
+          hasAllowedScheme = true
+        }
+      })
+
+      this.setCardRestrictionState(!hasAllowedScheme)
+    }
+
+    private setCardRestrictionState(isRestricted: boolean) {
+      this.isCardRestricted = isRestricted
+
+      const payButton = document.getElementById("dco-card-pay-button") as HTMLButtonElement
+      const errorMessage = document.getElementById("card-number-error-message")
+
+      if (isRestricted) {
+        if (payButton) {
+          payButton.disabled = true
+        }
+
+        if (errorMessage) {
+          errorMessage.textContent = Translations.getText(
+            "card-not-supported-error-message",
+            this.paymentConfig.locale,
+          )
+        }
+      } else {
+        if (payButton) {
+          payButton.disabled = false
+        }
+
+        if (errorMessage) {
+          errorMessage.textContent = ""
+        }
+      }
     }
 
     private handleValidationError(error) {
@@ -764,8 +902,18 @@ module ProcessOut {
       cardForm
         .querySelectorAll(".dco-payment-method-card-form-input-error-message")
         .forEach(errorMessage => {
+          if (this.isCardRestricted && errorMessage.id === "card-number-error-message") {
+            return
+          }
+
           errorMessage.textContent = ""
         })
+
+      const payButton = document.getElementById("dco-card-pay-button") as HTMLButtonElement
+
+      if (payButton) {
+        payButton.disabled = this.isCardRestricted
+      }
     }
 
     private getDefaultSelectOption(text: string) {

@@ -32,6 +32,15 @@ module ProcessOut {
     "no-saved-payment-methods-header": "No hay métodos de pago guardados",
     "no-saved-payment-methods-message":
       "La próxima vez que guardes un método de pago, aparecerá aquí.",
+    "card-number-label": "Número de tarjeta",
+    "expiry-date-label": "Fecha de vencimiento",
+    "cvc-label": "CVC",
+    "card-not-supported-error-message": "Esta tarjeta no es compatible",
     "card-label": "Tarjeta bancaria",
+    "delete-payment-method-label": "Eliminar método de pago",
+    "settings-button-label": "Administrar métodos de pago guardados",
+    "loading-label": "Cargando",
+    "processing-payment-label": "Procesando pago",
+    "card-form-label": "Formulario de pago con tarjeta",
   }
 }

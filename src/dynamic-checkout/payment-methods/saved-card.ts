@@ -33,6 +33,7 @@ module ProcessOut {
         deleteMode,
         paymentMethod.card_customer_token.deleting_allowed,
         handleDeletePaymentMethod,
+        paymentConfig.locale,
       )
 
       this.processOutInstance = processOutInstance
@@ -45,12 +46,11 @@ module ProcessOut {
     }
 
     private getChildrenElement(deleteMode?: boolean) {
-      const payButtonText = `${Translations.getText(
-        "pay-button-text",
-        this.paymentConfig.locale,
-      )} ${this.paymentConfig.invoiceDetails.amount} ${this.paymentConfig.invoiceDetails.currency}`
-
-      console.log(this.paymentMethod)
+      const payButtonText = this.paymentConfig.payButtonText
+        || `${Translations.getText(
+          "pay-button-text",
+          this.paymentConfig.locale,
+        )} ${this.paymentConfig.invoiceDetails.amount} ${this.paymentConfig.invoiceDetails.currency}`
 
       const [wrapper, payButton] = HTMLElements.createMultipleElements([
         {
@@ -148,10 +148,17 @@ module ProcessOut {
 
       payButton.disabled = true
       payButton.textContent = ""
+      payButton.setAttribute(
+        "aria-label",
+        Translations.getText("processing-payment-label", this.paymentConfig.locale),
+      )
 
       const spinner = HTMLElements.createElement({
         tagName: "span",
         classNames: ["dco-payment-method-button-pay-button-spinner"],
+        attributes: {
+          "aria-hidden": "true",
+        },
       })
 
       HTMLElements.appendChildren(payButton, [spinner])
