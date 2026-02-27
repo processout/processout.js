@@ -333,10 +333,11 @@ module ProcessOut {
         {
           tagName: "button",
           classNames: ["dco-payment-method-button-pay-button"],
-          textContent: `${Translations.getText(
-            "continue-with-apm-button",
-            this.paymentConfig.locale,
-          )} ${this.paymentMethod.display.name}`,
+          textContent: this.paymentConfig.payButtonText
+            || `${Translations.getText(
+              "continue-with-apm-button",
+              this.paymentConfig.locale,
+            )} ${this.paymentMethod.display.name}`,
         },
       ])
 

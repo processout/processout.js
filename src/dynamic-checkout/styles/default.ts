@@ -219,6 +219,7 @@ const defaultStyles = `
 
   .dco-payment-method-wrapper:has(input[type="radio"]:checked) {
     background-color: #F6F6F7;
+    cursor: default;
   }
 
   .dco-payment-method-wrapper:has(input[type="radio"]:checked) .dco-payment-method-button-general-children-container {
