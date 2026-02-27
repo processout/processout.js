@@ -224,8 +224,9 @@ module ProcessOut {
     }
 
     private getChildrenElement() {
-      const payButtonText = this.paymentConfig.payButtonText
-        || `${Translations.getText(
+      const payButtonText =
+        this.paymentConfig.payButtonText ||
+        `${Translations.getText(
           "pay-button-text",
           this.paymentConfig.locale,
         )} ${this.paymentConfig.invoiceDetails.amount} ${this.paymentConfig.invoiceDetails.currency}`
@@ -420,7 +421,10 @@ module ProcessOut {
           ],
           attributes: {
             "data-processout-input": "cc-cvc",
-            "data-processout-placeholder": "CVC",
+            "data-processout-placeholder": Translations.getText(
+              "cvc-label",
+              this.paymentConfig.locale,
+            ),
           },
         },
         {

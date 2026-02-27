@@ -66,6 +66,12 @@ module ProcessOut {
     processOut: ProcessOut
 
     /**
+     * Custom pay button text override
+     * @type {string}
+     */
+    payButtonText?: string
+
+    /**
      * Native APM Form constructor
      */
     constructor(
@@ -74,6 +80,7 @@ module ProcessOut {
       onSubmitHandler: Function,
       theme: NativeApmThemeConfigType,
       prefilledData: PrefilledData,
+      payButtonText?: string,
     ) {
       if (!formData) {
         throw new Exception(
@@ -86,6 +93,7 @@ module ProcessOut {
       this.processOut = processOut
       this.prefilledData = prefilledData
       this.formData = formData
+      this.payButtonText = payButtonText
       this.onSubmitHandler = onSubmitHandler
       this.formInputs = this.createFormInputs()
       this.submitButton = this.createSubmitButton()
@@ -140,11 +148,8 @@ module ProcessOut {
      * This function creates the submit button of the form
      */
     private createSubmitButton() {
-      const buttonText = `
-      ${TextUtils.getText("submitButtonText")} 
-      ${this.formData.invoice.amount} 
-      ${this.formData.invoice.currency_code}
-      `
+      const buttonText = this.payButtonText
+        || `${TextUtils.getText("submitButtonText")} ${this.formData.invoice.amount} ${this.formData.invoice.currency_code}`
 
       return new NativeApmButton(buttonText, this.theme)
     }

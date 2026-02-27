@@ -110,6 +110,11 @@ module ProcessOut {
       this.processOutInstance = processOutInstance
       this.paymentConfig = new NativeApmPaymentConfig(paymentConfig)
       this.theme = new NativeApmThemeConfig()
+
+      if (this.paymentConfig.locale) {
+        TextUtils.setLocale(this.paymentConfig.locale)
+      }
+
       this.loadMarkdownLibrary()
       this.loadQrCodesLibrary()
       this.loadPhoneNumberInputLibrary()
@@ -184,6 +189,7 @@ module ProcessOut {
           this.proceedPayment.bind(this),
           this.theme,
           this.prefilledData,
+          this.paymentConfig.payButtonText,
         )
 
         EventsUtils.dispatchWidgetReadyEvent()
@@ -297,6 +303,7 @@ module ProcessOut {
           this.proceedPayment.bind(this),
           this.theme,
           this.prefilledData,
+          this.paymentConfig.payButtonText,
         )
 
         EventsUtils.dispatchPaymentAdditionalInputEvent()
