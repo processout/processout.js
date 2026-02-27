@@ -16,7 +16,7 @@ module ProcessOut {
     "cardholder-name-error-message": "Name des Karteninhabers ist ungültig",
     "payment-error-message": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
     "payment-cancelled-message": "Die Zahlung wurde storniert.",
-    "express-checkout-header": "Express-Checkout",
+    "express-checkout-header": "Express-Kasse",
     "other-payment-methods-header": "Weitere Zahlungsmethoden",
     "select-payment-method-label": "Zahlungsmethode auswählen",
     "payment-success-message": "Diese Zahlung wurde abgeschlossen.",
