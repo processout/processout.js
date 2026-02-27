@@ -33,6 +33,8 @@ module ProcessOut {
         invoiceId,
         gatewayConfigurationId: apm.gateway_configuration_id,
         returnUrl: invoiceDetails.return_url,
+        payButtonText: paymentConfig.payButtonText,
+        locale: paymentConfig.locale,
       })
 
       const backgroundColor =
