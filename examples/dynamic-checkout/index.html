@@ -10,8 +10,8 @@
     <script>
       document.addEventListener("DOMContentLoaded", function () {
         // You need to replace these values with your own
-        const projectId = "test-proj_zkSfc1Cz6vPjhcLkapSpO7UtmCeYuavb"
-        const invoiceId = "iv_3AFPfYuavbUBf4rerB2VMHKUnmQjke59"
+        const projectId = "proj_6O2BtRj35JrqX3SDMuvk2dtiROstpU5m"
+        const invoiceId = "iv_3AFyQtpU5mzTMmOvdXQCyGBy2GKKZCaA"
         const clientSecret = ""
 
         const client = new ProcessOut.ProcessOut(projectId)
@@ -22,7 +22,7 @@
           capturePayments: false,
           allowFallbackToSale: false,
           showStatusMessage: false,
-          locale: "de",
+          locale: "en",
         })
 
         dynamicCheckout.mount("#dynamic-cko-container")

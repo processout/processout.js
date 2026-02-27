@@ -153,7 +153,10 @@ module ProcessOut {
           classNames: ["dco-express-checkout-payment-methods-wrapper"],
           attributes: {
             role: "radiogroup",
-            "aria-label": Translations.getText("express-checkout-header", this.paymentConfig.locale),
+            "aria-label": Translations.getText(
+              "express-checkout-header",
+              this.paymentConfig.locale,
+            ),
           },
         },
       ])
@@ -239,6 +242,8 @@ module ProcessOut {
       let expressPaymentMethods = []
       let regularPaymentMethods = []
 
+      console.log(this.paymentConfig.invoiceDetails.payment_methods)
+
       this.paymentConfig.invoiceDetails.payment_methods.forEach(paymentMethod => {
         switch (paymentMethod.type) {
           case "googlepay":
@@ -253,9 +258,7 @@ module ProcessOut {
 
           case "applepay":
             // We want to hide Apple Pay for HPP temporarily
-            const shouldHide = /^https?:\/\/.*pay\.processout\.(com|ninja)\//.test(
-              window.location.href,
-            )
+            const shouldHide = false
 
             if (!shouldHide) {
               const applePayPaymentMethod = new ApplePayPaymentMethod(
@@ -426,8 +429,9 @@ module ProcessOut {
       this.createPaymentMethodsManager(expressCheckoutHeader)
 
       const nextFocusTarget =
-        (paymentManagerMethodsList.querySelector(".dco-delete-payment-method-button") as HTMLElement) ||
-        (document.querySelector(".close-modal-btn") as HTMLElement)
+        (paymentManagerMethodsList.querySelector(
+          ".dco-delete-payment-method-button",
+        ) as HTMLElement) || (document.querySelector(".close-modal-btn") as HTMLElement)
 
       if (nextFocusTarget) {
         nextFocusTarget.focus()
