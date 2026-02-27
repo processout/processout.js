@@ -229,24 +229,38 @@ module ProcessOut {
         }
 
 
-        private postMessage(message: any, retries: number = 3, delay: number = 50): void {
+        private postMessage(message: any, options: { retries?: number, delay?: number, onError: (err: Exception) => void }): void {
             if (this.destroyed) {
                 return;
             }
 
-            if (retries <= 0) {
-                throw new Exception("processout-js.field.unavailable", "Tried to locate the iframe content window but failed.");
+            const { retries, delay, onError } = {
+                retries: 3,
+                delay: 50,
+                ...options
             }
 
-            if (!this.iframe || !this.iframe.contentWindow) {
-                setTimeout(() => this.postMessage(message, retries - 1, delay), delay);
+            if (retries <= 0) {
+                var err = new Exception("processout-js.field.unavailable", "Tried to locate the iframe content window but failed.");
+                this.instance.telemetryClient.reportError({
+                    host: "processout-js",
+                    fileName: "cardfield.ts#postMessage",
+                    lineNumber: 246,
+                    message: err.message,
+                    stack: err.stack,
+                });
+                onError(err);
                 return;
             }
 
             try {
+                if (!this.iframe || !this.iframe.contentWindow) {
+                    setTimeout(() => this.postMessage(message, { retries: retries - 1, delay, onError }), delay);
+                    return;
+                }
                 this.iframe.contentWindow.postMessage(message, "*");
             } catch (e) {
-                throw new Exception("processout-js.field.unavailable", "Iframe content window found but failed to post message: " + e.message);
+                setTimeout(() => this.postMessage(message, { retries: retries - 1, delay, onError }), delay);
             }
         }
         /**
@@ -327,7 +341,17 @@ module ProcessOut {
                             "action":    "setup",
                             "formID":    this.form.getUID(),
                             "data":      this.options
-                        }));
+                        }), { onError: err => {
+                            this.instance.telemetryClient.reportError({
+                                host: "processout-js",
+                                fileName: "cardfield.ts#spawn",
+                                lineNumber: 338,
+                                message: err.message,
+                                stack: err.stack,
+                            });
+                            error(err);
+                            return;
+                        } });
                     }
 
                     if (data.action == "ready") {
@@ -343,7 +367,17 @@ module ProcessOut {
                             "namespace": Message.fieldNamespace,
                             "projectID": this.instance.getProjectID(),
                             "action":    "resize"
-                        }));
+                        }), { onError: err => {
+                            this.instance.telemetryClient.reportError({
+                                host: "processout-js",
+                                fileName: "cardfield.ts#spawn",
+                                lineNumber: 366,
+                                message: err.message,
+                                stack: err.stack,
+                            });
+                            error(err);
+                            return;
+                        } });
 
                         // Hook an event listener for the focus event to focus
                         // on the input when the user presses tab on older
@@ -356,7 +390,7 @@ module ProcessOut {
                 } catch (e) {
                     this.instance.telemetryClient.reportError({
                         host: "processout-js",
-                        fileName: "cardfield.ts",
+                        fileName: "cardfield.ts#spawn",
                         lineNumber: 257,
                         message: e.message,
                         stack: e.stack,
@@ -518,23 +552,21 @@ module ProcessOut {
                 this.options.style = (<any>Object).assign(
                     this.options.style, options.style);
 
-            try {
-                this.postMessage(JSON.stringify({
-                    "namespace": Message.fieldNamespace,
-                    "projectID": this.instance.getProjectID(),
-                    "action":    "update",
-                    "data":      this.options
-                }));
-            } catch (err) {
+            this.postMessage(JSON.stringify({
+                "namespace": Message.fieldNamespace,
+                "projectID": this.instance.getProjectID(),
+                "action":    "update",
+                "data":      this.options
+            }), { onError: (err) => { 
                 this.instance.telemetryClient.reportError({
                     host: "processout-js",
-                    fileName: "cardfield.ts",
-                    lineNumber: 533,
+                    fileName: "cardfield.ts#update",
+                    lineNumber: 555,
                     message: err.message,
                     stack: err.stack,
-                });
-                throw err;
-            }
+                });   
+                throw err 
+            } });
         }
 
         /**
@@ -549,23 +581,21 @@ module ProcessOut {
                 this.handlers[e] = [];
 
             this.handlers[e].push(h);
-            try {
-                this.postMessage(JSON.stringify({
-                    "namespace": Message.fieldNamespace,
-                    "projectID": this.instance.getProjectID(),
-                    "action":    "registerEvent",
-                    "data":      e
-                }));
-            } catch (err) {
+            this.postMessage(JSON.stringify({
+                "namespace": Message.fieldNamespace,
+                "projectID": this.instance.getProjectID(),
+                "action":    "registerEvent",
+                "data":      e
+            }), { onError: (err) => { 
                 this.instance.telemetryClient.reportError({
                     host: "processout-js",
-                    fileName: "cardfield.ts",
-                    lineNumber: 563,
+                    fileName: "cardfield.ts#addEventListener",
+                    lineNumber: 584,
                     message: err.message,
                     stack: err.stack,
                 });
                 throw err;
-            }
+            } });
         }
 
         /**
@@ -583,23 +613,21 @@ module ProcessOut {
          * @return {void}
          */
         public blur(): void {
-            try {
-                this.postMessage(JSON.stringify({
-                    "messageID": Math.random().toString(),
-                    "namespace": Message.fieldNamespace,
-                    "projectID": this.instance.getProjectID(),
-                    "action":    "blur"
-                }));
-            } catch (err) {
+            this.postMessage(JSON.stringify({
+                "messageID": Math.random().toString(),
+                "namespace": Message.fieldNamespace,
+                "projectID": this.instance.getProjectID(),
+                "action":    "blur"
+            }), { onError: (err) => { 
                 this.instance.telemetryClient.reportError({
                     host: "processout-js",
-                    fileName: "cardfield.ts",
-                    lineNumber: 596,
+                    fileName: "cardfield.ts#blur",
+                    lineNumber: 616,
                     message: err.message,
                     stack: err.stack,
                 });
                 throw err;
-            }
+            } });
         }
 
         /**
@@ -607,23 +635,24 @@ module ProcessOut {
          * @return {void}
          */
         public focus(): void {
-            try {
-                this.postMessage(JSON.stringify({
-                    "messageID": Math.random().toString(),
-                    "namespace": Message.fieldNamespace,
-                    "projectID": this.instance.getProjectID(),
-                    "action":    "focus"
-                }));
-            } catch (err) {
-                this.instance.telemetryClient.reportError({
-                    host: "processout-js",
-                    fileName: "cardfield.ts",
-                    lineNumber: 619,
-                    message: err.message,
-                    stack: err.stack,
-                });
-                throw err;
-            }
+            this.postMessage(JSON.stringify({
+                "messageID": Math.random().toString(),
+                "namespace": Message.fieldNamespace,
+                "projectID": this.instance.getProjectID(),
+                "action":    "focus"
+            }), { 
+                onError: (err) => { 
+                    this.instance.telemetryClient.reportError({
+                        host: "processout-js",
+                        fileName: "cardfield.ts#focus",
+                        lineNumber: 638,
+                        message: err.message,
+                        stack: err.stack,
+                    });
+                    throw err;
+                    return;
+                }
+            });
         }
 
         /**
@@ -641,24 +670,24 @@ module ProcessOut {
             }
 
             // Ask the iframe for its value
-            try {
-                this.postMessage(JSON.stringify({
-                    "messageID": id,
-                    "namespace": Message.fieldNamespace,
-                    "projectID": this.instance.getProjectID(),
-                    "action":    "validate"
-                }));
-            } catch (err) {
-                this.instance.telemetryClient.reportError({
-                    host: "processout-js",
-                    fileName: "cardfield.ts",
-                    lineNumber: 648,
-                    message: err.message,
-                    stack: err.stack,
-                });
-                error(err);
-                return;
-            }
+            this.postMessage(JSON.stringify({
+                "messageID": id,
+                "namespace": Message.fieldNamespace,
+                "projectID": this.instance.getProjectID(),
+                "action":    "validate"
+            }), { 
+                onError: err => {
+                    this.instance.telemetryClient.reportError({
+                        host: "processout-js",
+                        fileName: "cardfield.ts#validate",
+                        lineNumber: 673,
+                        message: err.message,
+                        stack: err.stack,
+                    });
+                    error(err);
+                    return;
+                } 
+            });
 
             // Our timeout, just in case
             var fetchingTimeout =
@@ -707,28 +736,28 @@ module ProcessOut {
             // expect a response
             var id = Math.random().toString();
 
-            try {
-                this.postMessage(JSON.stringify({
-                    "messageID": id,
-                    "namespace": Message.fieldNamespace,
-                    "projectID": this.instance.getProjectID(),
-                    "action":    "tokenize",
-                    "data": {
-                        "fields": fields,
-                        "data":   data
-                    }
-                }));
-            } catch (err) {
-                this.instance.telemetryClient.reportError({
-                    host: "processout-js",
-                    fileName: "cardfield.ts",
-                    lineNumber: 708,
-                    message: err.message,
-                    stack: err.stack,
-                });
-                error(err);
-                return;
-            }
+            this.postMessage(JSON.stringify({
+                "messageID": id,
+                "namespace": Message.fieldNamespace,
+                "projectID": this.instance.getProjectID(),
+                "action":    "tokenize",
+                "data": {
+                    "fields": fields,
+                    "data":   data
+                }
+            }), { 
+                onError: err => {
+                    this.instance.telemetryClient.reportError({
+                        host: "processout-js",
+                        fileName: "cardfield.ts#tokenize",
+                        lineNumber: 739,
+                        message: err.message,
+                        stack: err.stack,
+                    });
+                    error(err);
+                    return;
+                } 
+            });
 
             // Our timeout, just in case
             var fetchingTimeout =
@@ -771,25 +800,25 @@ module ProcessOut {
             // Tell our field it should start the tokenization process and
             // expect a response
             var id = Math.random().toString();
-            try {
-                this.postMessage(JSON.stringify({
-                    "messageID": id,
-                    "namespace": Message.fieldNamespace,
-                    "projectID": this.instance.getProjectID(),
-                    "action":    "refresh-cvc",
-                    "data":      cardUID
-                }));
-            } catch (err) {
-                this.instance.telemetryClient.reportError({
-                    host: "processout-js",
-                    fileName: "cardfield.ts",
-                    lineNumber: 779,
-                    message: err.message,
-                    stack: err.stack,
-                });
-                error(err);
-                return;
-            }
+            this.postMessage(JSON.stringify({
+                "messageID": id,
+                "namespace": Message.fieldNamespace,
+                "projectID": this.instance.getProjectID(),
+                "action":    "refresh-cvc",
+                "data":      cardUID
+            }), { 
+                onError: err => {
+                    this.instance.telemetryClient.reportError({
+                        host: "processout-js",
+                        fileName: "cardfield.ts#refreshCVC",
+                        lineNumber: 803,
+                        message: err.message,
+                        stack: err.stack,
+                    });
+                    error(err);
+                    return;
+                } 
+            });
 
             // Our timeout, just in case
             var fetchingTimeout =
