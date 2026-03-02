@@ -377,7 +377,12 @@ module ProcessOut {
         "delete",
         `customers/${customerId}/tokens/${tokenId}`,
         {},
-        () => {
+        (data) => {
+          if (resolveOutcome(data) === OUTCOME.Failed) {
+            DynamicCheckoutEventsUtils.dispatchDeletePaymentMethodErrorEvent(data)
+            return
+          }
+
           this.deletePaymentMethodFromDom(tokenId, isCardToken)
           DynamicCheckoutEventsUtils.dispatchDeletePaymentMethodEvent()
         },

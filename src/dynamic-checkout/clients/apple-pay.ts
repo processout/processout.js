@@ -167,6 +167,18 @@ module ProcessOut {
 
           DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error)
         },
+        undefined,
+        invoiceId => {
+          if (this.paymentConfig.showStatusMessage) {
+            getViewContainer().appendChild(
+              new DynamicCheckoutPaymentPendingView(this.processOutInstance, this.paymentConfig).element,
+            )
+          }
+
+          DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent(invoiceId, {
+            payment_method_name: "apple_pay",
+          })
+        },
       )
     }
 
