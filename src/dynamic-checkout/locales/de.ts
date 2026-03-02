@@ -22,6 +22,7 @@ module ProcessOut {
     "payment-success-message": "Diese Zahlung wurde abgeschlossen.",
     "payment-info-message":
       "Wir verarbeiten Ihre Zahlung. Sie können dieses Fenster jetzt schließen.",
+    "payment-pending-message": "Ihre Zahlung steht noch aus.",
     "payment-error-generic-message": "Wir konnten Ihre Zahlung nicht verarbeiten.",
     "street1-label": "Adresszeile 1",
     "street2-label": "Adresszeile 2",

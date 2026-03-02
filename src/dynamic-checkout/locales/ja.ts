@@ -22,6 +22,7 @@ module ProcessOut {
     "payment-success-message": "お支払いが完了しました。",
     "payment-info-message":
       "お支払いを処理しています。このウィンドウを閉じていただいて構いません。",
+    "payment-pending-message": "お支払いは保留中です。",
     "payment-error-generic-message": "お支払いを処理できませんでした。",
     "street1-label": "住所1",
     "street2-label": "住所2",

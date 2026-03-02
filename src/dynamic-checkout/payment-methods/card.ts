@@ -122,10 +122,6 @@ module ProcessOut {
         cardPaymentOptions["save_source"] = saveForFutureCheckbox.checked
       }
 
-      DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent(cardToken, {
-        payment_method_name: "card",
-      })
-
       this.procesoutInstance.makeCardPayment(
         this.paymentConfig.invoiceId,
         cardToken,
@@ -135,6 +131,7 @@ module ProcessOut {
         {
           clientSecret: this.paymentConfig.clientSecret,
         },
+        this.handleCardPaymentPending.bind(this),
       )
     }
 
@@ -163,6 +160,18 @@ module ProcessOut {
       DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
         invoiceId,
         returnUrl: this.paymentConfig.invoiceDetails.return_url,
+      })
+    }
+
+    private handleCardPaymentPending(invoiceId: string) {
+      if (this.paymentConfig.showStatusMessage) {
+        this.resetContainerHtml().appendChild(
+          new DynamicCheckoutPaymentPendingView(this.procesoutInstance, this.paymentConfig).element,
+        )
+      }
+
+      DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent(invoiceId, {
+        payment_method_name: "card",
       })
     }
 

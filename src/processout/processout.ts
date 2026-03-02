@@ -633,7 +633,7 @@ module ProcessOut {
         "cards",
         data,
         function (data: any, req: XMLHttpRequest, e: Event): void {
-          if (!data.success) {
+          if (resolveOutcome(data) === OUTCOME.Failed) {
             error(new Exception(data.error_type, data.message))
             return
           }
@@ -687,7 +687,7 @@ module ProcessOut {
         "cards",
         data,
         function (data: any, req: XMLHttpRequest, e: Event): void {
-          if (!data.success) {
+          if (resolveOutcome(data) === OUTCOME.Failed) {
             error(new Exception(data.error_type, data.message))
             return
           }
@@ -843,7 +843,7 @@ module ProcessOut {
           cvc: cvc,
         },
         function (data: any, req: XMLHttpRequest, e: Event): void {
-          if (!data.success) {
+          if (resolveOutcome(data) === OUTCOME.Failed) {
             error(new Exception("card.invalid"))
             return
           }
@@ -949,7 +949,7 @@ module ProcessOut {
           expand_merchant_accounts: "true",
         },
         function (data: any): void {
-          if (!data.success) {
+          if (resolveOutcome(data) === OUTCOME.Failed) {
             error(new Exception(data.error_type, data.message))
             return
           }
@@ -1569,6 +1569,7 @@ module ProcessOut {
       success: (data: any) => void,
       error: (err: Exception) => void,
       apiRequestOptions?: apiRequestOptions,
+      pending?: (data: any) => void,
     ): void {
       this.handleCardActions(
         "POST",
@@ -1579,6 +1580,7 @@ module ProcessOut {
         success,
         error,
         apiRequestOptions,
+        pending,
       )
     }
 
@@ -1630,7 +1632,7 @@ module ProcessOut {
         `invoices/${invoiceID}/increment_authorization`,
         { amount: amount },
         function (data: any, req: XMLHttpRequest, e: Event): void {
-          if (!data.success) {
+          if (resolveOutcome(data) === OUTCOME.Failed) {
             error(new Exception("request.validation.error"))
             return
           }
@@ -1668,7 +1670,7 @@ module ProcessOut {
         apiEndpoint,
         {},
         function (data: any, req: XMLHttpRequest, e: Event): void {
-          if (!data.success) {
+          if (resolveOutcome(data) === OUTCOME.Failed) {
             error(new Exception("request.validation.error"))
             return
           }
@@ -1696,7 +1698,7 @@ module ProcessOut {
         "installment-plans/active",
         {},
         function (data: any, req: XMLHttpRequest, e: Event): void {
-          if (!data.success) {
+          if (resolveOutcome(data) === OUTCOME.Failed) {
             error(new Exception(data.error_type, data.message))
             return
           }
@@ -1718,6 +1720,7 @@ module ProcessOut {
       success: (data: any) => void,
       error: (err: Exception) => void,
       apiRequestOptions?: apiRequestOptions,
+      pending?: (data: any) => void,
     ): void {
       // returns this.hppInitialURL only once during the first call from HPP, then returns the endpoint
       const getEndpoint = (): string => {
@@ -1781,8 +1784,22 @@ module ProcessOut {
         getEndpoint(),
         payload,
         function (data: any): void {
-          if (!data.success) {
+          var outcome = resolveOutcome(data)
+
+          if (outcome === OUTCOME.Failed) {
             error(new Exception(data.error_type, data.message))
+            return
+          }
+
+          if (outcome === OUTCOME.Pending) {
+            // If pending callback is provided, call it with the resourceID
+            // Otherwise, call the success callback with the resourceID
+            // This is to ensure backward compatibility with old usage of PO.js
+            if (pending) {
+              pending(resourceID)
+            } else {
+              success(resourceID)
+            }
             return
           }
 
@@ -1802,6 +1819,7 @@ module ProcessOut {
               success,
               error,
               apiRequestOptions,
+              pending,
             )
           }.bind(this)
 
@@ -1828,7 +1846,7 @@ module ProcessOut {
                     success,
                     error,
                     apiRequestOptions,
-                    resourceID,
+                    pending,
                   )
                 }.bind(this),
                 error,
