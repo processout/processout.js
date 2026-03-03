@@ -20,8 +20,7 @@ module ProcessOut {
     "other-payment-methods-header": "기타 결제 수단",
     "select-payment-method-label": "결제 수단 선택",
     "payment-success-message": "결제가 완료되었습니다.",
-    "payment-info-message":
-      "결제를 처리하고 있습니다. 이 창을 닫으셔도 됩니다.",
+    "payment-info-message": "결제를 처리하고 있습니다. 이 창을 닫으셔도 됩니다.",
     "payment-pending-message": "결제가 대기 중입니다.",
     "payment-error-generic-message": "결제를 처리할 수 없습니다.",
     "street1-label": "주소 1",
@@ -32,8 +31,7 @@ module ProcessOut {
     "payments-manager-header": "저장된 결제 수단 관리",
     "payments-manager-close-button": "닫기",
     "no-saved-payment-methods-header": "저장된 결제 수단 없음",
-    "no-saved-payment-methods-message":
-      "다음에 결제 수단을 저장하면 여기에 표시됩니다.",
+    "no-saved-payment-methods-message": "다음에 결제 수단을 저장하면 여기에 표시됩니다.",
     "card-number-label": "카드 번호",
     "expiry-date-label": "만료일",
     "cvc-label": "보안 코드",
