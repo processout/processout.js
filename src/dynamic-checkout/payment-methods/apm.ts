@@ -191,7 +191,7 @@ module ProcessOut {
             return
           }
 
-          if (outcome === OUTCOME.Pending) {
+          if (outcome === OUTCOME.Pending && !data.customer_action) {
             this.resetContainerHtml().appendChild(
               new DynamicCheckoutPaymentPendingView(this.processOutInstance, this.paymentConfig).element,
             )
@@ -199,7 +199,7 @@ module ProcessOut {
             DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent(this.paymentConfig.invoiceId, {
               payment_method_name: apm.gateway_name,
             })
-            
+
             return
           }
 

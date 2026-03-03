@@ -1791,7 +1791,7 @@ module ProcessOut {
             return
           }
 
-          if (outcome === OUTCOME.Pending) {
+          if (outcome === OUTCOME.Pending && !data.customer_action) {
             // If pending callback is provided, call it with the resourceID
             // Otherwise, call the success callback with the resourceID
             // This is to ensure backward compatibility with old usage of PO.js
