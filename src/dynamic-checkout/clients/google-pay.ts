@@ -119,7 +119,7 @@ module ProcessOut {
             paymentToken,
             {},
             token => {
-              DynamicCheckoutEventsUtils.dispatchTokenizePaymentSuccessEvent(token)
+              DynamicCheckoutEventsUtils.dispatchTokenizePaymentSuccessEvent(this.paymentConfig.invoiceId, token)
 
               this.processOutInstance.makeCardPayment(
                 invoiceData.id,
@@ -149,8 +149,8 @@ module ProcessOut {
                   }
 
                   DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
-                    invoiceId,
-                    returnUrl: this.paymentConfig.invoiceDetails.return_url,
+                    invoice_id: invoiceId,
+                    return_url: this.paymentConfig.invoiceDetails.return_url,
                   })
                 },
                 error => {
@@ -173,18 +173,20 @@ module ProcessOut {
                     )
                   }
 
-                  DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error)
+                  DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(this.paymentConfig.invoiceId, error)
                 },
                 undefined,
-                invoiceId => {
+                (invoiceId, reason) => {
                   if (this.paymentConfig.showStatusMessage) {
                     getViewContainer().appendChild(
                       new DynamicCheckoutPaymentPendingView(this.processOutInstance, this.paymentConfig).element,
                     )
                   }
 
-                  DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent(invoiceId, {
+                  DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent({
                     payment_method_name: "google_pay",
+                    invoice_id: invoiceId,
+                    reason: reason || null,
                   })
                 },
               )
@@ -195,7 +197,7 @@ module ProcessOut {
                   .element,
               )
 
-              DynamicCheckoutEventsUtils.dispatchTokenizePaymentErrorEvent({
+              DynamicCheckoutEventsUtils.dispatchTokenizePaymentErrorEvent(this.paymentConfig.invoiceId, {
                 message: `Tokenize payment error: ${JSON.stringify(error, undefined, 2)}`,
               })
             },

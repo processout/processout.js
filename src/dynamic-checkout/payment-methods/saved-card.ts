@@ -46,8 +46,9 @@ module ProcessOut {
     }
 
     private getChildrenElement(deleteMode?: boolean) {
-      const payButtonText = this.paymentConfig.payButtonText
-        || `${Translations.getText(
+      const payButtonText =
+        this.paymentConfig.payButtonText ||
+        `${Translations.getText(
           "pay-button-text",
           this.paymentConfig.locale,
         )} ${this.paymentConfig.invoiceDetails.amount} ${this.paymentConfig.invoiceDetails.currency}`
@@ -89,6 +90,7 @@ module ProcessOut {
 
       DynamicCheckoutEventsUtils.dispatchPaymentSubmittedEvent({
         payment_method_name: "card",
+        invoice_id: this.paymentConfig.invoiceId,
       })
 
       this.processOutInstance.makeCardPayment(
@@ -121,20 +123,23 @@ module ProcessOut {
       }
 
       DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
-        invoiceId,
-        returnUrl: this.paymentConfig.invoiceDetails.return_url,
+        invoice_id: invoiceId,
+        return_url: this.paymentConfig.invoiceDetails.return_url,
       })
     }
 
-    private handlePaymentPending(invoiceId: string) {
+    private handlePaymentPending(invoiceId: string, reason: string | null) {
       if (this.paymentConfig.showStatusMessage) {
         this.resetContainerHtml().appendChild(
-          new DynamicCheckoutPaymentPendingView(this.processOutInstance, this.paymentConfig).element,
+          new DynamicCheckoutPaymentPendingView(this.processOutInstance, this.paymentConfig)
+            .element,
         )
       }
 
-      DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent(invoiceId, {
+      DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent({
         payment_method_name: "card",
+        invoice_id: invoiceId,
+        reason: reason || null,
       })
     }
 
@@ -152,7 +157,7 @@ module ProcessOut {
         )
       }
 
-      DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error)
+      DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(this.paymentConfig.invoiceId, error)
     }
 
     private setButtonLoading() {

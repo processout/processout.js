@@ -25,36 +25,41 @@ module ProcessOut {
   }
 
   export class DynamicCheckoutEventsUtils {
-    static dispatchInvoiceFetchingErrorEvent(errorData: any) {
+    static dispatchInvoiceFetchingErrorEvent(invoiceId: string, errorData: any) {
       const event = EventsUtils.createEvent(
         DYNAMIC_CHECKOUT_EVENTS.INVOICE_FETCHING_ERROR,
-        errorData,
+        { ...errorData, invoice_id: invoiceId },
       )
 
       return window.dispatchEvent(event)
     }
 
-    static dispatchWidgetLoadingEvent() {
-      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.WIDGET_LOADING)
-      return window.dispatchEvent(event)
-    }
-
-    static dispatchWidgetReadyEvent() {
-      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.WIDGET_READY)
-      return window.dispatchEvent(event)
-    }
-
-    static dispatchTokenizePaymentSuccessEvent(token: string) {
-      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.TOKENIZE_PAYMENT_SUCCESS, {
-        token,
+    static dispatchWidgetLoadingEvent(invoiceId: string) {
+      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.WIDGET_LOADING, {
+        invoice_id: invoiceId,
       })
       return window.dispatchEvent(event)
     }
 
-    static dispatchTokenizePaymentErrorEvent(errorData: any) {
+    static dispatchWidgetReadyEvent(invoiceId: string) {
+      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.WIDGET_READY, {
+        invoice_id: invoiceId,
+      })
+      return window.dispatchEvent(event)
+    }
+
+    static dispatchTokenizePaymentSuccessEvent(invoiceId: string, token: string) {
+      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.TOKENIZE_PAYMENT_SUCCESS, {
+        token,
+        invoice_id: invoiceId,
+      })
+      return window.dispatchEvent(event)
+    }
+
+    static dispatchTokenizePaymentErrorEvent(invoiceId: string, errorData: any) {
       const event = EventsUtils.createEvent(
         DYNAMIC_CHECKOUT_EVENTS.TOKENIZE_PAYMENT_ERROR,
-        errorData,
+        { ...errorData, invoice_id: invoiceId },
       )
       return window.dispatchEvent(event)
     }
@@ -67,64 +72,81 @@ module ProcessOut {
       return window.dispatchEvent(event)
     }
 
-    static dispatchPaymentErrorEvent(errorData: any) {
+    static dispatchPaymentErrorEvent(invoiceId: string, errorData: any) {
+      const normalizedError =
+        typeof errorData === "object" && errorData !== null
+          ? errorData
+          : { message: String(errorData) }
+
       // TODO: Temporary fix until we fix properly the field unavailable error
-      if (errorData.code === "processout-js.field.unavailable") {
+      if (normalizedError.code === "processout-js.field.unavailable") {
         return
       }
 
-      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.PAYMENT_ERROR, errorData)
+      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.PAYMENT_ERROR, {
+        ...normalizedError,
+        invoice_id: invoiceId,
+        reason: normalizedError.message || null,
+      })
       return window.dispatchEvent(event)
     }
 
-    static dispatchPaymentSuccessEvent(response: { invoiceId: string; returnUrl: string }) {
+    static dispatchPaymentSuccessEvent(response: { invoice_id: string; return_url: string }) {
       const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.PAYMENT_SUCCESS, response)
 
       return window.dispatchEvent(event)
     }
 
-    static dispatchApplePayNewSessionEvent() {
-      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.APPLE_PAY_NEW_SESSION)
+    static dispatchApplePayNewSessionEvent(invoiceId: string) {
+      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.APPLE_PAY_NEW_SESSION, {
+        invoice_id: invoiceId,
+      })
 
       return window.dispatchEvent(event)
     }
 
-    static dispatchApplePayAuthorizedPostProcessEvent() {
+    static dispatchApplePayAuthorizedPostProcessEvent(invoiceId: string) {
       const event = EventsUtils.createEvent(
         DYNAMIC_CHECKOUT_EVENTS.APPLE_PAY_AUTHORIZED_POST_PROCESS,
+        { invoice_id: invoiceId },
       )
 
       return window.dispatchEvent(event)
     }
 
-    static dispatchApplePaySessionError(err: any) {
-      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.APPLE_PAY_SESSION_ERROR)
+    static dispatchApplePaySessionError(invoiceId: string, err: any) {
+      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.APPLE_PAY_SESSION_ERROR, {
+        ...err,
+        invoice_id: invoiceId,
+      })
 
       return window.dispatchEvent(event)
     }
 
-    static dispatchDeletePaymentMethodEvent() {
-      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.DELETE_PAYMENT_METHOD)
+    static dispatchDeletePaymentMethodEvent(invoiceId: string) {
+      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.DELETE_PAYMENT_METHOD, {
+        invoice_id: invoiceId,
+      })
 
       return window.dispatchEvent(event)
     }
 
-    static dispatchDeletePaymentMethodErrorEvent(err: any) {
+    static dispatchDeletePaymentMethodErrorEvent(invoiceId: string, err: any) {
       const event = EventsUtils.createEvent(
         DYNAMIC_CHECKOUT_EVENTS.DELETE_PAYMENT_METHOD_ERROR,
-        err,
+        { ...err, invoice_id: invoiceId },
       )
 
       return window.dispatchEvent(event)
     }
 
-    static dispatchTransactionErrorEvent(errorData: { invoiceId: string; returnUrl: string }) {
+    static dispatchTransactionErrorEvent(errorData: { invoice_id: string; return_url: string }) {
       const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.TRANSACTION_ERROR, errorData)
 
       return window.dispatchEvent(event)
     }
 
-    static dispatchGooglePayLoadError(errorData: { invoiceId: string; returnUrl: string }) {
+    static dispatchGooglePayLoadError(errorData: { invoice_id: string; return_url: string }) {
       const event = EventsUtils.createEvent(
         DYNAMIC_CHECKOUT_EVENTS.GOOGLE_PAY_LOAD_ERROR,
         errorData,
@@ -133,26 +155,30 @@ module ProcessOut {
       return window.dispatchEvent(event)
     }
 
-    static dispatchPaymentSubmittedEvent(details: { payment_method_name: string }) {
-      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.PAYMENT_SUBMITTED, {
-        details,
-      })
-
-      return window.dispatchEvent(event)
-    }
-    static dispatchPaymentCancelledEvent(details: { payment_method_name: string }) {
-      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.PAYMENT_CANCELLED, {
-        details,
-      })
+    static dispatchPaymentSubmittedEvent(details: {
+      payment_method_name: string
+      invoice_id: string
+    }) {
+      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.PAYMENT_SUBMITTED, details)
 
       return window.dispatchEvent(event)
     }
 
-    static dispatchPaymentPendingEvent(token: string, details: { payment_method_name: string }) {
-      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.PAYMENT_PENDING, {
-        token,
-        details,
-      })
+    static dispatchPaymentCancelledEvent(details: {
+      payment_method_name: string
+      invoice_id: string
+    }) {
+      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.PAYMENT_CANCELLED, details)
+
+      return window.dispatchEvent(event)
+    }
+
+    static dispatchPaymentPendingEvent(details: {
+      payment_method_name: string
+      invoice_id: string
+      reason: string | null
+    }) {
+      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.PAYMENT_PENDING, details)
 
       return window.dispatchEvent(event)
     }

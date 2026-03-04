@@ -50,7 +50,7 @@ module ProcessOut {
 
       this.loadView(paymentMethodsView.element)
 
-      DynamicCheckoutEventsUtils.dispatchWidgetReadyEvent()
+      DynamicCheckoutEventsUtils.dispatchWidgetReadyEvent(this.paymentConfig.invoiceId)
     }
 
     private getInvoiceDetails(onFetch: Function, onSuccess: Function, onError: Function) {
@@ -73,7 +73,7 @@ module ProcessOut {
     private onGetInvoiceLoading() {
       this.loadView(new DynamicCheckoutInvoiceLoadingView(this.paymentConfig.locale).element)
 
-      DynamicCheckoutEventsUtils.dispatchWidgetLoadingEvent()
+      DynamicCheckoutEventsUtils.dispatchWidgetLoadingEvent(this.paymentConfig.invoiceId)
     }
 
     private onGetInvoiceSuccess(data: any) {
@@ -82,7 +82,10 @@ module ProcessOut {
           new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig).element,
         )
 
-        return DynamicCheckoutEventsUtils.dispatchInvoiceFetchingErrorEvent(data)
+        return DynamicCheckoutEventsUtils.dispatchInvoiceFetchingErrorEvent(
+          this.paymentConfig.invoiceId,
+          data,
+        )
       }
 
       if (!data.invoice.payment_methods) {
@@ -95,7 +98,7 @@ module ProcessOut {
         )
 
         return DynamicCheckoutEventsUtils.dispatchNoDynamicCheckoutConfigurationEvent({
-          invoiceId: data.invoice.id,
+          invoice_id: data.invoice.id,
         })
       }
 
@@ -109,8 +112,8 @@ module ProcessOut {
         )
 
         return DynamicCheckoutEventsUtils.dispatchTransactionErrorEvent({
-          invoiceId: data.invoice.id,
-          returnUrl: data.invoice.return_url,
+          invoice_id: data.invoice.id,
+          return_url: data.invoice.return_url,
         })
       }
 
@@ -129,7 +132,10 @@ module ProcessOut {
           message: Translator.translateError(errorCode),
         }
 
-      DynamicCheckoutEventsUtils.dispatchInvoiceFetchingErrorEvent(errorData)
+      DynamicCheckoutEventsUtils.dispatchInvoiceFetchingErrorEvent(
+        this.paymentConfig.invoiceId,
+        errorData,
+      )
 
       this.loadView(
         new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig).element,

@@ -78,12 +78,12 @@ module ProcessOut {
           merchantApplePayCertificateId: applePayPaymentMethodData.merchant_id,
           applePaySessionVersion: 14,
         },
-        DynamicCheckoutEventsUtils.dispatchApplePayNewSessionEvent,
-        DynamicCheckoutEventsUtils.dispatchApplePaySessionError,
+        () => DynamicCheckoutEventsUtils.dispatchApplePayNewSessionEvent(this.paymentConfig.invoiceId),
+        (err) => DynamicCheckoutEventsUtils.dispatchApplePaySessionError(this.paymentConfig.invoiceId, err),
       )
 
       session.onpaymentauthorizedPostprocess =
-        DynamicCheckoutEventsUtils.dispatchApplePayAuthorizedPostProcessEvent
+        () => DynamicCheckoutEventsUtils.dispatchApplePayAuthorizedPostProcessEvent(this.paymentConfig.invoiceId)
 
       return session
     }
@@ -97,7 +97,7 @@ module ProcessOut {
         card => {
           session.completePayment(0)
 
-          DynamicCheckoutEventsUtils.dispatchTokenizePaymentSuccessEvent(card)
+          DynamicCheckoutEventsUtils.dispatchTokenizePaymentSuccessEvent(this.paymentConfig.invoiceId, card)
 
           // The casting is needed since Apple Pay returns card object instead of card token for some reason
           // You can check the implementation of tokenize function
@@ -145,8 +145,8 @@ module ProcessOut {
           }
 
           DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
-            invoiceId,
-            returnUrl: this.paymentConfig.invoiceDetails.return_url,
+            invoice_id: invoiceId,
+            return_url: this.paymentConfig.invoiceDetails.return_url,
           })
         },
         error => {
@@ -165,18 +165,20 @@ module ProcessOut {
             )
           }
 
-          DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error)
+          DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(this.paymentConfig.invoiceId, error)
         },
         undefined,
-        invoiceId => {
+        (invoiceId, reason) => {
           if (this.paymentConfig.showStatusMessage) {
             getViewContainer().appendChild(
               new DynamicCheckoutPaymentPendingView(this.processOutInstance, this.paymentConfig).element,
             )
           }
 
-          DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent(invoiceId, {
+          DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent({
             payment_method_name: "apple_pay",
+            invoice_id: invoiceId,
+            reason: reason || null,
           })
         },
       )

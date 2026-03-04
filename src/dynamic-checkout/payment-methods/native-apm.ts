@@ -9,12 +9,15 @@ module ProcessOut {
     private resetContainerHtml: () => HTMLElement
     protected processOutInstance: ProcessOut
 
+    private onPaymentSubmit?: () => void
+
     constructor(
       processOutInstance: ProcessOut,
       paymentMethod: PaymentMethod,
       paymentConfig: DynamicCheckoutPaymentConfig,
       theme: DynamicCheckoutThemeType,
       resetContainerHtml: () => HTMLElement,
+      onPaymentSubmit?: () => void,
     ) {
       const { display, apm } = paymentMethod
       const { invoiceId, invoiceDetails } = paymentConfig
@@ -25,6 +28,7 @@ module ProcessOut {
       this.processOutInstance = processOutInstance
       this.resetContainerHtml = resetContainerHtml
       this.theme = theme
+      this.onPaymentSubmit = onPaymentSubmit
 
       const wrapper = this.getNativeApmWrapper()
       super.appendChildren(wrapper)
@@ -64,6 +68,12 @@ module ProcessOut {
         }
       })
 
+      window.addEventListener(NATIVE_APM_EVENTS.PAYMENT_INIT, () => {
+        if (this.onPaymentSubmit) {
+          this.onPaymentSubmit()
+        }
+      })
+
       window.addEventListener(NATIVE_APM_EVENTS.PAYMENT_SUCCESS, () => {
         if (this.paymentConfig.showStatusMessage) {
           this.resetContainerHtml().appendChild(
@@ -80,8 +90,8 @@ module ProcessOut {
         }
 
         DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
-          invoiceId: this.paymentConfig.invoiceId,
-          returnUrl: this.paymentConfig.invoiceDetails.return_url,
+          invoice_id: this.paymentConfig.invoiceId,
+          return_url: this.paymentConfig.invoiceDetails.return_url,
         })
       })
 
@@ -100,7 +110,7 @@ module ProcessOut {
           )
         }
 
-        DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(e)
+        DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(this.paymentConfig.invoiceId, e)
       })
     }
 
