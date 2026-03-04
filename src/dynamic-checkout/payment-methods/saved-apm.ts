@@ -104,12 +104,18 @@ module ProcessOut {
       this.setButtonLoading()
 
       if (apm_customer_token.redirect_url) {
+        const { additionalData } = this.paymentConfig
+
+        const redirectUrl = additionalData
+          ? this.processOutInstance.appendAdditionalDataToUrl(apm_customer_token.redirect_url, additionalData)
+          : apm_customer_token.redirect_url
+
         DynamicCheckoutEventsUtils.dispatchPaymentSubmittedEvent({
           payment_method_name: apm.gateway_name,
         })
 
         return this.processOutInstance.handleAction(
-          apm_customer_token.redirect_url,
+          redirectUrl,
           paymentToken => {
             this.processOutInstance.makeCardPayment(
               invoiceId,
