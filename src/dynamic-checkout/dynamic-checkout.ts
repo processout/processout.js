@@ -111,10 +111,10 @@ module ProcessOut {
           ).element,
         )
 
-        return DynamicCheckoutEventsUtils.dispatchTransactionErrorEvent({
-          invoice_id: data.invoice.id,
-          return_url: data.invoice.return_url,
-        })
+        return DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(
+          data.invoice.id,
+          { message: "Transaction is not in a waiting state" },
+        )
       }
 
       this.paymentConfig.setInvoiceDetails(data.invoice)

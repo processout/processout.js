@@ -12,8 +12,7 @@ module ProcessOut {
     PAYMENT_ERROR: "processout_dynamic_checkout_payment_error",
     PAYMENT_SUCCESS: "processout_dynamic_checkout_payment_success",
     PAYMENT_CANCELLED: "processout_dynamic_checkout_payment_cancelled",
-    TRANSACTION_ERROR: "processout_dynamic_checkout_transaction_error",
-    GOOGLE_PAY_LOAD_ERROR: "processout_dynamic_checkout_google_pay_load_error",
+GOOGLE_PAY_LOAD_ERROR: "processout_dynamic_checkout_google_pay_load_error",
     APPLE_PAY_NEW_SESSION: "processout_dynamic_checkout_apple_pay_new_session",
     APPLE_PAY_SESSION_ERROR: "processout_dynamic_checkout_apple_pay_session_error",
     APPLE_PAY_AUTHORIZED_POST_PROCESS:
@@ -48,9 +47,9 @@ module ProcessOut {
       return window.dispatchEvent(event)
     }
 
-    static dispatchTokenizePaymentSuccessEvent(invoiceId: string, token: string) {
+    static dispatchTokenizePaymentSuccessEvent(invoiceId: string, cardId: string) {
       const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.TOKENIZE_PAYMENT_SUCCESS, {
-        token,
+        card_id: cardId,
         invoice_id: invoiceId,
       })
       return window.dispatchEvent(event)
@@ -72,7 +71,12 @@ module ProcessOut {
       return window.dispatchEvent(event)
     }
 
-    static dispatchPaymentErrorEvent(invoiceId: string, errorData: any) {
+    static dispatchPaymentErrorEvent(
+      invoiceId: string,
+      errorData: any,
+      customerTokenId?: string,
+      paymentMethodName?: string,
+    ) {
       const normalizedError =
         typeof errorData === "object" && errorData !== null
           ? errorData
@@ -87,11 +91,18 @@ module ProcessOut {
         ...normalizedError,
         invoice_id: invoiceId,
         reason: normalizedError.message || null,
+        ...(customerTokenId && { customer_token_id: customerTokenId }),
+        ...(paymentMethodName && { payment_method_name: paymentMethodName }),
       })
       return window.dispatchEvent(event)
     }
 
-    static dispatchPaymentSuccessEvent(response: { invoice_id: string; return_url: string }) {
+    static dispatchPaymentSuccessEvent(response: {
+      invoice_id: string
+      return_url: string
+      customer_token_id?: string
+      payment_method_name?: string
+    }) {
       const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.PAYMENT_SUCCESS, response)
 
       return window.dispatchEvent(event)
@@ -140,13 +151,7 @@ module ProcessOut {
       return window.dispatchEvent(event)
     }
 
-    static dispatchTransactionErrorEvent(errorData: { invoice_id: string; return_url: string }) {
-      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.TRANSACTION_ERROR, errorData)
-
-      return window.dispatchEvent(event)
-    }
-
-    static dispatchGooglePayLoadError(errorData: { invoice_id: string; return_url: string }) {
+static dispatchGooglePayLoadError(errorData: { invoice_id: string; return_url: string }) {
       const event = EventsUtils.createEvent(
         DYNAMIC_CHECKOUT_EVENTS.GOOGLE_PAY_LOAD_ERROR,
         errorData,
@@ -158,6 +163,7 @@ module ProcessOut {
     static dispatchPaymentSubmittedEvent(details: {
       payment_method_name: string
       invoice_id: string
+      customer_token_id?: string
     }) {
       const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.PAYMENT_SUBMITTED, details)
 
@@ -177,6 +183,7 @@ module ProcessOut {
       payment_method_name: string
       invoice_id: string
       reason: string | null
+      customer_token_id?: string
     }) {
       const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.PAYMENT_PENDING, details)
 

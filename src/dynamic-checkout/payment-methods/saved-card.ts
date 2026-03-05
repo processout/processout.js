@@ -91,6 +91,7 @@ module ProcessOut {
       DynamicCheckoutEventsUtils.dispatchPaymentSubmittedEvent({
         payment_method_name: "card",
         invoice_id: this.paymentConfig.invoiceId,
+        customer_token_id: this.paymentMethod.card_customer_token.customer_token_id,
       })
 
       this.processOutInstance.makeCardPayment(
@@ -125,6 +126,8 @@ module ProcessOut {
       DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
         invoice_id: invoiceId,
         return_url: this.paymentConfig.invoiceDetails.return_url,
+        customer_token_id: this.paymentMethod.card_customer_token.customer_token_id,
+        payment_method_name: "card",
       })
     }
 
@@ -140,6 +143,7 @@ module ProcessOut {
         payment_method_name: "card",
         invoice_id: invoiceId,
         reason: reason || null,
+        customer_token_id: this.paymentMethod.card_customer_token.customer_token_id,
       })
     }
 
@@ -157,7 +161,7 @@ module ProcessOut {
         )
       }
 
-      DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(this.paymentConfig.invoiceId, error)
+      DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(this.paymentConfig.invoiceId, error, this.paymentMethod.card_customer_token.customer_token_id, "card")
     }
 
     private setButtonLoading() {
