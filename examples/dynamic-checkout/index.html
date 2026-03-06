@@ -10,9 +10,10 @@
     <script>
       document.addEventListener("DOMContentLoaded", function () {
         // You need to replace these values with your own
-        const projectId = "test-proj_zkSfc1Cz6vPjhcLkapSpO7UtmCeYuavb"
-        const invoiceId = "iv_3AFPfYuavbUBf4rerB2VMHKUnmQjke59"
-        const clientSecret = ""
+        const projectId = "test-proj_qEi1u5BwoYcZb6mOMKDWIm4mpqKCq6bN"
+        const invoiceId = "iv_3AZopCq6bNeWzgBIqH7gtCMecS7fU5aW"
+        const clientSecret =
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzI4MTE0MjcsImludm9pY2VfaWQiOiJpdl8zQVpsQUNxNmJOQXZGR0tNcDJ2Um52RFZkcGdjUExydSIsImN1c3RvbWVyX2lkIjoiY3VzdF95S0V1SzNBRkEzUkJGQWxCdzg4YnFSMXZocHpKVjNReSJ9.SZ0Ul9OEwl0sVreShh7iWm31Nifofe_IvZ09fmP51F8"
 
         const client = new ProcessOut.ProcessOut(projectId)
 
@@ -21,63 +22,85 @@
           clientSecret,
           capturePayments: false,
           allowFallbackToSale: false,
-          showStatusMessage: false,
-          locale: "de",
+          showStatusMessage: true,
+          locale: "en",
+          payButtonText: undefined,
         })
 
         dynamicCheckout.mount("#dynamic-cko-container")
 
-        // Dynamic Checkout widget dispatches event on every major action. Here are event handlers to test them
+        // Dynamic Checkout events
         window.addEventListener("processout_dynamic_checkout_loading", function (e) {
-          console.log("Widget loading")
+          console.log("DC: Widget loading", e.detail)
         })
 
         window.addEventListener("processout_dynamic_checkout_ready", function (e) {
-          console.log("Widget Ready")
+          console.log("DC: Widget ready", e.detail)
         })
 
         window.addEventListener("processout_dynamic_checkout_invoice_fetching_error", function (e) {
-          console.log("Invoice fetching error")
-        })
-
-        window.addEventListener("processout_dynamic_checkout_apm_payment_submitted", function (e) {
-          console.log("Apm payment submitted", e)
-        })
-
-        window.addEventListener("processout_dynamic_checkout_apm_payment_pending", function (e) {
-          console.log("Apm payment pending", e)
+          console.log("DC: Invoice fetching error", e.detail)
         })
 
         window.addEventListener(
-          "processout_dynamic_checkout_tokenize_payment_success",
+          "processout_dynamic_checkout_no_dynamic_checkout_configuration",
           function (e) {
-            console.log("Tokenize payment success")
+            console.log("DC: No dynamic checkout configuration", e.detail)
           },
         )
 
-        window.addEventListener("processout_dynamic_checkout_tokenize_payment_error", function (e) {
-          console.log("Tokenize payment error")
+        window.addEventListener("processout_dynamic_checkout_payment_submitted", function (e) {
+          console.log("DC: Payment submitted", e.detail)
+        })
+
+        window.addEventListener("processout_dynamic_checkout_payment_pending", function (e) {
+          console.log("DC: Payment pending", e.detail)
         })
 
         window.addEventListener("processout_dynamic_checkout_payment_success", function (e) {
-          console.log("Payment success", e)
+          console.log("DC: Payment success", e.detail)
         })
 
         window.addEventListener("processout_dynamic_checkout_payment_error", function (e) {
-          console.log("Payment Error", e)
+          console.log("DC: Payment error", e.detail)
         })
 
-        window.addEventListener("processout_native_apm_payment_success", function (e) {
-          console.log("Payment Status (outside widget): Payment success", e)
-        })
-
-        window.addEventListener("processout_dynamic_checkout_transaction_error", function (e) {
-          console.log("Payment Status (outside widget): Transaction error", e)
+        window.addEventListener("processout_dynamic_checkout_payment_cancelled", function (e) {
+          console.log("DC: Payment cancelled", e.detail)
         })
 
         window.addEventListener("processout_dynamic_checkout_google_pay_load_error", function (e) {
-          console.log("Payment Status (outside widget): Google Pay load error", e)
+          console.log("DC: Google Pay load error", e.detail)
         })
+
+        window.addEventListener("processout_dynamic_checkout_apple_pay_new_session", function (e) {
+          console.log("DC: Apple Pay new session", e.detail)
+        })
+
+        window.addEventListener(
+          "processout_dynamic_checkout_apple_pay_session_error",
+          function (e) {
+            console.log("DC: Apple Pay session error", e.detail)
+          },
+        )
+
+        window.addEventListener(
+          "processout_dynamic_checkout_apple_pay_authorized_post_process",
+          function (e) {
+            console.log("DC: Apple Pay authorized post process", e.detail)
+          },
+        )
+
+        window.addEventListener("processout_dynamic_checkout_delete_payment_method", function (e) {
+          console.log("DC: Delete payment method", e.detail)
+        })
+
+        window.addEventListener(
+          "processout_dynamic_checkout_delete_payment_method_error",
+          function (e) {
+            console.log("DC: Delete payment method error", e.detail)
+          },
+        )
       })
     </script>
   </body>

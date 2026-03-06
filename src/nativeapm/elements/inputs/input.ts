@@ -68,7 +68,6 @@ module ProcessOut {
      * This function returns the input value
      */
     public getInputValue() {
-      console.log(this.inputInstance.getValue())
       return this.inputInstance.getValue()
     }
 

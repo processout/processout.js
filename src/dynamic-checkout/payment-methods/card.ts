@@ -8,6 +8,7 @@ module ProcessOut {
     private theme: DynamicCheckoutThemeType
     private resetContainerHtml: () => HTMLElement
     private isCardRestricted: boolean = false
+    private tokenizedCardId?: string
 
     constructor(
       procesoutInstance: ProcessOut,
@@ -90,9 +91,12 @@ module ProcessOut {
               }
 
               this.setButtonLoading()
+              this.tokenizedCardId = undefined
 
               DynamicCheckoutEventsUtils.dispatchPaymentSubmittedEvent({
                 payment_method_name: "card",
+                invoice_id: this.paymentConfig.invoiceId,
+                return_url: this.paymentConfig.invoiceDetails.return_url || null,
               })
 
               this.procesoutInstance.tokenize(
@@ -104,11 +108,20 @@ module ProcessOut {
             }, this.handleValidationError.bind(this))
           })
         },
-        DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent,
+        err =>
+          DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(
+            this.paymentConfig.invoiceId,
+            err,
+            "card",
+            undefined,
+            this.paymentConfig.invoiceDetails.return_url || null,
+          ),
       )
     }
 
     private handleTokenizeSuccess(cardToken: string) {
+      this.tokenizedCardId = cardToken
+
       const cardPaymentOptions = {
         authorize_only: !this.paymentConfig.capturePayments,
         allow_fallback_to_sale: this.paymentConfig.allowFallbackToSale,
@@ -140,10 +153,23 @@ module ProcessOut {
         new DynamicCheckoutPaymentErrorView(this.procesoutInstance, this.paymentConfig).element,
       )
 
-      DynamicCheckoutEventsUtils.dispatchTokenizePaymentErrorEvent(error)
+      DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(
+        this.paymentConfig.invoiceId,
+        error,
+        "card",
+        this.tokenizedCardId,
+        this.paymentConfig.invoiceDetails.return_url || null,
+      )
     }
 
     private handleCardPaymentSuccess(invoiceId: string) {
+      DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
+        invoice_id: invoiceId,
+        return_url: this.paymentConfig.invoiceDetails.return_url || null,
+        payment_method_name: "card",
+        ...(this.tokenizedCardId && { card_id: this.tokenizedCardId }),
+      })
+
       if (this.paymentConfig.showStatusMessage) {
         this.resetContainerHtml().appendChild(
           new DynamicCheckoutPaymentSuccessView(this.procesoutInstance, this.paymentConfig).element,
@@ -156,11 +182,6 @@ module ProcessOut {
           new DynamicCheckoutPaymentInfoView(this.processOutInstance, this.paymentConfig).element,
         )
       }
-
-      DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
-        invoiceId,
-        returnUrl: this.paymentConfig.invoiceDetails.return_url,
-      })
     }
 
     private handleCardPaymentPending(invoiceId: string) {
@@ -170,8 +191,11 @@ module ProcessOut {
         )
       }
 
-      DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent(invoiceId, {
+      DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent({
         payment_method_name: "card",
+        invoice_id: invoiceId,
+        return_url: this.paymentConfig.invoiceDetails.return_url || null,
+        ...(this.tokenizedCardId && { card_id: this.tokenizedCardId }),
       })
     }
 
@@ -189,7 +213,13 @@ module ProcessOut {
         )
       }
 
-      DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error)
+      DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(
+        this.paymentConfig.invoiceId,
+        error,
+        "card",
+        this.tokenizedCardId,
+        this.paymentConfig.invoiceDetails.return_url || null,
+      )
     }
 
     private getCardFormOptions() {

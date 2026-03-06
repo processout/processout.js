@@ -1569,7 +1569,7 @@ module ProcessOut {
       success: (data: any) => void,
       error: (err: Exception) => void,
       apiRequestOptions?: apiRequestOptions,
-      pending?: (data: any) => void,
+      pending?: (resourceId: string, reason: string | null) => void,
     ): void {
       this.handleCardActions(
         "POST",
@@ -1720,7 +1720,7 @@ module ProcessOut {
       success: (data: any) => void,
       error: (err: Exception) => void,
       apiRequestOptions?: apiRequestOptions,
-      pending?: (data: any) => void,
+      pending?: (resourceId: string, reason: string | null) => void,
     ): void {
       // returns this.hppInitialURL only once during the first call from HPP, then returns the endpoint
       const getEndpoint = (): string => {
@@ -1796,7 +1796,7 @@ module ProcessOut {
             // Otherwise, call the success callback with the resourceID
             // This is to ensure backward compatibility with old usage of PO.js
             if (pending) {
-              pending(resourceID)
+              pending(resourceID, data?.message || null)
             } else {
               success(resourceID)
             }
