@@ -78,12 +78,25 @@ module ProcessOut {
           merchantApplePayCertificateId: applePayPaymentMethodData.merchant_id,
           applePaySessionVersion: 14,
         },
-        () => DynamicCheckoutEventsUtils.dispatchApplePayNewSessionEvent(this.paymentConfig.invoiceId),
-        (err) => DynamicCheckoutEventsUtils.dispatchApplePaySessionError(this.paymentConfig.invoiceId, err),
+        () =>
+          DynamicCheckoutEventsUtils.dispatchApplePayNewSessionEvent(
+            this.paymentConfig.invoiceId,
+            this.paymentConfig.invoiceDetails.return_url || null,
+          ),
+        (err) =>
+          DynamicCheckoutEventsUtils.dispatchApplePaySessionError(
+            this.paymentConfig.invoiceId,
+            err,
+            this.paymentConfig.invoiceDetails.return_url || null,
+          ),
       )
 
       session.onpaymentauthorizedPostprocess =
-        () => DynamicCheckoutEventsUtils.dispatchApplePayAuthorizedPostProcessEvent(this.paymentConfig.invoiceId)
+        () =>
+          DynamicCheckoutEventsUtils.dispatchApplePayAuthorizedPostProcessEvent(
+            this.paymentConfig.invoiceId,
+            this.paymentConfig.invoiceDetails.return_url || null,
+          )
 
       return session
     }
@@ -97,8 +110,6 @@ module ProcessOut {
         card => {
           session.completePayment(0)
 
-          DynamicCheckoutEventsUtils.dispatchTokenizePaymentSuccessEvent(this.paymentConfig.invoiceId, card)
-
           // The casting is needed since Apple Pay returns card object instead of card token for some reason
           // You can check the implementation of tokenize function
           const cardToken = (card as unknown as Record<string, any>).id
@@ -111,6 +122,14 @@ module ProcessOut {
           getViewContainer().appendChild(
             new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig)
               .element,
+          )
+
+          DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(
+            this.paymentConfig.invoiceId,
+            { message: "Apple Pay tokenization failed" },
+            "apple_pay",
+            undefined,
+            this.paymentConfig.invoiceDetails.return_url || null,
           )
         },
       )
@@ -146,7 +165,8 @@ module ProcessOut {
 
           DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
             invoice_id: invoiceId,
-            return_url: this.paymentConfig.invoiceDetails.return_url,
+            return_url: this.paymentConfig.invoiceDetails.return_url || null,
+            payment_method_name: "apple_pay",
           })
         },
         error => {
@@ -165,10 +185,16 @@ module ProcessOut {
             )
           }
 
-          DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(this.paymentConfig.invoiceId, error)
+          DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(
+            this.paymentConfig.invoiceId,
+            error,
+            "apple_pay",
+            undefined,
+            this.paymentConfig.invoiceDetails.return_url || null,
+          )
         },
         undefined,
-        (invoiceId, reason) => {
+        invoiceId => {
           if (this.paymentConfig.showStatusMessage) {
             getViewContainer().appendChild(
               new DynamicCheckoutPaymentPendingView(this.processOutInstance, this.paymentConfig).element,
@@ -178,7 +204,7 @@ module ProcessOut {
           DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent({
             payment_method_name: "apple_pay",
             invoice_id: invoiceId,
-            reason: reason || null,
+            return_url: this.paymentConfig.invoiceDetails.return_url || null,
           })
         },
       )

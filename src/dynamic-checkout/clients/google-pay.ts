@@ -103,7 +103,13 @@ module ProcessOut {
             buttonContainer.appendChild(button)
           }
         })
-        .catch(DynamicCheckoutEventsUtils.dispatchGooglePayLoadError)
+        .catch(error =>
+          DynamicCheckoutEventsUtils.dispatchGooglePayLoadError(
+            error,
+            this.paymentConfig.invoiceId,
+            this.paymentConfig.invoiceDetails.return_url || null,
+          ),
+        )
     }
 
     private makePayment(invoiceData: Invoice, getViewContainer: () => HTMLElement) {
@@ -119,8 +125,6 @@ module ProcessOut {
             paymentToken,
             {},
             token => {
-              DynamicCheckoutEventsUtils.dispatchTokenizePaymentSuccessEvent(this.paymentConfig.invoiceId, token)
-
               this.processOutInstance.makeCardPayment(
                 invoiceData.id,
                 token,
@@ -150,7 +154,8 @@ module ProcessOut {
 
                   DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
                     invoice_id: invoiceId,
-                    return_url: this.paymentConfig.invoiceDetails.return_url,
+                    return_url: this.paymentConfig.invoiceDetails.return_url || null,
+                    payment_method_name: "google_pay",
                   })
                 },
                 error => {
@@ -173,10 +178,16 @@ module ProcessOut {
                     )
                   }
 
-                  DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(this.paymentConfig.invoiceId, error)
+                  DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(
+                    this.paymentConfig.invoiceId,
+                    error,
+                    "google_pay",
+                    undefined,
+                    this.paymentConfig.invoiceDetails.return_url || null,
+                  )
                 },
                 undefined,
-                (invoiceId, reason) => {
+                invoiceId => {
                   if (this.paymentConfig.showStatusMessage) {
                     getViewContainer().appendChild(
                       new DynamicCheckoutPaymentPendingView(this.processOutInstance, this.paymentConfig).element,
@@ -186,7 +197,7 @@ module ProcessOut {
                   DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent({
                     payment_method_name: "google_pay",
                     invoice_id: invoiceId,
-                    reason: reason || null,
+                    return_url: this.paymentConfig.invoiceDetails.return_url || null,
                   })
                 },
               )
@@ -197,13 +208,25 @@ module ProcessOut {
                   .element,
               )
 
-              DynamicCheckoutEventsUtils.dispatchTokenizePaymentErrorEvent(this.paymentConfig.invoiceId, {
-                message: `Tokenize payment error: ${JSON.stringify(error, undefined, 2)}`,
-              })
+              DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(
+                this.paymentConfig.invoiceId,
+                {
+                  message: `Tokenize payment error: ${JSON.stringify(error, undefined, 2)}`,
+                },
+                "google_pay",
+                undefined,
+                this.paymentConfig.invoiceDetails.return_url || null,
+              )
             },
           )
         })
-        .catch(DynamicCheckoutEventsUtils.dispatchGooglePayLoadError)
+        .catch(error =>
+          DynamicCheckoutEventsUtils.dispatchGooglePayLoadError(
+            error,
+            this.paymentConfig.invoiceId,
+            this.paymentConfig.invoiceDetails.return_url || null,
+          ),
+        )
     }
 
     private prepareIsReadyToPayRequest(invoiceData: Invoice) {

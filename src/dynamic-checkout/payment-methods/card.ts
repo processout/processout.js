@@ -8,6 +8,7 @@ module ProcessOut {
     private theme: DynamicCheckoutThemeType
     private resetContainerHtml: () => HTMLElement
     private isCardRestricted: boolean = false
+    private tokenizedCardId?: string
 
     constructor(
       procesoutInstance: ProcessOut,
@@ -90,10 +91,12 @@ module ProcessOut {
               }
 
               this.setButtonLoading()
+              this.tokenizedCardId = undefined
 
               DynamicCheckoutEventsUtils.dispatchPaymentSubmittedEvent({
                 payment_method_name: "card",
                 invoice_id: this.paymentConfig.invoiceId,
+                return_url: this.paymentConfig.invoiceDetails.return_url || null,
               })
 
               this.procesoutInstance.tokenize(
@@ -105,12 +108,19 @@ module ProcessOut {
             }, this.handleValidationError.bind(this))
           })
         },
-        (err) => DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(this.paymentConfig.invoiceId, err),
+        err =>
+          DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(
+            this.paymentConfig.invoiceId,
+            err,
+            "card",
+            undefined,
+            this.paymentConfig.invoiceDetails.return_url || null,
+          ),
       )
     }
 
     private handleTokenizeSuccess(cardToken: string) {
-      DynamicCheckoutEventsUtils.dispatchTokenizePaymentSuccessEvent(this.paymentConfig.invoiceId, cardToken)
+      this.tokenizedCardId = cardToken
 
       const cardPaymentOptions = {
         authorize_only: !this.paymentConfig.capturePayments,
@@ -143,10 +153,23 @@ module ProcessOut {
         new DynamicCheckoutPaymentErrorView(this.procesoutInstance, this.paymentConfig).element,
       )
 
-      DynamicCheckoutEventsUtils.dispatchTokenizePaymentErrorEvent(this.paymentConfig.invoiceId, error)
+      DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(
+        this.paymentConfig.invoiceId,
+        error,
+        "card",
+        this.tokenizedCardId,
+        this.paymentConfig.invoiceDetails.return_url || null,
+      )
     }
 
     private handleCardPaymentSuccess(invoiceId: string) {
+      DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
+        invoice_id: invoiceId,
+        return_url: this.paymentConfig.invoiceDetails.return_url || null,
+        payment_method_name: "card",
+        ...(this.tokenizedCardId && { card_id: this.tokenizedCardId }),
+      })
+
       if (this.paymentConfig.showStatusMessage) {
         this.resetContainerHtml().appendChild(
           new DynamicCheckoutPaymentSuccessView(this.procesoutInstance, this.paymentConfig).element,
@@ -159,14 +182,9 @@ module ProcessOut {
           new DynamicCheckoutPaymentInfoView(this.processOutInstance, this.paymentConfig).element,
         )
       }
-
-      DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
-        invoice_id: invoiceId,
-        return_url: this.paymentConfig.invoiceDetails.return_url,
-      })
     }
 
-    private handleCardPaymentPending(invoiceId: string, reason: string | null) {
+    private handleCardPaymentPending(invoiceId: string) {
       if (this.paymentConfig.showStatusMessage) {
         this.resetContainerHtml().appendChild(
           new DynamicCheckoutPaymentPendingView(this.procesoutInstance, this.paymentConfig).element,
@@ -176,7 +194,8 @@ module ProcessOut {
       DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent({
         payment_method_name: "card",
         invoice_id: invoiceId,
-        reason: reason || null,
+        return_url: this.paymentConfig.invoiceDetails.return_url || null,
+        ...(this.tokenizedCardId && { card_id: this.tokenizedCardId }),
       })
     }
 
@@ -194,7 +213,13 @@ module ProcessOut {
         )
       }
 
-      DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(this.paymentConfig.invoiceId, error)
+      DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(
+        this.paymentConfig.invoiceId,
+        error,
+        "card",
+        this.tokenizedCardId,
+        this.paymentConfig.invoiceDetails.return_url || null,
+      )
     }
 
     private getCardFormOptions() {

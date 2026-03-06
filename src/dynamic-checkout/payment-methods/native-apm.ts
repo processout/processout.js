@@ -2,9 +2,12 @@
 
 module ProcessOut {
   export class NativeApmPaymentMethod extends PaymentMethodButton {
+    private static activePaymentMethod: NativeApmPaymentMethod | null = null
+
     private nativeApmInstance: NativeApm
     private paymentConfig: DynamicCheckoutPaymentConfig
     private isMounted: boolean
+    private paymentMethodName: string
     private theme: DynamicCheckoutThemeType
     private resetContainerHtml: () => HTMLElement
     protected processOutInstance: ProcessOut
@@ -25,6 +28,7 @@ module ProcessOut {
       super(processOutInstance, display.name, display.logo.dark_url.vector, display.name)
 
       this.paymentConfig = paymentConfig
+      this.paymentMethodName = apm.gateway_name
       this.processOutInstance = processOutInstance
       this.resetContainerHtml = resetContainerHtml
       this.theme = theme
@@ -62,6 +66,8 @@ module ProcessOut {
 
     private setupEventListeners(wrapper: HTMLElement) {
       this.element.addEventListener("click", () => {
+        NativeApmPaymentMethod.activePaymentMethod = this
+
         if (!this.isMounted) {
           this.nativeApmInstance.mount(wrapper)
           this.isMounted = true
@@ -69,12 +75,20 @@ module ProcessOut {
       })
 
       window.addEventListener(NATIVE_APM_EVENTS.PAYMENT_INIT, () => {
+        if (!this.isActivePaymentMethod()) {
+          return
+        }
+
         if (this.onPaymentSubmit) {
           this.onPaymentSubmit()
         }
       })
 
       window.addEventListener(NATIVE_APM_EVENTS.PAYMENT_SUCCESS, () => {
+        if (!this.isActivePaymentMethod()) {
+          return
+        }
+
         if (this.paymentConfig.showStatusMessage) {
           this.resetContainerHtml().appendChild(
             new DynamicCheckoutPaymentSuccessView(this.processOutInstance, this.paymentConfig)
@@ -91,11 +105,18 @@ module ProcessOut {
 
         DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
           invoice_id: this.paymentConfig.invoiceId,
-          return_url: this.paymentConfig.invoiceDetails.return_url,
+          return_url: this.paymentConfig.invoiceDetails.return_url || null,
+          payment_method_name: this.paymentMethodName,
         })
+
+        NativeApmPaymentMethod.activePaymentMethod = null
       })
 
       window.addEventListener(NATIVE_APM_EVENTS.PAYMENT_ERROR, e => {
+        if (!this.isActivePaymentMethod()) {
+          return
+        }
+
         if (this.paymentConfig.showStatusMessage) {
           this.resetContainerHtml().appendChild(
             new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig)
@@ -110,8 +131,20 @@ module ProcessOut {
           )
         }
 
-        DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(this.paymentConfig.invoiceId, e)
+        DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(
+          this.paymentConfig.invoiceId,
+          e,
+          this.paymentMethodName,
+          undefined,
+          this.paymentConfig.invoiceDetails.return_url || null,
+        )
+
+        NativeApmPaymentMethod.activePaymentMethod = null
       })
+    }
+
+    private isActivePaymentMethod() {
+      return NativeApmPaymentMethod.activePaymentMethod === this
     }
 
     private getNativeApmWrapper() {

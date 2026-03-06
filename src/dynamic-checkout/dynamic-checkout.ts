@@ -50,7 +50,7 @@ module ProcessOut {
 
       this.loadView(paymentMethodsView.element)
 
-      DynamicCheckoutEventsUtils.dispatchWidgetReadyEvent(this.paymentConfig.invoiceId)
+      DynamicCheckoutEventsUtils.dispatchWidgetReadyEvent(this.paymentConfig.invoiceId, null)
     }
 
     private getInvoiceDetails(onFetch: Function, onSuccess: Function, onError: Function) {
@@ -73,7 +73,7 @@ module ProcessOut {
     private onGetInvoiceLoading() {
       this.loadView(new DynamicCheckoutInvoiceLoadingView(this.paymentConfig.locale).element)
 
-      DynamicCheckoutEventsUtils.dispatchWidgetLoadingEvent(this.paymentConfig.invoiceId)
+      DynamicCheckoutEventsUtils.dispatchWidgetLoadingEvent(this.paymentConfig.invoiceId, null)
     }
 
     private onGetInvoiceSuccess(data: any) {
@@ -85,6 +85,7 @@ module ProcessOut {
         return DynamicCheckoutEventsUtils.dispatchInvoiceFetchingErrorEvent(
           this.paymentConfig.invoiceId,
           data,
+          data.invoice ? data.invoice.return_url || null : null,
         )
       }
 
@@ -97,9 +98,12 @@ module ProcessOut {
           ).element,
         )
 
-        return DynamicCheckoutEventsUtils.dispatchNoDynamicCheckoutConfigurationEvent({
-          invoice_id: data.invoice.id,
-        })
+        return DynamicCheckoutEventsUtils.dispatchNoDynamicCheckoutConfigurationEvent(
+          {
+            invoice_id: data.invoice.id,
+          },
+          data.invoice.return_url || null,
+        )
       }
 
       if (data.invoice.transaction.status !== "waiting") {
@@ -113,7 +117,14 @@ module ProcessOut {
 
         return DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(
           data.invoice.id,
-          { message: "Transaction is not in a waiting state" },
+          {
+            error_type: "transaction.invalid-status",
+            message: "Transaction is not in a waiting state",
+            transaction_status: data.invoice.transaction.status,
+          },
+          undefined,
+          undefined,
+          data.invoice.return_url || null,
         )
       }
 
@@ -135,6 +146,7 @@ module ProcessOut {
       DynamicCheckoutEventsUtils.dispatchInvoiceFetchingErrorEvent(
         this.paymentConfig.invoiceId,
         errorData,
+        null,
       )
 
       this.loadView(

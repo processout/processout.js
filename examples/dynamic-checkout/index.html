@@ -11,8 +11,9 @@
       document.addEventListener("DOMContentLoaded", function () {
         // You need to replace these values with your own
         const projectId = "test-proj_qEi1u5BwoYcZb6mOMKDWIm4mpqKCq6bN"
-        const invoiceId = "iv_3AWvoCq6bNNqVl8dXb5MFXjdSgviKYfY"
-        const clientSecret = ""
+        const invoiceId = "iv_3AZopCq6bNeWzgBIqH7gtCMecS7fU5aW"
+        const clientSecret =
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzI4MTE0MjcsImludm9pY2VfaWQiOiJpdl8zQVpsQUNxNmJOQXZGR0tNcDJ2Um52RFZkcGdjUExydSIsImN1c3RvbWVyX2lkIjoiY3VzdF95S0V1SzNBRkEzUkJGQWxCdzg4YnFSMXZocHpKVjNReSJ9.SZ0Ul9OEwl0sVreShh7iWm31Nifofe_IvZ09fmP51F8"
 
         const client = new ProcessOut.ProcessOut(projectId)
 
@@ -66,21 +67,6 @@
 
         window.addEventListener("processout_dynamic_checkout_payment_cancelled", function (e) {
           console.log("DC: Payment cancelled", e.detail)
-        })
-
-        window.addEventListener(
-          "processout_dynamic_checkout_tokenize_payment_success",
-          function (e) {
-            console.log("DC: Tokenize payment success", e.detail)
-          },
-        )
-
-        window.addEventListener("processout_dynamic_checkout_tokenize_payment_error", function (e) {
-          console.log("DC: Tokenize payment error", e.detail)
-        })
-
-        window.addEventListener("processout_dynamic_checkout_transaction_error", function (e) {
-          console.log("DC: Transaction error", e.detail)
         })
 
         window.addEventListener("processout_dynamic_checkout_google_pay_load_error", function (e) {
