@@ -22,9 +22,11 @@
           clientSecret,
           capturePayments: false,
           allowFallbackToSale: false,
-          showStatusMessage: true,
+          showStatusMessage: false,
           locale: "en",
-          payButtonText: undefined,
+          additionalData: {
+            issuer_id: "1234",
+          },
         })
 
         dynamicCheckout.mount("#dynamic-cko-container")
