@@ -65,16 +65,33 @@ module ProcessOut {
       );
       return window.dispatchEvent(event);
     }
+
+    private static sanitizeEventDetail(data?: any) {
+      if (!data || Object.prototype.toString.call(data) !== "[object Object]") {
+        return data;
+      }
+
+      return Object.keys(data).reduce((sanitizedData, key) => {
+        if (data[key] !== null && data[key] !== undefined) {
+          sanitizedData[key] = data[key];
+        }
+
+        return sanitizedData;
+      }, {});
+    }
+
     // IE 11 polyfill
     static createEvent(eventName: string, data?: any) {
+      const sanitizedData = EventsUtils.sanitizeEventDetail(data);
+
       if (typeof window.CustomEvent === "function") {
         return new CustomEvent(eventName, {
           bubbles: true,
-          detail: data,
+          detail: sanitizedData,
         });
       } else {
         const event = document.createEvent("CustomEvent");
-        event.initCustomEvent(eventName, true, false, data);
+        event.initCustomEvent(eventName, true, false, sanitizedData);
         return event;
       }
     }

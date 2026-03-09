@@ -140,7 +140,6 @@ module ProcessOut {
                 DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
                   invoice_id: invoiceId,
                   return_url: this.paymentConfig.invoiceDetails.return_url || null,
-                  customer_token_id: apm_customer_token.customer_token_id,
                   payment_method_name: apm.gateway_name,
                 })
               },
@@ -183,7 +182,6 @@ module ProcessOut {
                   payment_method_name: apm.gateway_name,
                   invoice_id: invoiceId,
                   return_url: this.paymentConfig.invoiceDetails.return_url || null,
-                  customer_token_id: apm_customer_token.customer_token_id,
                 })
               },
             )
@@ -207,8 +205,6 @@ module ProcessOut {
         )
       }
 
-      console.log(apm)
-
       DynamicCheckoutEventsUtils.dispatchPaymentSubmittedEvent({
         payment_method_name: this.paymentMethod.apm ? this.paymentMethod.apm.gateway_name : "apm",
         invoice_id: invoiceId,
@@ -227,7 +223,7 @@ module ProcessOut {
       )
     }
 
-    private handlePaymentSuccess(invoiceId: string) {
+    private handlePaymentSuccess(invoiceId: string, data) {
       this.resetContainerHtml().appendChild(
         new DynamicCheckoutPaymentSuccessView(this.processOutInstance, this.paymentConfig).element,
       )
@@ -235,7 +231,6 @@ module ProcessOut {
       DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
         invoice_id: invoiceId,
         return_url: this.paymentConfig.invoiceDetails.return_url || null,
-        customer_token_id: this.paymentMethod.apm_customer_token.customer_token_id,
         payment_method_name: this.paymentMethod.apm ? this.paymentMethod.apm.gateway_name : "apm",
       })
     }
@@ -252,7 +247,6 @@ module ProcessOut {
         payment_method_name: this.paymentMethod.apm ? this.paymentMethod.apm.gateway_name : "apm",
         invoice_id: this.paymentConfig.invoiceId,
         return_url: this.paymentConfig.invoiceDetails.return_url || null,
-        customer_token_id: this.paymentMethod.apm_customer_token.customer_token_id,
       })
     }
 

@@ -162,12 +162,13 @@ module ProcessOut {
       )
     }
 
-    private handleCardPaymentSuccess(invoiceId: string) {
+    private handleCardPaymentSuccess(invoiceId: string, data?: any) {
       DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
         invoice_id: invoiceId,
         return_url: this.paymentConfig.invoiceDetails.return_url || null,
         payment_method_name: "card",
         ...(this.tokenizedCardId && { card_id: this.tokenizedCardId }),
+        customer_token_id: data?.customer_token_id,
       })
 
       if (this.paymentConfig.showStatusMessage) {

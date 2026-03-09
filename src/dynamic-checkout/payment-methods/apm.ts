@@ -124,7 +124,6 @@ module ProcessOut {
                 invoice_id: invoiceId,
                 return_url: this.paymentConfig.invoiceDetails.return_url || null,
                 payment_method_name: apm.gateway_name,
-                customer_token_id: paymentToken,
               })
             },
             error => {

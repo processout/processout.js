@@ -127,7 +127,6 @@ module ProcessOut {
       DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
         invoice_id: invoiceId,
         return_url: this.paymentConfig.invoiceDetails.return_url || null,
-        customer_token_id: this.paymentMethod.card_customer_token.customer_token_id,
         payment_method_name: "card",
       })
     }
@@ -144,7 +143,6 @@ module ProcessOut {
         payment_method_name: "card",
         invoice_id: invoiceId,
         return_url: this.paymentConfig.invoiceDetails.return_url || null,
-        customer_token_id: this.paymentMethod.card_customer_token.customer_token_id,
       })
     }
 

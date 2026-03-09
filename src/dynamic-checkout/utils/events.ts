@@ -46,27 +46,33 @@ module ProcessOut {
       errorData: any,
       returnUrl: string | null,
     ) {
-      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.INVOICE_FETCHING_ERROR, {
+      const event = DynamicCheckoutEventsUtils.createEvent(
+        DYNAMIC_CHECKOUT_EVENTS.INVOICE_FETCHING_ERROR,
+        {
         ...errorData,
         invoice_id: invoiceId,
         payment_method_name: null,
         return_url: returnUrl,
-      })
+        },
+      )
 
       return window.dispatchEvent(event)
     }
 
     static dispatchWidgetLoadingEvent(invoiceId: string, returnUrl: string | null) {
-      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.WIDGET_LOADING, {
+      const event = DynamicCheckoutEventsUtils.createEvent(
+        DYNAMIC_CHECKOUT_EVENTS.WIDGET_LOADING,
+        {
         invoice_id: invoiceId,
         payment_method_name: null,
         return_url: returnUrl,
-      })
+        },
+      )
       return window.dispatchEvent(event)
     }
 
     static dispatchWidgetReadyEvent(invoiceId: string, returnUrl: string | null) {
-      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.WIDGET_READY, {
+      const event = DynamicCheckoutEventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.WIDGET_READY, {
         invoice_id: invoiceId,
         return_url: returnUrl,
       })
@@ -74,7 +80,7 @@ module ProcessOut {
     }
 
     static dispatchNoDynamicCheckoutConfigurationEvent(errorData: any, returnUrl: string | null) {
-      const event = EventsUtils.createEvent(
+      const event = DynamicCheckoutEventsUtils.createEvent(
         DYNAMIC_CHECKOUT_EVENTS.NO_DYNAMIC_CHECKOUT_CONFIGURATION,
         {
           ...errorData,
@@ -108,7 +114,7 @@ module ProcessOut {
         return
       }
 
-      const event = EventsUtils.createEvent(
+      const event = DynamicCheckoutEventsUtils.createEvent(
         DYNAMIC_CHECKOUT_EVENTS.PAYMENT_ERROR,
         normalizedError,
       )
@@ -116,7 +122,7 @@ module ProcessOut {
     }
 
     static dispatchPaymentSuccessEvent(response: DynamicCheckoutPaymentSuccessEventDetail) {
-      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.PAYMENT_SUCCESS, {
+      const event = DynamicCheckoutEventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.PAYMENT_SUCCESS, {
         ...response,
         payment_method_name: response.payment_method_name || null,
         return_url: response.return_url || null,
@@ -126,17 +132,20 @@ module ProcessOut {
     }
 
     static dispatchApplePayNewSessionEvent(invoiceId: string, returnUrl: string | null) {
-      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.APPLE_PAY_NEW_SESSION, {
+      const event = DynamicCheckoutEventsUtils.createEvent(
+        DYNAMIC_CHECKOUT_EVENTS.APPLE_PAY_NEW_SESSION,
+        {
         invoice_id: invoiceId,
         payment_method_name: "apple_pay",
         return_url: returnUrl,
-      })
+        },
+      )
 
       return window.dispatchEvent(event)
     }
 
     static dispatchApplePayAuthorizedPostProcessEvent(invoiceId: string, returnUrl: string | null) {
-      const event = EventsUtils.createEvent(
+      const event = DynamicCheckoutEventsUtils.createEvent(
         DYNAMIC_CHECKOUT_EVENTS.APPLE_PAY_AUTHORIZED_POST_PROCESS,
         {
           invoice_id: invoiceId,
@@ -149,12 +158,15 @@ module ProcessOut {
     }
 
     static dispatchApplePaySessionError(invoiceId: string, err: any, returnUrl: string | null) {
-      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.APPLE_PAY_SESSION_ERROR, {
+      const event = DynamicCheckoutEventsUtils.createEvent(
+        DYNAMIC_CHECKOUT_EVENTS.APPLE_PAY_SESSION_ERROR,
+        {
         ...err,
         invoice_id: invoiceId,
         payment_method_name: "apple_pay",
         return_url: returnUrl,
-      })
+        },
+      )
 
       return window.dispatchEvent(event)
     }
@@ -164,11 +176,14 @@ module ProcessOut {
       paymentMethodName: string | null,
       returnUrl: string | null,
     ) {
-      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.DELETE_PAYMENT_METHOD, {
+      const event = DynamicCheckoutEventsUtils.createEvent(
+        DYNAMIC_CHECKOUT_EVENTS.DELETE_PAYMENT_METHOD,
+        {
         invoice_id: invoiceId,
         payment_method_name: paymentMethodName,
         return_url: returnUrl,
-      })
+        },
+      )
 
       return window.dispatchEvent(event)
     }
@@ -179,18 +194,21 @@ module ProcessOut {
       paymentMethodName: string | null,
       returnUrl: string | null,
     ) {
-      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.DELETE_PAYMENT_METHOD_ERROR, {
+      const event = DynamicCheckoutEventsUtils.createEvent(
+        DYNAMIC_CHECKOUT_EVENTS.DELETE_PAYMENT_METHOD_ERROR,
+        {
         ...err,
         invoice_id: invoiceId,
         payment_method_name: paymentMethodName,
         return_url: returnUrl,
-      })
+        },
+      )
 
       return window.dispatchEvent(event)
     }
 
     static dispatchGooglePayLoadError(errorData: any, invoiceId: string, returnUrl: string | null) {
-      const event = EventsUtils.createEvent(
+      const event = DynamicCheckoutEventsUtils.createEvent(
         DYNAMIC_CHECKOUT_EVENTS.GOOGLE_PAY_LOAD_ERROR,
         {
           ...DynamicCheckoutEventsUtils.getEventDetail(errorData),
@@ -209,7 +227,10 @@ module ProcessOut {
       return_url: string | null
       customer_token_id?: string
     }) {
-      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.PAYMENT_SUBMITTED, details)
+      const event = DynamicCheckoutEventsUtils.createEvent(
+        DYNAMIC_CHECKOUT_EVENTS.PAYMENT_SUBMITTED,
+        details,
+      )
 
       return window.dispatchEvent(event)
     }
@@ -219,7 +240,10 @@ module ProcessOut {
       invoice_id: string
       return_url: string | null
     }) {
-      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.PAYMENT_CANCELLED, details)
+      const event = DynamicCheckoutEventsUtils.createEvent(
+        DYNAMIC_CHECKOUT_EVENTS.PAYMENT_CANCELLED,
+        details,
+      )
 
       return window.dispatchEvent(event)
     }
@@ -230,7 +254,10 @@ module ProcessOut {
       return_url: string | null
       customer_token_id?: string
     }) {
-      const event = EventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.PAYMENT_PENDING, details)
+      const event = DynamicCheckoutEventsUtils.createEvent(
+        DYNAMIC_CHECKOUT_EVENTS.PAYMENT_PENDING,
+        details,
+      )
 
       return window.dispatchEvent(event)
     }
@@ -275,16 +302,32 @@ module ProcessOut {
       }
     }
 
+    private static sanitizeEventDetail(data?: any) {
+      if (!data || Object.prototype.toString.call(data) !== "[object Object]") {
+        return data
+      }
+
+      return Object.keys(data).reduce((sanitizedData, key) => {
+        if (data[key] !== null && data[key] !== undefined) {
+          sanitizedData[key] = data[key]
+        }
+
+        return sanitizedData
+      }, {})
+    }
+
     // IE 11 polyfill
     static createEvent(eventName: string, data?: any) {
+      const sanitizedData = DynamicCheckoutEventsUtils.sanitizeEventDetail(data)
+
       if (typeof window.CustomEvent === "function") {
         return new CustomEvent(eventName, {
           bubbles: true,
-          detail: data,
+          detail: sanitizedData,
         })
       } else {
         const event = document.createEvent("CustomEvent")
-        event.initCustomEvent(eventName, true, false, data)
+        event.initCustomEvent(eventName, true, false, sanitizedData)
         return event
       }
     }
