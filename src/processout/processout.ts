@@ -1,6 +1,5 @@
 /// <reference path="../references.ts" />
 
-
 // declare the IE specific XDomainRequest object
 declare var XDomainRequest: any
 
@@ -331,8 +330,8 @@ module ProcessOut {
 
       if (path.substring(0, 4) != "http" && path[0] != "/") path = this.endpoint("api", "/" + path)
 
-      const queryParams = path.indexOf('?') !== -1 ? path.split('?')[1].split('&') : [];
-      path = path.indexOf('?') !== -1 ?  path.split('?')[0] : path
+      const queryParams = path.indexOf("?") !== -1 ? path.split("?")[1].split("&") : []
+      path = path.indexOf("?") !== -1 ? path.split("?")[0] : path
 
       var headers = {
         "Content-Type": "application/json",
@@ -356,7 +355,7 @@ module ProcessOut {
         // We need to hack our project ID in the URL itself so that
         // ProcessOut's load-balancers and routers can route the request
         // to the project's region
-        queryParams.push(`legacyrequest=true&project_id=${this.projectID}`);
+        queryParams.push(`legacyrequest=true&project_id=${this.projectID}`)
       }
 
       // We also need to hack our request headers for legacy browsers to
@@ -367,13 +366,13 @@ module ProcessOut {
       }
 
       for (var k in customHeaders) {
-        queryParams.push(`x-${k}=${customHeaders[k]}`);
+        queryParams.push(`x-${k}=${customHeaders[k]}`)
         headers[`X-${k}`] = customHeaders[k]
       }
 
       if (method == "get") {
         for (var key in data) {
-          queryParams.push(`${key}=${encodeURIComponent(data[key])}`);
+          queryParams.push(`${key}=${encodeURIComponent(data[key])}`)
         }
       }
 
@@ -459,20 +458,20 @@ module ProcessOut {
       form: HTMLElement,
       options: CardFieldOptions,
       onSuccess: (form: CardForm) => void,
-      onError: (err: Exception) => void
-    ): CardForm;
+      onError: (err: Exception) => void,
+    ): CardForm
 
     public setupForm(
       form: HTMLElement,
       onSuccess: (form: CardForm) => void,
-      onError: (err: Exception) => void
-    ): CardForm;
+      onError: (err: Exception) => void,
+    ): CardForm
 
     public setupForm(
       form: HTMLElement,
       optionsOrOnSuccess: CardFieldOptions | ((form: CardForm) => void),
       onSuccessOrOnError: ((form: CardForm) => void) | ((err: Exception) => void),
-      onError?: (err: Exception) => void
+      onError?: (err: Exception) => void,
     ): CardForm {
       if (!this.projectID) {
         throw new Exception(
@@ -488,18 +487,18 @@ module ProcessOut {
         )
       }
 
-      let options: CardFieldOptions;
-      let onSuccess: ((form: CardForm) => void);
+      let options: CardFieldOptions
+      let onSuccess: (form: CardForm) => void
 
-      if (typeof optionsOrOnSuccess === 'function') {
+      if (typeof optionsOrOnSuccess === "function") {
         // This is the setupForm(element, onSuccess, onError) signature
-        options = new CardFieldOptions("");
-        onSuccess = optionsOrOnSuccess;
-        onError = onSuccessOrOnError as (err: Exception) => void;
+        options = new CardFieldOptions("")
+        onSuccess = optionsOrOnSuccess
+        onError = onSuccessOrOnError as (err: Exception) => void
       } else {
         // This is the setupForm(element, options, onSuccess, onError) signature
-        options = optionsOrOnSuccess;
-        onSuccess = onSuccessOrOnError as (form: CardForm) => void;
+        options = optionsOrOnSuccess
+        onSuccess = onSuccessOrOnError as (form: CardForm) => void
       }
 
       return new CardForm(this, form).setup(options, onSuccess, onError)
@@ -523,23 +522,22 @@ module ProcessOut {
     /**
      * apm
      */
-    public get apm(){
+    public get apm() {
       return {
         tokenization: (container: Container, options: TokenizationUserOptions) => {
           return new APMImpl(this, this.telemetryClient, container, {
             ...options,
-            flow: 'tokenization',
+            flow: "tokenization",
           })
         },
         authorization: (container: Container, options: AuthorizationUserOptions) => {
           return new APMImpl(this, this.telemetryClient, container, {
             ...options,
-            flow: 'authorization'
+            flow: "authorization",
           })
-        }
+        },
       }
     }
-
 
     /**
      * SetupDynamicCheckout creates a Dynamic Checkout instance
@@ -1569,7 +1567,7 @@ module ProcessOut {
       success: (data: any) => void,
       error: (err: Exception) => void,
       apiRequestOptions?: apiRequestOptions,
-      pending?: (data: any) => void,
+      pending?: (resourceId: string, reason: string | null) => void,
     ): void {
       this.handleCardActions(
         "POST",
@@ -1664,7 +1662,7 @@ module ProcessOut {
 
       const iin = cardNumber.substring(0, 6)
       const apiEndpoint = `iins/${iin}`
-      
+
       this.apiRequest(
         "GET",
         apiEndpoint,
@@ -1717,10 +1715,10 @@ module ProcessOut {
       resourceID: string,
       cardID: string,
       options: any,
-      success: (data: any) => void,
+      success: (resourceId: any, data?: any) => void,
       error: (err: Exception) => void,
       apiRequestOptions?: apiRequestOptions,
-      pending?: (data: any) => void,
+      pending?: (resourceId: string, reason: string | null) => void,
     ): void {
       // returns this.hppInitialURL only once during the first call from HPP, then returns the endpoint
       const getEndpoint = (): string => {
@@ -1733,7 +1731,7 @@ module ProcessOut {
       }
 
       if (!options) options = {}
-      
+
       // Validate split_allocations if provided
       try {
         this.validateSplitAllocations(options.split_allocations)
@@ -1741,7 +1739,7 @@ module ProcessOut {
         error(validationError)
         return
       }
-      
+
       let source: string = cardID
       if (options.gatewayRequestSource) source = options.gatewayRequestSource
 
@@ -1796,15 +1794,15 @@ module ProcessOut {
             // Otherwise, call the success callback with the resourceID
             // This is to ensure backward compatibility with old usage of PO.js
             if (pending) {
-              pending(resourceID)
+              pending(resourceID, data?.message || null)
             } else {
-              success(resourceID)
+              success(resourceID, data)
             }
             return
           }
 
           if (!data.customer_action) {
-            success(resourceID)
+            success(resourceID, data)
             return
           }
 
@@ -1923,7 +1921,7 @@ module ProcessOut {
       }
 
       const allowedTypes = ["PURCHASE", "FEE", "VAT", "COMMISSION", "MARKETPLACE", "SHIPPING"]
-      
+
       splitAllocations.forEach((allocation: any, index: number) => {
         if (!allocation || typeof allocation !== "object") {
           throw new Exception("invalid_request", `split_allocations[${index}] must be an object`)
@@ -1933,23 +1931,35 @@ module ProcessOut {
         const requiredFields = ["provider_recipient_reference", "type", "amount", "currency"]
         requiredFields.forEach(field => {
           if (!allocation[field]) {
-            throw new Exception("invalid_request", `split_allocations[${index}].${field} is required`)
+            throw new Exception(
+              "invalid_request",
+              `split_allocations[${index}].${field} is required`,
+            )
           }
         })
 
         // Validate type field
         if (allowedTypes.indexOf(allocation.type) === -1) {
-          throw new Exception("invalid_request", `split_allocations[${index}].type must be one of: ${allowedTypes.join(", ")}`)
+          throw new Exception(
+            "invalid_request",
+            `split_allocations[${index}].type must be one of: ${allowedTypes.join(", ")}`,
+          )
         }
 
         // Validate amount is a valid number string
         if (typeof allocation.amount !== "string" || isNaN(parseFloat(allocation.amount))) {
-          throw new Exception("invalid_request", `split_allocations[${index}].amount must be a valid number string`)
+          throw new Exception(
+            "invalid_request",
+            `split_allocations[${index}].amount must be a valid number string`,
+          )
         }
 
         // Validate currency is a string
         if (typeof allocation.currency !== "string") {
-          throw new Exception("invalid_request", `split_allocations[${index}].currency must be a string`)
+          throw new Exception(
+            "invalid_request",
+            `split_allocations[${index}].currency must be a string`,
+          )
         }
       })
     }

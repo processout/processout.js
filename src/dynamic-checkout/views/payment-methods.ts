@@ -310,6 +310,13 @@ module ProcessOut {
                   this.paymentConfig,
                   this.theme,
                   this.resetContainerHtml.bind(this),
+                  () => {
+                    DynamicCheckoutEventsUtils.dispatchPaymentSubmittedEvent({
+                      payment_method_name: paymentMethod.apm.gateway_name,
+                      invoice_id: this.paymentConfig.invoiceId,
+                      return_url: this.paymentConfig.invoiceDetails.return_url || null,
+                    })
+                  },
                 )
 
             return regularPaymentMethods.push(apmPaymentMethod)
@@ -379,15 +386,29 @@ module ProcessOut {
         {},
         (data) => {
           if (resolveOutcome(data) === OUTCOME.Failed) {
-            DynamicCheckoutEventsUtils.dispatchDeletePaymentMethodErrorEvent(data)
+            DynamicCheckoutEventsUtils.dispatchDeletePaymentMethodErrorEvent(
+              this.paymentConfig.invoiceId,
+              data,
+              isCardToken ? "card" : paymentMethod.apm.gateway_name,
+              this.paymentConfig.invoiceDetails.return_url || null,
+            )
             return
           }
 
           this.deletePaymentMethodFromDom(tokenId, isCardToken)
-          DynamicCheckoutEventsUtils.dispatchDeletePaymentMethodEvent()
+          DynamicCheckoutEventsUtils.dispatchDeletePaymentMethodEvent(
+            this.paymentConfig.invoiceId,
+            isCardToken ? "card" : paymentMethod.apm.gateway_name,
+            this.paymentConfig.invoiceDetails.return_url || null,
+          )
         },
         err => {
-          DynamicCheckoutEventsUtils.dispatchDeletePaymentMethodErrorEvent(err)
+          DynamicCheckoutEventsUtils.dispatchDeletePaymentMethodErrorEvent(
+            this.paymentConfig.invoiceId,
+            err,
+            isCardToken ? "card" : paymentMethod.apm.gateway_name,
+            this.paymentConfig.invoiceDetails.return_url || null,
+          )
         },
         0,
         {

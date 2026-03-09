@@ -50,7 +50,7 @@ module ProcessOut {
 
       this.loadView(paymentMethodsView.element)
 
-      DynamicCheckoutEventsUtils.dispatchWidgetReadyEvent()
+      DynamicCheckoutEventsUtils.dispatchWidgetReadyEvent(this.paymentConfig.invoiceId, null)
     }
 
     private getInvoiceDetails(onFetch: Function, onSuccess: Function, onError: Function) {
@@ -73,7 +73,7 @@ module ProcessOut {
     private onGetInvoiceLoading() {
       this.loadView(new DynamicCheckoutInvoiceLoadingView(this.paymentConfig.locale).element)
 
-      DynamicCheckoutEventsUtils.dispatchWidgetLoadingEvent()
+      DynamicCheckoutEventsUtils.dispatchWidgetLoadingEvent(this.paymentConfig.invoiceId, null)
     }
 
     private onGetInvoiceSuccess(data: any) {
@@ -82,7 +82,11 @@ module ProcessOut {
           new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig).element,
         )
 
-        return DynamicCheckoutEventsUtils.dispatchInvoiceFetchingErrorEvent(data)
+        return DynamicCheckoutEventsUtils.dispatchInvoiceFetchingErrorEvent(
+          this.paymentConfig.invoiceId,
+          data,
+          data.invoice ? data.invoice.return_url || null : null,
+        )
       }
 
       if (!data.invoice.payment_methods) {
@@ -94,9 +98,12 @@ module ProcessOut {
           ).element,
         )
 
-        return DynamicCheckoutEventsUtils.dispatchNoDynamicCheckoutConfigurationEvent({
-          invoiceId: data.invoice.id,
-        })
+        return DynamicCheckoutEventsUtils.dispatchNoDynamicCheckoutConfigurationEvent(
+          {
+            invoice_id: data.invoice.id,
+          },
+          data.invoice.return_url || null,
+        )
       }
 
       if (data.invoice.transaction.status !== "waiting") {
@@ -108,10 +115,17 @@ module ProcessOut {
           ).element,
         )
 
-        return DynamicCheckoutEventsUtils.dispatchTransactionErrorEvent({
-          invoiceId: data.invoice.id,
-          returnUrl: data.invoice.return_url,
-        })
+        return DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(
+          data.invoice.id,
+          {
+            error_type: "transaction.invalid-status",
+            message: "Transaction is not in a waiting state",
+            transaction_status: data.invoice.transaction.status,
+          },
+          undefined,
+          undefined,
+          data.invoice.return_url || null,
+        )
       }
 
       this.paymentConfig.setInvoiceDetails(data.invoice)
@@ -129,7 +143,11 @@ module ProcessOut {
           message: Translator.translateError(errorCode),
         }
 
-      DynamicCheckoutEventsUtils.dispatchInvoiceFetchingErrorEvent(errorData)
+      DynamicCheckoutEventsUtils.dispatchInvoiceFetchingErrorEvent(
+        this.paymentConfig.invoiceId,
+        errorData,
+        null,
+      )
 
       this.loadView(
         new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig).element,
