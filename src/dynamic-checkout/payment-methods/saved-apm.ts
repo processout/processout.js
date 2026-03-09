@@ -206,7 +206,9 @@ module ProcessOut {
       }
 
       DynamicCheckoutEventsUtils.dispatchPaymentSubmittedEvent({
-        payment_method_name: this.paymentMethod.apm ? this.paymentMethod.apm.gateway_name : "apm",
+        payment_method_name: this.paymentMethod.apm_customer_token
+          ? this.paymentMethod.apm_customer_token.gateway_name
+          : "apm",
         invoice_id: invoiceId,
         return_url: this.paymentConfig.invoiceDetails.return_url || null,
         customer_token_id: apm_customer_token.customer_token_id,
@@ -231,7 +233,9 @@ module ProcessOut {
       DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
         invoice_id: invoiceId,
         return_url: this.paymentConfig.invoiceDetails.return_url || null,
-        payment_method_name: this.paymentMethod.apm ? this.paymentMethod.apm.gateway_name : "apm",
+        payment_method_name: this.paymentMethod.apm_customer_token
+          ? this.paymentMethod.apm_customer_token.gateway_name
+          : "apm",
       })
     }
 
@@ -244,7 +248,9 @@ module ProcessOut {
       }
 
       DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent({
-        payment_method_name: this.paymentMethod.apm ? this.paymentMethod.apm.gateway_name : "apm",
+        payment_method_name: this.paymentMethod.apm_customer_token
+          ? this.paymentMethod.apm_customer_token.gateway_name
+          : "apm",
         invoice_id: this.paymentConfig.invoiceId,
         return_url: this.paymentConfig.invoiceDetails.return_url || null,
       })
@@ -258,7 +264,9 @@ module ProcessOut {
       DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(
         this.paymentConfig.invoiceId,
         error,
-        this.paymentMethod.apm ? this.paymentMethod.apm.gateway_name : "apm",
+        this.paymentMethod.apm_customer_token
+          ? this.paymentMethod.apm_customer_token.gateway_name
+          : "apm",
         undefined,
         this.paymentConfig.invoiceDetails.return_url || null,
       )
