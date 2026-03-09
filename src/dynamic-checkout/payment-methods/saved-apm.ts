@@ -108,11 +108,14 @@ module ProcessOut {
         const { additionalData } = this.paymentConfig
 
         const redirectUrl = additionalData
-          ? this.processOutInstance.appendAdditionalDataToUrl(apm_customer_token.redirect_url, additionalData)
+          ? this.processOutInstance.appendAdditionalDataToUrl(
+              apm_customer_token.redirect_url,
+              additionalData,
+            )
           : apm_customer_token.redirect_url
 
         DynamicCheckoutEventsUtils.dispatchPaymentSubmittedEvent({
-          payment_method_name: apm.gateway_name,
+          payment_method_name: apm_customer_token.gateway_name,
           invoice_id: invoiceId,
           return_url: this.paymentConfig.invoiceDetails.return_url || null,
           customer_token_id: apm_customer_token.customer_token_id,
@@ -146,7 +149,7 @@ module ProcessOut {
                 DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
                   invoice_id: invoiceId,
                   return_url: this.paymentConfig.invoiceDetails.return_url || null,
-                  payment_method_name: apm.gateway_name,
+                  payment_method_name: apm_customer_token.gateway_name,
                 })
               },
               error => {
@@ -168,7 +171,7 @@ module ProcessOut {
                 DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(
                   this.paymentConfig.invoiceId,
                   error,
-                  apm.gateway_name,
+                  apm_customer_token.gateway_name,
                   undefined,
                   this.paymentConfig.invoiceDetails.return_url || null,
                 )
@@ -185,7 +188,7 @@ module ProcessOut {
                 }
 
                 DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent({
-                  payment_method_name: apm.gateway_name,
+                  payment_method_name: apm_customer_token.gateway_name,
                   invoice_id: invoiceId,
                   return_url: this.paymentConfig.invoiceDetails.return_url || null,
                 })
@@ -201,7 +204,7 @@ module ProcessOut {
             DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(
               this.paymentConfig.invoiceId,
               error,
-              apm.gateway_name,
+              apm_customer_token.gateway_name,
               undefined,
               this.paymentConfig.invoiceDetails.return_url || null,
             )
