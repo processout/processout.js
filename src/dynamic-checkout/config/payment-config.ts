@@ -1,6 +1,10 @@
 /// <reference path="../references.ts" />
 
 module ProcessOut {
+  interface DynamicCheckoutAdditionalDataByGateway {
+    [gatewayName: string]: Record<string, string>
+  }
+
   export type DynamicCheckoutPublicConfigType = {
     invoiceId: string
     projectId: string
@@ -10,7 +14,7 @@ module ProcessOut {
     allowFallbackToSale?: boolean
     showStatusMessage?: boolean
     payButtonText?: string
-    additionalData?: Record<string, string>
+    additionalData?: DynamicCheckoutAdditionalDataByGateway
   }
 
   export type DynamicCheckoutInternalConfigType = {
@@ -51,6 +55,10 @@ module ProcessOut {
 
     public setInvoiceDetails(invoiceDetails: Invoice) {
       this.invoiceDetails = invoiceDetails
+    }
+
+    public getAdditionalDataForGateway(gatewayName: string): Record<string, string> {
+      return this.additionalData[gatewayName] || {}
     }
 
     private setInitialConfig(config: DynamicCheckoutPublicConfigType) {

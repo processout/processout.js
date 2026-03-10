@@ -86,11 +86,12 @@ module ProcessOut {
       requestOptions: RequestOptions,
     ) {
       const { apm } = this.paymentMethod
-      const { additionalData } = this.paymentConfig
-
-      const redirectUrl = additionalData
-        ? this.processOutInstance.appendAdditionalDataToUrl(apm.redirect_url, additionalData)
-        : apm.redirect_url
+      const additionalData = this.paymentConfig.getAdditionalDataForGateway(apm.gateway_name)
+      console.log("additionalData", additionalData)
+      const redirectUrl =
+        Object.keys(additionalData).length > 0
+          ? this.processOutInstance.appendAdditionalDataToUrl(apm.redirect_url, additionalData)
+          : apm.redirect_url
 
       DynamicCheckoutEventsUtils.dispatchPaymentSubmittedEvent({
         payment_method_name: apm.gateway_name,

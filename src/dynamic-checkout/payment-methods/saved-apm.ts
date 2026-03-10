@@ -105,9 +105,11 @@ module ProcessOut {
       this.setButtonLoading()
 
       if (apm_customer_token.redirect_url) {
-        const { additionalData } = this.paymentConfig
+        const additionalData = this.paymentConfig.getAdditionalDataForGateway(
+          apm_customer_token.gateway_name,
+        )
 
-        const redirectUrl = additionalData
+        const redirectUrl = Object.keys(additionalData).length > 0
           ? this.processOutInstance.appendAdditionalDataToUrl(
               apm_customer_token.redirect_url,
               additionalData,
