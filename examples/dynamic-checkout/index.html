@@ -11,9 +11,9 @@
       document.addEventListener("DOMContentLoaded", function () {
         // You need to replace these values with your own
         const projectId = "test-proj_qEi1u5BwoYcZb6mOMKDWIm4mpqKCq6bN"
-        const invoiceId = "iv_3AZopCq6bNeWzgBIqH7gtCMecS7fU5aW"
+        const invoiceId = "iv_3AiKACq6bNpnTbInjGANaGAHyRQfU2hc"
         const clientSecret =
-          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzI4MTE0MjcsImludm9pY2VfaWQiOiJpdl8zQVpsQUNxNmJOQXZGR0tNcDJ2Um52RFZkcGdjUExydSIsImN1c3RvbWVyX2lkIjoiY3VzdF95S0V1SzNBRkEzUkJGQWxCdzg4YnFSMXZocHpKVjNReSJ9.SZ0Ul9OEwl0sVreShh7iWm31Nifofe_IvZ09fmP51F8"
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzMwNzM0MDksImludm9pY2VfaWQiOiJpdl8zQWlLQUNxNmJOcG5UYkluakdBTmFHQUh5UlFmVTJoYyIsImN1c3RvbWVyX2lkIjoiY3VzdF95S0V1SzNBRkEzUkJGQWxCdzg4YnFSMXZocHpKVjNReSJ9.apFLSYI3z2suKP-sURVCu9Ts38fguZTo2i3ZDiYnaGg"
 
         const client = new ProcessOut.ProcessOut(projectId)
 
@@ -22,9 +22,10 @@
           clientSecret,
           capturePayments: false,
           allowFallbackToSale: false,
-          showStatusMessage: true,
           locale: "en",
-          payButtonText: undefined,
+          additionalData: {
+            issuer_id: "1234",
+          },
         })
 
         dynamicCheckout.mount("#dynamic-cko-container")

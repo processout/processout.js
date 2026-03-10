@@ -1005,6 +1005,35 @@ module ProcessOut {
       })
     }
 
+    public appendAdditionalDataToUrl(url: string, additionalData: any): string {
+      if (!additionalData || Object.keys(additionalData).length === 0) {
+        return url
+      }
+
+      var query = this.buildAdditionalDataQuery(additionalData)
+
+      if (!query) {
+        return url
+      }
+
+      var separator = url.includes("?") ? "&" : "?"
+      return url + separator + query.substring(1)
+    }
+
+    public buildAdditionalDataQuery(additionalData: any): string {
+      if (!additionalData) {
+        return ""
+      }
+
+      var query = "?"
+
+      for (var key in additionalData) {
+        query += `${encodeURIComponent(`additional_data[${key}]`)}=${encodeURIComponent(additionalData[key])}&`
+      }
+
+      return query.substring(0, query.length - 1)
+    }
+
     /**
      * Returns the invoice action URL.
      * @param {InvoiceActionUrlProps} config
@@ -1020,17 +1049,10 @@ module ProcessOut {
         )
       }
 
-      var suffix = "?"
-      var additionalData = config.additionalData
-      for (var key in additionalData) {
-        suffix += `additional_data[${key}]=${encodeURI(additionalData[key])}&`
-      }
+      var suffix = this.buildAdditionalDataQuery(config.additionalData)
 
       var tokenSuffix = config.customerTokenId ? `/tokenized/${config.customerTokenId}` : ""
-      var path = `/${this.getProjectID()}/${invoiceId}/redirect/${gatewayConfID}${tokenSuffix}${suffix.substring(
-        0,
-        suffix.length - 1,
-      )}`
+      var path = `/${this.getProjectID()}/${invoiceId}/redirect/${gatewayConfID}${tokenSuffix}${suffix}`
       return this.endpoint("checkout", path)
     }
 
@@ -1263,17 +1285,11 @@ module ProcessOut {
         )
       }
 
-      var suffix = "?"
-      for (var key in additionalData) {
-        suffix += `additional_data[${key}]=${encodeURI(additionalData[key])}&`
-      }
+      var suffix = this.buildAdditionalDataQuery(additionalData)
 
       return this.endpoint(
         "checkout",
-        `/${this.getProjectID()}/${customerID}/${tokenID}/redirect/${gatewayConfID}${suffix.substring(
-          0,
-          suffix.length - 1,
-        )}`,
+        `/${this.getProjectID()}/${customerID}/${tokenID}/redirect/${gatewayConfID}${suffix}`,
       )
     }
 

@@ -1,6 +1,10 @@
 /// <reference path="../references.ts" />
 
 module ProcessOut {
+  interface DynamicCheckoutAdditionalDataByGateway {
+    [gatewayName: string]: Record<string, string>
+  }
+
   export type DynamicCheckoutPublicConfigType = {
     invoiceId: string
     projectId: string
@@ -10,6 +14,7 @@ module ProcessOut {
     allowFallbackToSale?: boolean
     showStatusMessage?: boolean
     payButtonText?: string
+    additionalData?: DynamicCheckoutAdditionalDataByGateway
   }
 
   export type DynamicCheckoutInternalConfigType = {
@@ -28,6 +33,7 @@ module ProcessOut {
     allowFallbackToSale: DynamicCheckoutPublicConfigType["allowFallbackToSale"] = false
     showStatusMessage: DynamicCheckoutPublicConfigType["showStatusMessage"] = true
     payButtonText: DynamicCheckoutPublicConfigType["payButtonText"] = ""
+    additionalData: DynamicCheckoutPublicConfigType["additionalData"] = {}
     invoiceDetails: DynamicCheckoutInternalConfigType["invoiceDetails"]
 
     constructor(config: DynamicCheckoutPublicConfigType) {
@@ -43,11 +49,16 @@ module ProcessOut {
         capturePayments: this.capturePayments,
         allowFallbackToSale: this.allowFallbackToSale,
         showStatusMessage: this.showStatusMessage,
+        additionalData: this.additionalData,
       }
     }
 
     public setInvoiceDetails(invoiceDetails: Invoice) {
       this.invoiceDetails = invoiceDetails
+    }
+
+    public getAdditionalDataForGateway(gatewayName: string): Record<string, string> {
+      return this.additionalData[gatewayName] || {}
     }
 
     private setInitialConfig(config: DynamicCheckoutPublicConfigType) {
@@ -64,6 +75,7 @@ module ProcessOut {
       this.capturePayments = config.capturePayments || false
       this.allowFallbackToSale = config.allowFallbackToSale || false
       this.payButtonText = config.payButtonText || ""
+      this.additionalData = config.additionalData || {}
 
       if (config.showStatusMessage !== undefined && config.showStatusMessage !== null) {
         this.showStatusMessage = config.showStatusMessage

@@ -86,6 +86,12 @@ module ProcessOut {
       requestOptions: RequestOptions,
     ) {
       const { apm } = this.paymentMethod
+      const additionalData = this.paymentConfig.getAdditionalDataForGateway(apm.gateway_name)
+
+      const redirectUrl =
+        Object.keys(additionalData).length > 0
+          ? this.processOutInstance.appendAdditionalDataToUrl(apm.redirect_url, additionalData)
+          : apm.redirect_url
 
       DynamicCheckoutEventsUtils.dispatchPaymentSubmittedEvent({
         payment_method_name: apm.gateway_name,
@@ -94,7 +100,7 @@ module ProcessOut {
       })
 
       this.processOutInstance.handleAction(
-        apm.redirect_url,
+        redirectUrl,
         paymentToken => {
           this.resetContainerHtml().appendChild(
             new DynamicCheckoutInvoiceLoadingView(this.paymentConfig.locale).element,
