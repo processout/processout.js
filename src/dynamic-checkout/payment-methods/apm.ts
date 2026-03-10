@@ -87,7 +87,7 @@ module ProcessOut {
     ) {
       const { apm } = this.paymentMethod
       const additionalData = this.paymentConfig.getAdditionalDataForGateway(apm.gateway_name)
-      console.log("additionalData", additionalData)
+
       const redirectUrl =
         Object.keys(additionalData).length > 0
           ? this.processOutInstance.appendAdditionalDataToUrl(apm.redirect_url, additionalData)

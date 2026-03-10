@@ -1021,6 +1021,10 @@ module ProcessOut {
     }
 
     public buildAdditionalDataQuery(additionalData: any): string {
+      if (!additionalData) {
+        return ""
+      }
+
       var query = "?"
 
       for (var key in additionalData) {
