@@ -5,12 +5,20 @@ module ProcessOut {
     public element: Element
 
     constructor(processOutInstance: ProcessOut, paymentConfig: DynamicCheckoutPaymentConfig) {
-      const [element, message] = HTMLElements.createMultipleElements([
+      const [element, image, message] = HTMLElements.createMultipleElements([
         {
           tagName: "div",
           classNames: ["dco-card-payment-success"],
           attributes: {
             role: "status",
+          },
+        },
+        {
+          tagName: "img",
+          classNames: ["dco-card-payment-success-image"],
+          attributes: {
+            src: processOutInstance.endpoint("js", PAYMENT_PENDING_IMAGE_ASSET),
+            alt: "",
           },
         },
         {
@@ -20,7 +28,7 @@ module ProcessOut {
         },
       ])
 
-      HTMLElements.appendChildren(element, [message])
+      HTMLElements.appendChildren(element, [image, message])
 
       this.element = element
     }

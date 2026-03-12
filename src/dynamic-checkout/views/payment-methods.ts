@@ -24,6 +24,14 @@ module ProcessOut {
     }
 
     private createViewElement() {
+      if (!this.hasVisiblePaymentMethods()) {
+        return new DynamicCheckoutPaymentErrorView(
+          this.processOutInstance,
+          this.paymentConfig,
+          Translations.getText("payment-error-generic-message", this.paymentConfig.locale),
+        ).element as HTMLElement
+      }
+
       const {
         wrapper,
         walletCheckoutWrapper,
@@ -93,6 +101,10 @@ module ProcessOut {
       }
 
       return wrapper
+    }
+
+    private hasVisiblePaymentMethods() {
+      return this.getVisiblePaymentMethods().length > 0
     }
 
     private getUiElements() {
@@ -239,7 +251,7 @@ module ProcessOut {
       let expressPaymentMethods = []
       let regularPaymentMethods = []
 
-      this.paymentConfig.invoiceDetails.payment_methods.forEach(paymentMethod => {
+      this.getVisiblePaymentMethods().forEach(paymentMethod => {
         switch (paymentMethod.type) {
           case "googlepay":
             const googlePayPaymentMethod = new GooglePayPaymentMethod(
@@ -352,7 +364,7 @@ module ProcessOut {
     private shouldShowSettingsButton() {
       let shouldShowSettingsButton = false
 
-      this.paymentConfig.invoiceDetails.payment_methods.forEach(paymentMethod => {
+      this.getVisiblePaymentMethods().forEach(paymentMethod => {
         const canDeleteApm =
           paymentMethod.type === "apm_customer_token" &&
           paymentMethod.apm_customer_token &&
@@ -369,6 +381,22 @@ module ProcessOut {
       })
 
       return shouldShowSettingsButton
+    }
+
+    private getVisiblePaymentMethods() {
+      if (!this.paymentConfig.hideSavedPaymentMethods) {
+        return this.paymentConfig.invoiceDetails.payment_methods
+      }
+
+      return this.paymentConfig.invoiceDetails.payment_methods.filter(
+        paymentMethod => !this.isSavedPaymentMethod(paymentMethod),
+      )
+    }
+
+    private isSavedPaymentMethod(paymentMethod: PaymentMethod) {
+      return (
+        paymentMethod.type === "apm_customer_token" || paymentMethod.type === "card_customer_token"
+      )
     }
 
     private handleDeletePaymentMethod(paymentMethod: PaymentMethod) {

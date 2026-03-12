@@ -121,17 +121,23 @@ module ProcessOut {
 
     private handleTokenizeSuccess(cardToken: string) {
       this.tokenizedCardId = cardToken
+      const canSavePaymentMethod = this.paymentMethod.card.saving_allowed
 
       const cardPaymentOptions = {
         authorize_only: !this.paymentConfig.capturePayments,
         allow_fallback_to_sale: this.paymentConfig.allowFallbackToSale,
+        save_source: canSavePaymentMethod && this.paymentConfig.enforceSafePaymentMethod,
       }
 
       const saveForFutureCheckbox = document.getElementById(
         "save-card-for-future",
       ) as HTMLInputElement | null
 
-      if (saveForFutureCheckbox) {
+      if (
+        canSavePaymentMethod &&
+        saveForFutureCheckbox &&
+        !this.paymentConfig.enforceSafePaymentMethod
+      ) {
         cardPaymentOptions["save_source"] = saveForFutureCheckbox.checked
       }
 
@@ -264,6 +270,17 @@ module ProcessOut {
     }
 
     private getChildrenElement() {
+      const saveForFutureAttributes: Record<string, string> = {
+        id: "save-card-for-future",
+        type: "checkbox",
+        name: "save-card-for-future",
+      }
+
+      if (this.paymentConfig.enforceSafePaymentMethod) {
+        saveForFutureAttributes.checked = "checked"
+        saveForFutureAttributes.disabled = "disabled"
+      }
+
       const payButtonText =
         this.paymentConfig.payButtonText ||
         `${Translations.getText(
@@ -298,11 +315,7 @@ module ProcessOut {
         {
           tagName: "input",
           classNames: ["dco-payment-method-button-save-for-future-checkbox"],
-          attributes: {
-            id: "save-card-for-future",
-            type: "checkbox",
-            name: "save-card-for-future",
-          },
+          attributes: saveForFutureAttributes,
         },
         {
           tagName: "label",
@@ -350,7 +363,21 @@ module ProcessOut {
       return cardFormWrapper
     }
 
+    private getCvcLabel() {
+      return this.paymentConfig.cvcLabel || Translations.getText("cvc-label", this.paymentConfig.locale)
+    }
+
+    private getCvcPlaceholder() {
+      return (
+        this.paymentConfig.cvcPlaceholder ||
+        Translations.getText("cvc-placeholder", this.paymentConfig.locale)
+      )
+    }
+
     private getCardDetailsSection() {
+      const cvcLabelText = this.getCvcLabel()
+      const cvcPlaceholder = this.getCvcPlaceholder()
+
       const [
         cardDetailsSection,
         cardDetailsSectionTitle,
@@ -367,6 +394,7 @@ module ProcessOut {
         cvcInputWrapper,
         cvcLabel,
         cvcInput,
+        cvcInputIcon,
         cvcInputErrorMessage,
         cardHolderNameInputWrapper,
         cardHolderNameLabel,
@@ -451,20 +479,27 @@ module ProcessOut {
         {
           tagName: "label",
           classNames: ["dco-input-label"],
-          textContent: Translations.getText("cvc-label", this.paymentConfig.locale),
+          textContent: cvcLabelText,
         },
         {
           tagName: "div",
           classNames: [
             "dco-payment-method-card-form-input",
             "dco-payment-method-card-form-input-card-details",
+            "dco-payment-method-card-form-input-cvc",
           ],
           attributes: {
             "data-processout-input": "cc-cvc",
-            "data-processout-placeholder": Translations.getText(
-              "cvc-label",
-              this.paymentConfig.locale,
-            ),
+            "data-processout-placeholder": cvcPlaceholder,
+          },
+        },
+        {
+          tagName: "img",
+          classNames: ["dco-card-cvc-icon"],
+          attributes: {
+            src: this.procesoutInstance.endpoint("js", CARD_CVC_ICON),
+            alt: "",
+            "aria-hidden": "true",
           },
         },
         {
@@ -538,6 +573,8 @@ module ProcessOut {
         expiryDateInput,
         expiryDateInputErrorMessage,
       ])
+
+      HTMLElements.appendChildren(cvcInput, [cvcInputIcon])
 
       HTMLElements.appendChildren(cvcInputWrapper, [cvcLabel, cvcInput, cvcInputErrorMessage])
 

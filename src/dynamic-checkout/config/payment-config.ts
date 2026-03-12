@@ -12,9 +12,13 @@ module ProcessOut {
     clientSecret?: string
     capturePayments?: boolean
     allowFallbackToSale?: boolean
+    enforceSafePaymentMethod?: boolean
+    hideSavedPaymentMethods?: boolean
     showStatusMessage?: boolean
     payButtonText?: string
     additionalData?: DynamicCheckoutAdditionalDataByGateway
+    cvcLabel?: string
+    cvcPlaceholder?: string
   }
 
   export type DynamicCheckoutInternalConfigType = {
@@ -31,9 +35,13 @@ module ProcessOut {
     locale: DynamicCheckoutPublicConfigType["locale"] = "en"
     capturePayments: DynamicCheckoutPublicConfigType["capturePayments"] = false
     allowFallbackToSale: DynamicCheckoutPublicConfigType["allowFallbackToSale"] = false
+    enforceSafePaymentMethod: DynamicCheckoutPublicConfigType["enforceSafePaymentMethod"] = false
+    hideSavedPaymentMethods: DynamicCheckoutPublicConfigType["hideSavedPaymentMethods"] = false
     showStatusMessage: DynamicCheckoutPublicConfigType["showStatusMessage"] = true
     payButtonText: DynamicCheckoutPublicConfigType["payButtonText"] = ""
     additionalData: DynamicCheckoutPublicConfigType["additionalData"] = {}
+    cvcLabel: DynamicCheckoutPublicConfigType["cvcLabel"] = ""
+    cvcPlaceholder: DynamicCheckoutPublicConfigType["cvcPlaceholder"] = ""
     invoiceDetails: DynamicCheckoutInternalConfigType["invoiceDetails"]
 
     constructor(config: DynamicCheckoutPublicConfigType) {
@@ -48,8 +56,13 @@ module ProcessOut {
         invoiceDetails: this.invoiceDetails,
         capturePayments: this.capturePayments,
         allowFallbackToSale: this.allowFallbackToSale,
+        enforceSafePaymentMethod: this.enforceSafePaymentMethod,
+        hideSavedPaymentMethods: this.hideSavedPaymentMethods,
         showStatusMessage: this.showStatusMessage,
         additionalData: this.additionalData,
+        payButtonText: this.payButtonText,
+        cvcLabel: this.cvcLabel,
+        cvcPlaceholder: this.cvcPlaceholder,
       }
     }
 
@@ -74,8 +87,12 @@ module ProcessOut {
       this.locale = config.locale || "en"
       this.capturePayments = config.capturePayments || false
       this.allowFallbackToSale = config.allowFallbackToSale || false
+      this.enforceSafePaymentMethod = config.enforceSafePaymentMethod || false
+      this.hideSavedPaymentMethods = config.hideSavedPaymentMethods || false
       this.payButtonText = config.payButtonText || ""
       this.additionalData = config.additionalData || {}
+      this.cvcLabel = config.cvcLabel || ""
+      this.cvcPlaceholder = config.cvcPlaceholder || ""
 
       if (config.showStatusMessage !== undefined && config.showStatusMessage !== null) {
         this.showStatusMessage = config.showStatusMessage
