@@ -32,11 +32,11 @@ module ProcessOut {
     "payments-manager-header": "保存済みの支払い方法を管理",
     "payments-manager-close-button": "閉じる",
     "no-saved-payment-methods-header": "保存済みの支払い方法はありません",
-    "no-saved-payment-methods-message":
-      "次回支払い方法を保存すると、ここに表示されます。",
+    "no-saved-payment-methods-message": "次回支払い方法を保存すると、ここに表示されます。",
     "card-number-label": "カード番号",
     "expiry-date-label": "有効期限",
     "cvc-label": "セキュリティコード",
+    "cvc-placeholder": "CVC/CVV",
     "card-not-supported-error-message": "このカードはサポートされていません",
     "card-label": "カード",
     "delete-payment-method-label": "支払い方法を削除",
