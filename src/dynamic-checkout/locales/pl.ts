@@ -12,7 +12,7 @@ module ProcessOut {
     "select-state-placeholder": "Wybierz stan",
     "card-number-error-message": "Numer karty jest nieprawidłowy",
     "expiry-date-error-message": "Data ważności jest nieprawidłowa",
-    "cvc-error-message": "CVV/CVC jest nieprawidłowy",
+    "cvc-error-message": "Kod zabezpieczający jest nieprawidłowy",
     "cardholder-name-error-message": "Imię i nazwisko posiadacza karty jest nieprawidłowe",
     "payment-error-message": "Coś poszło nie tak. Spróbuj ponownie.",
     "payment-cancelled-message": "Płatność została anulowana.",

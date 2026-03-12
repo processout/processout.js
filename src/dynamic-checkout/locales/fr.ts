@@ -12,7 +12,7 @@ module ProcessOut {
     "select-state-placeholder": "Sélectionner un état",
     "card-number-error-message": "Le numéro de carte est invalide",
     "expiry-date-error-message": "La date d'expiration est invalide",
-    "cvc-error-message": "Le CVV/CVC est invalide",
+    "cvc-error-message": "Le code de sécurité est invalide",
     "cardholder-name-error-message": "Le nom du titulaire de la carte est invalide",
     "payment-error-message": "Quelque chose a mal tourné. Veuillez réessayer.",
     "payment-cancelled-message": "Le paiement a été annulé.",

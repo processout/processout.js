@@ -12,7 +12,7 @@ module ProcessOut {
     "select-state-placeholder": "Seleccionar estado",
     "card-number-error-message": "El número de tarjeta es inválido",
     "expiry-date-error-message": "La fecha de vencimiento es inválida",
-    "cvc-error-message": "El CVV/CVC es inválido",
+    "cvc-error-message": "El código de seguridad es inválido",
     "cardholder-name-error-message": "El nombre del titular de la tarjeta es inválido",
     "payment-error-message": "Algo salió mal. Por favor, inténtalo de nuevo.",
     "payment-cancelled-message": "El pago ha sido cancelado.",

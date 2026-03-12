@@ -12,7 +12,7 @@ module ProcessOut {
     "select-state-placeholder": "Seleziona provincia",
     "card-number-error-message": "Il numero della carta non è valido",
     "expiry-date-error-message": "La data di scadenza non è valida",
-    "cvc-error-message": "Il CVV/CVC non è valido",
+    "cvc-error-message": "Il codice di sicurezza non è valido",
     "cardholder-name-error-message": "Il nome del titolare della carta non è valido",
     "payment-error-message": "Si è verificato un errore. Riprova.",
     "payment-cancelled-message": "Il pagamento è stato annullato.",
