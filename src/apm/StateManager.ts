@@ -31,6 +31,8 @@ module ProcessOut {
     // Optional cleanup callback when component is removed
     onDestroy?: (id: string, state: any) => void;
   }
+
+  type ScheduleFunction = (callback: FrameRequestCallback) => number | ReturnType<typeof setTimeout>;
   
   export class StateManager {
     private static instance: StateManager | null = null;
@@ -171,7 +173,7 @@ module ProcessOut {
       this.isBatchScheduled = true;
       
       // Use requestAnimationFrame to batch updates, with fallback for IE 11
-      let scheduleFunction = requestAnimationFrame;
+      let scheduleFunction: ScheduleFunction = requestAnimationFrame;
 
       if (!scheduleFunction) {
         scheduleFunction = function(callback: FrameRequestCallback) { return setTimeout(() => callback(performance.now()), 16); };
@@ -214,7 +216,7 @@ module ProcessOut {
       this.pendingCallbacks.length = 0;
       
       if (callbacks.length > 0) {
-        let scheduleFunction = requestAnimationFrame
+        let scheduleFunction: ScheduleFunction = requestAnimationFrame
 
         if (!scheduleFunction) {
           scheduleFunction = function(callback: FrameRequestCallback) { return setTimeout(() => callback(performance.now()), 16); };
