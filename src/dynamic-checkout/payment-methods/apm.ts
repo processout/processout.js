@@ -55,7 +55,7 @@ module ProcessOut {
       const cardPaymentOptions = {
         authorize_only: !this.paymentConfig.capturePayments,
         allow_fallback_to_sale: this.paymentConfig.allowFallbackToSale,
-        save_source: canSavePaymentMethod && this.paymentConfig.enforceSafePaymentMethod,
+        save_source: canSavePaymentMethod && this.paymentConfig.enforceSavePaymentMethod,
       }
 
       const requestOptions = {
@@ -69,7 +69,7 @@ module ProcessOut {
       if (
         canSavePaymentMethod &&
         saveForFutureCheckbox &&
-        !this.paymentConfig.enforceSafePaymentMethod
+        !this.paymentConfig.enforceSavePaymentMethod
       ) {
         cardPaymentOptions["save_source"] = saveForFutureCheckbox.checked
       }
@@ -407,7 +407,7 @@ module ProcessOut {
         id: `save-apm-for-future-${this.paymentMethod.apm.gateway_name}`,
       }
 
-      if (this.paymentConfig.enforceSafePaymentMethod) {
+      if (this.paymentConfig.enforceSavePaymentMethod) {
         saveForFutureAttributes.checked = "checked"
         saveForFutureAttributes.disabled = "disabled"
       }

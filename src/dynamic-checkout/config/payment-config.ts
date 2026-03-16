@@ -12,7 +12,7 @@ module ProcessOut {
     clientSecret?: string
     capturePayments?: boolean
     allowFallbackToSale?: boolean
-    enforceSafePaymentMethod?: boolean
+    enforceSavePaymentMethod?: boolean
     hideSavedPaymentMethods?: boolean
     showStatusMessage?: boolean
     payButtonText?: string
@@ -35,7 +35,7 @@ module ProcessOut {
     locale: DynamicCheckoutPublicConfigType["locale"] = "en"
     capturePayments: DynamicCheckoutPublicConfigType["capturePayments"] = false
     allowFallbackToSale: DynamicCheckoutPublicConfigType["allowFallbackToSale"] = false
-    enforceSafePaymentMethod: DynamicCheckoutPublicConfigType["enforceSafePaymentMethod"] = false
+    enforceSavePaymentMethod: DynamicCheckoutPublicConfigType["enforceSavePaymentMethod"] = false
     hideSavedPaymentMethods: DynamicCheckoutPublicConfigType["hideSavedPaymentMethods"] = false
     showStatusMessage: DynamicCheckoutPublicConfigType["showStatusMessage"] = true
     payButtonText: DynamicCheckoutPublicConfigType["payButtonText"] = ""
@@ -56,7 +56,7 @@ module ProcessOut {
         invoiceDetails: this.invoiceDetails,
         capturePayments: this.capturePayments,
         allowFallbackToSale: this.allowFallbackToSale,
-        enforceSafePaymentMethod: this.enforceSafePaymentMethod,
+        enforceSavePaymentMethod: this.enforceSavePaymentMethod,
         hideSavedPaymentMethods: this.hideSavedPaymentMethods,
         showStatusMessage: this.showStatusMessage,
         additionalData: this.additionalData,
@@ -87,7 +87,7 @@ module ProcessOut {
       this.locale = config.locale || "en"
       this.capturePayments = config.capturePayments || false
       this.allowFallbackToSale = config.allowFallbackToSale || false
-      this.enforceSafePaymentMethod = config.enforceSafePaymentMethod || false
+      this.enforceSavePaymentMethod = config.enforceSavePaymentMethod || false
       this.hideSavedPaymentMethods = config.hideSavedPaymentMethods || false
       this.payButtonText = config.payButtonText || ""
       this.additionalData = config.additionalData || {}

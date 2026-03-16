@@ -63,12 +63,7 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzMwNzM0MDksImludm9pY2VfaWQiOiJ
 
               <label class="form-field">
                 <span>Pay Button Color</span>
-                <input
-                  id="pay-button-color"
-                  name="payButtonColor"
-                  type="text"
-                  value="#242c38"
-                />
+                <input id="pay-button-color" name="payButtonColor" type="text" value="#242c38" />
               </label>
 
               <label class="form-field">
@@ -104,7 +99,7 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzMwNzM0MDksImludm9pY2VfaWQiOiJ
               <label class="form-field form-field-toggle">
                 <input
                   id="enforce-safe-payment-method"
-                  name="enforceSafePaymentMethod"
+                  name="enforceSavePaymentMethod"
                   type="checkbox"
                 />
                 <span>Enforce Safe Payment Method</span>
@@ -202,7 +197,7 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzMwNzM0MDksImludm9pY2VfaWQiOiJ
               locale: formValues.locale,
               capturePayments: formValues.capturePayments,
               allowFallbackToSale: formValues.allowFallbackToSale,
-              enforceSafePaymentMethod: formValues.enforceSafePaymentMethod,
+              enforceSavePaymentMethod: formValues.enforceSavePaymentMethod,
               hideSavedPaymentMethods: formValues.hideSavedPaymentMethods,
               showStatusMessage: formValues.showStatusMessage,
               payButtonText: formValues.payButtonText,
@@ -235,7 +230,7 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzMwNzM0MDksImludm9pY2VfaWQiOiJ
         const payButtonTextColor = document.getElementById("pay-button-text-color").value.trim()
         const capturePayments = document.getElementById("capture-payments").checked
         const allowFallbackToSale = document.getElementById("allow-fallback-to-sale").checked
-        const enforceSafePaymentMethod = document.getElementById(
+        const enforceSavePaymentMethod = document.getElementById(
           "enforce-safe-payment-method",
         ).checked
         const hideSavedPaymentMethods = document.getElementById(
@@ -251,7 +246,7 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzMwNzM0MDksImludm9pY2VfaWQiOiJ
           locale,
           capturePayments,
           allowFallbackToSale,
-          enforceSafePaymentMethod,
+          enforceSavePaymentMethod,
           hideSavedPaymentMethods,
           showStatusMessage,
           payButtonText,

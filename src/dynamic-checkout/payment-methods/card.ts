@@ -126,7 +126,7 @@ module ProcessOut {
       const cardPaymentOptions = {
         authorize_only: !this.paymentConfig.capturePayments,
         allow_fallback_to_sale: this.paymentConfig.allowFallbackToSale,
-        save_source: canSavePaymentMethod && this.paymentConfig.enforceSafePaymentMethod,
+        save_source: canSavePaymentMethod && this.paymentConfig.enforceSavePaymentMethod,
       }
 
       const saveForFutureCheckbox = document.getElementById(
@@ -136,7 +136,7 @@ module ProcessOut {
       if (
         canSavePaymentMethod &&
         saveForFutureCheckbox &&
-        !this.paymentConfig.enforceSafePaymentMethod
+        !this.paymentConfig.enforceSavePaymentMethod
       ) {
         cardPaymentOptions["save_source"] = saveForFutureCheckbox.checked
       }
@@ -276,7 +276,7 @@ module ProcessOut {
         name: "save-card-for-future",
       }
 
-      if (this.paymentConfig.enforceSafePaymentMethod) {
+      if (this.paymentConfig.enforceSavePaymentMethod) {
         saveForFutureAttributes.checked = "checked"
         saveForFutureAttributes.disabled = "disabled"
       }
@@ -364,7 +364,9 @@ module ProcessOut {
     }
 
     private getCvcLabel() {
-      return this.paymentConfig.cvcLabel || Translations.getText("cvc-label", this.paymentConfig.locale)
+      return (
+        this.paymentConfig.cvcLabel || Translations.getText("cvc-label", this.paymentConfig.locale)
+      )
     }
 
     private getCvcPlaceholder() {
