@@ -8,6 +8,7 @@ module ProcessOut {
     private theme: DynamicCheckoutThemeType
     private resetContainerHtml: () => HTMLElement
     private isCardRestricted: boolean = false
+    private tokenizedCardId?: string
 
     constructor(
       procesoutInstance: ProcessOut,
@@ -90,9 +91,12 @@ module ProcessOut {
               }
 
               this.setButtonLoading()
+              this.tokenizedCardId = undefined
 
               DynamicCheckoutEventsUtils.dispatchPaymentSubmittedEvent({
                 payment_method_name: "card",
+                invoice_id: this.paymentConfig.invoiceId,
+                return_url: this.paymentConfig.invoiceDetails.return_url || null,
               })
 
               this.procesoutInstance.tokenize(
@@ -104,27 +108,38 @@ module ProcessOut {
             }, this.handleValidationError.bind(this))
           })
         },
-        DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent,
+        err =>
+          DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(
+            this.paymentConfig.invoiceId,
+            err,
+            "card",
+            undefined,
+            this.paymentConfig.invoiceDetails.return_url || null,
+          ),
       )
     }
 
     private handleTokenizeSuccess(cardToken: string) {
+      this.tokenizedCardId = cardToken
+      const canSavePaymentMethod = this.paymentMethod.card.saving_allowed
+
       const cardPaymentOptions = {
         authorize_only: !this.paymentConfig.capturePayments,
         allow_fallback_to_sale: this.paymentConfig.allowFallbackToSale,
+        save_source: canSavePaymentMethod && this.paymentConfig.enforceSafePaymentMethod,
       }
 
       const saveForFutureCheckbox = document.getElementById(
         "save-card-for-future",
       ) as HTMLInputElement | null
 
-      if (saveForFutureCheckbox) {
+      if (
+        canSavePaymentMethod &&
+        saveForFutureCheckbox &&
+        !this.paymentConfig.enforceSafePaymentMethod
+      ) {
         cardPaymentOptions["save_source"] = saveForFutureCheckbox.checked
       }
-
-      DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent(cardToken, {
-        payment_method_name: "card",
-      })
 
       this.procesoutInstance.makeCardPayment(
         this.paymentConfig.invoiceId,
@@ -135,6 +150,7 @@ module ProcessOut {
         {
           clientSecret: this.paymentConfig.clientSecret,
         },
+        this.handleCardPaymentPending.bind(this),
       )
     }
 
@@ -143,10 +159,24 @@ module ProcessOut {
         new DynamicCheckoutPaymentErrorView(this.procesoutInstance, this.paymentConfig).element,
       )
 
-      DynamicCheckoutEventsUtils.dispatchTokenizePaymentErrorEvent(error)
+      DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(
+        this.paymentConfig.invoiceId,
+        error,
+        "card",
+        this.tokenizedCardId,
+        this.paymentConfig.invoiceDetails.return_url || null,
+      )
     }
 
-    private handleCardPaymentSuccess(invoiceId: string) {
+    private handleCardPaymentSuccess(invoiceId: string, data?: any) {
+      DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
+        invoice_id: invoiceId,
+        return_url: this.paymentConfig.invoiceDetails.return_url || null,
+        payment_method_name: "card",
+        ...(this.tokenizedCardId && { card_id: this.tokenizedCardId }),
+        customer_token_id: data?.customer_token_id,
+      })
+
       if (this.paymentConfig.showStatusMessage) {
         this.resetContainerHtml().appendChild(
           new DynamicCheckoutPaymentSuccessView(this.procesoutInstance, this.paymentConfig).element,
@@ -159,10 +189,20 @@ module ProcessOut {
           new DynamicCheckoutPaymentInfoView(this.processOutInstance, this.paymentConfig).element,
         )
       }
+    }
 
-      DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
-        invoiceId,
-        returnUrl: this.paymentConfig.invoiceDetails.return_url,
+    private handleCardPaymentPending(invoiceId: string) {
+      if (this.paymentConfig.showStatusMessage) {
+        this.resetContainerHtml().appendChild(
+          new DynamicCheckoutPaymentPendingView(this.procesoutInstance, this.paymentConfig).element,
+        )
+      }
+
+      DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent({
+        payment_method_name: "card",
+        invoice_id: invoiceId,
+        return_url: this.paymentConfig.invoiceDetails.return_url || null,
+        ...(this.tokenizedCardId && { card_id: this.tokenizedCardId }),
       })
     }
 
@@ -180,7 +220,13 @@ module ProcessOut {
         )
       }
 
-      DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(error)
+      DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(
+        this.paymentConfig.invoiceId,
+        error,
+        "card",
+        this.tokenizedCardId,
+        this.paymentConfig.invoiceDetails.return_url || null,
+      )
     }
 
     private getCardFormOptions() {
@@ -224,8 +270,20 @@ module ProcessOut {
     }
 
     private getChildrenElement() {
-      const payButtonText = this.paymentConfig.payButtonText
-        || `${Translations.getText(
+      const saveForFutureAttributes: Record<string, string> = {
+        id: "save-card-for-future",
+        type: "checkbox",
+        name: "save-card-for-future",
+      }
+
+      if (this.paymentConfig.enforceSafePaymentMethod) {
+        saveForFutureAttributes.checked = "checked"
+        saveForFutureAttributes.disabled = "disabled"
+      }
+
+      const payButtonText =
+        this.paymentConfig.payButtonText ||
+        `${Translations.getText(
           "pay-button-text",
           this.paymentConfig.locale,
         )} ${this.paymentConfig.invoiceDetails.amount} ${this.paymentConfig.invoiceDetails.currency}`
@@ -257,11 +315,7 @@ module ProcessOut {
         {
           tagName: "input",
           classNames: ["dco-payment-method-button-save-for-future-checkbox"],
-          attributes: {
-            id: "save-card-for-future",
-            type: "checkbox",
-            name: "save-card-for-future",
-          },
+          attributes: saveForFutureAttributes,
         },
         {
           tagName: "label",
@@ -309,7 +363,21 @@ module ProcessOut {
       return cardFormWrapper
     }
 
+    private getCvcLabel() {
+      return this.paymentConfig.cvcLabel || Translations.getText("cvc-label", this.paymentConfig.locale)
+    }
+
+    private getCvcPlaceholder() {
+      return (
+        this.paymentConfig.cvcPlaceholder ||
+        Translations.getText("cvc-placeholder", this.paymentConfig.locale)
+      )
+    }
+
     private getCardDetailsSection() {
+      const cvcLabelText = this.getCvcLabel()
+      const cvcPlaceholder = this.getCvcPlaceholder()
+
       const [
         cardDetailsSection,
         cardDetailsSectionTitle,
@@ -326,6 +394,7 @@ module ProcessOut {
         cvcInputWrapper,
         cvcLabel,
         cvcInput,
+        cvcInputIcon,
         cvcInputErrorMessage,
         cardHolderNameInputWrapper,
         cardHolderNameLabel,
@@ -410,17 +479,27 @@ module ProcessOut {
         {
           tagName: "label",
           classNames: ["dco-input-label"],
-          textContent: Translations.getText("cvc-label", this.paymentConfig.locale),
+          textContent: cvcLabelText,
         },
         {
           tagName: "div",
           classNames: [
             "dco-payment-method-card-form-input",
             "dco-payment-method-card-form-input-card-details",
+            "dco-payment-method-card-form-input-cvc",
           ],
           attributes: {
             "data-processout-input": "cc-cvc",
-            "data-processout-placeholder": "CVC",
+            "data-processout-placeholder": cvcPlaceholder,
+          },
+        },
+        {
+          tagName: "img",
+          classNames: ["dco-card-cvc-icon"],
+          attributes: {
+            src: this.procesoutInstance.endpoint("js", CARD_CVC_ICON),
+            alt: "",
+            "aria-hidden": "true",
           },
         },
         {
@@ -494,6 +573,8 @@ module ProcessOut {
         expiryDateInput,
         expiryDateInputErrorMessage,
       ])
+
+      HTMLElements.appendChildren(cvcInput, [cvcInputIcon])
 
       HTMLElements.appendChildren(cvcInputWrapper, [cvcLabel, cvcInput, cvcInputErrorMessage])
 

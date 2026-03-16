@@ -18,9 +18,13 @@ module ProcessOut {
     rupay: "/images/schemes/rectangle/rupay.svg",
   }
 
-  export const PAYMENT_SUCCESS_IMAGE_ASSET = "/images/dynamic-checkout-assets/payment-success.svg"
+  export const PAYMENT_SUCCESS_IMAGE_ASSET = "/images/dynamic-checkout-assets/check-icon.svg"
 
-  export const PAYMENT_ERROR_IMAGE_ASSET = "/images/dynamic-checkout-assets/payment-error.svg"
+  export const PAYMENT_ERROR_IMAGE_ASSET = "/images/dynamic-checkout-assets/x-icon.svg"
+
+  export const PAYMENT_PENDING_IMAGE_ASSET = "/images/dynamic-checkout-assets/clock-icon.svg"
+
+  export const CARD_CVC_ICON = "/images/dynamic-checkout-assets/cvc-icon.svg"
 
   export const COG_ICON = "/images/dynamic-checkout-assets/cog-icon.svg"
 

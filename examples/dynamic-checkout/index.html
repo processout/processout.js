@@ -5,80 +5,343 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div id="dynamic-cko-container"></div>
+    <main class="example-layout">
+      <section class="example-panel">
+        <div id="dynamic-cko-container"></div>
+      </section>
+
+      <aside class="example-panel example-panel-sidebar">
+        <section class="example-section">
+          <form id="dynamic-checkout-form" class="dynamic-checkout-form">
+            <div class="form-grid">
+              <label class="form-field">
+                <span>Project ID</span>
+                <input
+                  id="project-id"
+                  name="projectId"
+                  type="text"
+                  value="test-proj_qEi1u5BwoYcZb6mOMKDWIm4mpqKCq6bN"
+                />
+              </label>
+
+              <label class="form-field">
+                <span>Invoice ID</span>
+                <input
+                  id="invoice-id"
+                  name="invoiceId"
+                  type="text"
+                  value="iv_3AnZVCq6bNvgkeIF7zEJopli2neXakWc"
+                />
+              </label>
+
+              <label class="form-field form-field-full">
+                <span>Client Secret</span>
+                <textarea id="client-secret" name="clientSecret" rows="4">
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzMwNzM0MDksImludm9pY2VfaWQiOiJpdl8zQWlLQUNxNmJOcG5UYkluakdBTmFHQUh5UlFmVTJoYyIsImN1c3RvbWVyX2lkIjoiY3VzdF95S0V1SzNBRkEzUkJGQWxCdzg4YnFSMXZocHpKVjNReSJ9.apFLSYI3z2suKP-sURVCu9Ts38fguZTo2i3ZDiYnaGg</textarea
+                >
+              </label>
+
+              <label class="form-field">
+                <span>Locale</span>
+                <input id="locale" name="locale" type="text" value="en" />
+              </label>
+
+              <label class="form-field">
+                <span>Pay Button Text</span>
+                <input id="pay-button-text" name="payButtonText" type="text" value="Pay now" />
+              </label>
+
+              <label class="form-field">
+                <span>CVC Label</span>
+                <input id="cvc-label" name="cvcLabel" type="text" value="Security code" />
+              </label>
+
+              <label class="form-field">
+                <span>CVC Placeholder</span>
+                <input id="cvc-placeholder" name="cvcPlaceholder" type="text" value="CVV" />
+              </label>
+
+              <label class="form-field">
+                <span>Pay Button Color</span>
+                <input
+                  id="pay-button-color"
+                  name="payButtonColor"
+                  type="text"
+                  value="#242c38"
+                />
+              </label>
+
+              <label class="form-field">
+                <span>Pay Button Text Color</span>
+                <input
+                  id="pay-button-text-color"
+                  name="payButtonTextColor"
+                  type="text"
+                  value="#ffffff"
+                />
+              </label>
+
+              <label class="form-field form-field-toggle">
+                <input id="capture-payments" name="capturePayments" type="checkbox" />
+                <span>Capture Payments</span>
+              </label>
+
+              <label class="form-field form-field-toggle">
+                <input id="allow-fallback-to-sale" name="allowFallbackToSale" type="checkbox" />
+                <span>Allow Fallback To Sale</span>
+              </label>
+
+              <label class="form-field form-field-toggle">
+                <input
+                  id="show-status-message"
+                  name="showStatusMessage"
+                  type="checkbox"
+                  checked="checked"
+                />
+                <span>Show Status Message</span>
+              </label>
+
+              <label class="form-field form-field-toggle">
+                <input
+                  id="enforce-safe-payment-method"
+                  name="enforceSafePaymentMethod"
+                  type="checkbox"
+                />
+                <span>Enforce Safe Payment Method</span>
+              </label>
+
+              <label class="form-field form-field-toggle">
+                <input
+                  id="hide-saved-payment-methods"
+                  name="hideSavedPaymentMethods"
+                  type="checkbox"
+                />
+                <span>Hide Saved Payment Methods</span>
+              </label>
+
+              <label class="form-field form-field-full">
+                <span>Additional Data JSON</span>
+                <textarea id="additional-data" name="additionalData" rows="8">
+{
+  "klarna": {
+    "customer_first_name": "Ada",
+    "customer_last_name": "Lovelace"
+  }
+}</textarea
+                >
+              </label>
+            </div>
+
+            <div class="form-actions">
+              <button id="load-dynamic-checkout" type="submit">Load checkout</button>
+              <p id="form-error" class="form-error" role="alert" hidden="hidden"></p>
+            </div>
+          </form>
+        </section>
+
+        <section class="example-section">
+          <h2>Dispatched Events</h2>
+          <ol id="dynamic-checkout-event-log" class="event-log"></ol>
+        </section>
+      </aside>
+    </main>
+
     <script src="../../dist/processout.js" crossorigin="anonymous"></script>
     <script>
+      const dynamicCheckoutEvents = [
+        "processout_dynamic_checkout_loading",
+        "processout_dynamic_checkout_ready",
+        "processout_dynamic_checkout_invoice_fetching_error",
+        "processout_dynamic_checkout_no_dynamic_checkout_configuration",
+        "processout_dynamic_checkout_payment_submitted",
+        "processout_dynamic_checkout_payment_pending",
+        "processout_dynamic_checkout_payment_success",
+        "processout_dynamic_checkout_payment_error",
+        "processout_dynamic_checkout_payment_cancelled",
+        "processout_dynamic_checkout_google_pay_load_error",
+        "processout_dynamic_checkout_apple_pay_new_session",
+        "processout_dynamic_checkout_apple_pay_session_error",
+        "processout_dynamic_checkout_apple_pay_authorized_post_process",
+        "processout_dynamic_checkout_delete_payment_method_success",
+        "processout_dynamic_checkout_delete_payment_method_error",
+      ]
+
       document.addEventListener("DOMContentLoaded", function () {
-        // You need to replace these values with your own
-        const projectId = "test-proj_qEi1u5BwoYcZb6mOMKDWIm4mpqKCq6bN"
-        const invoiceId = "iv_39vI9Cq6bN1LV3k0Xh7bSIxV0ICdFwHu"
-        const clientSecret = ""
+        const form = document.getElementById("dynamic-checkout-form")
 
-        const client = new ProcessOut.ProcessOut(projectId)
+        registerDynamicCheckoutEventHandlers(dynamicCheckoutEvents)
 
-        const dynamicCheckout = client.setupDynamicCheckout({
+        form.addEventListener("submit", function (event) {
+          event.preventDefault()
+          loadDynamicCheckoutFromForm()
+        })
+
+        loadDynamicCheckoutFromForm()
+      })
+
+      function loadDynamicCheckoutFromForm() {
+        const dynamicCheckoutContainer = document.getElementById("dynamic-cko-container")
+        const formValues = getFormValues()
+
+        clearFormError()
+
+        if (!formValues.additionalData.isValid) {
+          showFormError(formValues.additionalData.errorMessage)
+          return
+        }
+
+        clearEventLog()
+        dynamicCheckoutContainer.innerHTML = ""
+
+        try {
+          const client = new ProcessOut.ProcessOut(formValues.projectId)
+          const dynamicCheckout = client.setupDynamicCheckout(
+            {
+              invoiceId: formValues.invoiceId,
+              clientSecret: formValues.clientSecret,
+              locale: formValues.locale,
+              capturePayments: formValues.capturePayments,
+              allowFallbackToSale: formValues.allowFallbackToSale,
+              enforceSafePaymentMethod: formValues.enforceSafePaymentMethod,
+              hideSavedPaymentMethods: formValues.hideSavedPaymentMethods,
+              showStatusMessage: formValues.showStatusMessage,
+              payButtonText: formValues.payButtonText,
+              additionalData: formValues.additionalData.value,
+              cvcLabel: formValues.cvcLabel,
+              cvcPlaceholder: formValues.cvcPlaceholder,
+            },
+            {
+              payButtonColor: formValues.payButtonColor,
+              payButtonTextColor: formValues.payButtonTextColor,
+            },
+          )
+
+          dynamicCheckout.mount("#dynamic-cko-container")
+        } catch (error) {
+          showFormError(error && error.message ? error.message : String(error))
+          dynamicCheckoutContainer.innerHTML = ""
+        }
+      }
+
+      function getFormValues() {
+        const projectId = document.getElementById("project-id").value.trim()
+        const invoiceId = document.getElementById("invoice-id").value.trim()
+        const clientSecret = document.getElementById("client-secret").value.trim()
+        const locale = document.getElementById("locale").value.trim()
+        const payButtonText = document.getElementById("pay-button-text").value.trim()
+        const cvcLabel = document.getElementById("cvc-label").value.trim()
+        const cvcPlaceholder = document.getElementById("cvc-placeholder").value.trim()
+        const payButtonColor = document.getElementById("pay-button-color").value.trim()
+        const payButtonTextColor = document.getElementById("pay-button-text-color").value.trim()
+        const capturePayments = document.getElementById("capture-payments").checked
+        const allowFallbackToSale = document.getElementById("allow-fallback-to-sale").checked
+        const enforceSafePaymentMethod = document.getElementById(
+          "enforce-safe-payment-method",
+        ).checked
+        const hideSavedPaymentMethods = document.getElementById(
+          "hide-saved-payment-methods",
+        ).checked
+        const showStatusMessage = document.getElementById("show-status-message").checked
+        const additionalDataValue = document.getElementById("additional-data").value.trim()
+
+        return {
+          projectId,
           invoiceId,
           clientSecret,
-          capturePayments: false,
-          allowFallbackToSale: false,
-          showStatusMessage: false,
-          locale: "en",
+          locale,
+          capturePayments,
+          allowFallbackToSale,
+          enforceSafePaymentMethod,
+          hideSavedPaymentMethods,
+          showStatusMessage,
+          payButtonText,
+          cvcLabel,
+          cvcPlaceholder,
+          payButtonColor,
+          payButtonTextColor,
+          additionalData: parseAdditionalData(additionalDataValue),
+        }
+      }
+
+      function parseAdditionalData(additionalDataValue) {
+        if (!additionalDataValue) {
+          return {
+            isValid: true,
+            value: {},
+          }
+        }
+
+        try {
+          return {
+            isValid: true,
+            value: JSON.parse(additionalDataValue),
+          }
+        } catch (error) {
+          return {
+            isValid: false,
+            value: {},
+            errorMessage:
+              "Additional Data JSON is invalid: " +
+              (error && error.message ? error.message : String(error)),
+          }
+        }
+      }
+
+      function registerDynamicCheckoutEventHandlers(events) {
+        events.forEach(function (eventName) {
+          window.addEventListener(eventName, function (event) {
+            console.log("[Dynamic Checkout]", eventName, event.detail)
+            appendEventLog(eventName, event.detail)
+          })
         })
+      }
 
-        dynamicCheckout.mount("#dynamic-cko-container")
+      function appendEventLog(eventName, detail) {
+        const eventLog = document.getElementById("dynamic-checkout-event-log")
+        const eventItem = document.createElement("li")
+        const eventTimestamp = document.createElement("span")
+        const eventNameElement = document.createElement("strong")
+        const eventDetail = document.createElement("pre")
+        const timestamp = new Date().toLocaleTimeString()
 
-        // Dynamic Checkout widget dispatches event on every major action. Here are event handlers to test them
-        window.addEventListener("processout_dynamic_checkout_loading", function (e) {
-          console.log("Widget loading")
-        })
+        eventTimestamp.className = "event-log-time"
+        eventTimestamp.textContent = timestamp
 
-        window.addEventListener("processout_dynamic_checkout_ready", function (e) {
-          console.log("Widget Ready")
-        })
+        eventNameElement.textContent = eventName
 
-        window.addEventListener("processout_dynamic_checkout_invoice_fetching_error", function (e) {
-          console.log("Invoice fetching error")
-        })
+        eventDetail.textContent = formatJson(detail)
 
-        window.addEventListener("processout_dynamic_checkout_apm_payment_submitted", function (e) {
-          console.log("Apm payment submitted", e)
-        })
+        eventItem.appendChild(eventTimestamp)
+        eventItem.appendChild(eventNameElement)
+        eventItem.appendChild(eventDetail)
+        eventLog.insertBefore(eventItem, eventLog.firstChild)
 
-        window.addEventListener("processout_dynamic_checkout_apm_payment_pending", function (e) {
-          console.log("Apm payment pending", e)
-        })
+        if (eventLog.children.length > 12) {
+          eventLog.removeChild(eventLog.lastChild)
+        }
+      }
 
-        window.addEventListener(
-          "processout_dynamic_checkout_tokenize_payment_success",
-          function (e) {
-            console.log("Tokenize payment success")
-          },
-        )
+      function clearEventLog() {
+        document.getElementById("dynamic-checkout-event-log").innerHTML = ""
+      }
 
-        window.addEventListener("processout_dynamic_checkout_tokenize_payment_error", function (e) {
-          console.log("Tokenize payment error")
-        })
+      function clearFormError() {
+        const formError = document.getElementById("form-error")
 
-        window.addEventListener("processout_dynamic_checkout_payment_success", function (e) {
-          console.log("Payment success", e)
-        })
+        formError.hidden = true
+        formError.textContent = ""
+      }
 
-        window.addEventListener("processout_dynamic_checkout_payment_error", function (e) {
-          console.log("Payment Error", e)
-        })
+      function showFormError(message) {
+        const formError = document.getElementById("form-error")
 
-        window.addEventListener("processout_native_apm_payment_success", function (e) {
-          console.log("Payment Status (outside widget): Payment success", e)
-        })
+        formError.hidden = false
+        formError.textContent = message
+      }
 
-        window.addEventListener("processout_dynamic_checkout_transaction_error", function (e) {
-          console.log("Payment Status (outside widget): Transaction error", e)
-        })
-
-        window.addEventListener("processout_dynamic_checkout_google_pay_load_error", function (e) {
-          console.log("Payment Status (outside widget): Google Pay load error", e)
-        })
-      })
+      function formatJson(value) {
+        return JSON.stringify(value === undefined ? null : value, null, 2)
+      }
     </script>
   </body>
 </html>

@@ -2,12 +2,17 @@
 
 module ProcessOut {
   export class NativeApmPaymentMethod extends PaymentMethodButton {
+    private static activePaymentMethod: NativeApmPaymentMethod | null = null
+
     private nativeApmInstance: NativeApm
     private paymentConfig: DynamicCheckoutPaymentConfig
     private isMounted: boolean
+    private paymentMethodName: string
     private theme: DynamicCheckoutThemeType
     private resetContainerHtml: () => HTMLElement
     protected processOutInstance: ProcessOut
+
+    private onPaymentSubmit?: () => void
 
     constructor(
       processOutInstance: ProcessOut,
@@ -15,6 +20,7 @@ module ProcessOut {
       paymentConfig: DynamicCheckoutPaymentConfig,
       theme: DynamicCheckoutThemeType,
       resetContainerHtml: () => HTMLElement,
+      onPaymentSubmit?: () => void,
     ) {
       const { display, apm } = paymentMethod
       const { invoiceId, invoiceDetails } = paymentConfig
@@ -22,9 +28,11 @@ module ProcessOut {
       super(processOutInstance, display.name, display.logo.dark_url.vector, display.name)
 
       this.paymentConfig = paymentConfig
+      this.paymentMethodName = apm.gateway_name
       this.processOutInstance = processOutInstance
       this.resetContainerHtml = resetContainerHtml
       this.theme = theme
+      this.onPaymentSubmit = onPaymentSubmit
 
       const wrapper = this.getNativeApmWrapper()
       super.appendChildren(wrapper)
@@ -33,6 +41,8 @@ module ProcessOut {
         invoiceId,
         gatewayConfigurationId: apm.gateway_configuration_id,
         returnUrl: invoiceDetails.return_url,
+        payButtonText: paymentConfig.payButtonText,
+        locale: paymentConfig.locale,
       })
 
       const backgroundColor =
@@ -56,13 +66,29 @@ module ProcessOut {
 
     private setupEventListeners(wrapper: HTMLElement) {
       this.element.addEventListener("click", () => {
+        NativeApmPaymentMethod.activePaymentMethod = this
+
         if (!this.isMounted) {
           this.nativeApmInstance.mount(wrapper)
           this.isMounted = true
         }
       })
 
+      window.addEventListener(NATIVE_APM_EVENTS.PAYMENT_INIT, () => {
+        if (!this.isActivePaymentMethod()) {
+          return
+        }
+
+        if (this.onPaymentSubmit) {
+          this.onPaymentSubmit()
+        }
+      })
+
       window.addEventListener(NATIVE_APM_EVENTS.PAYMENT_SUCCESS, () => {
+        if (!this.isActivePaymentMethod()) {
+          return
+        }
+
         if (this.paymentConfig.showStatusMessage) {
           this.resetContainerHtml().appendChild(
             new DynamicCheckoutPaymentSuccessView(this.processOutInstance, this.paymentConfig)
@@ -78,12 +104,19 @@ module ProcessOut {
         }
 
         DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
-          invoiceId: this.paymentConfig.invoiceId,
-          returnUrl: this.paymentConfig.invoiceDetails.return_url,
+          invoice_id: this.paymentConfig.invoiceId,
+          return_url: this.paymentConfig.invoiceDetails.return_url || null,
+          payment_method_name: this.paymentMethodName,
         })
+
+        NativeApmPaymentMethod.activePaymentMethod = null
       })
 
       window.addEventListener(NATIVE_APM_EVENTS.PAYMENT_ERROR, e => {
+        if (!this.isActivePaymentMethod()) {
+          return
+        }
+
         if (this.paymentConfig.showStatusMessage) {
           this.resetContainerHtml().appendChild(
             new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig)
@@ -98,8 +131,20 @@ module ProcessOut {
           )
         }
 
-        DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(e)
+        DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(
+          this.paymentConfig.invoiceId,
+          e,
+          this.paymentMethodName,
+          undefined,
+          this.paymentConfig.invoiceDetails.return_url || null,
+        )
+
+        NativeApmPaymentMethod.activePaymentMethod = null
       })
+    }
+
+    private isActivePaymentMethod() {
+      return NativeApmPaymentMethod.activePaymentMethod === this
     }
 
     private getNativeApmWrapper() {

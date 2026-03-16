@@ -92,12 +92,13 @@ const defaultStyles = `
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 16px;
   }
 
   .dco-card-payment-success-image {
     display: block;
-    width: 120px;
-    height: 120px;
+    width: 90px;
+    height: 90px;
   }
 
   .dco-card-payment-success-text {
@@ -219,6 +220,7 @@ const defaultStyles = `
 
   .dco-payment-method-wrapper:has(input[type="radio"]:checked) {
     background-color: #F6F6F7;
+    cursor: default;
   }
 
   .dco-payment-method-wrapper:has(input[type="radio"]:checked) .dco-payment-method-button-general-children-container {
@@ -361,6 +363,21 @@ const defaultStyles = `
     padding: 8px;
     color: #000;
     width: 100%;
+  }
+
+  .dco-payment-method-card-form-input-cvc {
+    padding-right: 40px;
+  }
+
+  .dco-card-cvc-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    width: 16px;
+    height: 16px;
+    transform: translateY(-50%);
+    pointer-events: none;
+    z-index: 1;
   }
 
   .dco-payment-method-card-form-input:placeholder {

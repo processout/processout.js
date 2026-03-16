@@ -24,6 +24,14 @@ module ProcessOut {
     }
 
     private createViewElement() {
+      if (!this.hasVisiblePaymentMethods()) {
+        return new DynamicCheckoutPaymentErrorView(
+          this.processOutInstance,
+          this.paymentConfig,
+          Translations.getText("payment-error-generic-message", this.paymentConfig.locale),
+        ).element as HTMLElement
+      }
+
       const {
         wrapper,
         walletCheckoutWrapper,
@@ -93,6 +101,10 @@ module ProcessOut {
       }
 
       return wrapper
+    }
+
+    private hasVisiblePaymentMethods() {
+      return this.getVisiblePaymentMethods().length > 0
     }
 
     private getUiElements() {
@@ -239,7 +251,7 @@ module ProcessOut {
       let expressPaymentMethods = []
       let regularPaymentMethods = []
 
-      this.paymentConfig.invoiceDetails.payment_methods.forEach(paymentMethod => {
+      this.getVisiblePaymentMethods().forEach(paymentMethod => {
         switch (paymentMethod.type) {
           case "googlepay":
             const googlePayPaymentMethod = new GooglePayPaymentMethod(
@@ -310,6 +322,13 @@ module ProcessOut {
                   this.paymentConfig,
                   this.theme,
                   this.resetContainerHtml.bind(this),
+                  () => {
+                    DynamicCheckoutEventsUtils.dispatchPaymentSubmittedEvent({
+                      payment_method_name: paymentMethod.apm.gateway_name,
+                      invoice_id: this.paymentConfig.invoiceId,
+                      return_url: this.paymentConfig.invoiceDetails.return_url || null,
+                    })
+                  },
                 )
 
             return regularPaymentMethods.push(apmPaymentMethod)
@@ -345,7 +364,7 @@ module ProcessOut {
     private shouldShowSettingsButton() {
       let shouldShowSettingsButton = false
 
-      this.paymentConfig.invoiceDetails.payment_methods.forEach(paymentMethod => {
+      this.getVisiblePaymentMethods().forEach(paymentMethod => {
         const canDeleteApm =
           paymentMethod.type === "apm_customer_token" &&
           paymentMethod.apm_customer_token &&
@@ -364,6 +383,22 @@ module ProcessOut {
       return shouldShowSettingsButton
     }
 
+    private getVisiblePaymentMethods() {
+      if (!this.paymentConfig.hideSavedPaymentMethods) {
+        return this.paymentConfig.invoiceDetails.payment_methods
+      }
+
+      return this.paymentConfig.invoiceDetails.payment_methods.filter(
+        paymentMethod => !this.isSavedPaymentMethod(paymentMethod),
+      )
+    }
+
+    private isSavedPaymentMethod(paymentMethod: PaymentMethod) {
+      return (
+        paymentMethod.type === "apm_customer_token" || paymentMethod.type === "card_customer_token"
+      )
+    }
+
     private handleDeletePaymentMethod(paymentMethod: PaymentMethod) {
       const isCardToken = paymentMethod.type === "card_customer_token"
 
@@ -377,12 +412,31 @@ module ProcessOut {
         "delete",
         `customers/${customerId}/tokens/${tokenId}`,
         {},
-        () => {
+        (data) => {
+          if (resolveOutcome(data) === OUTCOME.Failed) {
+            DynamicCheckoutEventsUtils.dispatchDeletePaymentMethodErrorEvent(
+              this.paymentConfig.invoiceId,
+              data,
+              isCardToken ? "card" : paymentMethod.apm.gateway_name,
+              this.paymentConfig.invoiceDetails.return_url || null,
+            )
+            return
+          }
+
           this.deletePaymentMethodFromDom(tokenId, isCardToken)
-          DynamicCheckoutEventsUtils.dispatchDeletePaymentMethodEvent()
+          DynamicCheckoutEventsUtils.dispatchDeletePaymentMethodEvent(
+            this.paymentConfig.invoiceId,
+            isCardToken ? "card" : paymentMethod.apm.gateway_name,
+            this.paymentConfig.invoiceDetails.return_url || null,
+          )
         },
         err => {
-          DynamicCheckoutEventsUtils.dispatchDeletePaymentMethodErrorEvent(err)
+          DynamicCheckoutEventsUtils.dispatchDeletePaymentMethodErrorEvent(
+            this.paymentConfig.invoiceId,
+            err,
+            isCardToken ? "card" : paymentMethod.apm.gateway_name,
+            this.paymentConfig.invoiceDetails.return_url || null,
+          )
         },
         0,
         {

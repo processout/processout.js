@@ -5,6 +5,8 @@ type NativeApmPaymentConfigType = {
   invoiceId: string;
   returnUrl?: string;
   pollingMaxTimeout?: number;
+  payButtonText?: string;
+  locale?: string;
 };
 
 module ProcessOut {
@@ -13,6 +15,8 @@ module ProcessOut {
     invoiceId: NativeApmPaymentConfigType["invoiceId"];
     pollingMaxTimeout: NativeApmPaymentConfigType["pollingMaxTimeout"];
     returnUrl?: NativeApmPaymentConfigType["returnUrl"];
+    payButtonText?: NativeApmPaymentConfigType["payButtonText"];
+    locale?: NativeApmPaymentConfigType["locale"];
 
     constructor(config: NativeApmPaymentConfigType) {
       this.setConfig(config);
@@ -39,6 +43,8 @@ module ProcessOut {
       this.invoiceId = config.invoiceId;
       this.returnUrl = config.returnUrl;
       this.pollingMaxTimeout = config.pollingMaxTimeout || 180;
+      this.payButtonText = config.payButtonText;
+      this.locale = config.locale;
     }
 
     private isValidConfig(config: NativeApmPaymentConfigType) {

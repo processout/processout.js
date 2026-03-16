@@ -3,16 +3,172 @@ html {
 }
 
 body {
-  width: 100%;
-  font-family: "Arial";
-  display: flex;
-  justify-content: center;
+  margin: 0;
+  background: #f5f7fa;
+  color: #242c38;
+  font-family: Arial, sans-serif;
 }
 
-h1 {
-  margin-bottom: 50px;
+h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+p,
+pre {
+  margin: 0;
+}
+
+textarea,
+input,
+button {
+  font: inherit;
+}
+
+pre {
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.example-layout {
+  box-sizing: border-box;
+  display: grid;
+  gap: 24px;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 32px 20px;
+}
+
+.example-panel {
+  background: #ffffff;
+  border: 1px solid #d9e0e8;
+  border-radius: 16px;
+  box-shadow: 0 12px 32px rgba(36, 44, 56, 0.08);
+  padding: 24px;
+}
+
+.example-panel-sidebar {
+  display: grid;
+  gap: 24px;
+}
+
+.example-section {
+  display: grid;
+  gap: 16px;
+}
+
+.dynamic-checkout-form {
+  display: grid;
+  gap: 20px;
+}
+
+.form-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.form-field {
+  display: grid;
+  gap: 8px;
+}
+
+.form-field span {
+  font-weight: 700;
+}
+
+.form-field input,
+.form-field textarea {
+  box-sizing: border-box;
+  width: 100%;
+  background: #f5f7fa;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  color: inherit;
+  padding: 12px;
+}
+
+.form-field textarea {
+  min-height: 112px;
+  resize: vertical;
+}
+
+.form-field-toggle {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.form-field-toggle input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+.form-actions {
+  display: grid;
+  gap: 12px;
+}
+
+.form-actions button {
+  border: 0;
+  border-radius: 999px;
+  background: #242c38;
+  color: #ffffff;
+  cursor: pointer;
+  padding: 12px 18px;
+}
+
+.form-error {
+  color: #b42318;
+  line-height: 1.5;
+}
+
+.event-log {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+  display: grid;
+  gap: 12px;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.event-log li {
+  display: grid;
+  gap: 8px;
+  background: #f5f7fa;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.event-log-time {
+  color: #526173;
+  font-size: 12px;
+}
+
+.event-log pre {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 10px;
 }
 
 #dynamic-cko-container {
-  width: 400px;
+  width: 100%;
+  max-width: 420px;
+}
+
+@media (min-width: 960px) {
+  .example-layout {
+    grid-template-columns: minmax(420px, 460px) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .form-field-full {
+    grid-column: 1 / -1;
+  }
 }

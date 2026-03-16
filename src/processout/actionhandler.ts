@@ -347,7 +347,7 @@ module ProcessOut {
                   // The payment window was closed
                   clearInterval(timer)
                   timer = null
-                  error(new Exception("customer.canceled"))
+                  error(new Exception("customer.canceled", undefined, { reason: "tab_closed" }))
                   
                   // Temporary just to investigate the issue
                   telemetryClient.reportWarning({
