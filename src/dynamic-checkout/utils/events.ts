@@ -238,6 +238,7 @@ module ProcessOut {
       payment_method_name: string
       invoice_id: string
       return_url: string | null
+      tab_closed?: boolean
     }) {
       const event = DynamicCheckoutEventsUtils.createEvent(
         DYNAMIC_CHECKOUT_EVENTS.PAYMENT_CANCELLED,

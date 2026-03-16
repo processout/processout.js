@@ -177,6 +177,7 @@ module ProcessOut {
               payment_method_name: apm.gateway_name,
               invoice_id: this.paymentConfig.invoiceId,
               return_url: this.paymentConfig.invoiceDetails.return_url || null,
+              tab_closed: error.metadata?.reason === "tab_closed",
             })
           } else {
             this.resetContainerHtml().appendChild(
