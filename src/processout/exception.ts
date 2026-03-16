@@ -6,7 +6,7 @@
 module ProcessOut {
 
     export interface ExceptionMetadata {
-        [key: string]: any;
+        [key: string]: string | boolean | number;
     }
 
     /**
