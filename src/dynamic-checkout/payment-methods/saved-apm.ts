@@ -152,18 +152,34 @@ module ProcessOut {
             )
           },
           error => {
-            this.resetContainerHtml().appendChild(
-              new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig)
-                .element,
-            )
+            if (error.code === "customer.canceled") {
+              this.resetContainerHtml().appendChild(
+                new DynamicCheckoutPaymentCancelledView(
+                  this.processOutInstance,
+                  this.paymentConfig,
+                ).element,
+              )
 
-            DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(
-              this.paymentConfig.invoiceId,
-              error,
-              apm_customer_token.gateway_name,
-              undefined,
-              this.paymentConfig.invoiceDetails.return_url || null,
-            )
+              DynamicCheckoutEventsUtils.dispatchPaymentCancelledEvent({
+                payment_method_name: apm_customer_token.gateway_name,
+                invoice_id: this.paymentConfig.invoiceId,
+                return_url: this.paymentConfig.invoiceDetails.return_url || null,
+                tab_closed: error.metadata?.reason === "tab_closed",
+              })
+            } else {
+              this.resetContainerHtml().appendChild(
+                new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig)
+                  .element,
+              )
+
+              DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(
+                this.paymentConfig.invoiceId,
+                error,
+                apm_customer_token.gateway_name,
+                undefined,
+                this.paymentConfig.invoiceDetails.return_url || null,
+              )
+            }
           },
           actionHandlerOptions,
           this.paymentConfig.invoiceId,
@@ -222,19 +238,35 @@ module ProcessOut {
     }
 
     private handlePaymentError(error) {
-      this.resetContainerHtml().appendChild(
-        new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig).element,
-      )
+      if (error.code === "customer.canceled") {
+        this.resetContainerHtml().appendChild(
+          new DynamicCheckoutPaymentCancelledView(this.processOutInstance, this.paymentConfig)
+            .element,
+        )
 
-      DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(
-        this.paymentConfig.invoiceId,
-        error,
-        this.paymentMethod.apm_customer_token
-          ? this.paymentMethod.apm_customer_token.gateway_name
-          : "apm",
-        undefined,
-        this.paymentConfig.invoiceDetails.return_url || null,
-      )
+        DynamicCheckoutEventsUtils.dispatchPaymentCancelledEvent({
+          payment_method_name: this.paymentMethod.apm_customer_token
+            ? this.paymentMethod.apm_customer_token.gateway_name
+            : "apm",
+          invoice_id: this.paymentConfig.invoiceId,
+          return_url: this.paymentConfig.invoiceDetails.return_url || null,
+          tab_closed: error.metadata?.reason === "tab_closed",
+        })
+      } else {
+        this.resetContainerHtml().appendChild(
+          new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig).element,
+        )
+
+        DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(
+          this.paymentConfig.invoiceId,
+          error,
+          this.paymentMethod.apm_customer_token
+            ? this.paymentMethod.apm_customer_token.gateway_name
+            : "apm",
+          undefined,
+          this.paymentConfig.invoiceDetails.return_url || null,
+        )
+      }
     }
   }
 }
