@@ -38,7 +38,6 @@ module ProcessOut {
         walletPaymentMethods,
         expressPaymentMethods,
         expressCheckoutWrapper,
-        expressPaymentMethodsWrapper,
         regularPaymentMethodsSectionWrapper,
         regularPaymentMethods,
         regularPaymentMethodsList,
@@ -53,11 +52,16 @@ module ProcessOut {
       }
 
       if (expressPaymentMethods.length > 0) {
-        expressPaymentMethods.forEach(paymentMethod => {
-          expressPaymentMethodsWrapper.appendChild(paymentMethod.element)
+        const savedPaymentMethodsWrapper = HTMLElements.createElement({
+          tagName: "div",
+          classNames: ["dco-saved-payment-methods-wrapper"],
         })
 
-        expressCheckoutWrapper.appendChild(expressPaymentMethodsWrapper)
+        expressPaymentMethods.forEach(paymentMethod => {
+          savedPaymentMethodsWrapper.appendChild(paymentMethod.element)
+        })
+
+        expressCheckoutWrapper.appendChild(savedPaymentMethodsWrapper)
       }
 
       if (regularPaymentMethods.length > 0) {
@@ -116,7 +120,7 @@ module ProcessOut {
       const { walletPaymentMethods, expressPaymentMethods, regularPaymentMethods } =
         this.getPaymentMethodsElements()
 
-      const { expressCheckoutWrapper, walletCheckoutWrapper, expressPaymentMethodsWrapper } =
+      const { expressCheckoutWrapper, walletCheckoutWrapper } =
         this.getExpressCheckoutElements()
 
       const { regularPaymentMethodsSectionWrapper, regularPaymentMethodsList } =
@@ -128,7 +132,6 @@ module ProcessOut {
         expressPaymentMethods,
         expressCheckoutWrapper,
         walletCheckoutWrapper,
-        expressPaymentMethodsWrapper,
         regularPaymentMethodsSectionWrapper,
         regularPaymentMethods,
         regularPaymentMethodsList,
@@ -141,7 +144,6 @@ module ProcessOut {
         expressCheckoutHeader,
         expressCheckoutHeaderText,
         walletCheckoutWrapper,
-        expressPaymentMethodsWrapper,
       ] = HTMLElements.createMultipleElements([
         {
           tagName: "div",
@@ -160,14 +162,6 @@ module ProcessOut {
           tagName: "div",
           classNames: ["dco-wallet-checkout-wrapper"],
         },
-        {
-          tagName: "div",
-          classNames: ["dco-express-checkout-payment-methods-wrapper"],
-          attributes: {
-            role: "radiogroup",
-            "aria-label": Translations.getText("express-checkout-header", this.paymentConfig.locale),
-          },
-        },
       ])
 
       expressCheckoutHeader.appendChild(expressCheckoutHeaderText)
@@ -180,7 +174,6 @@ module ProcessOut {
       return {
         expressCheckoutWrapper,
         walletCheckoutWrapper,
-        expressPaymentMethodsWrapper,
       }
     }
 
@@ -449,7 +442,7 @@ module ProcessOut {
       const paymentMethodElements = document.querySelectorAll(`[data-id=${id}`)
       const paymentManagerMethodsList = document.querySelector(".dco-modal-payment-methods-list")
       const expressCheckoutMethodsList = document.querySelector(
-        ".dco-express-checkout-payment-methods-wrapper",
+        ".dco-saved-payment-methods-wrapper",
       )
 
       const expressCheckoutHeader = document.querySelector(".dco-express-checkout-header-wrapper")

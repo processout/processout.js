@@ -3,14 +3,14 @@
 module ProcessOut {
   export class PaymentMethodsManager {
     public element: HTMLElement
-    private expressPaymentMethods: PaymentMethodButton[]
+    private expressPaymentMethods: { element: HTMLElement }[]
     public modal: any
     private paymentConfig: DynamicCheckoutPaymentConfig
     private processOutInstance: ProcessOut
 
     constructor(
       processOutInstance: ProcessOut,
-      expressPaymentMethods: PaymentMethodButton[],
+      expressPaymentMethods: { element: HTMLElement }[],
       paymentConfig: DynamicCheckoutPaymentConfig,
     ) {
       this.expressPaymentMethods = expressPaymentMethods

@@ -156,13 +156,51 @@ const defaultStyles = `
     gap: 20px;
   }
 
-  .dco-express-checkout-payment-methods-wrapper {
+  .dco-saved-payment-methods-wrapper {
     width: 100%;
     display: flex;
     flex-direction: column;
+    gap: 8px;
+  }
+
+  .dco-saved-payment-method-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 12px 16px;
     border: 1px solid #dde0e3;
     border-radius: 4px;
-    overflow: hidden;
+    background-color: #fff;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.9rem;
+    font-family: inherit;
+    transition: background-color 0.2s;
+  }
+
+  .dco-saved-payment-method-button:hover {
+    background-color: #F6F6F7;
+  }
+
+  .dco-saved-payment-method-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .dco-saved-payment-method-button--delete-mode {
+    cursor: default;
+  }
+
+  .dco-saved-payment-method-button:focus-visible {
+    outline: 2px solid #242C38;
+    outline-offset: 2px;
+  }
+
+  .dco-saved-payment-method-logo {
+    width: 24px;
+    height: 24px;
   }
 
   .dco-express-checkout-header {
