@@ -93,7 +93,7 @@ module ProcessOut {
         .then(response => {
           if (response.result) {
             const button = this.googleClient.createButton({
-              buttonColor: "default",
+              buttonColor: "white",
               buttonType: "plain",
               buttonRadius: 4,
               buttonSizeMode: "fill",
