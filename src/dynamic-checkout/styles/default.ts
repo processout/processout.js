@@ -110,7 +110,7 @@ const defaultStyles = `
 
   apple-pay-button {
     --apple-pay-button-width: 100%;
-    --apple-pay-button-height: 40px;
+    --apple-pay-button-height: 48px;
     --apple-pay-button-border-radius: 4px;
     --apple-pay-button-padding: 5px;
     --apple-pay-button-box-sizing: border-box;
@@ -153,14 +153,14 @@ const defaultStyles = `
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 20px;
+    gap: 10px;
   }
 
   .dco-saved-payment-methods-wrapper {
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
   }
 
   .dco-saved-payment-method-button {
@@ -169,19 +169,15 @@ const defaultStyles = `
     justify-content: center;
     gap: 10px;
     width: 100%;
-    padding: 12px 16px;
-    border: 1px solid #dde0e3;
+    height: 48px;
+    padding: 0 16px;
+    border: 1px solid #000;
     border-radius: 4px;
-    background-color: #fff;
+    background-color: transparent;
     cursor: pointer;
     font-weight: 500;
     font-size: 0.9rem;
     font-family: inherit;
-    transition: background-color 0.2s;
-  }
-
-  .dco-saved-payment-method-button:hover {
-    background-color: #F6F6F7;
   }
 
   .dco-saved-payment-method-button:disabled {
@@ -210,12 +206,28 @@ const defaultStyles = `
 
   .dco-wallet-checkout-wrapper {
     display: flex;
+    flex-direction: column;
     width: 100%;
     gap: 10px;
   }
 
   .dco-wallet-checkout-button {
-   flex: 1;
+   width: 100%;
+  }
+
+  #google-pay-button-container {
+    height: 48px;
+  }
+
+  #google-pay-button-container button {
+    border: 1px solid #000 !important;
+    border-radius: 4px !important;
+    outline: none !important;
+    background-color: #fff !important;
+  }
+
+  #google-pay-button-container button:hover {
+    background-color: #fff !important;
   }
 
   .dco-regular-express-checkout-wrapper {
@@ -238,7 +250,7 @@ const defaultStyles = `
     display: flex;
     flex-direction: column;
     border: 1px solid #dde0e3;
-    border-radius: 4px;
+    border-radius: 12px;
     overflow: hidden;
   }
 
@@ -472,8 +484,8 @@ const defaultStyles = `
   .dco-payment-method-button-pay-button-spinner {
     width: 18px;
     height: 18px;
-    border: 3px solid #f2f2f2;
-    border-bottom-color: #bfbfbf;
+    border: 3px solid #ccc;
+    border-bottom-color: #333;
     border-radius: 50%;
     display: inline-block;
     box-sizing: border-box;
@@ -592,6 +604,7 @@ const defaultStyles = `
     width: 100%;
     align-items: center;
     justify-content: space-between;
+    margin-bottom: 10px;
   }
 
   .modal-box {

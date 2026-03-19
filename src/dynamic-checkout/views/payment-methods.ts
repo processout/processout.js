@@ -120,8 +120,7 @@ module ProcessOut {
       const { walletPaymentMethods, expressPaymentMethods, regularPaymentMethods } =
         this.getPaymentMethodsElements()
 
-      const { expressCheckoutWrapper, walletCheckoutWrapper } =
-        this.getExpressCheckoutElements()
+      const { expressCheckoutWrapper, walletCheckoutWrapper } = this.getExpressCheckoutElements()
 
       const { regularPaymentMethodsSectionWrapper, regularPaymentMethodsList } =
         this.getRegularPaymentMethodsElements([...expressPaymentMethods, ...walletPaymentMethods])
@@ -405,7 +404,7 @@ module ProcessOut {
         "delete",
         `customers/${customerId}/tokens/${tokenId}`,
         {},
-        (data) => {
+        data => {
           if (resolveOutcome(data) === OUTCOME.Failed) {
             DynamicCheckoutEventsUtils.dispatchDeletePaymentMethodErrorEvent(
               this.paymentConfig.invoiceId,
@@ -473,8 +472,9 @@ module ProcessOut {
       this.createPaymentMethodsManager(expressCheckoutHeader)
 
       const nextFocusTarget =
-        (paymentManagerMethodsList.querySelector(".dco-delete-payment-method-button") as HTMLElement) ||
-        (document.querySelector(".close-modal-btn") as HTMLElement)
+        (paymentManagerMethodsList.querySelector(
+          ".dco-delete-payment-method-button",
+        ) as HTMLElement) || (document.querySelector(".close-modal-btn") as HTMLElement)
 
       if (nextFocusTarget) {
         nextFocusTarget.focus()

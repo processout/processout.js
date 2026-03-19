@@ -18,7 +18,7 @@ module ProcessOut {
       const applePayScript = document.createElement("script")
       applePayScript.src = applePaySdkUrl
       applePayScript.onload = () => {
-        buttonContainer.innerHTML = `<apple-pay-button buttonstyle="black" type="plain" locale="en-US"></apple-pay-button>`
+        buttonContainer.innerHTML = `<apple-pay-button buttonstyle="white-outline" type="plain" locale="en-US"></apple-pay-button>`
         this.initializeApplePay(invoiceData, buttonContainer, getViewContainer)
       }
 
@@ -83,7 +83,7 @@ module ProcessOut {
             this.paymentConfig.invoiceId,
             this.paymentConfig.invoiceDetails.return_url || null,
           ),
-        (err) =>
+        err =>
           DynamicCheckoutEventsUtils.dispatchApplePaySessionError(
             this.paymentConfig.invoiceId,
             err,
@@ -91,12 +91,11 @@ module ProcessOut {
           ),
       )
 
-      session.onpaymentauthorizedPostprocess =
-        () =>
-          DynamicCheckoutEventsUtils.dispatchApplePayAuthorizedPostProcessEvent(
-            this.paymentConfig.invoiceId,
-            this.paymentConfig.invoiceDetails.return_url || null,
-          )
+      session.onpaymentauthorizedPostprocess = () =>
+        DynamicCheckoutEventsUtils.dispatchApplePayAuthorizedPostProcessEvent(
+          this.paymentConfig.invoiceId,
+          this.paymentConfig.invoiceDetails.return_url || null,
+        )
 
       return session
     }
@@ -197,7 +196,8 @@ module ProcessOut {
         invoiceId => {
           if (this.paymentConfig.showStatusMessage) {
             getViewContainer().appendChild(
-              new DynamicCheckoutPaymentPendingView(this.processOutInstance, this.paymentConfig).element,
+              new DynamicCheckoutPaymentPendingView(this.processOutInstance, this.paymentConfig)
+                .element,
             )
           }
 

@@ -67,10 +67,17 @@ module ProcessOut {
       const googleClientScript = document.createElement("script")
       googleClientScript.src = googlePaySdkUrl
       googleClientScript.onload = () => {
+        const googlePayMethod = this.getGooglePayMethodData(invoiceData)
+        const merchantId =
+          googlePayMethod && googlePayMethod.googlepay
+            ? googlePayMethod.googlepay.gateway_merchant_id
+            : ""
+        const isSandbox = merchantId && merchantId.indexOf("test-") === 0
+
         this.googleClient =
           window.globalThis && window.globalThis.google
             ? new window.globalThis.google.payments.api.PaymentsClient({
-                environment: DEBUG ? "TEST" : "PRODUCTION",
+                environment: DEBUG || isSandbox ? "TEST" : "PRODUCTION",
               })
             : null
 
@@ -93,7 +100,7 @@ module ProcessOut {
         .then(response => {
           if (response.result) {
             const button = this.googleClient.createButton({
-              buttonColor: "default",
+              buttonColor: "white",
               buttonType: "plain",
               buttonRadius: 4,
               buttonSizeMode: "fill",
