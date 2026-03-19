@@ -434,6 +434,10 @@ const defaultStyles = `
     color: #c2c2c2;
   }
 
+  select.dco-payment-method-card-form-input--placeholder {
+    color: #696F79;
+  }
+
   .dco-payment-method-card-form-section-inputs-wrapper {
     display: flex;
     gap: 10px;
@@ -567,37 +571,29 @@ const defaultStyles = `
   }
     
   .dco-express-checkout-header-settings-button {
-    min-width: 44px;
     min-height: 44px;
     padding: 0;
     display: flex;
-    justify-content: center;
+    justify-content: flex-end;
     align-items: center;
     background-color: transparent;
     border: none;
     cursor: pointer;
-    transition: all .4s;
-    border-radius: 4px;
   }
 
   .dco-delete-payment-method-button {
-    min-width: 44px;
     min-height: 44px;
     display: flex;
-    justify-content: center;
+    justify-content: flex-end;
     align-items: center;
     background-color: transparent;
     border: none;
     cursor: pointer;
     padding: 0;
-    transition: all .4s;
-    border-radius: 4px;
     pointer-events: auto;
+    margin-left: auto;
   }
 
-  .dco-delete-payment-method-button:hover, .dco-express-checkout-header-settings-button:hover {
-    background-color: #1213140f;
-  }
 
   .dco-express-checkout-header-wrapper {
     display: flex;
@@ -636,8 +632,9 @@ const defaultStyles = `
 
   .dco-modal-payment-methods-list {
     width: 100%;
-    border: 1px solid #dde0e3;
-    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
   }
 
   .dco-modal-payment-methods-list--no-methods {
