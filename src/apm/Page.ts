@@ -106,7 +106,7 @@ module ProcessOut {
 
       ContextImpl.context.page.render(APMViewError, {
         title: "Unable to connect",
-        message: "An unexpected error occurred. We're working to fix this issue, please check back later or contact support if you need assistance.",
+        message: message || "An unexpected error occurred. We're working to fix this issue, please check back later or contact support if you need assistance.",
         hideRefresh: true
       })
     }
