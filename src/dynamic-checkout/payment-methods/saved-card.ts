@@ -11,7 +11,6 @@ module ProcessOut {
       processOutInstance: ProcessOut,
       paymentMethod: PaymentMethod,
       paymentConfig: DynamicCheckoutPaymentConfig,
-      theme: DynamicCheckoutThemeType,
       resetContainerHtml: () => HTMLElement,
       deleteMode?: boolean,
       handleDeletePaymentMethod?: () => void,
@@ -39,6 +38,8 @@ module ProcessOut {
     }
 
     private handlePayment() {
+      const methodOptions = this.paymentConfig.getOptionsForMethod("card")
+
       this.setLoading(this.paymentConfig.locale)
 
       DynamicCheckoutEventsUtils.dispatchPaymentSubmittedEvent({
@@ -52,8 +53,8 @@ module ProcessOut {
         this.paymentConfig.invoiceId,
         this.paymentMethod.card_customer_token.customer_token_id,
         {
-          authorize_only: !this.paymentConfig.capturePayments,
-          allow_fallback_to_sale: this.paymentConfig.allowFallbackToSale,
+          authorize_only: !methodOptions.capturePayments,
+          allow_fallback_to_sale: !!methodOptions.allowFallbackToSale,
         },
         this.handlePaymentSuccess.bind(this),
         this.handlePaymentError.bind(this),
@@ -63,15 +64,14 @@ module ProcessOut {
     }
 
     private handlePaymentSuccess(invoiceId: string) {
-      if (this.paymentConfig.showStatusMessage) {
+      const methodOptions = this.paymentConfig.getOptionsForMethod("card")
+
+      if (methodOptions.showStatusMessage) {
         this.resetContainerHtml().appendChild(
           new DynamicCheckoutPaymentSuccessView(this.processOutInstance, this.paymentConfig)
             .element,
         )
-      } else if (
-        !this.paymentConfig.showStatusMessage &&
-        !this.paymentConfig.invoiceDetails.return_url
-      ) {
+      } else if (!methodOptions.showStatusMessage && !this.paymentConfig.invoiceDetails.return_url) {
         this.resetContainerHtml().appendChild(
           new DynamicCheckoutPaymentInfoView(this.processOutInstance, this.paymentConfig).element,
         )
@@ -85,7 +85,7 @@ module ProcessOut {
     }
 
     private handlePaymentPending(invoiceId: string) {
-      if (this.paymentConfig.showStatusMessage) {
+      if (this.paymentConfig.getOptionsForMethod("card").showStatusMessage) {
         this.resetContainerHtml().appendChild(
           new DynamicCheckoutPaymentPendingView(this.processOutInstance, this.paymentConfig)
             .element,
@@ -100,6 +100,8 @@ module ProcessOut {
     }
 
     private handlePaymentError(error) {
+      const methodOptions = this.paymentConfig.getOptionsForMethod("card")
+
       if (error.code === "customer.canceled") {
         this.resetContainerHtml().appendChild(
           new DynamicCheckoutPaymentCancelledView(this.processOutInstance, this.paymentConfig)
@@ -113,15 +115,12 @@ module ProcessOut {
           tab_closed: error.metadata?.reason === "tab_closed",
         })
       } else {
-        if (this.paymentConfig.showStatusMessage) {
+        if (methodOptions.showStatusMessage) {
           this.resetContainerHtml().appendChild(
             new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig)
               .element,
           )
-        } else if (
-          !this.paymentConfig.showStatusMessage &&
-          !this.paymentConfig.invoiceDetails.return_url
-        ) {
+        } else if (!methodOptions.showStatusMessage && !this.paymentConfig.invoiceDetails.return_url) {
           this.resetContainerHtml().appendChild(
             new DynamicCheckoutPaymentInfoView(this.processOutInstance, this.paymentConfig)
               .element,

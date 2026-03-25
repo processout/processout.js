@@ -1,8 +1,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
   <head>
     <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
-    <title>ProcessOut.js Dynamic Checkout</title>
-    <link rel="stylesheet" href="styles.css" />
+    <title>ProcessOut.js Dynamic Checkout (initDynamicCheckout)</title>
+    <link rel="stylesheet" href="../dynamic-checkout/styles.css" />
   </head>
   <body>
     <main class="example-layout">
@@ -148,7 +148,7 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzMwNzM0MDksImludm9pY2VfaWQiOiJ
 
     <script src="../../dist/processout.js" crossorigin="anonymous"></script>
     <script>
-      const dynamicCheckoutEvents = [
+      var dynamicCheckoutEvents = [
         "processout_dynamic_checkout_loading",
         "processout_dynamic_checkout_ready",
         "processout_dynamic_checkout_invoice_fetching_error",
@@ -167,7 +167,7 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzMwNzM0MDksImludm9pY2VfaWQiOiJ
       ]
 
       document.addEventListener("DOMContentLoaded", function () {
-        const form = document.getElementById("dynamic-checkout-form")
+        var form = document.getElementById("dynamic-checkout-form")
 
         registerDynamicCheckoutEventHandlers(dynamicCheckoutEvents)
 
@@ -180,8 +180,8 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzMwNzM0MDksImludm9pY2VfaWQiOiJ
       })
 
       function loadDynamicCheckoutFromForm() {
-        const dynamicCheckoutContainer = document.getElementById("dynamic-cko-container")
-        const formValues = getFormValues()
+        var dynamicCheckoutContainer = document.getElementById("dynamic-cko-container")
+        var formValues = getFormValues()
 
         clearFormError()
 
@@ -191,31 +191,33 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzMwNzM0MDksImludm9pY2VfaWQiOiJ
         }
 
         clearEventLog()
-        dynamicCheckoutContainer.innerHTML = ""
+        dynamicCheckoutContainer.textContent = ""
 
         try {
-          const client = new ProcessOut.ProcessOut(formValues.projectId)
+          var client = new ProcessOut.ProcessOut(formValues.projectId)
 
-          const dynamicCheckout = client.setupDynamicCheckout(
-            {
-              invoiceId: formValues.invoiceId,
-              clientSecret: formValues.clientSecret,
-              locale: formValues.locale,
+          var dynamicCheckout = client.initDynamicCheckout({
+            invoiceId: formValues.invoiceId,
+            clientSecret: formValues.clientSecret,
+            locale: formValues.locale,
+            options: {
               capturePayments: formValues.capturePayments,
               allowFallbackToSale: formValues.allowFallbackToSale,
               enforceSavePaymentMethod: formValues.enforceSavePaymentMethod,
               hideSavedPaymentMethods: formValues.hideSavedPaymentMethods,
               showStatusMessage: formValues.showStatusMessage,
-              payButtonText: formValues.payButtonText,
-              cvcLabel: formValues.cvcLabel,
-              cvcPlaceholder: formValues.cvcPlaceholder,
-              additionalData: formValues.additionalData.value,
             },
-            {
+            theme: {
               payButtonColor: formValues.payButtonColor,
               payButtonTextColor: formValues.payButtonTextColor,
             },
-          )
+            text: {
+              payButtonText: formValues.payButtonText,
+              cvcLabel: formValues.cvcLabel,
+              cvcPlaceholder: formValues.cvcPlaceholder,
+            },
+            paymentMethodOverrides: buildPaymentMethodOverrides(formValues.additionalData.value),
+          })
 
           dynamicCheckout.mount("#dynamic-cko-container")
 
@@ -227,31 +229,38 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzMwNzM0MDksImludm9pY2VfaWQiOiJ
       }
 
       function updateCodePreview(formValues) {
-        const config = {
+        var config = {
           invoiceId: formValues.invoiceId,
           clientSecret: formValues.clientSecret,
           locale: formValues.locale,
-          capturePayments: formValues.capturePayments,
-          allowFallbackToSale: formValues.allowFallbackToSale,
-          enforceSavePaymentMethod: formValues.enforceSavePaymentMethod,
-          hideSavedPaymentMethods: formValues.hideSavedPaymentMethods,
-          showStatusMessage: formValues.showStatusMessage,
-          payButtonText: formValues.payButtonText,
-          cvcLabel: formValues.cvcLabel,
-          cvcPlaceholder: formValues.cvcPlaceholder,
-          additionalData: formValues.additionalData.value,
+          options: {
+            capturePayments: formValues.capturePayments,
+            allowFallbackToSale: formValues.allowFallbackToSale,
+            enforceSavePaymentMethod: formValues.enforceSavePaymentMethod,
+            hideSavedPaymentMethods: formValues.hideSavedPaymentMethods,
+            showStatusMessage: formValues.showStatusMessage,
+          },
+          theme: {
+            payButtonColor: formValues.payButtonColor,
+            payButtonTextColor: formValues.payButtonTextColor,
+          },
+          text: {
+            payButtonText: formValues.payButtonText,
+            cvcLabel: formValues.cvcLabel,
+            cvcPlaceholder: formValues.cvcPlaceholder,
+          },
         }
 
-        const theme = {
-          payButtonColor: formValues.payButtonColor,
-          payButtonTextColor: formValues.payButtonTextColor,
+        var overrides = buildPaymentMethodOverrides(formValues.additionalData.value)
+
+        if (Object.keys(overrides).length > 0) {
+          config.paymentMethodOverrides = overrides
         }
 
-        const code =
+        var code =
           'const client = new ProcessOut.ProcessOut("' + formValues.projectId + '")\n\n' +
-          "const checkout = client.setupDynamicCheckout(\n" +
-          "  " + JSON.stringify(config, null, 2).replace(/\n/g, "\n  ") + ",\n" +
-          "  " + JSON.stringify(theme, null, 2).replace(/\n/g, "\n  ") + ",\n" +
+          "const checkout = client.initDynamicCheckout(" +
+          JSON.stringify(config, null, 2) +
           ")\n\n" +
           'checkout.mount("#dynamic-cko-container")'
 
@@ -259,41 +268,41 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzMwNzM0MDksImludm9pY2VfaWQiOiJ
       }
 
       function getFormValues() {
-        const projectId = document.getElementById("project-id").value.trim()
-        const invoiceId = document.getElementById("invoice-id").value.trim()
-        const clientSecret = document.getElementById("client-secret").value.trim()
-        const locale = document.getElementById("locale").value.trim()
-        const payButtonText = document.getElementById("pay-button-text").value.trim()
-        const cvcLabel = document.getElementById("cvc-label").value.trim()
-        const cvcPlaceholder = document.getElementById("cvc-placeholder").value.trim()
-        const payButtonColor = document.getElementById("pay-button-color").value.trim()
-        const payButtonTextColor = document.getElementById("pay-button-text-color").value.trim()
-        const capturePayments = document.getElementById("capture-payments").checked
-        const allowFallbackToSale = document.getElementById("allow-fallback-to-sale").checked
-        const enforceSavePaymentMethod = document.getElementById(
+        var projectId = document.getElementById("project-id").value.trim()
+        var invoiceId = document.getElementById("invoice-id").value.trim()
+        var clientSecret = document.getElementById("client-secret").value.trim()
+        var locale = document.getElementById("locale").value.trim()
+        var payButtonText = document.getElementById("pay-button-text").value.trim()
+        var cvcLabel = document.getElementById("cvc-label").value.trim()
+        var cvcPlaceholder = document.getElementById("cvc-placeholder").value.trim()
+        var payButtonColor = document.getElementById("pay-button-color").value.trim()
+        var payButtonTextColor = document.getElementById("pay-button-text-color").value.trim()
+        var capturePayments = document.getElementById("capture-payments").checked
+        var allowFallbackToSale = document.getElementById("allow-fallback-to-sale").checked
+        var enforceSavePaymentMethod = document.getElementById(
           "enforce-safe-payment-method",
         ).checked
-        const hideSavedPaymentMethods = document.getElementById(
+        var hideSavedPaymentMethods = document.getElementById(
           "hide-saved-payment-methods",
         ).checked
-        const showStatusMessage = document.getElementById("show-status-message").checked
-        const additionalDataValue = document.getElementById("additional-data").value.trim()
+        var showStatusMessage = document.getElementById("show-status-message").checked
+        var additionalDataValue = document.getElementById("additional-data").value.trim()
 
         return {
-          projectId,
-          invoiceId,
-          clientSecret,
-          locale,
-          capturePayments,
-          allowFallbackToSale,
-          enforceSavePaymentMethod,
-          hideSavedPaymentMethods,
-          showStatusMessage,
-          payButtonText,
-          cvcLabel,
-          cvcPlaceholder,
-          payButtonColor,
-          payButtonTextColor,
+          projectId: projectId,
+          invoiceId: invoiceId,
+          clientSecret: clientSecret,
+          locale: locale,
+          capturePayments: capturePayments,
+          allowFallbackToSale: allowFallbackToSale,
+          enforceSavePaymentMethod: enforceSavePaymentMethod,
+          hideSavedPaymentMethods: hideSavedPaymentMethods,
+          showStatusMessage: showStatusMessage,
+          payButtonText: payButtonText,
+          cvcLabel: cvcLabel,
+          cvcPlaceholder: cvcPlaceholder,
+          payButtonColor: payButtonColor,
+          payButtonTextColor: payButtonTextColor,
           additionalData: parseAdditionalData(additionalDataValue),
         }
       }
@@ -322,6 +331,20 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzMwNzM0MDksImludm9pY2VfaWQiOiJ
         }
       }
 
+      function buildPaymentMethodOverrides(additionalDataByMethod) {
+        var overrides = {}
+
+        for (var methodKey in additionalDataByMethod) {
+          if (additionalDataByMethod.hasOwnProperty(methodKey)) {
+            overrides[methodKey] = {
+              additionalData: additionalDataByMethod[methodKey],
+            }
+          }
+        }
+
+        return overrides
+      }
+
       function registerDynamicCheckoutEventHandlers(events) {
         events.forEach(function (eventName) {
           window.addEventListener(eventName, function (event) {
@@ -332,12 +355,12 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzMwNzM0MDksImludm9pY2VfaWQiOiJ
       }
 
       function appendEventLog(eventName, detail) {
-        const eventLog = document.getElementById("dynamic-checkout-event-log")
-        const eventItem = document.createElement("li")
-        const eventTimestamp = document.createElement("span")
-        const eventNameElement = document.createElement("strong")
-        const eventDetail = document.createElement("pre")
-        const timestamp = new Date().toLocaleTimeString()
+        var eventLog = document.getElementById("dynamic-checkout-event-log")
+        var eventItem = document.createElement("li")
+        var eventTimestamp = document.createElement("span")
+        var eventNameElement = document.createElement("strong")
+        var eventDetail = document.createElement("pre")
+        var timestamp = new Date().toLocaleTimeString()
 
         eventTimestamp.className = "event-log-time"
         eventTimestamp.textContent = timestamp
@@ -357,18 +380,18 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzMwNzM0MDksImludm9pY2VfaWQiOiJ
       }
 
       function clearEventLog() {
-        document.getElementById("dynamic-checkout-event-log").innerHTML = ""
+        document.getElementById("dynamic-checkout-event-log").textContent = ""
       }
 
       function clearFormError() {
-        const formError = document.getElementById("form-error")
+        var formError = document.getElementById("form-error")
 
         formError.hidden = true
         formError.textContent = ""
       }
 
       function showFormError(message) {
-        const formError = document.getElementById("form-error")
+        var formError = document.getElementById("form-error")
 
         formError.hidden = false
         formError.textContent = message

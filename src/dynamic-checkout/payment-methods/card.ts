@@ -5,7 +5,6 @@ module ProcessOut {
     private procesoutInstance: ProcessOut
     private paymentMethod: PaymentMethod
     private paymentConfig: DynamicCheckoutPaymentConfig
-    private theme: DynamicCheckoutThemeType
     private resetContainerHtml: () => HTMLElement
     private isCardRestricted: boolean = false
     private tokenizedCardId?: string
@@ -14,7 +13,6 @@ module ProcessOut {
       procesoutInstance: ProcessOut,
       paymentMethod: PaymentMethod,
       paymentConfig: DynamicCheckoutPaymentConfig,
-      theme: DynamicCheckoutThemeType,
       resetContainerHtml: () => HTMLElement,
     ) {
       const { display } = paymentMethod
@@ -35,13 +33,24 @@ module ProcessOut {
       this.procesoutInstance = procesoutInstance
       this.paymentMethod = paymentMethod
       this.paymentConfig = paymentConfig
-      this.theme = theme
       this.resetContainerHtml = resetContainerHtml
 
       const cardForm = this.getChildrenElement()
 
       super.appendChildren(cardForm)
       this.setupCardForm(cardForm)
+    }
+
+    private getMethodOptions() {
+      return this.paymentConfig.getOptionsForMethod("card")
+    }
+
+    private getMethodTheme() {
+      return this.paymentConfig.getThemeForMethod("card")
+    }
+
+    private getTextOverrides() {
+      return this.paymentConfig.getTextOverridesForMethod("card")
     }
 
     private setupCardForm(form: HTMLElement): void {
@@ -122,11 +131,12 @@ module ProcessOut {
     private handleTokenizeSuccess(cardToken: string) {
       this.tokenizedCardId = cardToken
       const canSavePaymentMethod = this.paymentMethod.card.saving_allowed
+      const methodOptions = this.getMethodOptions()
 
       const cardPaymentOptions = {
-        authorize_only: !this.paymentConfig.capturePayments,
-        allow_fallback_to_sale: this.paymentConfig.allowFallbackToSale,
-        save_source: canSavePaymentMethod && this.paymentConfig.enforceSavePaymentMethod,
+        authorize_only: !methodOptions.capturePayments,
+        allow_fallback_to_sale: methodOptions.allowFallbackToSale,
+        save_source: canSavePaymentMethod && methodOptions.enforceSavePaymentMethod,
       }
 
       const saveForFutureCheckbox = document.getElementById(
@@ -136,7 +146,7 @@ module ProcessOut {
       if (
         canSavePaymentMethod &&
         saveForFutureCheckbox &&
-        !this.paymentConfig.enforceSavePaymentMethod
+        !methodOptions.enforceSavePaymentMethod
       ) {
         cardPaymentOptions["save_source"] = saveForFutureCheckbox.checked
       }
@@ -169,6 +179,8 @@ module ProcessOut {
     }
 
     private handleCardPaymentSuccess(invoiceId: string, data?: any) {
+      const methodOptions = this.getMethodOptions()
+
       DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
         invoice_id: invoiceId,
         return_url: this.paymentConfig.invoiceDetails.return_url || null,
@@ -177,14 +189,11 @@ module ProcessOut {
         customer_token_id: data?.customer_token_id,
       })
 
-      if (this.paymentConfig.showStatusMessage) {
+      if (methodOptions.showStatusMessage) {
         this.resetContainerHtml().appendChild(
           new DynamicCheckoutPaymentSuccessView(this.procesoutInstance, this.paymentConfig).element,
         )
-      } else if (
-        !this.paymentConfig.showStatusMessage &&
-        !this.paymentConfig.invoiceDetails.return_url
-      ) {
+      } else if (!methodOptions.showStatusMessage && !this.paymentConfig.invoiceDetails.return_url) {
         this.resetContainerHtml().appendChild(
           new DynamicCheckoutPaymentInfoView(this.processOutInstance, this.paymentConfig).element,
         )
@@ -192,7 +201,7 @@ module ProcessOut {
     }
 
     private handleCardPaymentPending(invoiceId: string) {
-      if (this.paymentConfig.showStatusMessage) {
+      if (this.getMethodOptions().showStatusMessage) {
         this.resetContainerHtml().appendChild(
           new DynamicCheckoutPaymentPendingView(this.procesoutInstance, this.paymentConfig).element,
         )
@@ -207,14 +216,13 @@ module ProcessOut {
     }
 
     private handleCardPaymentError(error) {
-      if (this.paymentConfig.showStatusMessage) {
+      const methodOptions = this.getMethodOptions()
+
+      if (methodOptions.showStatusMessage) {
         this.resetContainerHtml().appendChild(
           new DynamicCheckoutPaymentErrorView(this.procesoutInstance, this.paymentConfig).element,
         )
-      } else if (
-        !this.paymentConfig.showStatusMessage &&
-        !this.paymentConfig.invoiceDetails.return_url
-      ) {
+      } else if (!methodOptions.showStatusMessage && !this.paymentConfig.invoiceDetails.return_url) {
         this.resetContainerHtml().appendChild(
           new DynamicCheckoutPaymentInfoView(this.processOutInstance, this.paymentConfig).element,
         )
@@ -276,13 +284,17 @@ module ProcessOut {
         name: "save-card-for-future",
       }
 
-      if (this.paymentConfig.enforceSavePaymentMethod) {
+      const methodOptions = this.getMethodOptions()
+      const textOverrides = this.getTextOverrides()
+      const theme = this.getMethodTheme()
+
+      if (methodOptions.enforceSavePaymentMethod) {
         saveForFutureAttributes.checked = "checked"
         saveForFutureAttributes.disabled = "disabled"
       }
 
       const payButtonText =
-        this.paymentConfig.payButtonText ||
+        textOverrides.payButtonText ||
         `${Translations.getText(
           "pay-button-text",
           this.paymentConfig.locale,
@@ -335,12 +347,12 @@ module ProcessOut {
         },
       ])
 
-      if (this.theme && this.theme.payButtonColor) {
-        payButton.style.backgroundColor = this.theme.payButtonColor
+      if (theme && theme.payButtonColor) {
+        payButton.style.backgroundColor = theme.payButtonColor
       }
 
-      if (this.theme && this.theme.payButtonTextColor) {
-        payButton.style.color = this.theme.payButtonTextColor
+      if (theme && theme.payButtonTextColor) {
+        payButton.style.color = theme.payButtonTextColor
       }
 
       HTMLElements.appendChildren(saveForFutureWrapper, [saveForFutureCheckbox, saveForFutureLabel])
@@ -364,14 +376,18 @@ module ProcessOut {
     }
 
     private getCvcLabel() {
+      const textOverrides = this.getTextOverrides()
+
       return (
-        this.paymentConfig.cvcLabel || Translations.getText("cvc-label", this.paymentConfig.locale)
+        textOverrides.cvcLabel || Translations.getText("cvc-label", this.paymentConfig.locale)
       )
     }
 
     private getCvcPlaceholder() {
+      const textOverrides = this.getTextOverrides()
+
       return (
-        this.paymentConfig.cvcPlaceholder ||
+        textOverrides.cvcPlaceholder ||
         Translations.getText("cvc-placeholder", this.paymentConfig.locale)
       )
     }

@@ -6,19 +6,16 @@ module ProcessOut {
     dynamicCheckout: DynamicCheckout
     paymentConfig: DynamicCheckoutPaymentConfig
     paymentMethodsManager: PaymentMethodsManager
-    theme: DynamicCheckoutThemeType
     element: HTMLElement
 
     constructor(
       dynamicCheckout: DynamicCheckout,
       processOutInstance: ProcessOut,
       paymentConfig: DynamicCheckoutPaymentConfig,
-      theme: DynamicCheckoutThemeType,
     ) {
       this.dynamicCheckout = dynamicCheckout
       this.processOutInstance = processOutInstance
       this.paymentConfig = paymentConfig
-      this.theme = theme
       this.element = this.createViewElement()
       this.loadTingleLibrary()
     }
@@ -278,7 +275,6 @@ module ProcessOut {
               this.processOutInstance,
               paymentMethod,
               this.paymentConfig,
-              this.theme,
               this.resetContainerHtml.bind(this),
               deleteMode,
               () => this.handleDeletePaymentMethod(paymentMethod),
@@ -291,7 +287,6 @@ module ProcessOut {
               this.processOutInstance,
               paymentMethod,
               this.paymentConfig,
-              this.theme,
               this.resetContainerHtml.bind(this),
               deleteMode,
               () => this.handleDeletePaymentMethod(paymentMethod),
@@ -305,14 +300,12 @@ module ProcessOut {
                   this.processOutInstance,
                   paymentMethod,
                   this.paymentConfig,
-                  this.theme,
                   this.resetContainerHtml.bind(this),
                 )
               : new NativeApmPaymentMethod(
                   this.processOutInstance,
                   paymentMethod,
                   this.paymentConfig,
-                  this.theme,
                   this.resetContainerHtml.bind(this),
                   () => {
                     DynamicCheckoutEventsUtils.dispatchPaymentSubmittedEvent({
@@ -330,7 +323,6 @@ module ProcessOut {
               this.processOutInstance,
               paymentMethod,
               this.paymentConfig,
-              this.theme,
               this.resetContainerHtml.bind(this),
             )
 
