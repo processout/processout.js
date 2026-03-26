@@ -85,7 +85,7 @@ module ProcessOut {
           this.criticalFailure({
             code: data.error.code,
             message: data.error.message,
-            title: "Unable to connect",
+            title: "Payment Failed",
           })
         },
       })
@@ -105,7 +105,7 @@ module ProcessOut {
       })
 
       ContextImpl.context.page.render(APMViewError, {
-        title: "Unable to connect",
+        title: title || "Unable to connect",
         message: message || "An unexpected error occurred. We're working to fix this issue, please check back later or contact support if you need assistance.",
         hideRefresh: true
       })
