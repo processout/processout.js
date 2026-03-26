@@ -6,20 +6,14 @@ module ProcessOut {
     widgetWrapper: Element
     processOutInstance: ProcessOut
     paymentConfig: DynamicCheckoutPaymentConfig
-    theme: DynamicCheckoutTheme
     invoiceDetails: Invoice
 
     constructor(
       processOutInstance: ProcessOut,
-      config: DynamicCheckoutPublicConfigType,
-      theme?: DynamicCheckoutThemeType,
+      config: DynamicCheckoutNormalizedPublicConfigType,
     ) {
       this.processOutInstance = processOutInstance
       this.paymentConfig = new DynamicCheckoutPaymentConfig(config)
-
-      if (theme) {
-        this.theme = new DynamicCheckoutTheme(theme)
-      }
 
       this.applyDefaultStyles()
     }
@@ -45,7 +39,6 @@ module ProcessOut {
         this,
         this.processOutInstance,
         this.paymentConfig,
-        this.theme,
       )
 
       this.loadView(paymentMethodsView.element)

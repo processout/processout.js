@@ -48,6 +48,8 @@ module ProcessOut {
     }
   }
   export class GooglePayClient {
+    private static readonly METHOD_KEY = "googlepay"
+
     googleClient: any
     processOutInstance: ProcessOut
     paymentConfig: DynamicCheckoutPaymentConfig
@@ -120,6 +122,8 @@ module ProcessOut {
     }
 
     private makePayment(invoiceData: Invoice, getViewContainer: () => HTMLElement) {
+      const methodOptions = this.paymentConfig.getOptionsForMethod(GooglePayClient.METHOD_KEY)
+
       this.googleClient
         .loadPaymentData(this.paymentRequest)
         .then(paymentData => {
@@ -136,21 +140,18 @@ module ProcessOut {
                 invoiceData.id,
                 token,
                 {
-                  authorize_only: !this.paymentConfig.capturePayments,
-                  allow_fallback_to_sale: this.paymentConfig.allowFallbackToSale,
+                  authorize_only: !methodOptions.capturePayments,
+                  allow_fallback_to_sale: !!methodOptions.allowFallbackToSale,
                 },
                 invoiceId => {
-                  if (this.paymentConfig.showStatusMessage) {
+                  if (methodOptions.showStatusMessage) {
                     getViewContainer().appendChild(
                       new DynamicCheckoutPaymentSuccessView(
                         this.processOutInstance,
                         this.paymentConfig,
                       ).element,
                     )
-                  } else if (
-                    !this.paymentConfig.showStatusMessage &&
-                    !this.paymentConfig.invoiceDetails.return_url
-                  ) {
+                  } else if (!methodOptions.showStatusMessage && !this.paymentConfig.invoiceDetails.return_url) {
                     getViewContainer().appendChild(
                       new DynamicCheckoutPaymentInfoView(
                         this.processOutInstance,
@@ -166,17 +167,14 @@ module ProcessOut {
                   })
                 },
                 error => {
-                  if (this.paymentConfig.showStatusMessage) {
+                  if (methodOptions.showStatusMessage) {
                     getViewContainer().appendChild(
                       new DynamicCheckoutPaymentErrorView(
                         this.processOutInstance,
                         this.paymentConfig,
                       ).element,
                     )
-                  } else if (
-                    !this.paymentConfig.showStatusMessage &&
-                    !this.paymentConfig.invoiceDetails.return_url
-                  ) {
+                  } else if (!methodOptions.showStatusMessage && !this.paymentConfig.invoiceDetails.return_url) {
                     getViewContainer().appendChild(
                       new DynamicCheckoutPaymentInfoView(
                         this.processOutInstance,
@@ -195,7 +193,7 @@ module ProcessOut {
                 },
                 undefined,
                 invoiceId => {
-                  if (this.paymentConfig.showStatusMessage) {
+                  if (methodOptions.showStatusMessage) {
                     getViewContainer().appendChild(
                       new DynamicCheckoutPaymentPendingView(this.processOutInstance, this.paymentConfig).element,
                     )
