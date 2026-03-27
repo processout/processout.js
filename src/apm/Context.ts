@@ -39,6 +39,30 @@ module ProcessOut {
       /** Whether user must take action to dismiss success screen (default: false) */
       requiresAction: boolean
     }
+
+    /**
+     * Client-side redirect behaviour (web APM). Aligns with mobile
+     * `RedirectConfiguration.enableHeadlessMode`: skip the intermediate
+     * “Continue to payment” / Pay button and open the PSP flow as soon as the
+     * redirect step is shown.
+     */
+    redirect?: {
+      enableHeadlessMode?: boolean
+      /**
+       * When headless, emit `failure` for `handleAction` errors but do not render the in-widget
+       * error screen (mobile-style; merchant handles UX). Popup-blocked fallback UI is unchanged.
+       * Default false for backward compatibility.
+       */
+      silentFailureView?: boolean
+      /**
+       * When headless, show the loader while opening the PSP. Default true; set false for no in-widget chrome.
+       */
+      showHeadlessLoader?: boolean
+      /**
+       * Append `ActionHandler` iframe modal / new-window overlay to this element instead of `document.body`.
+       */
+      actionOverlayMountParent?: HTMLElement | null
+    }
   }
 
   export type TokenizationUserData = TokenizationFlowData & FlowData

@@ -9,10 +9,12 @@ module ProcessOut {
         protected element: HTMLElement;
         protected iframe:  HTMLIFrameElement;
         public closed:     boolean;
+        protected mountParent?: HTMLElement;
 
-        constructor(el: HTMLElement, iframe: HTMLIFrameElement) {
+        constructor(el: HTMLElement, iframe: HTMLIFrameElement, mountParent?: HTMLElement) {
             this.element = el;
             this.iframe  = iframe;
+            this.mountParent = mountParent;
 
             window.addEventListener("resize", function(event) {
                 var width = Math.max(document.body.clientWidth,
@@ -42,7 +44,7 @@ module ProcessOut {
             document.body.style.overflow = "hidden";
 
             // And finally show the modal to the user
-            document.body.appendChild(this.element);
+            (this.mountParent || document.body).appendChild(this.element);
         }
 
         public close() {
@@ -79,6 +81,9 @@ module ProcessOut {
 
         // gatewayLogo is shown when the action is done on another tab or window
         public gatewayLogo?: string;
+
+        /** When set, iframe modal and new-window overlay are appended here instead of document.body */
+        public overlayMountParent?: HTMLElement;
 
         public static ThreeDSChallengeFlow = "three-d-s-challenge-flow";
         public static ThreeDSChallengeFlowNoIframe = "three-d-s-challenge-flow-no-iframe";
@@ -248,7 +253,11 @@ module ProcessOut {
 
                 iframeWrapper.appendChild(iframe);
                 iframeWrapper.appendChild(buttonWrapper);
-                this.iframeWrapper = new MockedIFrameWindow(iframeWrapper, iframe);
+                this.iframeWrapper = new MockedIFrameWindow(
+                    iframeWrapper,
+                    iframe,
+                    this.options.overlayMountParent,
+                );
                 button.onclick = function() {
                     this.iframeWrapper.close();
                 }.bind(this);
@@ -464,7 +473,8 @@ module ProcessOut {
                 this.cancel();
             }.bind(this), false);
 
-            document.body.appendChild(ret.topLayer);
+            var mount = this.options.overlayMountParent || document.body;
+            mount.appendChild(ret.topLayer);
             return ret;
         }
 
