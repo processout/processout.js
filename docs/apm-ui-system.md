@@ -574,14 +574,6 @@ const apm = client.apm.authorization(container, {
     timeout: 900,                // Timeout in seconds (15 minutes)
     allowCancelation: true       // Allow cancellation during confirmation
   },
-
-  // Redirect step (web only): optional keys match Context.ts FlowData.redirect (see sdks-embedded-components.md)
-  redirect: {
-    enableHeadlessMode: false,
-    // silentFailureView: false,
-    // showHeadlessLoader: true,
-    // actionOverlayMountParent: document.getElementById('overlay-root'), // HTMLElement | null
-  },
   
   // Success screen settings
   success: {
