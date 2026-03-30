@@ -33,17 +33,13 @@ module ProcessOut {
             requiresAction: false,
             autoDismissDuration: 3,
             manualDismissDuration: 60,
-            ...(data.success || {}),
+            ...data.success,
           },
           confirmation: {
             requiresAction: false,
             timeout: MIN_15 / 1000,
             allowCancelation: true,
-            ...(data.confirmation || {}),
-          },
-          redirect: {
-            enableHeadlessMode: false,
-            ...(data.redirect || {}),
+            ...data.confirmation,
           },
           logger: {
             error: (options: Omit<Parameters<TelemetryClient['reportError']>[0], 'stack'>) => {
