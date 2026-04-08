@@ -17,7 +17,20 @@
     <input type="text" id="customer-token-id" name="customer_token_id" placeholder="Customer Token ID" style="display: none" />
     <button type="submit">Initialise APM</button>
   </form>
+  <fieldset id="redirect-fieldset" style="margin-top: 1rem; max-width: 520px;">
+    <legend>Web redirect (headless)</legend>
+    <p style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: #555;">
+      Matches <code>FlowData.redirect</code> in the SDK: auto-open PSP, optional silent errors, loader, and where the action overlay attaches.
+    </p>
+    <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+      <label><input type="checkbox" id="redirect-headless" /> Enable headless mode (skip &ldquo;Continue to payment&rdquo; / Pay; open PSP immediately)</label>
+      <label style="margin-left: 1.25rem;"><input type="checkbox" id="redirect-silent-failure" disabled /> Silent failure view (headless: no in-widget error; listen for <code>failure</code>)</label>
+      <label style="margin-left: 1.25rem;"><input type="checkbox" id="redirect-show-loader" checked disabled /> Show headless loader while opening PSP</label>
+      <label><input type="checkbox" id="redirect-overlay-root" /> Mount PSP action overlay on <code>#action-overlay-root</code> instead of <code>document.body</code></label>
+    </div>
+  </fieldset>
 </div>
+<div id="action-overlay-root" title="PSP action overlay mounts here when the option above is enabled"></div>
 <div id="apm-container"></div>
 <script src="../../dist/processout.js" crossorigin="anonymous"></script>
 <script>
@@ -64,6 +77,37 @@
 
     const client = new ProcessOut.ProcessOut(projectId)
     const el = document.querySelector('#apm-container')
+
+    function syncRedirectDependentControls() {
+      const headless = document.getElementById('redirect-headless').checked;
+      document.getElementById('redirect-silent-failure').disabled = !headless;
+      document.getElementById('redirect-show-loader').disabled = !headless;
+      if (!headless) {
+        document.getElementById('redirect-silent-failure').checked = false;
+        document.getElementById('redirect-show-loader').checked = true;
+      }
+    }
+
+    document.getElementById('redirect-headless').addEventListener('change', syncRedirectDependentControls);
+    syncRedirectDependentControls();
+
+    function buildRedirectOptions() {
+      /** @type {Record<string, unknown>} */
+      const redirect = {};
+      if (document.getElementById('redirect-headless').checked) {
+        redirect.enableHeadlessMode = true;
+      }
+      if (document.getElementById('redirect-silent-failure').checked) {
+        redirect.silentFailureView = true;
+      }
+      if (document.getElementById('redirect-headless').checked && !document.getElementById('redirect-show-loader').checked) {
+        redirect.showHeadlessLoader = false;
+      }
+      if (document.getElementById('redirect-overlay-root').checked) {
+        redirect.actionOverlayMountParent = document.getElementById('action-overlay-root');
+      }
+      return Object.keys(redirect).length ? { redirect } : {};
+    }
 
     gatewayEl.addEventListener('change', (e) => {
       const value = e.target.value;
@@ -137,6 +181,7 @@
             requiresAction: true,
             manualDismissDuration: 0,
           },
+          ...buildRedirectOptions(),
         })
       }
 
@@ -154,6 +199,7 @@
           gatewayConfigurationId,
           customerId,
           customerTokenId,
+          ...buildRedirectOptions(),
         })
       }
 
