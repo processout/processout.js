@@ -60,6 +60,15 @@ module ProcessOut {
         paymentState?: string
       }
 
+      // Emitted when a headless redirect auto-open was blocked by the browser (e.g. Safari
+      // popup blocker) and the SDK has surfaced its manual-fallback Pay UI. Fired before
+      // forceUpdate so the merchant can make their container visible first.
+      // `retry` is a bound reference to handleRedirectClick — call it from a real user-gesture
+      // handler (e.g. an onclick) to open the payment tab with a fresh browser gesture.
+      "redirect-popup-blocked": {
+        retry: () => void
+      }
+
       "copy-to-clipboard": {
         text: string
       }

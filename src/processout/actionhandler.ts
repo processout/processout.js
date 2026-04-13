@@ -325,6 +325,16 @@ module ProcessOut {
                 return null;
             }
 
+            // Safari (pattern 2): window.open returns a non-null window that is immediately
+            // closed — treat this as popup-blocked rather than letting the 500ms timer fire
+            // a misleading "customer.canceled" error. Only applies to real popup flows;
+            // MockedIFrameWindow (IFrame/FingerprintIframe) initialises closed as undefined.
+            if ((this.options.flow === ActionFlow.NewTab || this.options.flow === ActionFlow.NewWindow) && newWindow.closed) {
+                error(new Exception("customer.popup-blocked"));
+                refocus();
+                return null;
+            }
+
             // We now want to monitor the payment page
             var timer = setInterval(function() {
                 if (!timer) return;
@@ -335,7 +345,6 @@ module ProcessOut {
                   newWindow.close()
                   error(new Exception("customer.canceled"))
 
-                  // Temporary just to investigate the issue
                   telemetryClient.reportWarning({
                     host: window && window.location ? window.location.host : "",
                     fileName: "actionhandler.ts/ActionHandler.handle.timer",
@@ -357,8 +366,7 @@ module ProcessOut {
                   clearInterval(timer)
                   timer = null
                   error(new Exception("customer.canceled", undefined, { reason: "tab_closed" }))
-                  
-                  // Temporary just to investigate the issue
+
                   telemetryClient.reportWarning({
                     host: window && window.location ? window.location.host : "",
                     fileName: "actionhandler.ts/ActionHandler.handle.cancelf",
@@ -536,7 +544,6 @@ module ProcessOut {
 
                     error(new Exception("customer.canceled"));
 
-                    // Temporary just to investigate the issue
                     telemetryClient.reportWarning({
                       host: window && window.location ? window.location.host : "",
                       fileName: "actionhandler.ts/ActionHandler.listenEvents",

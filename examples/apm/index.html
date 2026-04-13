@@ -26,6 +26,7 @@
       <label><input type="checkbox" id="redirect-headless" /> Enable headless mode (skip &ldquo;Continue to payment&rdquo; / Pay; open PSP immediately)</label>
       <label style="margin-left: 1.25rem;"><input type="checkbox" id="redirect-silent-failure" disabled /> Silent failure view (headless: no in-widget error; listen for <code>failure</code>)</label>
       <label style="margin-left: 1.25rem;"><input type="checkbox" id="redirect-show-loader" checked disabled /> Show headless loader while opening PSP</label>
+      <label style="margin-left: 1.25rem;"><input type="checkbox" id="redirect-popup-blocked-overlay" checked disabled /> SDK overlay on popup-blocked (default <code>true</code>; uncheck to suppress and handle <code>redirect-popup-blocked</code> yourself)</label>
       <label><input type="checkbox" id="redirect-overlay-root" /> Mount PSP action overlay on <code>#action-overlay-root</code> instead of <code>document.body</code></label>
     </div>
   </fieldset>
@@ -82,9 +83,11 @@
       const headless = document.getElementById('redirect-headless').checked;
       document.getElementById('redirect-silent-failure').disabled = !headless;
       document.getElementById('redirect-show-loader').disabled = !headless;
+      document.getElementById('redirect-popup-blocked-overlay').disabled = !headless;
       if (!headless) {
         document.getElementById('redirect-silent-failure').checked = false;
         document.getElementById('redirect-show-loader').checked = true;
+        document.getElementById('redirect-popup-blocked-overlay').checked = true;
       }
     }
 
@@ -102,6 +105,9 @@
       }
       if (document.getElementById('redirect-headless').checked && !document.getElementById('redirect-show-loader').checked) {
         redirect.showHeadlessLoader = false;
+      }
+      if (document.getElementById('redirect-headless').checked && !document.getElementById('redirect-popup-blocked-overlay').checked) {
+        redirect.popupBlockedOverlay = false;
       }
       if (document.getElementById('redirect-overlay-root').checked) {
         redirect.actionOverlayMountParent = document.getElementById('action-overlay-root');
@@ -209,6 +215,25 @@
           if (type === 'success' || type === 'failure' || type === 'payment-cancelled') {
             apm.cleanUp()
           }
+        })
+
+        // redirect-popup-blocked fires when the headless auto-open was blocked by the browser
+        // (e.g. Safari). By default the SDK shows its own Pay button overlay automatically.
+        // When popupBlockedOverlay: false is set, handle it here instead.
+        apm.on('redirect-popup-blocked', function (data) {
+          if (document.getElementById('redirect-popup-blocked-overlay').checked) return; // SDK overlay or forceUpdate is handling it
+          // Example custom UI: a simple fixed overlay with a retry button
+          var overlay = document.createElement('div');
+          overlay.style.cssText = 'position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,0.5);';
+          var btn = document.createElement('button');
+          btn.textContent = 'Continue to payment';
+          btn.style.cssText = 'padding:0.75em 1.5em;font-size:1rem;cursor:pointer;';
+          btn.onclick = function () {
+            overlay.remove();
+            data.retry();
+          };
+          overlay.appendChild(btn);
+          document.body.appendChild(overlay);
         })
 
         try {
