@@ -62,6 +62,12 @@ module ProcessOut {
        * Append `ActionHandler` iframe modal / new-window overlay to this element instead of `document.body`.
        */
       actionOverlayMountParent?: HTMLElement | null
+      /**
+       * When the headless popup is blocked, mount the SDK's built-in Pay button modal
+       * overlay directly on `document.body`. Default `true`.
+       * Set to `false` to suppress the SDK overlay and handle `redirect-popup-blocked` yourself.
+       */
+      popupBlockedOverlay?: boolean
     }
   }
 
