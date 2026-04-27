@@ -12,6 +12,10 @@ module ProcessOut {
     [methodKey: string]: T | undefined
   }
 
+  function isSafeMethodScopedConfigKey(key: string): boolean {
+    return key !== "__proto__" && key !== "constructor" && key !== "prototype"
+  }
+
   function cloneMethodScopedConfig<T extends Record<string, any>>(
     config?: DynamicCheckoutMethodScopedConfig<T>,
   ): DynamicCheckoutMethodScopedConfig<T> {
@@ -21,13 +25,17 @@ module ProcessOut {
       return clonedConfig
     }
 
-    for (const key in config) {
+    Object.keys(config).forEach(key => {
+      if (!isSafeMethodScopedConfigKey(key)) {
+        return
+      }
+
       if (config[key]) {
         clonedConfig[key] = {
           ...config[key],
         }
       }
-    }
+    })
 
     return clonedConfig
   }
@@ -166,11 +174,15 @@ module ProcessOut {
     const additionalPaymentDataByMethod: DynamicCheckoutMethodScopedConfig<DynamicCheckoutAdditionalPaymentDataType> = {}
 
     if (config.paymentMethodOverrides) {
-      for (const key in config.paymentMethodOverrides) {
+      Object.keys(config.paymentMethodOverrides).forEach(key => {
+        if (!isSafeMethodScopedConfigKey(key)) {
+          return
+        }
+
         const override = config.paymentMethodOverrides[key]
 
         if (!override) {
-          continue
+          return
         }
 
         if (override.options) {
@@ -188,7 +200,7 @@ module ProcessOut {
         if (override.additionalData) {
           additionalPaymentDataByMethod[key] = { ...override.additionalData }
         }
-      }
+      })
     }
 
     return {

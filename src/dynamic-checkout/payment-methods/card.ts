@@ -135,8 +135,8 @@ module ProcessOut {
 
       const cardPaymentOptions = {
         authorize_only: !methodOptions.capturePayments,
-        allow_fallback_to_sale: methodOptions.allowFallbackToSale,
-        save_source: canSavePaymentMethod && methodOptions.enforceSavePaymentMethod,
+        allow_fallback_to_sale: !!methodOptions.allowFallbackToSale,
+        save_source: canSavePaymentMethod && !!methodOptions.enforceSavePaymentMethod,
       }
 
       const saveForFutureCheckbox = document.getElementById(

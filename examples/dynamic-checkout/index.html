@@ -251,7 +251,7 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzMwNzM0MDksImludm9pY2VfaWQiOiJ
           'const client = new ProcessOut.ProcessOut("' + formValues.projectId + '")\n\n' +
           "const checkout = client.setupDynamicCheckout(\n" +
           "  " + JSON.stringify(config, null, 2).replace(/\n/g, "\n  ") + ",\n" +
-          "  " + JSON.stringify(theme, null, 2).replace(/\n/g, "\n  ") + ",\n" +
+          "  " + JSON.stringify(theme, null, 2).replace(/\n/g, "\n  ") + "\n" +
           ")\n\n" +
           'checkout.mount("#dynamic-cko-container")'
 
