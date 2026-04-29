@@ -317,6 +317,7 @@ module ProcessOut {
                   () => {
                     DynamicCheckoutEventsUtils.dispatchPaymentSubmittedEvent({
                       payment_method_name: paymentMethod.apm.gateway_name,
+                      payment_method_display_name: paymentMethod.display.name,
                       invoice_id: this.paymentConfig.invoiceId,
                       return_url: this.paymentConfig.invoiceDetails.return_url || null,
                     })
@@ -411,6 +412,7 @@ module ProcessOut {
               data,
               isCardToken ? "card" : paymentMethod.apm.gateway_name,
               this.paymentConfig.invoiceDetails.return_url || null,
+              paymentMethod.display.name,
             )
             return
           }
@@ -420,6 +422,7 @@ module ProcessOut {
             this.paymentConfig.invoiceId,
             isCardToken ? "card" : paymentMethod.apm.gateway_name,
             this.paymentConfig.invoiceDetails.return_url || null,
+            paymentMethod.display.name,
           )
         },
         err => {
@@ -428,6 +431,7 @@ module ProcessOut {
             err,
             isCardToken ? "card" : paymentMethod.apm.gateway_name,
             this.paymentConfig.invoiceDetails.return_url || null,
+            paymentMethod.display.name,
           )
         },
         0,

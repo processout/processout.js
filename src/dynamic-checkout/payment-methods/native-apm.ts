@@ -8,6 +8,7 @@ module ProcessOut {
     private paymentConfig: DynamicCheckoutPaymentConfig
     private isMounted: boolean
     private paymentMethodName: string
+    private paymentMethodDisplayName: string
     private theme: DynamicCheckoutThemeType
     private resetContainerHtml: () => HTMLElement
     protected processOutInstance: ProcessOut
@@ -29,6 +30,7 @@ module ProcessOut {
 
       this.paymentConfig = paymentConfig
       this.paymentMethodName = apm.gateway_name
+      this.paymentMethodDisplayName = display.name
       this.processOutInstance = processOutInstance
       this.resetContainerHtml = resetContainerHtml
       this.theme = theme
@@ -107,6 +109,7 @@ module ProcessOut {
           invoice_id: this.paymentConfig.invoiceId,
           return_url: this.paymentConfig.invoiceDetails.return_url || null,
           payment_method_name: this.paymentMethodName,
+          payment_method_display_name: this.paymentMethodDisplayName,
         })
 
         NativeApmPaymentMethod.activePaymentMethod = null
@@ -137,6 +140,8 @@ module ProcessOut {
           this.paymentMethodName,
           undefined,
           this.paymentConfig.invoiceDetails.return_url || null,
+          undefined,
+          this.paymentMethodDisplayName,
         )
 
         NativeApmPaymentMethod.activePaymentMethod = null

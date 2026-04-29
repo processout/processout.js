@@ -114,6 +114,7 @@ module ProcessOut {
           DynamicCheckoutEventsUtils.dispatchGooglePayLoadError(
             error,
             this.paymentConfig.invoiceId,
+            this.getGooglePayPaymentMethodName(invoiceData),
             this.paymentConfig.invoiceDetails.return_url || null,
           ),
         )
@@ -132,12 +133,16 @@ module ProcessOut {
             paymentToken,
             {},
             token => {
+              const googlePayMethod = this.getGooglePayMethodData(invoiceData)
+              const canSavePaymentMethod = googlePayMethod.googlepay.saving_allowed
+
               this.processOutInstance.makeCardPayment(
                 invoiceData.id,
                 token,
                 {
                   authorize_only: !this.paymentConfig.capturePayments,
                   allow_fallback_to_sale: this.paymentConfig.allowFallbackToSale,
+                  save_source: canSavePaymentMethod && this.paymentConfig.enforceSavePaymentMethod,
                 },
                 invoiceId => {
                   if (this.paymentConfig.showStatusMessage) {
@@ -163,6 +168,7 @@ module ProcessOut {
                     invoice_id: invoiceId,
                     return_url: this.paymentConfig.invoiceDetails.return_url || null,
                     payment_method_name: "google_pay",
+                    payment_method_display_name: this.getGooglePayPaymentMethodName(invoiceData),
                   })
                 },
                 error => {
@@ -191,6 +197,8 @@ module ProcessOut {
                     "google_pay",
                     undefined,
                     this.paymentConfig.invoiceDetails.return_url || null,
+                    undefined,
+                    this.getGooglePayPaymentMethodName(invoiceData),
                   )
                 },
                 undefined,
@@ -203,6 +211,7 @@ module ProcessOut {
 
                   DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent({
                     payment_method_name: "google_pay",
+                    payment_method_display_name: this.getGooglePayPaymentMethodName(invoiceData),
                     invoice_id: invoiceId,
                     return_url: this.paymentConfig.invoiceDetails.return_url || null,
                   })
@@ -223,6 +232,8 @@ module ProcessOut {
                 "google_pay",
                 undefined,
                 this.paymentConfig.invoiceDetails.return_url || null,
+                undefined,
+                this.getGooglePayPaymentMethodName(invoiceData),
               )
             },
           )
@@ -231,6 +242,7 @@ module ProcessOut {
           DynamicCheckoutEventsUtils.dispatchGooglePayLoadError(
             error,
             this.paymentConfig.invoiceId,
+            this.getGooglePayPaymentMethodName(invoiceData),
             this.paymentConfig.invoiceDetails.return_url || null,
           ),
         )
@@ -313,6 +325,12 @@ module ProcessOut {
       })
 
       return googlePayMethod
+    }
+
+    private getGooglePayPaymentMethodName(invoiceData: Invoice) {
+      const googlePayMethod = this.getGooglePayMethodData(invoiceData)
+
+      return googlePayMethod && googlePayMethod.display ? googlePayMethod.display.name : "Google Pay"
     }
   }
 }

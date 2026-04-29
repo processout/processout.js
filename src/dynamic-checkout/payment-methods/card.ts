@@ -4,6 +4,7 @@ module ProcessOut {
   export class CardPaymentMethod extends PaymentMethodButton {
     private procesoutInstance: ProcessOut
     private paymentMethod: PaymentMethod
+    private paymentMethodDisplayName: string
     private paymentConfig: DynamicCheckoutPaymentConfig
     private theme: DynamicCheckoutThemeType
     private resetContainerHtml: () => HTMLElement
@@ -34,6 +35,7 @@ module ProcessOut {
 
       this.procesoutInstance = procesoutInstance
       this.paymentMethod = paymentMethod
+      this.paymentMethodDisplayName = display.name
       this.paymentConfig = paymentConfig
       this.theme = theme
       this.resetContainerHtml = resetContainerHtml
@@ -95,6 +97,7 @@ module ProcessOut {
 
               DynamicCheckoutEventsUtils.dispatchPaymentSubmittedEvent({
                 payment_method_name: "card",
+                payment_method_display_name: this.paymentMethodDisplayName,
                 invoice_id: this.paymentConfig.invoiceId,
                 return_url: this.paymentConfig.invoiceDetails.return_url || null,
               })
@@ -115,6 +118,8 @@ module ProcessOut {
             "card",
             undefined,
             this.paymentConfig.invoiceDetails.return_url || null,
+            undefined,
+            this.paymentMethodDisplayName,
           ),
       )
     }
@@ -165,6 +170,8 @@ module ProcessOut {
         "card",
         this.tokenizedCardId,
         this.paymentConfig.invoiceDetails.return_url || null,
+        undefined,
+        this.paymentMethodDisplayName,
       )
     }
 
@@ -173,6 +180,7 @@ module ProcessOut {
         invoice_id: invoiceId,
         return_url: this.paymentConfig.invoiceDetails.return_url || null,
         payment_method_name: "card",
+        payment_method_display_name: this.paymentMethodDisplayName,
         ...(this.tokenizedCardId && { card_id: this.tokenizedCardId }),
         customer_token_id: data?.customer_token_id,
       })
@@ -200,6 +208,7 @@ module ProcessOut {
 
       DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent({
         payment_method_name: "card",
+        payment_method_display_name: this.paymentMethodDisplayName,
         invoice_id: invoiceId,
         return_url: this.paymentConfig.invoiceDetails.return_url || null,
         ...(this.tokenizedCardId && { card_id: this.tokenizedCardId }),
@@ -226,6 +235,8 @@ module ProcessOut {
         "card",
         this.tokenizedCardId,
         this.paymentConfig.invoiceDetails.return_url || null,
+        undefined,
+        this.paymentMethodDisplayName,
       )
     }
 

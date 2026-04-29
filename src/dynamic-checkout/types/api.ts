@@ -38,6 +38,7 @@ type GooglePay = {
   allow_credit_cards: boolean
   gateway: string
   gateway_merchant_id: string
+  saving_allowed: boolean
 }
 
 type ApplePay = {
@@ -45,6 +46,7 @@ type ApplePay = {
   country_code: string
   supported_networks: string[]
   merchant_capabilities: string[]
+  saving_allowed: boolean
 }
 
 type Display = {
