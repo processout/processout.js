@@ -23,6 +23,7 @@ module ProcessOut {
 
   interface DynamicCheckoutEventDetail {
     payment_method_name: string | null
+    payment_method_display_name: string | null
     return_url: string | null
     card_id?: string
   }
@@ -52,6 +53,7 @@ module ProcessOut {
           ...errorData,
           invoice_id: invoiceId,
           payment_method_name: null,
+          payment_method_display_name: null,
           return_url: returnUrl,
         },
       )
@@ -63,6 +65,7 @@ module ProcessOut {
       const event = DynamicCheckoutEventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.WIDGET_LOADING, {
         invoice_id: invoiceId,
         payment_method_name: null,
+        payment_method_display_name: null,
         return_url: returnUrl,
       })
       return window.dispatchEvent(event)
@@ -71,6 +74,8 @@ module ProcessOut {
     static dispatchWidgetReadyEvent(invoiceId: string, returnUrl: string | null) {
       const event = DynamicCheckoutEventsUtils.createEvent(DYNAMIC_CHECKOUT_EVENTS.WIDGET_READY, {
         invoice_id: invoiceId,
+        payment_method_name: null,
+        payment_method_display_name: null,
         return_url: returnUrl,
       })
       return window.dispatchEvent(event)
@@ -82,6 +87,7 @@ module ProcessOut {
         {
           ...errorData,
           payment_method_name: null,
+          payment_method_display_name: null,
           return_url: returnUrl,
         },
       )
@@ -95,6 +101,7 @@ module ProcessOut {
       cardId?: string,
       returnUrl?: string | null,
       customerTokenId?: string,
+      paymentMethodDisplayName?: string,
     ) {
       const normalizedError = DynamicCheckoutEventsUtils.normalizePaymentError(
         invoiceId,
@@ -103,6 +110,7 @@ module ProcessOut {
         cardId,
         returnUrl || null,
         customerTokenId,
+        paymentMethodDisplayName || null,
       )
 
       // TODO: Temporary fix until we fix properly the field unavailable error
@@ -123,6 +131,7 @@ module ProcessOut {
         {
           ...response,
           payment_method_name: response.payment_method_name || null,
+          payment_method_display_name: response.payment_method_display_name || null,
           return_url: response.return_url || null,
         },
       )
@@ -130,12 +139,17 @@ module ProcessOut {
       return window.dispatchEvent(event)
     }
 
-    static dispatchApplePayNewSessionEvent(invoiceId: string, returnUrl: string | null) {
+    static dispatchApplePayNewSessionEvent(
+      invoiceId: string,
+      paymentMethodDisplayName: string,
+      returnUrl: string | null,
+    ) {
       const event = DynamicCheckoutEventsUtils.createEvent(
         DYNAMIC_CHECKOUT_EVENTS.APPLE_PAY_NEW_SESSION,
         {
           invoice_id: invoiceId,
           payment_method_name: "apple_pay",
+          payment_method_display_name: paymentMethodDisplayName,
           return_url: returnUrl,
         },
       )
@@ -143,12 +157,17 @@ module ProcessOut {
       return window.dispatchEvent(event)
     }
 
-    static dispatchApplePayAuthorizedPostProcessEvent(invoiceId: string, returnUrl: string | null) {
+    static dispatchApplePayAuthorizedPostProcessEvent(
+      invoiceId: string,
+      paymentMethodDisplayName: string,
+      returnUrl: string | null,
+    ) {
       const event = DynamicCheckoutEventsUtils.createEvent(
         DYNAMIC_CHECKOUT_EVENTS.APPLE_PAY_AUTHORIZED_POST_PROCESS,
         {
           invoice_id: invoiceId,
           payment_method_name: "apple_pay",
+          payment_method_display_name: paymentMethodDisplayName,
           return_url: returnUrl,
         },
       )
@@ -156,13 +175,19 @@ module ProcessOut {
       return window.dispatchEvent(event)
     }
 
-    static dispatchApplePaySessionError(invoiceId: string, err: any, returnUrl: string | null) {
+    static dispatchApplePaySessionError(
+      invoiceId: string,
+      err: any,
+      paymentMethodDisplayName: string,
+      returnUrl: string | null,
+    ) {
       const event = DynamicCheckoutEventsUtils.createEvent(
         DYNAMIC_CHECKOUT_EVENTS.APPLE_PAY_SESSION_ERROR,
         {
           ...err,
           invoice_id: invoiceId,
           payment_method_name: "apple_pay",
+          payment_method_display_name: paymentMethodDisplayName,
           return_url: returnUrl,
         },
       )
@@ -174,12 +199,14 @@ module ProcessOut {
       invoiceId: string,
       paymentMethodName: string | null,
       returnUrl: string | null,
+      paymentMethodDisplayName?: string | null,
     ) {
       const event = DynamicCheckoutEventsUtils.createEvent(
         DYNAMIC_CHECKOUT_EVENTS.DELETE_PAYMENT_METHOD,
         {
           invoice_id: invoiceId,
           payment_method_name: paymentMethodName,
+          payment_method_display_name: paymentMethodDisplayName || null,
           return_url: returnUrl,
         },
       )
@@ -192,6 +219,7 @@ module ProcessOut {
       err: any,
       paymentMethodName: string | null,
       returnUrl: string | null,
+      paymentMethodDisplayName?: string | null,
     ) {
       const event = DynamicCheckoutEventsUtils.createEvent(
         DYNAMIC_CHECKOUT_EVENTS.DELETE_PAYMENT_METHOD_ERROR,
@@ -199,6 +227,7 @@ module ProcessOut {
           ...err,
           invoice_id: invoiceId,
           payment_method_name: paymentMethodName,
+          payment_method_display_name: paymentMethodDisplayName || null,
           return_url: returnUrl,
         },
       )
@@ -206,7 +235,12 @@ module ProcessOut {
       return window.dispatchEvent(event)
     }
 
-    static dispatchGooglePayLoadError(errorData: any, invoiceId: string, returnUrl: string | null) {
+    static dispatchGooglePayLoadError(
+      errorData: any,
+      invoiceId: string,
+      paymentMethodDisplayName: string,
+      returnUrl: string | null,
+    ) {
       const event = DynamicCheckoutEventsUtils.createEvent(
         DYNAMIC_CHECKOUT_EVENTS.GOOGLE_PAY_LOAD_ERROR,
         {
@@ -214,6 +248,7 @@ module ProcessOut {
           invoice_id: invoiceId,
           return_url: returnUrl,
           payment_method_name: "google_pay",
+          payment_method_display_name: paymentMethodDisplayName,
         },
       )
 
@@ -222,6 +257,7 @@ module ProcessOut {
 
     static dispatchPaymentSubmittedEvent(details: {
       payment_method_name: string
+      payment_method_display_name: string
       invoice_id: string
       return_url: string | null
       customer_token_id?: string
@@ -236,6 +272,7 @@ module ProcessOut {
 
     static dispatchPaymentCancelledEvent(details: {
       payment_method_name: string
+      payment_method_display_name: string
       invoice_id: string
       return_url: string | null
       tab_closed?: boolean
@@ -250,6 +287,7 @@ module ProcessOut {
 
     static dispatchPaymentPendingEvent(details: {
       payment_method_name: string
+      payment_method_display_name: string
       invoice_id: string
       return_url: string | null
       customer_token_id?: string
@@ -277,6 +315,7 @@ module ProcessOut {
       cardId?: string,
       returnUrl?: string | null,
       customerTokenId?: string,
+      paymentMethodDisplayName?: string | null,
     ): DynamicCheckoutPaymentErrorEventDetail {
       const normalizedError = DynamicCheckoutEventsUtils.getEventDetail(errorData)
       const isObject = typeof normalizedError === "object" && normalizedError !== null
@@ -284,6 +323,7 @@ module ProcessOut {
       return {
         invoice_id: invoiceId,
         payment_method_name: paymentMethodName,
+        payment_method_display_name: paymentMethodDisplayName,
         return_url: returnUrl || null,
         ...(cardId && { card_id: cardId }),
         ...(customerTokenId && { customer_token_id: customerTokenId }),

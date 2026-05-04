@@ -16,6 +16,7 @@ module ProcessOut {
     protected processOutInstance: ProcessOut
     private paymentConfig: DynamicCheckoutPaymentConfig
     private paymentMethod: PaymentMethod
+    private paymentMethodDisplayName: string
     private theme: DynamicCheckoutThemeType
     private resetContainerHtml: () => HTMLElement
 
@@ -36,6 +37,7 @@ module ProcessOut {
       this.processOutInstance = processOutInstance
       this.paymentConfig = paymentConfig
       this.paymentMethod = paymentMethod
+      this.paymentMethodDisplayName = paymentMethod.display.name
       this.theme = theme
       this.resetContainerHtml = resetContainerHtml
 
@@ -100,6 +102,7 @@ module ProcessOut {
 
       DynamicCheckoutEventsUtils.dispatchPaymentSubmittedEvent({
         payment_method_name: apm.gateway_name,
+        payment_method_display_name: this.paymentMethodDisplayName,
         invoice_id: this.paymentConfig.invoiceId,
         return_url: this.paymentConfig.invoiceDetails.return_url || null,
       })
@@ -135,6 +138,7 @@ module ProcessOut {
                 invoice_id: invoiceId,
                 return_url: this.paymentConfig.invoiceDetails.return_url || null,
                 payment_method_name: apm.gateway_name,
+                payment_method_display_name: this.paymentMethodDisplayName,
               })
             },
             error => {
@@ -149,6 +153,8 @@ module ProcessOut {
                 apm.gateway_name,
                 undefined,
                 this.paymentConfig.invoiceDetails.return_url || null,
+                undefined,
+                this.paymentMethodDisplayName,
               )
             },
             requestOptions,
@@ -160,6 +166,7 @@ module ProcessOut {
 
               DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent({
                 payment_method_name: apm.gateway_name,
+                payment_method_display_name: this.paymentMethodDisplayName,
                 invoice_id: invoiceId,
                 return_url: this.paymentConfig.invoiceDetails.return_url || null,
               })
@@ -175,6 +182,7 @@ module ProcessOut {
 
             DynamicCheckoutEventsUtils.dispatchPaymentCancelledEvent({
               payment_method_name: apm.gateway_name,
+              payment_method_display_name: this.paymentMethodDisplayName,
               invoice_id: this.paymentConfig.invoiceId,
               return_url: this.paymentConfig.invoiceDetails.return_url || null,
               tab_closed: error.metadata?.reason === "tab_closed",
@@ -191,6 +199,8 @@ module ProcessOut {
               apm.gateway_name,
               undefined,
               this.paymentConfig.invoiceDetails.return_url || null,
+              undefined,
+              this.paymentMethodDisplayName,
             )
           }
         },
@@ -213,6 +223,7 @@ module ProcessOut {
 
       DynamicCheckoutEventsUtils.dispatchPaymentSubmittedEvent({
         payment_method_name: apm.gateway_name,
+        payment_method_display_name: this.paymentMethodDisplayName,
         invoice_id: this.paymentConfig.invoiceId,
         return_url: this.paymentConfig.invoiceDetails.return_url || null,
       })
@@ -237,6 +248,7 @@ module ProcessOut {
               undefined,
               this.paymentConfig.invoiceDetails.return_url || null,
               data.customer_token_id,
+              this.paymentMethodDisplayName,
             )
             return
           }
@@ -249,6 +261,7 @@ module ProcessOut {
 
             DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent({
               payment_method_name: apm.gateway_name,
+              payment_method_display_name: this.paymentMethodDisplayName,
               invoice_id: this.paymentConfig.invoiceId,
               return_url: this.paymentConfig.invoiceDetails.return_url || null,
               customer_token_id: data.customer_token_id,
@@ -292,6 +305,7 @@ module ProcessOut {
                     invoice_id: invoiceId,
                     return_url: this.paymentConfig.invoiceDetails.return_url || null,
                     payment_method_name: apm.gateway_name,
+                    payment_method_display_name: this.paymentMethodDisplayName,
                     customer_token_id: data.customer_token_id,
                   })
                 },
@@ -322,6 +336,7 @@ module ProcessOut {
                     undefined,
                     this.paymentConfig.invoiceDetails.return_url || null,
                     data.customer_token_id,
+                    this.paymentMethodDisplayName,
                   )
                 },
                 requestOptions,
@@ -335,6 +350,7 @@ module ProcessOut {
 
                   DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent({
                     payment_method_name: apm.gateway_name,
+                    payment_method_display_name: this.paymentMethodDisplayName,
                     invoice_id: invoiceId,
                     return_url: this.paymentConfig.invoiceDetails.return_url || null,
                     customer_token_id: data.customer_token_id,
@@ -353,6 +369,7 @@ module ProcessOut {
 
                 DynamicCheckoutEventsUtils.dispatchPaymentCancelledEvent({
                   payment_method_name: apm.gateway_name,
+                  payment_method_display_name: this.paymentMethodDisplayName,
                   invoice_id: this.paymentConfig.invoiceId,
                   return_url: this.paymentConfig.invoiceDetails.return_url || null,
                   tab_closed: error.metadata?.reason === "tab_closed",
@@ -380,6 +397,7 @@ module ProcessOut {
                   undefined,
                   this.paymentConfig.invoiceDetails.return_url || null,
                   data.customer_token_id,
+                  this.paymentMethodDisplayName,
                 )
               }
             },
@@ -409,6 +427,8 @@ module ProcessOut {
             apm.gateway_name,
             undefined,
             this.paymentConfig.invoiceDetails.return_url || null,
+            undefined,
+            this.paymentMethodDisplayName,
           )
         },
         0,

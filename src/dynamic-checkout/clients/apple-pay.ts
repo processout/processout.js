@@ -81,12 +81,14 @@ module ProcessOut {
         () =>
           DynamicCheckoutEventsUtils.dispatchApplePayNewSessionEvent(
             this.paymentConfig.invoiceId,
+            this.getApplePayPaymentMethodName(invoiceData),
             this.paymentConfig.invoiceDetails.return_url || null,
           ),
         err =>
           DynamicCheckoutEventsUtils.dispatchApplePaySessionError(
             this.paymentConfig.invoiceId,
             err,
+            this.getApplePayPaymentMethodName(invoiceData),
             this.paymentConfig.invoiceDetails.return_url || null,
           ),
       )
@@ -94,6 +96,7 @@ module ProcessOut {
       session.onpaymentauthorizedPostprocess = () =>
         DynamicCheckoutEventsUtils.dispatchApplePayAuthorizedPostProcessEvent(
           this.paymentConfig.invoiceId,
+          this.getApplePayPaymentMethodName(invoiceData),
           this.paymentConfig.invoiceDetails.return_url || null,
         )
 
@@ -129,6 +132,8 @@ module ProcessOut {
             "apple_pay",
             undefined,
             this.paymentConfig.invoiceDetails.return_url || null,
+            undefined,
+            this.getApplePayPaymentMethodName(invoiceData),
           )
         },
       )
@@ -139,13 +144,19 @@ module ProcessOut {
       invoiceData: Invoice,
       getViewContainer: () => HTMLElement,
     ) {
+      const cardPaymentOptions = {
+        authorize_only: !this.paymentConfig.capturePayments,
+        allow_fallback_to_sale: this.paymentConfig.allowFallbackToSale,
+      }
+
+      if (this.paymentConfig.enforceSavePaymentMethod) {
+        cardPaymentOptions["save_source"] = true
+      }
+
       this.processOutInstance.makeCardPayment(
         invoiceData.id,
         cardToken,
-        {
-          authorize_only: !this.paymentConfig.capturePayments,
-          allow_fallback_to_sale: this.paymentConfig.allowFallbackToSale,
-        },
+        cardPaymentOptions,
         invoiceId => {
           if (this.paymentConfig.showStatusMessage) {
             getViewContainer().appendChild(
@@ -166,6 +177,7 @@ module ProcessOut {
             invoice_id: invoiceId,
             return_url: this.paymentConfig.invoiceDetails.return_url || null,
             payment_method_name: "apple_pay",
+            payment_method_display_name: this.getApplePayPaymentMethodName(invoiceData),
           })
         },
         error => {
@@ -190,9 +202,13 @@ module ProcessOut {
             "apple_pay",
             undefined,
             this.paymentConfig.invoiceDetails.return_url || null,
+            undefined,
+            this.getApplePayPaymentMethodName(invoiceData),
           )
         },
-        undefined,
+        {
+          clientSecret: this.paymentConfig.clientSecret,
+        },
         invoiceId => {
           if (this.paymentConfig.showStatusMessage) {
             getViewContainer().appendChild(
@@ -203,6 +219,7 @@ module ProcessOut {
 
           DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent({
             payment_method_name: "apple_pay",
+            payment_method_display_name: this.getApplePayPaymentMethodName(invoiceData),
             invoice_id: invoiceId,
             return_url: this.paymentConfig.invoiceDetails.return_url || null,
           })
@@ -220,6 +237,18 @@ module ProcessOut {
       })
 
       return applePayPaymentMethodData
+    }
+
+    private getApplePayPaymentMethodName(invoiceData: Invoice) {
+      let applePayPaymentMethodName = "Apple Pay"
+
+      invoiceData.payment_methods.forEach(method => {
+        if (method.type === "applepay" && method.display) {
+          applePayPaymentMethodName = method.display.name
+        }
+      })
+
+      return applePayPaymentMethodName
     }
   }
 }

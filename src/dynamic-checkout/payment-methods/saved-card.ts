@@ -5,6 +5,7 @@ module ProcessOut {
     protected processOutInstance: ProcessOut
     private paymentConfig: DynamicCheckoutPaymentConfig
     private paymentMethod: PaymentMethod
+    private paymentMethodDisplayName: string
     private resetContainerHtml: () => HTMLElement
 
     constructor(
@@ -31,6 +32,7 @@ module ProcessOut {
       this.processOutInstance = processOutInstance
       this.paymentConfig = paymentConfig
       this.paymentMethod = paymentMethod
+      this.paymentMethodDisplayName = paymentMethod.display.name
       this.resetContainerHtml = resetContainerHtml
 
       if (!deleteMode) {
@@ -43,6 +45,7 @@ module ProcessOut {
 
       DynamicCheckoutEventsUtils.dispatchPaymentSubmittedEvent({
         payment_method_name: "card",
+        payment_method_display_name: this.paymentMethodDisplayName,
         invoice_id: this.paymentConfig.invoiceId,
         return_url: this.paymentConfig.invoiceDetails.return_url || null,
         customer_token_id: this.paymentMethod.card_customer_token.customer_token_id,
@@ -81,6 +84,7 @@ module ProcessOut {
         invoice_id: invoiceId,
         return_url: this.paymentConfig.invoiceDetails.return_url || null,
         payment_method_name: "card",
+        payment_method_display_name: this.paymentMethodDisplayName,
       })
     }
 
@@ -94,6 +98,7 @@ module ProcessOut {
 
       DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent({
         payment_method_name: "card",
+        payment_method_display_name: this.paymentMethodDisplayName,
         invoice_id: invoiceId,
         return_url: this.paymentConfig.invoiceDetails.return_url || null,
       })
@@ -108,6 +113,7 @@ module ProcessOut {
 
         DynamicCheckoutEventsUtils.dispatchPaymentCancelledEvent({
           payment_method_name: "card",
+          payment_method_display_name: this.paymentMethodDisplayName,
           invoice_id: this.paymentConfig.invoiceId,
           return_url: this.paymentConfig.invoiceDetails.return_url || null,
           tab_closed: error.metadata?.reason === "tab_closed",
@@ -134,6 +140,8 @@ module ProcessOut {
           "card",
           undefined,
           this.paymentConfig.invoiceDetails.return_url || null,
+          undefined,
+          this.paymentMethodDisplayName,
         )
       }
     }
