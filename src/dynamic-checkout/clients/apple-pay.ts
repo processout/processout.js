@@ -144,17 +144,19 @@ module ProcessOut {
       invoiceData: Invoice,
       getViewContainer: () => HTMLElement,
     ) {
-      const applePayPaymentMethodData = this.getApplePayPaymentMethodData(invoiceData)
-      const canSavePaymentMethod = applePayPaymentMethodData.saving_allowed
+      const cardPaymentOptions = {
+        authorize_only: !this.paymentConfig.capturePayments,
+        allow_fallback_to_sale: this.paymentConfig.allowFallbackToSale,
+      }
+
+      if (this.paymentConfig.enforceSavePaymentMethod) {
+        cardPaymentOptions["save_source"] = true
+      }
 
       this.processOutInstance.makeCardPayment(
         invoiceData.id,
         cardToken,
-        {
-          authorize_only: !this.paymentConfig.capturePayments,
-          allow_fallback_to_sale: this.paymentConfig.allowFallbackToSale,
-          save_source: canSavePaymentMethod && this.paymentConfig.enforceSavePaymentMethod,
-        },
+        cardPaymentOptions,
         invoiceId => {
           if (this.paymentConfig.showStatusMessage) {
             getViewContainer().appendChild(
@@ -204,7 +206,9 @@ module ProcessOut {
             this.getApplePayPaymentMethodName(invoiceData),
           )
         },
-        undefined,
+        {
+          clientSecret: this.paymentConfig.clientSecret,
+        },
         invoiceId => {
           if (this.paymentConfig.showStatusMessage) {
             getViewContainer().appendChild(

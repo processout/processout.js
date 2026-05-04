@@ -133,17 +133,19 @@ module ProcessOut {
             paymentToken,
             {},
             token => {
-              const googlePayMethod = this.getGooglePayMethodData(invoiceData)
-              const canSavePaymentMethod = googlePayMethod.googlepay.saving_allowed
+              const cardPaymentOptions = {
+                authorize_only: !this.paymentConfig.capturePayments,
+                allow_fallback_to_sale: this.paymentConfig.allowFallbackToSale,
+              }
+
+              if (this.paymentConfig.enforceSavePaymentMethod) {
+                cardPaymentOptions["save_source"] = true
+              }
 
               this.processOutInstance.makeCardPayment(
                 invoiceData.id,
                 token,
-                {
-                  authorize_only: !this.paymentConfig.capturePayments,
-                  allow_fallback_to_sale: this.paymentConfig.allowFallbackToSale,
-                  save_source: canSavePaymentMethod && this.paymentConfig.enforceSavePaymentMethod,
-                },
+                cardPaymentOptions,
                 invoiceId => {
                   if (this.paymentConfig.showStatusMessage) {
                     getViewContainer().appendChild(
@@ -201,11 +203,16 @@ module ProcessOut {
                     this.getGooglePayPaymentMethodName(invoiceData),
                   )
                 },
-                undefined,
+                {
+                  clientSecret: this.paymentConfig.clientSecret,
+                },
                 invoiceId => {
                   if (this.paymentConfig.showStatusMessage) {
                     getViewContainer().appendChild(
-                      new DynamicCheckoutPaymentPendingView(this.processOutInstance, this.paymentConfig).element,
+                      new DynamicCheckoutPaymentPendingView(
+                        this.processOutInstance,
+                        this.paymentConfig,
+                      ).element,
                     )
                   }
 
@@ -330,7 +337,9 @@ module ProcessOut {
     private getGooglePayPaymentMethodName(invoiceData: Invoice) {
       const googlePayMethod = this.getGooglePayMethodData(invoiceData)
 
-      return googlePayMethod && googlePayMethod.display ? googlePayMethod.display.name : "Google Pay"
+      return googlePayMethod && googlePayMethod.display
+        ? googlePayMethod.display.name
+        : "Google Pay"
     }
   }
 }
