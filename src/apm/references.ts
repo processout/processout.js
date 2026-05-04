@@ -34,6 +34,7 @@
 /// <reference path="views/NextSteps.ts" />
 /// <reference path="views/Pending.ts" />
 /// <reference path="views/Redirect.ts" />
+/// <reference path="views/PopupBlockedFallback.ts" />
 /// <reference path="views/CancelRequest.ts" />
 /// <reference path="views/utils/render-elements.ts" />
 /// <reference path="views/utils/form.ts" />

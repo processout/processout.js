@@ -16,3 +16,23 @@ h1 {
     max-width: 500px;
     margin: 0 auto;
 }
+
+/* Optional mount parent for PSP iframe / overlay (redirect.actionOverlayMountParent) */
+#action-overlay-root {
+    position: relative;
+    min-height: 0;
+    margin: 12px auto;
+    max-width: 500px;
+    border: 1px dashed #94a3b8;
+    border-radius: 6px;
+    background: rgba(148, 163, 184, 0.08);
+}
+
+#action-overlay-root:empty {
+    display: none;
+}
+
+#action-overlay-root:not(:empty) {
+    min-height: 80px;
+    padding: 8px;
+}

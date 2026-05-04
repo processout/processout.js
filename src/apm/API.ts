@@ -209,6 +209,8 @@ module ProcessOut {
   let INITIAL_MAX_RETRIES = 0
   let POLLING_TIMEOUT_ID: number | null = null
   let POLLING_CANCELLED = false // Add cancellation flag
+  /** Bumped on each makeRequest and on cancelPolling so stale responses / timers cannot duplicate polls. */
+  let POLLING_GENERATION = 0
 
   const isErrorResponse = (data: AuthorizationNetworkResponse | TokenizationNetworkResponse): data is NetworkErrorResponse => {
     const hasInvalidFields = 'invalid_fields' in data;
@@ -391,6 +393,13 @@ module ProcessOut {
         };
       }
 
+      const requestGen = ++POLLING_GENERATION;
+      if (POLLING_TIMEOUT_ID) {
+        window.clearTimeout(POLLING_TIMEOUT_ID);
+        POLLING_TIMEOUT_ID = null;
+      }
+      POLLING_CANCELLED = false;
+
       if (INITIAL_MAX_RETRIES === 0) {
         INITIAL_MAX_RETRIES = internalOptions.serviceRetries;
       }
@@ -413,6 +422,10 @@ module ProcessOut {
         endpoint,
         data,
         (apiResponse: AuthorizationNetworkResponse | TokenizationNetworkResponse) => {
+          if (requestGen !== POLLING_GENERATION) {
+            return;
+          }
+
           if (isErrorResponse(apiResponse)) {
             INITIAL_MAX_RETRIES = 0;
             
@@ -513,11 +526,10 @@ module ProcessOut {
               }
             }
 
-            // Continue polling in background (only if not cancelled)
+            // Continue polling in background (only if not cancelled and this chain is still current)
             if (!POLLING_CANCELLED) {
               POLLING_TIMEOUT_ID = window.setTimeout(() => {
-                // Double-check cancellation before continuing
-                if (!POLLING_CANCELLED) {
+                if (!POLLING_CANCELLED && requestGen === POLLING_GENERATION) {
                   internalOptions.serviceRetries = INITIAL_MAX_RETRIES
                   this.getCurrentStep(internalOptions);
                 }
@@ -554,8 +566,16 @@ module ProcessOut {
           return;
         },
         (req, _, errorCode) => {
+          if (requestGen !== POLLING_GENERATION) {
+            return;
+          }
+
           if ((req.status === 0 || req.status > 500) && internalOptions.serviceRetries > 0) {
+            const retryGen = POLLING_GENERATION;
             setTimeout(() => {
+              if (retryGen !== POLLING_GENERATION) {
+                return;
+              }
               internalOptions.serviceRetries--;
               this.makeRequest(method, pathOrOptions, data, internalOptions)
             }, TIMEOUT * ((INITIAL_MAX_RETRIES - internalOptions.serviceRetries) + 1));
@@ -629,7 +649,8 @@ module ProcessOut {
     }
 
     public static cancelPolling(): void {
-      POLLING_CANCELLED = true; // Set cancellation flag
+      POLLING_CANCELLED = true;
+      POLLING_GENERATION++;
       if (POLLING_TIMEOUT_ID) {
         window.clearTimeout(POLLING_TIMEOUT_ID);
         POLLING_TIMEOUT_ID = null;

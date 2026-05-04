@@ -713,7 +713,10 @@ module ProcessOut {
     private getCountryInput(billingAddressFieldsWrapper: HTMLElement) {
       const countryInput = HTMLElements.createElement({
         tagName: "select",
-        classNames: ["dco-payment-method-card-form-input"],
+        classNames: [
+          "dco-payment-method-card-form-input",
+          "dco-payment-method-card-form-input--placeholder",
+        ],
         attributes: {
           id: "country-select",
           name: "country",
@@ -759,6 +762,7 @@ module ProcessOut {
 
       countryInput.addEventListener("change", e => {
         const selectElement = e.target as HTMLSelectElement
+        selectElement.classList.remove("dco-payment-method-card-form-input--placeholder")
 
         HTMLElements.replaceChildren(
           billingAddressFieldsWrapper,
@@ -805,11 +809,20 @@ module ProcessOut {
         if (unit === "state" && countryConfig.states) {
           input = HTMLElements.createElement({
             tagName: "select",
-            classNames: ["dco-payment-method-card-form-input"],
+            classNames: [
+              "dco-payment-method-card-form-input",
+              "dco-payment-method-card-form-input--placeholder",
+            ],
             attributes: {
               name: unit,
               "aria-label": Translations.getText("state-label", this.paymentConfig.locale),
             },
+          })
+
+          input.addEventListener("change", (e: Event) => {
+            ;(e.target as HTMLSelectElement).classList.remove(
+              "dco-payment-method-card-form-input--placeholder",
+            )
           })
 
           HTMLElements.appendChildren(input, [

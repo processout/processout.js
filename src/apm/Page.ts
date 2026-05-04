@@ -85,17 +85,20 @@ module ProcessOut {
           this.criticalFailure({
             code: data.error.code,
             message: data.error.message,
-            title: "Unable to connect",
+            title: "Payment Failed",
           })
         },
       })
     }
 
-    criticalFailure({
-      title,
-      code,
-      message,
-    }: { message: string, title: string, code?: string, }) {
+    criticalFailure(
+      {
+        title,
+        code,
+        message,
+      }: { message: string, title: string, code?: string, },
+      options?: { renderErrorView?: boolean },
+    ) {
       ContextImpl.context.events.emit("failure", {
         failure: {
           code: code || 'processout-js.internal-error',
@@ -104,9 +107,13 @@ module ProcessOut {
         paymentState: this.state
       })
 
-      ContextImpl.context.page.render(APMViewError, {
-        title: "Unable to connect",
-        message: "An unexpected error occurred. We're working to fix this issue, please check back later or contact support if you need assistance.",
+      if (options && options.renderErrorView === false) {
+        return
+      }
+
+      this.render(APMViewError, {
+        title: title || "Unable to connect",
+        message: message || "An unexpected error occurred. We're working to fix this issue, please check back later or contact support if you need assistance.",
         hideRefresh: true
       })
     }
