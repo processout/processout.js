@@ -153,6 +153,21 @@ pre {
   padding: 10px;
 }
 
+.code-preview {
+  background: #1e293b;
+  color: #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 0;
+  overflow-x: auto;
+  white-space: pre;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  max-height: 480px;
+  overflow-y: auto;
+}
+
 #dynamic-cko-container {
   width: 100%;
   max-width: 420px;

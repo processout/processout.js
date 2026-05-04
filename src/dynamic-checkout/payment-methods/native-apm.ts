@@ -8,7 +8,6 @@ module ProcessOut {
     private paymentConfig: DynamicCheckoutPaymentConfig
     private isMounted: boolean
     private paymentMethodName: string
-    private theme: DynamicCheckoutThemeType
     private resetContainerHtml: () => HTMLElement
     protected processOutInstance: ProcessOut
 
@@ -18,7 +17,6 @@ module ProcessOut {
       processOutInstance: ProcessOut,
       paymentMethod: PaymentMethod,
       paymentConfig: DynamicCheckoutPaymentConfig,
-      theme: DynamicCheckoutThemeType,
       resetContainerHtml: () => HTMLElement,
       onPaymentSubmit?: () => void,
     ) {
@@ -31,25 +29,25 @@ module ProcessOut {
       this.paymentMethodName = apm.gateway_name
       this.processOutInstance = processOutInstance
       this.resetContainerHtml = resetContainerHtml
-      this.theme = theme
       this.onPaymentSubmit = onPaymentSubmit
 
       const wrapper = this.getNativeApmWrapper()
       super.appendChildren(wrapper)
+      const theme = this.paymentConfig.getThemeForMethod(this.paymentMethodName)
+      const textOverrides = this.paymentConfig.getTextOverridesForMethod(this.paymentMethodName)
 
       this.nativeApmInstance = this.processOutInstance.setupNativeApm({
         invoiceId,
         gatewayConfigurationId: apm.gateway_configuration_id,
         returnUrl: invoiceDetails.return_url,
-        payButtonText: paymentConfig.payButtonText,
+        payButtonText: textOverrides.payButtonText,
         locale: paymentConfig.locale,
       })
 
       const backgroundColor =
-        this.theme && this.theme.payButtonColor ? this.theme.payButtonColor : "#242C38"
+        theme && theme.payButtonColor ? theme.payButtonColor : "#242C38"
 
-      const color =
-        this.theme && this.theme.payButtonTextColor ? this.theme.payButtonTextColor : "white"
+      const color = theme && theme.payButtonTextColor ? theme.payButtonTextColor : "white"
 
       this.nativeApmInstance.setTheme({
         buttons: {
@@ -89,13 +87,13 @@ module ProcessOut {
           return
         }
 
-        if (this.paymentConfig.showStatusMessage) {
+        if (this.paymentConfig.getOptionsForMethod(this.paymentMethodName).showStatusMessage) {
           this.resetContainerHtml().appendChild(
             new DynamicCheckoutPaymentSuccessView(this.processOutInstance, this.paymentConfig)
               .element,
           )
         } else if (
-          !this.paymentConfig.showStatusMessage &&
+          !this.paymentConfig.getOptionsForMethod(this.paymentMethodName).showStatusMessage &&
           !this.paymentConfig.invoiceDetails.return_url
         ) {
           this.resetContainerHtml().appendChild(
@@ -117,13 +115,13 @@ module ProcessOut {
           return
         }
 
-        if (this.paymentConfig.showStatusMessage) {
+        if (this.paymentConfig.getOptionsForMethod(this.paymentMethodName).showStatusMessage) {
           this.resetContainerHtml().appendChild(
             new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig)
               .element,
           )
         } else if (
-          !this.paymentConfig.showStatusMessage &&
+          !this.paymentConfig.getOptionsForMethod(this.paymentMethodName).showStatusMessage &&
           !this.paymentConfig.invoiceDetails.return_url
         ) {
           this.resetContainerHtml().appendChild(

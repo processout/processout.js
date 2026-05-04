@@ -16,14 +16,12 @@ module ProcessOut {
     protected processOutInstance: ProcessOut
     private paymentConfig: DynamicCheckoutPaymentConfig
     private paymentMethod: PaymentMethod
-    private theme: DynamicCheckoutThemeType
     private resetContainerHtml: () => HTMLElement
 
     constructor(
       processOutInstance: ProcessOut,
       paymentMethod: PaymentMethod,
       paymentConfig: DynamicCheckoutPaymentConfig,
-      theme: DynamicCheckoutThemeType,
       resetContainerHtml: () => HTMLElement,
     ) {
       super(
@@ -36,16 +34,40 @@ module ProcessOut {
       this.processOutInstance = processOutInstance
       this.paymentConfig = paymentConfig
       this.paymentMethod = paymentMethod
-      this.theme = theme
       this.resetContainerHtml = resetContainerHtml
 
       super.appendChildren(this.getChildrenElement())
+    }
+
+    private getMethodKey() {
+      return this.paymentMethod.apm.gateway_name
+    }
+
+    private getMethodOptions() {
+      return this.paymentConfig.getOptionsForMethod(this.getMethodKey())
+    }
+
+    private getMethodTheme() {
+      return this.paymentConfig.getThemeForMethod(this.getMethodKey())
+    }
+
+    private getTextOverrides() {
+      return this.paymentConfig.getTextOverridesForMethod(this.getMethodKey())
+    }
+
+    private getAdditionalPaymentData() {
+      return this.paymentConfig.getAdditionalDataForMethod(this.getMethodKey())
+    }
+
+    private shouldShowStatusMessage() {
+      return this.getMethodOptions().showStatusMessage
     }
 
     private proceedToApmPayment() {
       const { apm } = this.paymentMethod
       const { clientSecret } = this.paymentConfig
       const canSavePaymentMethod = apm.saving_allowed
+      const methodOptions = this.getMethodOptions()
 
       const actionHandlerOptions = new ActionHandlerOptions(
         apm.gateway_name,
@@ -53,9 +75,9 @@ module ProcessOut {
       )
 
       const cardPaymentOptions = {
-        authorize_only: !this.paymentConfig.capturePayments,
-        allow_fallback_to_sale: this.paymentConfig.allowFallbackToSale,
-        save_source: canSavePaymentMethod && this.paymentConfig.enforceSavePaymentMethod,
+        authorize_only: !methodOptions.capturePayments,
+        allow_fallback_to_sale: !!methodOptions.allowFallbackToSale,
+        save_source: canSavePaymentMethod && !!methodOptions.enforceSavePaymentMethod,
       }
 
       const requestOptions = {
@@ -69,7 +91,7 @@ module ProcessOut {
       if (
         canSavePaymentMethod &&
         saveForFutureCheckbox &&
-        !this.paymentConfig.enforceSavePaymentMethod
+        !methodOptions.enforceSavePaymentMethod
       ) {
         cardPaymentOptions["save_source"] = saveForFutureCheckbox.checked
       }
@@ -91,7 +113,7 @@ module ProcessOut {
       requestOptions: RequestOptions,
     ) {
       const { apm } = this.paymentMethod
-      const additionalData = this.paymentConfig.getAdditionalDataForGateway(apm.gateway_name)
+      const additionalData = this.getAdditionalPaymentData()
 
       const redirectUrl =
         Object.keys(additionalData).length > 0
@@ -116,15 +138,12 @@ module ProcessOut {
             paymentToken,
             cardPaymentOptions,
             invoiceId => {
-              if (this.paymentConfig.showStatusMessage) {
+              if (this.shouldShowStatusMessage()) {
                 this.resetContainerHtml().appendChild(
                   new DynamicCheckoutPaymentSuccessView(this.processOutInstance, this.paymentConfig)
                     .element,
                 )
-              } else if (
-                !this.paymentConfig.showStatusMessage &&
-                !this.paymentConfig.invoiceDetails.return_url
-              ) {
+              } else if (!this.shouldShowStatusMessage() && !this.paymentConfig.invoiceDetails.return_url) {
                 this.resetContainerHtml().appendChild(
                   new DynamicCheckoutPaymentInfoView(this.processOutInstance, this.paymentConfig)
                     .element,
@@ -269,7 +288,7 @@ module ProcessOut {
                 paymentToken,
                 options,
                 invoiceId => {
-                  if (this.paymentConfig.showStatusMessage) {
+                  if (this.shouldShowStatusMessage()) {
                     this.resetContainerHtml().appendChild(
                       new DynamicCheckoutPaymentSuccessView(
                         this.processOutInstance,
@@ -277,7 +296,7 @@ module ProcessOut {
                       ).element,
                     )
                   } else if (
-                    !this.paymentConfig.showStatusMessage &&
+                    !this.shouldShowStatusMessage() &&
                     !this.paymentConfig.invoiceDetails.return_url
                   ) {
                     this.resetContainerHtml().appendChild(
@@ -296,7 +315,7 @@ module ProcessOut {
                   })
                 },
                 error => {
-                  if (this.paymentConfig.showStatusMessage) {
+                  if (this.shouldShowStatusMessage()) {
                     this.resetContainerHtml().appendChild(
                       new DynamicCheckoutPaymentErrorView(
                         this.processOutInstance,
@@ -304,7 +323,7 @@ module ProcessOut {
                       ).element,
                     )
                   } else if (
-                    !this.paymentConfig.showStatusMessage &&
+                    !this.shouldShowStatusMessage() &&
                     !this.paymentConfig.invoiceDetails.return_url
                   ) {
                     this.resetContainerHtml().appendChild(
@@ -358,13 +377,13 @@ module ProcessOut {
                   tab_closed: error.metadata?.reason === "tab_closed",
                 })
               } else {
-                if (this.paymentConfig.showStatusMessage) {
+                if (this.shouldShowStatusMessage()) {
                   this.resetContainerHtml().appendChild(
                     new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig)
                       .element,
                   )
                 } else if (
-                  !this.paymentConfig.showStatusMessage &&
+                  !this.shouldShowStatusMessage() &&
                   !this.paymentConfig.invoiceDetails.return_url
                 ) {
                   this.resetContainerHtml().appendChild(
@@ -388,15 +407,12 @@ module ProcessOut {
           )
         },
         error => {
-          if (this.paymentConfig.showStatusMessage) {
+          if (this.shouldShowStatusMessage()) {
             this.resetContainerHtml().appendChild(
               new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig)
                 .element,
             )
-          } else if (
-            !this.paymentConfig.showStatusMessage &&
-            !this.paymentConfig.invoiceDetails.return_url
-          ) {
+          } else if (!this.shouldShowStatusMessage() && !this.paymentConfig.invoiceDetails.return_url) {
             this.resetContainerHtml().appendChild(
               new DynamicCheckoutPaymentInfoView(this.processOutInstance, this.paymentConfig)
                 .element,
@@ -422,8 +438,11 @@ module ProcessOut {
         name: "save-apm-for-future",
         id: `save-apm-for-future-${this.paymentMethod.apm.gateway_name}`,
       }
+      const methodOptions = this.getMethodOptions()
+      const textOverrides = this.getTextOverrides()
+      const theme = this.getMethodTheme()
 
-      if (this.paymentConfig.enforceSavePaymentMethod) {
+      if (methodOptions.enforceSavePaymentMethod) {
         saveForFutureAttributes.checked = "checked"
         saveForFutureAttributes.disabled = "disabled"
       }
@@ -482,7 +501,7 @@ module ProcessOut {
           tagName: "button",
           classNames: ["dco-payment-method-button-pay-button"],
           textContent:
-            this.paymentConfig.payButtonText ||
+            textOverrides.payButtonText ||
             `${Translations.getText(
               "continue-with-apm-button",
               this.paymentConfig.locale,
@@ -501,12 +520,12 @@ module ProcessOut {
 
       HTMLElements.appendChildren(childrenWrapper, children)
 
-      if (this.theme && this.theme.payButtonColor) {
-        payButton.style.backgroundColor = this.theme.payButtonColor
+      if (theme && theme.payButtonColor) {
+        payButton.style.backgroundColor = theme.payButtonColor
       }
 
-      if (this.theme && this.theme.payButtonTextColor) {
-        payButton.style.color = this.theme.payButtonTextColor
+      if (theme && theme.payButtonTextColor) {
+        payButton.style.color = theme.payButtonTextColor
       }
 
       payButton.addEventListener("click", () => {

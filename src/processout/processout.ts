@@ -540,8 +540,9 @@ module ProcessOut {
     }
 
     /**
-     * SetupDynamicCheckout creates a Dynamic Checkout instance
-     * @param {DynamicCheckoutConfigType} config
+     * @deprecated Use initDynamicCheckout instead
+     * @param {DynamicCheckoutPublicConfigType} config
+     * @param {DynamicCheckoutThemeType} theme
      * @return {DynamicCheckout}
      */
     public setupDynamicCheckout(
@@ -554,7 +555,31 @@ module ProcessOut {
           "You must instantiate ProcessOut.js with a valid project ID in order to use ProcessOut's Dynamic Checkout",
         )
 
-      return new DynamicCheckout(this, { ...config, projectId: this.projectID }, theme)
+      return new DynamicCheckout(
+        this,
+        normalizeDynamicCheckoutSetupConfig(
+          { ...config, projectId: this.projectID },
+          theme,
+        ),
+      )
+    }
+
+    /**
+     * Creates a Dynamic Checkout instance
+     * @param {DynamicCheckoutInitConfigType} config
+     * @return {DynamicCheckout}
+     */
+    public initDynamicCheckout(config: DynamicCheckoutInitConfigType): DynamicCheckout {
+      if (!this.projectID)
+        throw new Exception(
+          "default",
+          "You must instantiate ProcessOut.js with a valid project ID in order to use ProcessOut's Dynamic Checkout",
+        )
+
+      return new DynamicCheckout(
+        this,
+        normalizeDynamicCheckoutConfig({ ...config, projectId: this.projectID }),
+      )
     }
 
     /**
