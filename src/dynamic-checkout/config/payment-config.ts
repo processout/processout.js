@@ -40,6 +40,18 @@ module ProcessOut {
     return clonedConfig
   }
 
+  function pickDefined<T extends Record<string, any>>(source: T): Partial<T> {
+    const result: Partial<T> = {}
+
+    Object.keys(source).forEach(key => {
+      if (source[key] !== undefined) {
+        result[key as keyof T] = source[key]
+      }
+    })
+
+    return result
+  }
+
   function getScopedConfigValue<T extends Record<string, any>>(
     config: DynamicCheckoutMethodScopedConfig<T>,
     methodKey: DynamicCheckoutMethodKey,
@@ -228,23 +240,23 @@ module ProcessOut {
       locale: config.locale,
       clientSecret: config.clientSecret,
       optionsByMethod: {
-        _global: {
+        _global: pickDefined({
           capturePayments: config.capturePayments,
           allowFallbackToSale: config.allowFallbackToSale,
           enforceSavePaymentMethod: config.enforceSavePaymentMethod,
           hideSavedPaymentMethods: config.hideSavedPaymentMethods,
           showStatusMessage: config.showStatusMessage,
-        },
+        }),
       },
       themeByMethod: {
         _global: theme ? { ...theme } : {},
       },
       textOverridesByMethod: {
-        _global: {
+        _global: pickDefined({
           payButtonText: config.payButtonText,
           cvcLabel: config.cvcLabel,
           cvcPlaceholder: config.cvcPlaceholder,
-        },
+        }),
       },
       additionalPaymentDataByMethod: cloneMethodScopedConfig(config.additionalData),
     }

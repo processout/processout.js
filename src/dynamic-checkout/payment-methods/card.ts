@@ -2,6 +2,8 @@
 
 module ProcessOut {
   export class CardPaymentMethod extends PaymentMethodButton {
+    private static readonly METHOD_KEY = "card"
+
     private procesoutInstance: ProcessOut
     private paymentMethod: PaymentMethod
     private paymentConfig: DynamicCheckoutPaymentConfig
@@ -42,15 +44,15 @@ module ProcessOut {
     }
 
     private getMethodOptions() {
-      return this.paymentConfig.getOptionsForMethod("card")
+      return this.paymentConfig.getOptionsForMethod(CardPaymentMethod.METHOD_KEY)
     }
 
     private getMethodTheme() {
-      return this.paymentConfig.getThemeForMethod("card")
+      return this.paymentConfig.getThemeForMethod(CardPaymentMethod.METHOD_KEY)
     }
 
     private getTextOverrides() {
-      return this.paymentConfig.getTextOverridesForMethod("card")
+      return this.paymentConfig.getTextOverridesForMethod(CardPaymentMethod.METHOD_KEY)
     }
 
     private setupCardForm(form: HTMLElement): void {
