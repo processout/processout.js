@@ -109,6 +109,8 @@ module ProcessOut {
     redirect?: {
       hint: string,
       url: string,
+      type?: 'web' | 'deep_link',
+      confirmation_required?: boolean,
     }
   }
 
@@ -123,6 +125,8 @@ module ProcessOut {
     redirect: {
       hint: string,
       url: string,
+      type?: 'web' | 'deep_link',
+      confirmation_required?: boolean,
     }
   }
 
@@ -350,8 +354,18 @@ module ProcessOut {
           gateway_configuration_id: context.gatewayConfigurationId,
           submit_data: { parameters: formData }
         };
-        
+
         return this.post(data, options)
+      }
+    }
+
+    public static sendRedirectResult(success: boolean) {
+      return (options: APIOptions<AuthorizationSuccessResponse | TokenizationSuccessResponse, AuthorizationValidationResponse | TokenizationValidationResponse>) => {
+        const context = ContextImpl.context;
+        return this.post({
+          gateway_configuration_id: context.gatewayConfigurationId,
+          redirect: { success },
+        }, options)
       }
     }
 
@@ -553,6 +567,10 @@ module ProcessOut {
           }
 
           if (apiResponse.state === 'NEXT_STEP_REQUIRED' && apiResponse.redirect) {
+            if (apiResponse.redirect.type === 'deep_link') {
+              ContextImpl.context.page.load(APIImpl.sendRedirectResult(false));
+              return;
+            }
             internalOptions.onSuccess && internalOptions.onSuccess(this.transformResponse(
               {
                 ...apiResponse,
