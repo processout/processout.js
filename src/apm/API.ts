@@ -51,7 +51,7 @@ module ProcessOut {
   } & {}
 
   // Single conditional with multiple branches - much cleaner
-  type TransformFormField<T> = 
+  type TransformFormField<T> =
     T extends { type: "phone" }
       ? T & { dialing_codes: Array<{ region_code: string; value: string; name: string }> }
     : T
@@ -64,10 +64,10 @@ module ProcessOut {
       parameter_definitions: Array<O>
     }
   }
-  
+
   export type InstructionData = {
     type: 'instruction',
-    instruction: 
+    instruction:
       | {
         type: 'message',
         value: string,
@@ -109,6 +109,8 @@ module ProcessOut {
     redirect?: {
       hint: string,
       url: string,
+      type?: 'web' | 'deep_link',
+      confirmation_required?: boolean,
     }
   }
 
@@ -123,6 +125,8 @@ module ProcessOut {
     redirect: {
       hint: string,
       url: string,
+      type?: 'web' | 'deep_link',
+      confirmation_required?: boolean,
     }
   }
 
@@ -234,7 +238,7 @@ module ProcessOut {
     if (!data.error_type) {
       const isMismatch = (data as any).state === 'FAILED' && (data as any).success === true;
       let message = `${request} failed`;
-      
+
       if (isMismatch) {
         message = `${request} failed, state and success are mismatched.`;
       }
@@ -255,7 +259,7 @@ module ProcessOut {
           message: data.message
         }
       };
-      
+
       options.onFailure && options.onFailure(defaultError);
       return
     }
@@ -269,7 +273,7 @@ module ProcessOut {
           message: `${request} failed as route does not exist`,
           category: 'APM - API'
         })
-        
+
         const routeNotFoundError = {
           success: false as const,
           state: 'FAILURE' as const,
@@ -278,7 +282,7 @@ module ProcessOut {
             message: 'We were unable to connect to our API. Please contact support if you think this is an error.',
           }
         };
-        
+
         options.onFailure && options.onFailure(routeNotFoundError);
         break;
       default: {
@@ -289,7 +293,7 @@ module ProcessOut {
           message: `${request} failed because of an error: ${data.message}`,
           category: 'APM - API'
         })
-        
+
         const defaultError = {
           success: false as const,
           state: 'FAILURE' as const,
@@ -298,7 +302,7 @@ module ProcessOut {
             message: data.message
           }
         };
-        
+
         options.onFailure && options.onFailure(defaultError);
         break;
       }
@@ -317,7 +321,7 @@ module ProcessOut {
       if (flow === 'authorization') {
         source = context.customerTokenId;
       }
-      
+
 
       return this.post({
         gateway_configuration_id: context.gatewayConfigurationId,
@@ -342,7 +346,7 @@ module ProcessOut {
         source,
       }, options)
     }
-    
+
     public static sendFormData<F extends Record<string, unknown> = Record<string, unknown>>(formData: F) {
       return (options: APIOptions<AuthorizationSuccessResponse | TokenizationSuccessResponse, AuthorizationValidationResponse | TokenizationValidationResponse>) => {
         const context = ContextImpl.context;
@@ -350,8 +354,18 @@ module ProcessOut {
           gateway_configuration_id: context.gatewayConfigurationId,
           submit_data: { parameters: formData }
         };
-        
+
         return this.post(data, options)
+      }
+    }
+
+    public static sendRedirectResult(success: boolean) {
+      return (options: APIOptions<AuthorizationSuccessResponse | TokenizationSuccessResponse, AuthorizationValidationResponse | TokenizationValidationResponse>) => {
+        const context = ContextImpl.context;
+        return this.post({
+          gateway_configuration_id: context.gatewayConfigurationId,
+          redirect: { success },
+        }, options)
       }
     }
 
@@ -363,8 +377,8 @@ module ProcessOut {
     }
 
     private static post<T extends Record<string, any> = Record<string, any>>(
-      data: T, 
-      pathOrOptions: string | APIOptions<AuthorizationSuccessResponse | TokenizationSuccessResponse, AuthorizationValidationResponse | TokenizationValidationResponse> = '', 
+      data: T,
+      pathOrOptions: string | APIOptions<AuthorizationSuccessResponse | TokenizationSuccessResponse, AuthorizationValidationResponse | TokenizationValidationResponse> = '',
       options: APIOptions<AuthorizationSuccessResponse | TokenizationSuccessResponse, AuthorizationValidationResponse | TokenizationValidationResponse> = {}
     ) {
       this.makeRequest('POST', pathOrOptions, data, options);
@@ -405,7 +419,7 @@ module ProcessOut {
       }
 
       const context = ContextImpl.context;
-      
+
       // Build endpoint based on flow type
       let endpoint = ['customers', context.customerId, 'apm-tokens', context.customerTokenId, 'tokenize'].join('/');
 
@@ -416,7 +430,7 @@ module ProcessOut {
           endpoint += `?source=${context.customerTokenId}`
         }
       }
-        
+
       ContextImpl.context.poClient.apiRequest(
         method,
         endpoint,
@@ -428,13 +442,13 @@ module ProcessOut {
 
           if (isErrorResponse(apiResponse)) {
             INITIAL_MAX_RETRIES = 0;
-            
+
             // Clear polling timeout since we have an error
             if (POLLING_TIMEOUT_ID) {
               window.clearTimeout(POLLING_TIMEOUT_ID);
               POLLING_TIMEOUT_ID = null;
             }
-            
+
             handleError(`${method} ${endpoint}`, apiResponse, internalOptions);
             return;
           }
@@ -445,7 +459,7 @@ module ProcessOut {
           if (context.flow === 'authorization') {
             isValidation = isValidationResponse(apiResponse as AuthorizationNetworkResponse);
           }
-          
+
           if (isValidation) {
             INITIAL_MAX_RETRIES = 0;
 
@@ -482,7 +496,7 @@ module ProcessOut {
           if (apiResponse.state === 'PENDING') {
             // Reset cancellation flag when we get a PENDING response - this is when we need to start/resume polling
             POLLING_CANCELLED = false;
-            
+
             if (internalOptions.initialTimestamp) {
               const currentTimestamp = Date.now();
               const elapsedTime = currentTimestamp - internalOptions.initialTimestamp;
@@ -513,12 +527,12 @@ module ProcessOut {
 
             // Return on first PENDING response OR anytime there are elements
             const shouldReturn = !internalOptions.hasReturnedFirstPending || apiResponse.elements;
-            
+
             if (shouldReturn) {
               if (!internalOptions.hasReturnedFirstPending) {
                 internalOptions.hasReturnedFirstPending = true;
               }
-              
+
               internalOptions.onSuccess && internalOptions.onSuccess(this.transformResponse(apiResponse));
               if (ContextImpl.context.confirmation.requiresAction && !storage.get('pending.startTime')) {
                 INITIAL_MAX_RETRIES = 0;
@@ -539,13 +553,13 @@ module ProcessOut {
           }
 
           INITIAL_MAX_RETRIES = 0;
-          
+
           // Clear polling timeout since we're done
           if (POLLING_TIMEOUT_ID) {
             window.clearTimeout(POLLING_TIMEOUT_ID);
             POLLING_TIMEOUT_ID = null;
           }
-          
+
           if (apiResponse.state === 'SUCCESS' && !ContextImpl.context.success.enabled) {
             storage.remove('pending.startTime')
             ContextImpl.context.events.emit('success', { trigger: 'immediate' });
@@ -553,6 +567,12 @@ module ProcessOut {
           }
 
           if (apiResponse.state === 'NEXT_STEP_REQUIRED' && apiResponse.redirect) {
+            // web flow doesn't support deep links, immediately share redirect failed
+            // BE should return a fallback URL or an alternative action or customer instructions
+            if (apiResponse.redirect.type === 'deep_link') {
+              ContextImpl.context.page.load(APIImpl.sendRedirectResult(false));
+              return;
+            }
             internalOptions.onSuccess && internalOptions.onSuccess(this.transformResponse(
               {
                 ...apiResponse,
@@ -583,13 +603,13 @@ module ProcessOut {
           }
 
           INITIAL_MAX_RETRIES = 0;
-          
+
           // Clear polling timeout since we have a network error
           if (POLLING_TIMEOUT_ID) {
             window.clearTimeout(POLLING_TIMEOUT_ID);
             POLLING_TIMEOUT_ID = null;
           }
-          
+
           const networkError = {
             success: false as const,
             state: 'FAILURE' as const,
