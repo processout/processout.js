@@ -146,7 +146,7 @@ module ProcessOut {
                 invoiceData.id,
                 token,
                 cardPaymentOptions,
-                invoiceId => {
+                (invoiceId, data) => {
                   if (this.paymentConfig.showStatusMessage) {
                     getViewContainer().appendChild(
                       new DynamicCheckoutPaymentSuccessView(
@@ -171,6 +171,7 @@ module ProcessOut {
                     return_url: this.paymentConfig.invoiceDetails.return_url || null,
                     payment_method_name: "google_pay",
                     payment_method_display_name: this.getGooglePayPaymentMethodName(invoiceData),
+                    ...DynamicCheckoutEventsUtils.getPaymentStatusEventDetail(data),
                   })
                 },
                 error => {
@@ -206,7 +207,7 @@ module ProcessOut {
                 {
                   clientSecret: this.paymentConfig.clientSecret,
                 },
-                invoiceId => {
+                (invoiceId, _reason, data) => {
                   if (this.paymentConfig.showStatusMessage) {
                     getViewContainer().appendChild(
                       new DynamicCheckoutPaymentPendingView(
@@ -221,6 +222,7 @@ module ProcessOut {
                     payment_method_display_name: this.getGooglePayPaymentMethodName(invoiceData),
                     invoice_id: invoiceId,
                     return_url: this.paymentConfig.invoiceDetails.return_url || null,
+                    ...DynamicCheckoutEventsUtils.getPaymentStatusEventDetail(data),
                   })
                 },
               )

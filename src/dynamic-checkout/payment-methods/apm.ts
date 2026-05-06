@@ -118,7 +118,7 @@ module ProcessOut {
             this.paymentConfig.invoiceId,
             paymentToken,
             cardPaymentOptions,
-            invoiceId => {
+            (invoiceId, data) => {
               if (this.paymentConfig.showStatusMessage) {
                 this.resetContainerHtml().appendChild(
                   new DynamicCheckoutPaymentSuccessView(this.processOutInstance, this.paymentConfig)
@@ -139,6 +139,7 @@ module ProcessOut {
                 return_url: this.paymentConfig.invoiceDetails.return_url || null,
                 payment_method_name: apm.gateway_name,
                 payment_method_display_name: this.paymentMethodDisplayName,
+                ...DynamicCheckoutEventsUtils.getPaymentStatusEventDetail(data),
               })
             },
             error => {
@@ -158,7 +159,7 @@ module ProcessOut {
               )
             },
             requestOptions,
-            invoiceId => {
+            (invoiceId, _reason, data) => {
               this.resetContainerHtml().appendChild(
                 new DynamicCheckoutPaymentPendingView(this.processOutInstance, this.paymentConfig)
                   .element,
@@ -169,6 +170,7 @@ module ProcessOut {
                 payment_method_display_name: this.paymentMethodDisplayName,
                 invoice_id: invoiceId,
                 return_url: this.paymentConfig.invoiceDetails.return_url || null,
+                ...DynamicCheckoutEventsUtils.getPaymentStatusEventDetail(data),
               })
             },
           )
@@ -265,6 +267,7 @@ module ProcessOut {
               invoice_id: this.paymentConfig.invoiceId,
               return_url: this.paymentConfig.invoiceDetails.return_url || null,
               customer_token_id: data.customer_token_id,
+              ...DynamicCheckoutEventsUtils.getPaymentStatusEventDetail(data),
             })
 
             return
@@ -281,7 +284,7 @@ module ProcessOut {
                 this.paymentConfig.invoiceId,
                 paymentToken,
                 options,
-                invoiceId => {
+                (invoiceId, paymentData) => {
                   if (this.paymentConfig.showStatusMessage) {
                     this.resetContainerHtml().appendChild(
                       new DynamicCheckoutPaymentSuccessView(
@@ -307,6 +310,7 @@ module ProcessOut {
                     payment_method_name: apm.gateway_name,
                     payment_method_display_name: this.paymentMethodDisplayName,
                     customer_token_id: data.customer_token_id,
+                    ...DynamicCheckoutEventsUtils.getPaymentStatusEventDetail(paymentData),
                   })
                 },
                 error => {
@@ -340,7 +344,7 @@ module ProcessOut {
                   )
                 },
                 requestOptions,
-                invoiceId => {
+                (invoiceId, _reason, paymentData) => {
                   this.resetContainerHtml().appendChild(
                     new DynamicCheckoutPaymentPendingView(
                       this.processOutInstance,
@@ -354,6 +358,7 @@ module ProcessOut {
                     invoice_id: invoiceId,
                     return_url: this.paymentConfig.invoiceDetails.return_url || null,
                     customer_token_id: data.customer_token_id,
+                    ...DynamicCheckoutEventsUtils.getPaymentStatusEventDetail(paymentData),
                   })
                 },
               )

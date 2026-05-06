@@ -1580,10 +1580,10 @@ module ProcessOut {
       invoiceID: string,
       cardID: string,
       options: any,
-      success: (data: any) => void,
+      success: (resourceId: any, data?: any) => void,
       error: (err: Exception) => void,
       apiRequestOptions?: apiRequestOptions,
-      pending?: (resourceId: string, reason: string | null) => void,
+      pending?: (resourceId: string, reason: string | null, data?: any) => void,
     ): void {
       this.handleCardActions(
         "POST",
@@ -1734,7 +1734,7 @@ module ProcessOut {
       success: (resourceId: any, data?: any) => void,
       error: (err: Exception) => void,
       apiRequestOptions?: apiRequestOptions,
-      pending?: (resourceId: string, reason: string | null) => void,
+      pending?: (resourceId: string, reason: string | null, data?: any) => void,
     ): void {
       // returns this.hppInitialURL only once during the first call from HPP, then returns the endpoint
       const getEndpoint = (): string => {
@@ -1801,7 +1801,22 @@ module ProcessOut {
           var outcome = resolveOutcome(data)
 
           if (outcome === OUTCOME.Failed) {
-            error(new Exception(data.error_type, data.message))
+            const paymentStatusMetadata = {
+              ...(Object.prototype.hasOwnProperty.call(data, "authorized") && {
+                authorized: data.authorized,
+              }),
+              ...(Object.prototype.hasOwnProperty.call(data, "captured") && {
+                captured: data.captured,
+              }),
+            }
+
+            error(
+              new Exception(
+                data.error_type,
+                data.message,
+                Object.keys(paymentStatusMetadata).length > 0 ? paymentStatusMetadata : undefined,
+              ),
+            )
             return
           }
 
@@ -1810,7 +1825,7 @@ module ProcessOut {
             // Otherwise, call the success callback with the resourceID
             // This is to ensure backward compatibility with old usage of PO.js
             if (pending) {
-              pending(resourceID, data?.message || null)
+              pending(resourceID, data?.message || null, data)
             } else {
               success(resourceID, data)
             }

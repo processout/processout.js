@@ -157,7 +157,7 @@ module ProcessOut {
         invoiceData.id,
         cardToken,
         cardPaymentOptions,
-        invoiceId => {
+        (invoiceId, data) => {
           if (this.paymentConfig.showStatusMessage) {
             getViewContainer().appendChild(
               new DynamicCheckoutPaymentSuccessView(this.processOutInstance, this.paymentConfig)
@@ -178,6 +178,7 @@ module ProcessOut {
             return_url: this.paymentConfig.invoiceDetails.return_url || null,
             payment_method_name: "apple_pay",
             payment_method_display_name: this.getApplePayPaymentMethodName(invoiceData),
+            ...DynamicCheckoutEventsUtils.getPaymentStatusEventDetail(data),
           })
         },
         error => {
@@ -209,7 +210,7 @@ module ProcessOut {
         {
           clientSecret: this.paymentConfig.clientSecret,
         },
-        invoiceId => {
+        (invoiceId, _reason, data) => {
           if (this.paymentConfig.showStatusMessage) {
             getViewContainer().appendChild(
               new DynamicCheckoutPaymentPendingView(this.processOutInstance, this.paymentConfig)
@@ -222,6 +223,7 @@ module ProcessOut {
             payment_method_display_name: this.getApplePayPaymentMethodName(invoiceData),
             invoice_id: invoiceId,
             return_url: this.paymentConfig.invoiceDetails.return_url || null,
+            ...DynamicCheckoutEventsUtils.getPaymentStatusEventDetail(data),
           })
         },
       )
