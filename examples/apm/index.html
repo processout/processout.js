@@ -12,6 +12,12 @@
     <select name="gateway" id="apm-gateway">
       <option value="">Select Gateway</option>
     </select>
+    <select id="flow-type" name="flow_type">
+      <option value="pay">Pay</option>
+      <option value="pay-with-token">Pay with token</option>
+      <option value="tokenize">Tokenize</option>
+      <option value="buy-and-tokenize">Buy &amp; Tokenize</option>
+    </select>
     <input type="text" id="invoice-id" name="invoice_id" placeholder="Invoice ID" />
     <input type="text" id="customer-id" name="customer_id" placeholder="Customer ID" style="display: none" />
     <input type="text" id="customer-token-id" name="customer_token_id" placeholder="Customer Token ID" style="display: none" />
@@ -67,11 +73,10 @@
       gatewayDict[option.value] = option.textContent.trim();
     });
 
+    const flowTypeEl = document.querySelector('#flow-type');
     const invoiceIdEl = document.querySelector('#invoice-id');
     const customerIdEl = document.querySelector('#customer-id');
     const customerTokenIdEl = document.querySelector('#customer-token-id');
-
-    let flow = 'authorization';
 
     let previousId;
     let previousGateway;
@@ -115,31 +120,18 @@
       return Object.keys(redirect).length ? { redirect } : {};
     }
 
-    gatewayEl.addEventListener('change', (e) => {
-      const value = e.target.value;
-      const gateway = gatewayDict[value];
+    function syncInputVisibility() {
+      const ft = flowTypeEl.value;
+      invoiceIdEl.style.display =
+        (ft === 'pay' || ft === 'pay-with-token' || ft === 'buy-and-tokenize') ? 'inline-block' : 'none';
+      customerIdEl.style.display =
+        (ft === 'tokenize' || ft === 'buy-and-tokenize') ? 'inline-block' : 'none';
+      customerTokenIdEl.style.display =
+        (ft === 'pay-with-token' || ft === 'tokenize' || ft === 'buy-and-tokenize') ? 'inline-block' : 'none';
+    }
 
-      switch (gateway) {
-        case 'Forage Authorization':
-          flow = 'authorization';
-          invoiceIdEl.style.display = 'inline-block';
-          customerIdEl.style.display = 'none';
-          customerTokenIdEl.style.display = 'inline-block';
-          break;
-        case 'Forage Tokenization':
-          flow = 'tokenization';
-          invoiceIdEl.style.display = 'none';
-          customerIdEl.style.display = 'inline-block';
-          customerTokenIdEl.style.display = 'inline-block';
-          break;
-        default:
-          flow = 'authorization';
-          invoiceIdEl.style.display = 'inline-block';
-          customerIdEl.style.display = 'none';
-          customerTokenIdEl.style.display = 'none';
-          break;
-      }
-    })
+    flowTypeEl.addEventListener('change', syncInputVisibility);
+    syncInputVisibility();
 
     document.querySelector('#initialise-apm').addEventListener('submit', (e) => {
       e.preventDefault()
@@ -150,7 +142,14 @@
 
       let apm;
 
-      if (flow === 'authorization') {
+      const flowType = flowTypeEl.value;
+      const needsInvoice     = flowType === 'pay' || flowType === 'pay-with-token' || flowType === 'buy-and-tokenize';
+      const needsCustomer    = flowType === 'tokenize' || flowType === 'buy-and-tokenize';
+      const needsCustomToken = flowType === 'pay-with-token' || flowType === 'tokenize' || flowType === 'buy-and-tokenize';
+      const useAuth          = flowType !== 'tokenize';
+      const useToken         = flowType === 'tokenize';
+
+      if (needsInvoice) {
         if (!invoiceId) {
           alert('Please enter an invoice ID')
           return;
@@ -167,15 +166,27 @@
         }
 
         if (previousId === invoiceId) {
-          const result = confirm("You're using a invoice id that has already been used. Are you sure you want to use it again?")
+          const result = confirm("You're using an invoice id that has already been used. Are you sure you want to use it again?")
           if (!result) {
             return
           }
         }
 
-
         previousId = invoiceId;
         previousGateway = gatewayConfigurationId;
+      }
+
+      if (needsCustomer && !customerId) {
+        alert('Please enter a customer ID')
+        return
+      }
+
+      if (needsCustomToken && !customerTokenId) {
+        alert('Please enter a customer token ID')
+        return
+      }
+
+      if (useAuth) {
         apm = client.apm.authorization(el, {
           gatewayConfigurationId,
           invoiceId,
@@ -189,18 +200,7 @@
           },
           ...buildRedirectOptions(),
         })
-      }
-
-      if (flow === 'tokenization') {
-        if (!customerId) {
-          alert('Please enter a customer ID')
-          return
-        }
-        if (!customerTokenId) {
-          alert('Please enter a customer token ID')
-          return
-        }
-
+      } else if (useToken) {
         apm = client.apm.tokenization(el, {
           gatewayConfigurationId,
           customerId,
