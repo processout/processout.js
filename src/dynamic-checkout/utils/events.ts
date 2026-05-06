@@ -26,6 +26,8 @@ module ProcessOut {
     payment_method_display_name: string | null
     return_url: string | null
     card_id?: string
+    authorized?: boolean
+    captured?: boolean
   }
 
   interface DynamicCheckoutPaymentErrorEventDetail extends DynamicCheckoutEventDetail {
@@ -133,6 +135,7 @@ module ProcessOut {
           payment_method_name: response.payment_method_name || null,
           payment_method_display_name: response.payment_method_display_name || null,
           return_url: response.return_url || null,
+          ...DynamicCheckoutEventsUtils.getPaymentStatusEventDetail(response),
         },
       )
 
@@ -261,6 +264,8 @@ module ProcessOut {
       invoice_id: string
       return_url: string | null
       customer_token_id?: string
+      authorized?: boolean
+      captured?: boolean
     }) {
       const event = DynamicCheckoutEventsUtils.createEvent(
         DYNAMIC_CHECKOUT_EVENTS.PAYMENT_SUBMITTED,
@@ -276,6 +281,8 @@ module ProcessOut {
       invoice_id: string
       return_url: string | null
       tab_closed?: boolean
+      authorized?: boolean
+      captured?: boolean
     }) {
       const event = DynamicCheckoutEventsUtils.createEvent(
         DYNAMIC_CHECKOUT_EVENTS.PAYMENT_CANCELLED,
@@ -290,11 +297,17 @@ module ProcessOut {
       payment_method_display_name: string
       invoice_id: string
       return_url: string | null
+      card_id?: string
       customer_token_id?: string
+      authorized?: boolean
+      captured?: boolean
     }) {
       const event = DynamicCheckoutEventsUtils.createEvent(
         DYNAMIC_CHECKOUT_EVENTS.PAYMENT_PENDING,
-        details,
+        {
+          ...details,
+          ...DynamicCheckoutEventsUtils.getPaymentStatusEventDetail(details),
+        },
       )
 
       return window.dispatchEvent(event)
@@ -306,6 +319,35 @@ module ProcessOut {
       }
 
       return data
+    }
+
+    static getPaymentStatusEventDetail(data: any) {
+      const detail = DynamicCheckoutEventsUtils.getEventDetail(data)
+      const isObject = typeof detail === "object" && detail !== null
+
+      if (!isObject) {
+        return {}
+      }
+
+      const metadata =
+        typeof detail.metadata === "object" && detail.metadata !== null ? detail.metadata : {}
+
+      return {
+        ...(Object.prototype.hasOwnProperty.call(detail, "authorized") && {
+          authorized: detail.authorized,
+        }),
+        ...(!Object.prototype.hasOwnProperty.call(detail, "authorized") &&
+          Object.prototype.hasOwnProperty.call(metadata, "authorized") && {
+            authorized: metadata.authorized,
+          }),
+        ...(Object.prototype.hasOwnProperty.call(detail, "captured") && {
+          captured: detail.captured,
+        }),
+        ...(!Object.prototype.hasOwnProperty.call(detail, "captured") &&
+          Object.prototype.hasOwnProperty.call(metadata, "captured") && {
+            captured: metadata.captured,
+          }),
+      }
     }
 
     private static normalizePaymentError(
@@ -333,6 +375,7 @@ module ProcessOut {
           : normalizedError == null
             ? null
             : String(normalizedError),
+        ...DynamicCheckoutEventsUtils.getPaymentStatusEventDetail(normalizedError),
         ...(isObject &&
           normalizedError.transaction_status && {
             transaction_status: normalizedError.transaction_status,
@@ -354,9 +397,24 @@ module ProcessOut {
       }, {})
     }
 
+    private static withPaymentStatusEventDetail(data?: any) {
+      const paymentStatusEventDetail = DynamicCheckoutEventsUtils.getPaymentStatusEventDetail(data)
+
+      if (!data || Object.prototype.toString.call(data) !== "[object Object]") {
+        return Object.keys(paymentStatusEventDetail).length > 0 ? paymentStatusEventDetail : data
+      }
+
+      return {
+        ...data,
+        ...paymentStatusEventDetail,
+      }
+    }
+
     // IE 11 polyfill
     static createEvent(eventName: string, data?: any) {
-      const sanitizedData = DynamicCheckoutEventsUtils.sanitizeEventDetail(data)
+      const sanitizedData = DynamicCheckoutEventsUtils.sanitizeEventDetail(
+        DynamicCheckoutEventsUtils.withPaymentStatusEventDetail(data),
+      )
 
       if (typeof window.CustomEvent === "function") {
         return new CustomEvent(eventName, {

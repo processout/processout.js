@@ -87,7 +87,7 @@ module ProcessOut {
               invoiceId,
               paymentToken,
               cardPaymentOptions,
-              invoiceId => {
+              (invoiceId, data) => {
                 if (this.paymentConfig.showStatusMessage) {
                   this.resetContainerHtml().appendChild(
                     new DynamicCheckoutPaymentSuccessView(
@@ -110,6 +110,7 @@ module ProcessOut {
                   return_url: this.paymentConfig.invoiceDetails.return_url || null,
                   payment_method_name: apm_customer_token.gateway_name,
                   payment_method_display_name: this.paymentMethodDisplayName,
+                  ...DynamicCheckoutEventsUtils.getPaymentStatusEventDetail(data),
                 })
               },
               error => {
@@ -139,7 +140,7 @@ module ProcessOut {
                 )
               },
               requestOptions,
-              invoiceId => {
+              (invoiceId, _reason, data) => {
                 if (this.paymentConfig.showStatusMessage) {
                   this.resetContainerHtml().appendChild(
                     new DynamicCheckoutPaymentPendingView(
@@ -154,6 +155,7 @@ module ProcessOut {
                   payment_method_display_name: this.paymentMethodDisplayName,
                   invoice_id: invoiceId,
                   return_url: this.paymentConfig.invoiceDetails.return_url || null,
+                  ...DynamicCheckoutEventsUtils.getPaymentStatusEventDetail(data),
                 })
               },
             )
@@ -229,10 +231,11 @@ module ProcessOut {
           ? this.paymentMethod.apm_customer_token.gateway_name
           : "apm",
         payment_method_display_name: this.paymentMethodDisplayName,
+        ...DynamicCheckoutEventsUtils.getPaymentStatusEventDetail(data),
       })
     }
 
-    private handlePaymentPending(invoiceId: string) {
+    private handlePaymentPending(invoiceId: string, _reason: string | null, data?: any) {
       if (this.paymentConfig.showStatusMessage) {
         this.resetContainerHtml().appendChild(
           new DynamicCheckoutPaymentPendingView(this.processOutInstance, this.paymentConfig)
@@ -247,6 +250,7 @@ module ProcessOut {
         payment_method_display_name: this.paymentMethodDisplayName,
         invoice_id: this.paymentConfig.invoiceId,
         return_url: this.paymentConfig.invoiceDetails.return_url || null,
+        ...DynamicCheckoutEventsUtils.getPaymentStatusEventDetail(data),
       })
     }
 

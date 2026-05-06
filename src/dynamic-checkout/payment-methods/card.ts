@@ -183,6 +183,7 @@ module ProcessOut {
         payment_method_display_name: this.paymentMethodDisplayName,
         ...(this.tokenizedCardId && { card_id: this.tokenizedCardId }),
         customer_token_id: data?.customer_token_id,
+        ...DynamicCheckoutEventsUtils.getPaymentStatusEventDetail(data),
       })
 
       if (this.paymentConfig.showStatusMessage) {
@@ -199,7 +200,7 @@ module ProcessOut {
       }
     }
 
-    private handleCardPaymentPending(invoiceId: string) {
+    private handleCardPaymentPending(invoiceId: string, _reason: string | null, data?: any) {
       if (this.paymentConfig.showStatusMessage) {
         this.resetContainerHtml().appendChild(
           new DynamicCheckoutPaymentPendingView(this.procesoutInstance, this.paymentConfig).element,
@@ -212,6 +213,7 @@ module ProcessOut {
         invoice_id: invoiceId,
         return_url: this.paymentConfig.invoiceDetails.return_url || null,
         ...(this.tokenizedCardId && { card_id: this.tokenizedCardId }),
+        ...DynamicCheckoutEventsUtils.getPaymentStatusEventDetail(data),
       })
     }
 
