@@ -1778,6 +1778,7 @@ module ProcessOut {
         preferred_card_type: options.preferred_card_type,
         split_allocations: options.split_allocations,
         installment_plan_id: options.installment_plan_id,
+        provision_network_token: options.provision_network_token,
       }
       payload = this.injectDeviceData(payload)
 
