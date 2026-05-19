@@ -511,8 +511,12 @@ module ProcessOut {
               }
             }
 
-            // Return on first PENDING response OR anytime there are elements
-            const shouldReturn = !internalOptions.hasReturnedFirstPending || apiResponse.elements;
+            // Return on first PENDING response OR when there are non-empty elements.
+            // Empty/absent elements on subsequent polls (e.g. gateway awaiting webhook) must NOT
+            // trigger a re-render — that would unmount the Pending view, wipe instructions/QR,
+            // and reset the countdown timer (see Pending.ts componentWillUnmount).
+            const hasElements = !!(apiResponse.elements && apiResponse.elements.length > 0);
+            const shouldReturn = !internalOptions.hasReturnedFirstPending || hasElements;
             
             if (shouldReturn) {
               if (!internalOptions.hasReturnedFirstPending) {
