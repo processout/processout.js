@@ -77,9 +77,7 @@ module ProcessOut {
             // Only render on the transition INTO PENDING. Background polling responses
             // (PENDING → PENDING) must not re-render — that would unmount the Pending view,
             // wiping displayed instructions/QR codes and resetting the countdown timer (see
-            // Pending.ts componentWillUnmount removing pending.startTime). When the user
-            // confirms via "I have sent the payment", the existing view's startTimer drives
-            // its own setState to reflect the confirmed state, so no re-render is needed here.
+            // Pending.ts componentWillUnmount removing pending.startTime).
             if (previousState !== 'PENDING') {
               ContextImpl.context.page.render(APMViewPending, { elements, config })
             }
