@@ -55,6 +55,7 @@ module ProcessOut {
       (request.bind(APIImpl) as APIRequest)({
         hasConfirmedPending,
         onSuccess: ({ elements, ...config }) => {
+          const previousState = this.state
           this.state = config.state
           callback && callback(null, this.state);
 
@@ -73,7 +74,13 @@ module ProcessOut {
           }
 
           if (config.state === 'PENDING') {
-            ContextImpl.context.page.render(APMViewPending, { elements, config })
+            // Only render on the transition INTO PENDING. Background polling responses
+            // (PENDING → PENDING) must not re-render — that would unmount the Pending view,
+            // wiping displayed instructions/QR codes and resetting the countdown timer (see
+            // Pending.ts componentWillUnmount removing pending.startTime).
+            if (previousState !== 'PENDING') {
+              ContextImpl.context.page.render(APMViewPending, { elements, config })
+            }
           }
         },
         onError: ({ elements, ...config }) => {
