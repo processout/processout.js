@@ -13,4 +13,3 @@ jobs:
   stale:
     name: Stale
     uses: processout/actions/.github/workflows/standards-stale.yaml@v1
-    secrets: inherit
