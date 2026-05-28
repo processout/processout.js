@@ -1,6 +1,9 @@
 name: Check version bumped
 
-on: [ pull_request ]
+on:
+  pull_request:
+    paths-ignore:
+      - '.github/**'
 
 jobs:
   check-version-bumped:

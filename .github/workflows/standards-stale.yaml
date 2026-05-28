@@ -1,0 +1,15 @@
+name: "Stale PRs"
+
+permissions:
+  pull-requests: write
+  issues: write
+
+on:
+  schedule:
+    # runs daily at 9am
+    - cron: '0 9 * * *'
+
+jobs:
+  stale:
+    name: Stale
+    uses: processout/actions/.github/workflows/standards-stale.yaml@v1
