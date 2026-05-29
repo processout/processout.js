@@ -970,6 +970,7 @@ module ProcessOut {
           break
         case "card.invalid-month":
         case "card.invalid-year":
+        case "card.invalid-date":
           const cardExpiryErrorMessage = document.getElementById("expiry-date-error-message")
 
           if (cardExpiryErrorMessage) {
