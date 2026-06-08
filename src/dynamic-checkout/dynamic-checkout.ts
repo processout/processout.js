@@ -162,6 +162,10 @@ module ProcessOut {
       this.widgetWrapper = document.createElement("div")
       this.widgetWrapper.setAttribute("class", "dynamic-checkout-widget-wrapper")
 
+      if (this.paymentConfig.locale === "ar") {
+        this.widgetWrapper.setAttribute("dir", "rtl")
+      }
+
       this.widgetWrapper.appendChild(view)
       this.dcoContainer.appendChild(this.widgetWrapper)
     }
