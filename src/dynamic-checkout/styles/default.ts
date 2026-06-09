@@ -929,4 +929,30 @@ const defaultStyles = `
       animation: none;
     }
   }
+
+  /* Right-to-left layout overrides (e.g. Arabic locale) */
+  .dynamic-checkout-widget-wrapper[dir="rtl"] .dco-payment-method-button-wrapper {
+    padding-right: 0;
+    padding-left: 10px;
+  }
+
+  .dynamic-checkout-widget-wrapper[dir="rtl"] .dco-payment-method-card-form-input-cvc {
+    padding-right: 0;
+    padding-left: 40px;
+  }
+
+  .dynamic-checkout-widget-wrapper[dir="rtl"] .dco-card-cvc-icon {
+    right: auto;
+    left: 10px;
+  }
+
+  .dynamic-checkout-widget-wrapper[dir="rtl"] .dco-card-scheme-logo {
+    right: auto;
+    left: 10px;
+  }
+
+  .dynamic-checkout-widget-wrapper[dir="rtl"] .dco-delete-payment-method-button {
+    margin-left: 0;
+    margin-right: auto;
+  }
 `
