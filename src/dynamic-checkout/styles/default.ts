@@ -931,27 +931,27 @@ const defaultStyles = `
   }
 
   /* Right-to-left layout overrides (e.g. Arabic locale) */
-  [dir="rtl"] .dco-payment-method-button-wrapper {
+  .dynamic-checkout-widget-wrapper[dir="rtl"] .dco-payment-method-button-wrapper {
     padding-right: 0;
     padding-left: 10px;
   }
 
-  [dir="rtl"] .dco-payment-method-card-form-input-cvc {
+  .dynamic-checkout-widget-wrapper[dir="rtl"] .dco-payment-method-card-form-input-cvc {
     padding-right: 0;
     padding-left: 40px;
   }
 
-  [dir="rtl"] .dco-card-cvc-icon {
+  .dynamic-checkout-widget-wrapper[dir="rtl"] .dco-card-cvc-icon {
     right: auto;
     left: 10px;
   }
 
-  [dir="rtl"] .dco-card-scheme-logo {
+  .dynamic-checkout-widget-wrapper[dir="rtl"] .dco-card-scheme-logo {
     right: auto;
     left: 10px;
   }
 
-  [dir="rtl"] .dco-delete-payment-method-button {
+  .dynamic-checkout-widget-wrapper[dir="rtl"] .dco-delete-payment-method-button {
     margin-left: 0;
     margin-right: auto;
   }
