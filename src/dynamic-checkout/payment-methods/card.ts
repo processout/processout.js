@@ -218,6 +218,25 @@ module ProcessOut {
     }
 
     private handleCardPaymentError(error) {
+      if (error.code === "customer.canceled") {
+        this.resetContainerHtml().appendChild(
+          new DynamicCheckoutPaymentCancelledView(this.procesoutInstance, this.paymentConfig)
+            .element,
+        )
+
+        DynamicCheckoutEventsUtils.dispatchPaymentCancelledEvent({
+          payment_method_name: "card",
+          payment_method_display_name: this.paymentMethodDisplayName,
+          invoice_id: this.paymentConfig.invoiceId,
+          return_url: this.paymentConfig.invoiceDetails.return_url || null,
+          // Card 3DS challenges always run in an iframe overlay (no tab/window),
+          // so a "customer.canceled" here is always the Cancel button, never a tab close.
+          tab_closed: false,
+        })
+
+        return
+      }
+
       if (this.paymentConfig.showStatusMessage) {
         this.resetContainerHtml().appendChild(
           new DynamicCheckoutPaymentErrorView(this.procesoutInstance, this.paymentConfig).element,
@@ -227,7 +246,7 @@ module ProcessOut {
         !this.paymentConfig.invoiceDetails.return_url
       ) {
         this.resetContainerHtml().appendChild(
-          new DynamicCheckoutPaymentInfoView(this.processOutInstance, this.paymentConfig).element,
+          new DynamicCheckoutPaymentInfoView(this.procesoutInstance, this.paymentConfig).element,
         )
       }
 
