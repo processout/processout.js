@@ -118,9 +118,9 @@ module ProcessOut {
           payment_method_display_name: this.paymentMethodDisplayName,
           invoice_id: this.paymentConfig.invoiceId,
           return_url: this.paymentConfig.invoiceDetails.return_url || null,
-          // Card 3DS challenges always run in an iframe overlay (no tab/window),
-          // so a "customer.canceled" here is always the Cancel button, never a tab close.
-          // The SDK still tags iframe closes with reason "tab_closed", so we override it.
+          // Card 3DS challenges run in an iframe overlay (no tab/window).
+          // The SDK can still report iframe closes as reason "tab_closed", but we treat this as an in-overlay cancel.
+          // For event reporting we therefore force `tab_closed: false` below.
           tab_closed: false,
         })
       } else {

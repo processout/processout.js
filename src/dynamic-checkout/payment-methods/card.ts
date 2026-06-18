@@ -2,7 +2,6 @@
 
 module ProcessOut {
   export class CardPaymentMethod extends PaymentMethodButton {
-    private procesoutInstance: ProcessOut
     private paymentMethod: PaymentMethod
     private paymentMethodDisplayName: string
     private paymentConfig: DynamicCheckoutPaymentConfig
@@ -12,7 +11,7 @@ module ProcessOut {
     private tokenizedCardId?: string
 
     constructor(
-      procesoutInstance: ProcessOut,
+      processOutInstance: ProcessOut,
       paymentMethod: PaymentMethod,
       paymentConfig: DynamicCheckoutPaymentConfig,
       theme: DynamicCheckoutThemeType,
@@ -26,14 +25,13 @@ module ProcessOut {
       })
 
       super(
-        procesoutInstance,
+        processOutInstance,
         Translations.getText("card-label", paymentConfig.locale),
         display.logo.light_url.vector,
         display.name,
         rightContent,
       )
 
-      this.procesoutInstance = procesoutInstance
       this.paymentMethod = paymentMethod
       this.paymentMethodDisplayName = display.name
       this.paymentConfig = paymentConfig
@@ -47,7 +45,7 @@ module ProcessOut {
     }
 
     private setupCardForm(form: HTMLElement): void {
-      this.procesoutInstance.setupForm(
+      this.processOutInstance.setupForm(
         form,
         this.getCardFormOptions(),
         cardForm => {
@@ -64,7 +62,7 @@ module ProcessOut {
 
                 cardSchemeLogo.setAttribute(
                   "src",
-                  this.procesoutInstance.endpoint("js", CARD_SCHEMES_ASSETS[scheme]),
+                  this.processOutInstance.endpoint("js", CARD_SCHEMES_ASSETS[scheme]),
                 )
               } else {
                 cardSchemeLogo.setAttribute("hidden", "true")
@@ -102,7 +100,7 @@ module ProcessOut {
                 return_url: this.paymentConfig.invoiceDetails.return_url || null,
               })
 
-              this.procesoutInstance.tokenize(
+              this.processOutInstance.tokenize(
                 cardForm,
                 this.getAdditionalFormValues(form),
                 this.handleTokenizeSuccess.bind(this),
@@ -146,7 +144,7 @@ module ProcessOut {
         cardPaymentOptions["save_source"] = saveForFutureCheckbox.checked
       }
 
-      this.procesoutInstance.makeCardPayment(
+      this.processOutInstance.makeCardPayment(
         this.paymentConfig.invoiceId,
         cardToken,
         cardPaymentOptions,
@@ -161,7 +159,7 @@ module ProcessOut {
 
     private handleTokenizeError(error) {
       this.resetContainerHtml().appendChild(
-        new DynamicCheckoutPaymentErrorView(this.procesoutInstance, this.paymentConfig).element,
+        new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig).element,
       )
 
       DynamicCheckoutEventsUtils.dispatchPaymentErrorEvent(
@@ -188,7 +186,7 @@ module ProcessOut {
 
       if (this.paymentConfig.showStatusMessage) {
         this.resetContainerHtml().appendChild(
-          new DynamicCheckoutPaymentSuccessView(this.procesoutInstance, this.paymentConfig).element,
+          new DynamicCheckoutPaymentSuccessView(this.processOutInstance, this.paymentConfig).element,
         )
       } else if (
         !this.paymentConfig.showStatusMessage &&
@@ -203,7 +201,7 @@ module ProcessOut {
     private handleCardPaymentPending(invoiceId: string, _reason: string | null, data?: any) {
       if (this.paymentConfig.showStatusMessage) {
         this.resetContainerHtml().appendChild(
-          new DynamicCheckoutPaymentPendingView(this.procesoutInstance, this.paymentConfig).element,
+          new DynamicCheckoutPaymentPendingView(this.processOutInstance, this.paymentConfig).element,
         )
       }
 
@@ -220,7 +218,7 @@ module ProcessOut {
     private handleCardPaymentError(error) {
       if (error.code === "customer.canceled") {
         this.resetContainerHtml().appendChild(
-          new DynamicCheckoutPaymentCancelledView(this.procesoutInstance, this.paymentConfig)
+          new DynamicCheckoutPaymentCancelledView(this.processOutInstance, this.paymentConfig)
             .element,
         )
 
@@ -229,8 +227,9 @@ module ProcessOut {
           payment_method_display_name: this.paymentMethodDisplayName,
           invoice_id: this.paymentConfig.invoiceId,
           return_url: this.paymentConfig.invoiceDetails.return_url || null,
-          // Card 3DS challenges always run in an iframe overlay (no tab/window),
-          // so a "customer.canceled" here is always the Cancel button, never a tab close.
+          // Card 3DS challenges run in an iframe overlay (no tab/window).
+          // The SDK can still report iframe closes as reason "tab_closed", but we treat this as an in-overlay cancel.
+          // For event reporting we therefore force `tab_closed: false` below.
           tab_closed: false,
         })
 
@@ -239,14 +238,14 @@ module ProcessOut {
 
       if (this.paymentConfig.showStatusMessage) {
         this.resetContainerHtml().appendChild(
-          new DynamicCheckoutPaymentErrorView(this.procesoutInstance, this.paymentConfig).element,
+          new DynamicCheckoutPaymentErrorView(this.processOutInstance, this.paymentConfig).element,
         )
       } else if (
         !this.paymentConfig.showStatusMessage &&
         !this.paymentConfig.invoiceDetails.return_url
       ) {
         this.resetContainerHtml().appendChild(
-          new DynamicCheckoutPaymentInfoView(this.procesoutInstance, this.paymentConfig).element,
+          new DynamicCheckoutPaymentInfoView(this.processOutInstance, this.paymentConfig).element,
         )
       }
 
@@ -531,7 +530,7 @@ module ProcessOut {
           tagName: "img",
           classNames: ["dco-card-cvc-icon"],
           attributes: {
-            src: this.procesoutInstance.endpoint("js", CARD_CVC_ICON),
+            src: this.processOutInstance.endpoint("js", CARD_CVC_ICON),
             alt: "",
             "aria-hidden": "true",
           },
@@ -581,7 +580,7 @@ module ProcessOut {
           tagName: "img",
           classNames: ["dco-card-scheme-logo"],
           attributes: {
-            src: this.procesoutInstance.endpoint("js", CARD_SCHEMES_ASSETS.visa),
+            src: this.processOutInstance.endpoint("js", CARD_SCHEMES_ASSETS.visa),
             hidden: "true",
           },
         },
@@ -643,7 +642,7 @@ module ProcessOut {
 
       // ProcessOut inputs doesn't have onChange event, so we need to listen to messages from the iframe
       window.addEventListener("message", e => {
-        if (e.origin === this.procesoutInstance.endpoint("js", "")) {
+        if (e.origin === this.processOutInstance.endpoint("js", "")) {
           const eventData = e.data ? JSON.parse(e.data) : {}
 
           if (eventData.action === "inputEvent") {
