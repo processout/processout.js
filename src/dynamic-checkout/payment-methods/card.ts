@@ -917,12 +917,24 @@ module ProcessOut {
         return
       }
 
+      // The backend matches schemes case-insensitively (EqualFold), so we
+      // lowercase the allowlist to mirror that behaviour.
+      const allowedSchemes = restrictToSchemes.map(function (scheme) {
+        return scheme.toLowerCase()
+      })
+
       var hasAllowedScheme = false
 
       schemes.forEach(function (scheme) {
-        if (restrictToSchemes.indexOf(scheme) !== -1) {
-          hasAllowedScheme = true
-        }
+        // Compare both the detected (hyphenated) code and its platform alias
+        // (space-separated), e.g. "american-express" and "american express".
+        const candidates = [scheme, schemeRestrictionAliases[scheme]]
+
+        candidates.forEach(function (candidate) {
+          if (candidate && allowedSchemes.indexOf(candidate.toLowerCase()) !== -1) {
+            hasAllowedScheme = true
+          }
+        })
       })
 
       this.setCardRestrictionState(!hasAllowedScheme)

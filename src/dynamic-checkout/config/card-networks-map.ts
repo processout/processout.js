@@ -23,4 +23,16 @@ module ProcessOut {
     visa: "visa",
     vpay: "vpay",
   }
+
+  // The card field detects schemes via Card.getPossibleSchemes(), which uses
+  // hyphenated codes (e.g. "american-express"). The rest of the platform
+  // (dashboard restrict_to_schemes, router, api) uses space-separated values
+  // (e.g. "american express"). This maps the SDK's multi-word codes to their
+  // platform equivalents so scheme restrictions match. Only schemes whose two
+  // spellings differ need an entry; single-word schemes already align.
+  export const schemeRestrictionAliases: { [key: string]: string } = {
+    "american-express": "american express",
+    "union-pay": "china union pay",
+    "diners-club": "diners club",
+  }
 }
