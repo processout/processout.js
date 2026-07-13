@@ -108,10 +108,12 @@ module ProcessOut {
 
     private handlePaymentError(error) {
       if (error.code === "customer.canceled") {
-        this.resetContainerHtml().appendChild(
-          new DynamicCheckoutPaymentCancelledView(this.processOutInstance, this.paymentConfig)
-            .element,
-        )
+        if (this.paymentConfig.showStatusMessage) {
+          this.resetContainerHtml().appendChild(
+            new DynamicCheckoutPaymentCancelledView(this.processOutInstance, this.paymentConfig)
+              .element,
+          )
+        }
 
         DynamicCheckoutEventsUtils.dispatchPaymentCancelledEvent({
           payment_method_name: "card",
