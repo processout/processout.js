@@ -19,11 +19,17 @@ module ProcessOut {
       vi: vi,
     }
 
+    static rtlLocales = ["ar"]
+
     static getText(key: string, locale: string) {
       const keys =
         Translations.localeTranslationsMap[locale] || Translations.localeTranslationsMap.en
 
       return keys[key] || ""
+    }
+
+    static isRtlLocale(locale: string) {
+      return Translations.rtlLocales.indexOf(locale) !== -1
     }
   }
 }
