@@ -456,8 +456,8 @@ module ProcessOut {
             number = Card.parseNumber(number); // Remove potential spaces
 
             var l = number.length;
-            if (l > 6)
-                l = 6;
+            if (l > 8)
+                l = 8;
             return number.substring(0, l);
         }
 

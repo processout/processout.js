@@ -918,7 +918,12 @@ module ProcessOut {
         return
       }
 
-      const isAllowedIin = restrictToIins.indexOf(iin) !== -1
+      // card_iin may carry more digits than the configured entries (IINs can
+      // be 6 or 8 digits), so match on prefix: an allowed entry matches when
+      // the detected IIN starts with it.
+      const isAllowedIin = restrictToIins.some(function (allowedIin) {
+        return allowedIin.length > 0 && iin.substring(0, allowedIin.length) === allowedIin
+      })
 
       this.setCardRestrictionState(!isAllowedIin)
     }
