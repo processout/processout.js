@@ -55,7 +55,7 @@
           function (form) {
             let preferredCardType = null;
             form.getNumberField().on("input", function (e) {
-              if (e.card_number_length == 6) {
+              if (e.card_number_length == 8) {
                 client.getCardInformation(
                   e.card_iin,
                   function(cardInfo) {
@@ -65,7 +65,7 @@
                       const radioGroup = document.createElement('div')
                       radioGroup.className = 'combo-card-types'
                       radioGroup.style.cssText = 'margin: 15px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background: #f9f9f9;'
-                      
+
                       radioGroup.innerHTML = `
                         <h4 style="margin: 0 0 10px 0; color: #333;">Select Card Type:</h4>
                         ${cardInfo.combo_card_types.map((type, index) => `
@@ -75,11 +75,11 @@
                           </label>
                         `).join('')}
                       `
-                      
+
                       // Insert before the Pay button
                       const payButton = document.querySelector('.submit-button')
                       payButton.parentNode.insertBefore(radioGroup, payButton)
-                      
+
                       // Add event listener to track selection changes
                       const radioButtons = radioGroup.querySelectorAll('input[name="cardType"]')
                       radioButtons.forEach(radio => {
@@ -88,7 +88,7 @@
                           console.log("User selected card type:", preferredCardType)
                         })
                       })
-                      
+
                       // Set initial value
                       preferredCardType = null
                     }
@@ -98,7 +98,7 @@
                   }
                 )
               }
-    
+
               document.getElementById("errors").innerHTML = ""
             })
 
