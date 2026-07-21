@@ -937,7 +937,7 @@ const defaultStyles = `
   }
 
   .dynamic-checkout-widget-wrapper[dir="rtl"] .dco-payment-method-card-form-input-cvc {
-    padding-right: 0;
+    padding-right: 8px;
     padding-left: 40px;
   }
 
