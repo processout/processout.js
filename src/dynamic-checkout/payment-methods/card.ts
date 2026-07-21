@@ -268,6 +268,12 @@ module ProcessOut {
         fontSize: "14px",
       }
 
+      if (Translations.isRtlLocale(this.paymentConfig.locale)) {
+        // Hosted field iframes don't inherit the widget's dir="rtl",
+        // so the direction has to be passed to them explicitly
+        options.style.direction = "rtl"
+      }
+
       options.placeholder = ""
       options.expiryAutoNext = false
       options.cardNumberAutoNext = true
