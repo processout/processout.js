@@ -4,6 +4,7 @@ module ProcessOut {
     "save-for-future-label": "حفظ لعمليات الدفع المستقبلية",
     "continue-with-apm-button": "المتابعة باستخدام",
     "pay-button-text": "ادفع",
+    "tokenize-payment-button-text": "ترميز الدفع",
     "card-details-section-title": "تفاصيل البطاقة",
     "cardholder-name-label": "اسم حامل البطاقة",
     "billing-address-section-title": "عنوان الفوترة",

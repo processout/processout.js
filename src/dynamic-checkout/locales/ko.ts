@@ -4,6 +4,7 @@ module ProcessOut {
     "save-for-future-label": "향후 결제를 위해 저장",
     "continue-with-apm-button": "계속하기",
     "pay-button-text": "결제",
+    "tokenize-payment-button-text": "결제 토큰화",
     "card-details-section-title": "카드 정보",
     "cardholder-name-label": "카드 소유자 이름",
     "billing-address-section-title": "청구지 주소",

@@ -4,6 +4,7 @@ module ProcessOut {
     "save-for-future-label": "Lưu cho các lần thanh toán sau",
     "continue-with-apm-button": "Tiếp tục với",
     "pay-button-text": "Thanh toán",
+    "tokenize-payment-button-text": "Mã hóa thanh toán",
     "card-details-section-title": "Chi tiết thẻ",
     "cardholder-name-label": "Tên chủ thẻ",
     "billing-address-section-title": "Địa chỉ thanh toán",
