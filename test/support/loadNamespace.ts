@@ -10,8 +10,10 @@ import * as ts from "typescript"
  *
  * Instead, we transpile the real source file and evaluate it in an isolated
  * function scope, returning the resulting `ProcessOut` namespace object. A
- * `navigator` implementation is injected so locale-dependent helpers are
- * deterministic regardless of the machine running the tests.
+ * `navigator` shim is injected so locale-dependent helpers can be exercised
+ * deterministically — pass an explicit `navigator` whenever a helper reads
+ * from it (the default is empty; e.g. `formatCurrency` would otherwise fall
+ * back to the host machine's locale).
  *
  * This exercises the exact source that ships — no re-implementation, no
  * test-only hooks baked into the production files.
