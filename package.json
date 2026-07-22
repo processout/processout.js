@@ -7,7 +7,9 @@
     "build:modal": "tsc -p src/modal && uglifyjs --compress --keep-fnames --ie8 dist/modal.js -o dist/modal.js",
     "build:test": "yarn build:processout & yarn build:modal && yarn append-debug-mode && yarn append-version",
     "build": "yarn build:processout & yarn build:modal && yarn append-version",
-    "verify": "yarn lint & yarn build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "verify": "yarn lint & yarn build && yarn test",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "format": "prettier --ignore-path .gitignore --write \"**/*.+(ts|json)\"",
@@ -35,7 +37,8 @@
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.23.0",
     "uglify-js": "3.8.0",
-    "vite": "^6.1.0"
+    "vite": "^6.1.0",
+    "vitest": "^3"
   },
   "lint-staged": {
     "*.{ts,json}": "eslint --cache --fix --no-warn-ignored"

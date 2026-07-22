@@ -15,6 +15,36 @@ module ProcessOut {
   }
 
   /**
+   * Extract the region subtag from the browser locale, e.g. "en-GB" -> "GB",
+   * "zh-Hant-TW" -> "TW". Returns "" when there is no region subtag (e.g. "en").
+   */
+  export function getBrowserRegion(): string {
+    const nav = navigator as any;
+    const locale: string = (nav.languages && nav.languages[0]) || nav.language || nav.userLanguage || '';
+    const parts = locale.split('-');
+    // Skip the language (and any script) subtag; the region is a 2-letter subtag.
+    for (let i = 1; i < parts.length; i++) {
+      if (/^[a-z]{2}$/i.test(parts[i])) {
+        return parts[i].toUpperCase();
+      }
+    }
+    return '';
+  }
+
+  /**
+   * Pick a default dialing code for the phone field. Prefers the code whose
+   * region matches the browser locale, falling back to the first available code.
+   */
+  export function getDefaultDialingCode(dialing_codes: Array<{ region_code: string, value: string }>): string {
+    if (!dialing_codes || dialing_codes.length === 0) {
+      return '';
+    }
+    const region = getBrowserRegion();
+    const match = region && dialing_codes.filter(c => c.region_code && c.region_code.toUpperCase() === region)[0];
+    return (match || dialing_codes[0]).value;
+  }
+
+  /**
    * Simple hash function for content comparison (djb2 algorithm)
    * @param str - String to hash
    * @returns Short hash string in base36 format
