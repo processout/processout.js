@@ -9,7 +9,7 @@ module ProcessOut {
     }>
     oninput?: FormFieldUpdate,
     onblur?: (key: string, value: { dialing_code: string, number: string }) => void,
-    value?: { dialing_code: string, value: string },
+    value?: { dialing_code: string, number: string },
   }
 
   const { div, label: labelEl, img, input, select, option } = elements
@@ -61,7 +61,7 @@ module ProcessOut {
     // Use StateManager for internal state management
     const { state, setState } = useComponentState({
       dialing_code: value && value.dialing_code || dialing_codes[0] && dialing_codes[0].value || '',
-      number: value && value.value || '',
+      number: value && value.number || '',
       iso: ''
     });
 

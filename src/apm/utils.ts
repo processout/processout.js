@@ -52,24 +52,56 @@ module ProcessOut {
   /**
    * Normalise a form field value to the scalar used for validation.
    *
-   * Most fields are primitives, but the phone field is an object. Depending on
-   * where it originates it carries the number under `value` (the initial /
-   * prefilled seed) or under `number` (emitted by the Phone component after the
-   * shopper interacts with it). We must read whichever is present, otherwise
-   * validation (e.g. the required check) sees a non-empty object and silently
-   * passes even when the number has been cleared.
+   * Most fields are primitives, but the phone field is an object. Its canonical
+   * key is `number` (the shape the API reads and the Phone component emits); we
+   * also read a legacy `value` key so any older/prefilled shape still validates.
+   * Without this, validation (e.g. the required check) sees a non-empty object
+   * and silently passes even when the number has been cleared.
    */
   export function getComparableFieldValue(value: unknown): unknown {
     if (isPlainObject(value)) {
       const record = value as Record<string, unknown>;
-      if ('value' in record) {
-        return record.value;
-      }
       if ('number' in record) {
         return record.number;
       }
+      if ('value' in record) {
+        return record.value;
+      }
     }
     return value;
+  }
+
+  /**
+   * Coerce a phone field value into the canonical `{ dialing_code, number }`
+   * shape the API expects (api PhoneValue → json `dialing_code` / `number`).
+   *
+   * Accepts a bare string (national/E.164 number), or an object using either
+   * the canonical `number` key or the legacy/merchant-facing `value` key, and
+   * falls back to `defaultDialingCode` when no dialing code is supplied. Keeps
+   * `initialData.phone_number.value` working while sending the correct key.
+   */
+  export function normalizePhoneValue(
+    value: unknown,
+    defaultDialingCode: string,
+  ): { dialing_code: string; number: string } {
+    if (typeof value === "string") {
+      return { dialing_code: defaultDialingCode, number: value };
+    }
+    if (isPlainObject(value)) {
+      const record = value as Record<string, unknown>;
+      const dialingCode =
+        typeof record.dialing_code === "string" && record.dialing_code
+          ? record.dialing_code
+          : defaultDialingCode;
+      let number = "";
+      if (typeof record.number === "string") {
+        number = record.number;
+      } else if (typeof record.value === "string") {
+        number = record.value;
+      }
+      return { dialing_code: dialingCode, number: number };
+    }
+    return { dialing_code: defaultDialingCode, number: "" };
   }
 
   export const isEmpty = (value: Record<string, unknown> | Array<any>): boolean => {

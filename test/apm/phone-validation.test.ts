@@ -38,10 +38,10 @@ describe("getComparableFieldValue", () => {
     expect(getComparableFieldValue({ dialing_code: "+44", number: "" })).toBe("")
   })
 
-  it("prefers `value` when both keys are present", () => {
+  it("prefers the canonical `number` when both keys are present", () => {
     expect(
       getComparableFieldValue({ value: "from-value", number: "from-number" }),
-    ).toBe("from-value")
+    ).toBe("from-number")
   })
 
   it("returns the object unchanged when neither key is present", () => {

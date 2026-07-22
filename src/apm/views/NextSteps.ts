@@ -43,12 +43,10 @@ module ProcessOut {
 
         // If we have prefilled data, use it and exit early
         if (prefilledValue) {
-          // Special handling for phone numbers - convert string to expected object format
-          if (param.type === 'phone' && typeof prefilledValue === 'string') {
-            acc[param.key] = {
-              dialing_code: param.dialing_codes[0].value,
-              value: prefilledValue,
-            };
+          // Phone values must be normalised to the canonical { dialing_code,
+          // number } shape (accepts a string or the legacy `value` key).
+          if (param.type === 'phone') {
+            acc[param.key] = normalizePhoneValue(prefilledValue, param.dialing_codes[0].value);
           } else {
             acc[param.key] = prefilledValue;
           }
@@ -60,10 +58,7 @@ module ProcessOut {
             acc[param.key] = param.available_values.find(item => item.preselected) && param.available_values.find(item => item.preselected).value || param.available_values[0] && param.available_values[0].value || ''
             break;
           case 'phone':
-            acc[param.key] = {
-              dialing_code: param.dialing_codes[0].value,
-              value: '',
-            }
+            acc[param.key] = normalizePhoneValue('', param.dialing_codes[0].value)
             break;
           default:
             acc[param.key] = ''
