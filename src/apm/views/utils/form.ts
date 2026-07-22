@@ -187,7 +187,7 @@ module ProcessOut {
           onblur: onBlur(setState),
           errored: !!error,
           disabled: state.loading,
-          number: value as PhoneState,
+          value: value as PhoneState,
         });
         break;
       }

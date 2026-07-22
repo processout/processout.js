@@ -101,10 +101,10 @@ module ProcessOut {
         dialingCodesRef.value = iso;
       }
 
-      // Trigger callback to update form state if there's a value
-      if (value) {
-        oninput && oninput(name, state, true);
-      }
+      // Note: we intentionally do NOT emit oninput here. The form value is
+      // already seeded (normalised to { dialing_code, number }) by NextSteps,
+      // and loadScript invokes this callback on every render — emitting an
+      // initial update each time would re-render the form in a loop.
 
       setState({
         dialing_code: dialingCode,

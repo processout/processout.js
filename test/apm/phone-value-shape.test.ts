@@ -81,3 +81,42 @@ describe("normalizePhoneValue", () => {
     })
   })
 })
+
+/**
+ * End-to-end shape check for a merchant prefill via
+ * `initialData.phone_number`. NextSteps seeds the form value by running the
+ * merchant-supplied object through normalizePhoneValue; that seeded object is
+ * what gets submitted verbatim. This asserts the submitted shape has exactly
+ * the keys the API reads (`dialing_code`, `number`) and that the deprecated
+ * `value` key never leaks through to the wire.
+ */
+describe("merchant prefill submitted shape (initialData.phone_number)", () => {
+  const DIALING_CODES = [{ region_code: "PT", value: "+351", name: "Portugal" }]
+
+  // Mirrors NextSteps seeding: normalizePhoneValue(prefill, dialing_codes[0].value)
+  function seedPhone(prefill: unknown) {
+    return normalizePhoneValue(prefill, DIALING_CODES[0].value)
+  }
+
+  it("submits a legacy { dialing_code, value } prefill under `number`", () => {
+    const submitted = seedPhone({ dialing_code: "+351", value: "912345678" })
+
+    expect(submitted).toEqual({ dialing_code: "+351", number: "912345678" })
+    expect(Object.keys(submitted).sort()).toEqual(["dialing_code", "number"])
+    expect("value" in submitted).toBe(false)
+  })
+
+  it("submits a canonical { dialing_code, number } prefill unchanged", () => {
+    const submitted = seedPhone({ dialing_code: "+351", number: "912345678" })
+
+    expect(submitted).toEqual({ dialing_code: "+351", number: "912345678" })
+    expect("value" in submitted).toBe(false)
+  })
+
+  it("submits a bare-string prefill with the default dialing code", () => {
+    const submitted = seedPhone("912345678")
+
+    expect(submitted).toEqual({ dialing_code: "+351", number: "912345678" })
+    expect("value" in submitted).toBe(false)
+  })
+})
