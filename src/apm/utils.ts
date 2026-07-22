@@ -49,6 +49,73 @@ module ProcessOut {
     return proto === null || proto === Object.prototype;
   }
 
+  /**
+   * Normalise a form field value to the scalar used for validation.
+   *
+   * Most fields are primitives, but the phone field is an object. Its canonical
+   * key is `number` (the shape the API reads and the Phone component emits); we
+   * also read a legacy `value` key so any older/prefilled shape still validates.
+   * Without this, validation (e.g. the required check) sees a non-empty object
+   * and silently passes even when the number has been cleared.
+   */
+  export function getComparableFieldValue(value: unknown): unknown {
+    if (isPlainObject(value)) {
+      const record = value as Record<string, unknown>;
+      if ('number' in record) {
+        return record.number;
+      }
+      if ('value' in record) {
+        return record.value;
+      }
+    }
+    return value;
+  }
+
+  /**
+   * Coerce a phone field value into the canonical `{ dialing_code, number }`
+   * shape the API expects (api PhoneValue → json `dialing_code` / `number`).
+   *
+   * Accepts a bare string/number (national/E.164 number), or an object using
+   * either the canonical `number` key or the legacy/merchant-facing `value`
+   * key, and falls back to `defaultDialingCode` when no dialing code is
+   * supplied. Numbers are coerced to strings so a numeric prefill isn't
+   * silently dropped. Keeps `initialData.phone_number.value` working while
+   * sending the correct key.
+   */
+  export function normalizePhoneValue(
+    value: unknown,
+    defaultDialingCode: string,
+  ): { dialing_code: string; number: string } {
+    // Coerce a scalar phone part to a string; anything else -> undefined.
+    const toNumberString = (candidate: unknown): string | undefined => {
+      if (typeof candidate === "string") {
+        return candidate;
+      }
+      if (typeof candidate === "number" && isFinite(candidate)) {
+        return String(candidate);
+      }
+      return undefined;
+    };
+
+    const bare = toNumberString(value);
+    if (bare !== undefined) {
+      return { dialing_code: defaultDialingCode, number: bare };
+    }
+    if (isPlainObject(value)) {
+      const record = value as Record<string, unknown>;
+      const dialingCode =
+        typeof record.dialing_code === "string" && record.dialing_code
+          ? record.dialing_code
+          : defaultDialingCode;
+      let number = toNumberString(record.number);
+      if (number === undefined) {
+        number = toNumberString(record.value);
+      }
+      return { dialing_code: dialingCode, number: number || "" };
+    }
+    return { dialing_code: defaultDialingCode, number: "" };
+  }
+
   export const isEmpty = (value: Record<string, unknown> | Array<any>): boolean => {
     if (Array.isArray(value)) {
       return value.length === 0;

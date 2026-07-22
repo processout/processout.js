@@ -41,7 +41,15 @@ module ProcessOut {
       email: string,
       phone_number: {
         dialing_code: string,
-        value: string,
+        /**
+         * The phone number. `number` is the canonical key (matches what the API
+         * expects); `value` is a deprecated alias kept for backward
+         * compatibility. Both are optional — if neither is set the phone
+         * starts empty.
+         */
+        number?: string,
+        /** @deprecated Use `number`. */
+        value?: string,
       }
     }
 }
