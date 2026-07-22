@@ -44,7 +44,8 @@ module ProcessOut {
         /**
          * The phone number. `number` is the canonical key (matches what the API
          * expects); `value` is a deprecated alias kept for backward
-         * compatibility. Provide one of them.
+         * compatibility. Both are optional — if neither is set the phone
+         * starts empty.
          */
         number?: string,
         /** @deprecated Use `number`. */

@@ -53,6 +53,19 @@ describe("normalizePhoneValue", () => {
     ).toEqual({ dialing_code: "+351", number: "111" })
   })
 
+  it("coerces numeric input to a string instead of dropping it", () => {
+    expect(normalizePhoneValue(912345678, DEFAULT)).toEqual({
+      dialing_code: DEFAULT,
+      number: "912345678",
+    })
+    expect(
+      normalizePhoneValue({ dialing_code: "+351", number: 912345678 }, DEFAULT),
+    ).toEqual({ dialing_code: "+351", number: "912345678" })
+    expect(
+      normalizePhoneValue({ dialing_code: "+351", value: 912345678 }, DEFAULT),
+    ).toEqual({ dialing_code: "+351", number: "912345678" })
+  })
+
   it("produces an empty number for empty / missing input", () => {
     expect(normalizePhoneValue("", DEFAULT)).toEqual({
       dialing_code: DEFAULT,

@@ -75,17 +75,31 @@ module ProcessOut {
    * Coerce a phone field value into the canonical `{ dialing_code, number }`
    * shape the API expects (api PhoneValue → json `dialing_code` / `number`).
    *
-   * Accepts a bare string (national/E.164 number), or an object using either
-   * the canonical `number` key or the legacy/merchant-facing `value` key, and
-   * falls back to `defaultDialingCode` when no dialing code is supplied. Keeps
-   * `initialData.phone_number.value` working while sending the correct key.
+   * Accepts a bare string/number (national/E.164 number), or an object using
+   * either the canonical `number` key or the legacy/merchant-facing `value`
+   * key, and falls back to `defaultDialingCode` when no dialing code is
+   * supplied. Numbers are coerced to strings so a numeric prefill isn't
+   * silently dropped. Keeps `initialData.phone_number.value` working while
+   * sending the correct key.
    */
   export function normalizePhoneValue(
     value: unknown,
     defaultDialingCode: string,
   ): { dialing_code: string; number: string } {
-    if (typeof value === "string") {
-      return { dialing_code: defaultDialingCode, number: value };
+    // Coerce a scalar phone part to a string; anything else -> undefined.
+    const toNumberString = (candidate: unknown): string | undefined => {
+      if (typeof candidate === "string") {
+        return candidate;
+      }
+      if (typeof candidate === "number" && isFinite(candidate)) {
+        return String(candidate);
+      }
+      return undefined;
+    };
+
+    const bare = toNumberString(value);
+    if (bare !== undefined) {
+      return { dialing_code: defaultDialingCode, number: bare };
     }
     if (isPlainObject(value)) {
       const record = value as Record<string, unknown>;
@@ -93,13 +107,11 @@ module ProcessOut {
         typeof record.dialing_code === "string" && record.dialing_code
           ? record.dialing_code
           : defaultDialingCode;
-      let number = "";
-      if (typeof record.number === "string") {
-        number = record.number;
-      } else if (typeof record.value === "string") {
-        number = record.value;
+      let number = toNumberString(record.number);
+      if (number === undefined) {
+        number = toNumberString(record.value);
       }
-      return { dialing_code: dialingCode, number: number };
+      return { dialing_code: dialingCode, number: number || "" };
     }
     return { dialing_code: defaultDialingCode, number: "" };
   }
