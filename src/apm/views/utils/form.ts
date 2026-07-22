@@ -24,12 +24,7 @@ module ProcessOut {
       return
     }
 
-    let actualValue;
-    if (isPlainObject(value) && 'value' in value) {
-      actualValue = value.value;
-    } else {
-      actualValue = value;
-    }
+    const actualValue = getComparableFieldValue(value);
 
     switch (true) {
       case validation.required &&

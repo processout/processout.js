@@ -49,6 +49,29 @@ module ProcessOut {
     return proto === null || proto === Object.prototype;
   }
 
+  /**
+   * Normalise a form field value to the scalar used for validation.
+   *
+   * Most fields are primitives, but the phone field is an object. Depending on
+   * where it originates it carries the number under `value` (the initial /
+   * prefilled seed) or under `number` (emitted by the Phone component after the
+   * shopper interacts with it). We must read whichever is present, otherwise
+   * validation (e.g. the required check) sees a non-empty object and silently
+   * passes even when the number has been cleared.
+   */
+  export function getComparableFieldValue(value: unknown): unknown {
+    if (isPlainObject(value)) {
+      const record = value as Record<string, unknown>;
+      if ('value' in record) {
+        return record.value;
+      }
+      if ('number' in record) {
+        return record.number;
+      }
+    }
+    return value;
+  }
+
   export const isEmpty = (value: Record<string, unknown> | Array<any>): boolean => {
     if (Array.isArray(value)) {
       return value.length === 0;
