@@ -4,6 +4,7 @@ module ProcessOut {
     "save-for-future-label": "எதிர்கால கட்டணங்களுக்காகச் சேமிக்கவும்",
     "continue-with-apm-button": "இதனுடன் தொடரவும்",
     "pay-button-text": "செலுத்து",
+    "tokenize-payment-button-text": "கட்டணத்தை டோக்கனாக்கு",
     "card-details-section-title": "அட்டை விவரங்கள்",
     "cardholder-name-label": "அட்டைதாரரின் பெயர்",
     "billing-address-section-title": "பில்லிங் முகவரி",

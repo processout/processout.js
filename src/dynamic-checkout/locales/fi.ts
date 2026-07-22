@@ -4,6 +4,7 @@ module ProcessOut {
     "save-for-future-label": "Tallenna tulevia maksuja varten",
     "continue-with-apm-button": "Jatka tavalla",
     "pay-button-text": "Maksa",
+    "tokenize-payment-button-text": "Tokenisoi maksu",
     "card-details-section-title": "Kortin tiedot",
     "cardholder-name-label": "Kortinhaltijan nimi",
     "billing-address-section-title": "Laskutusosoite",

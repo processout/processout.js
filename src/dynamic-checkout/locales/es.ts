@@ -4,6 +4,7 @@ module ProcessOut {
     "save-for-future-label": "Guardar para pagos futuros",
     "continue-with-apm-button": "Continuar con",
     "pay-button-text": "Pagar",
+    "tokenize-payment-button-text": "Tokenizar pago",
     "card-details-section-title": "Detalles de la tarjeta",
     "cardholder-name-label": "Nombre del titular de la tarjeta",
     "billing-address-section-title": "Dirección de facturación",
