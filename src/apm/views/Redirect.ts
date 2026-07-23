@@ -147,7 +147,9 @@ module ProcessOut {
         return page({ className: 'redirect-headless-empty', 'aria-hidden': 'true' })
       }
 
-      const redirectLabel = `Pay ${formatCurrency(this.props.config.invoice.amount, this.props.config.invoice.currency)}`;
+      const redirectLabel = this.props.config.invoice
+        ? `Pay ${formatCurrency(this.props.config.invoice.amount, this.props.config.invoice.currency)}`
+        : (this.props.config.redirect?.hint ?? `Continue`);
       return (
         Main({
             config: this.props.config,
