@@ -455,10 +455,45 @@ module ProcessOut {
         public static getIIN(number: string): string {
             number = Card.parseNumber(number); // Remove potential spaces
 
+            // Only expose an 8-digit IIN for schemes the backend allows to
+            // do so; every other scheme is capped at 6 to avoid
+            // over-exposing the BIN. Mirrors api (controllers/card_inn.go).
+            var max = Card.canExpose8DigitIIN(number) ? 8 : 6;
             var l = number.length;
-            if (l > 8)
-                l = 8;
+            if (l > max)
+                l = max;
             return number.substring(0, l);
+        }
+
+        /**
+         * Schemes permitted to surface an 8-digit IIN, mirroring the backend
+         * allow-list in api (controllers/card_inn.go). Every other scheme -
+         * notably American Express - is capped at 6 digits. Note the JS
+         * scheme key "union-pay" maps to the backend's "china union pay".
+         */
+        private static iin8DigitSchemes: Array<string> = [
+            "visa", "mastercard", "discover", "jcb", "union-pay", "carte bancaire"
+        ];
+
+        /**
+         * canExpose8DigitIIN reports whether the card number's detected
+         * scheme(s) are allowed to surface an 8-digit IIN. Conservative: every
+         * detected scheme must be in the allow-list, so co-badged or ambiguous
+         * prefixes (and unknown schemes) fall back to 6 digits.
+         * @param {string} number
+         * @return {boolean}
+         */
+        public static canExpose8DigitIIN(number: string): boolean {
+            var schemes = Card.getPossibleSchemes(number);
+            if (schemes.length == 0)
+                return false;
+
+            for (var i = 0; i < schemes.length; i++) {
+                if (Card.iin8DigitSchemes.indexOf(schemes[i]) === -1)
+                    return false;
+            }
+
+            return true;
         }
 
         /**
