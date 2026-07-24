@@ -19,7 +19,9 @@ module ProcessOut {
    * "zh-Hant-TW" -> "TW". Returns "" when there is no region subtag (e.g. "en").
    */
   export function getBrowserRegion(): string {
-    const nav = navigator as any;
+    // `userLanguage` is a legacy IE-only property that isn't on the standard
+    // Navigator type, so widen the type just enough to read it as a fallback.
+    const nav = navigator as Navigator & { userLanguage?: string };
     const locale: string = (nav.languages && nav.languages[0]) || nav.language || nav.userLanguage || '';
     const parts = locale.split('-');
     // Skip the language (and any script) subtag; the region is a 2-letter subtag.
