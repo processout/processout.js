@@ -85,6 +85,19 @@ module ProcessOut {
         /** When set, iframe modal and new-window overlay are appended here instead of document.body */
         public overlayMountParent?: HTMLElement;
 
+        /**
+         * When false, the 500ms monitor will NOT treat a closed payment
+         * window/tab as a cancellation. Driven by the
+         * no_listen_to_window_closed action metadata flag. This is a
+         * workaround for gateways
+         * (e.g. MercadoPago) whose redirect flow transiently closes and
+         * reopens the window, which would otherwise fire a spurious
+         * "customer.canceled" ({ reason: "tab_closed" }). Explicit user
+         * cancellation and postMessage-driven completion are unaffected.
+         * @type {boolean}
+         */
+        public listenToWindowClosed: boolean = true;
+
         public static ThreeDSChallengeFlow = "three-d-s-challenge-flow";
         public static ThreeDSChallengeFlowNoIframe = "three-d-s-challenge-flow-no-iframe";
         public static ThreeDSFingerprintFlow = "three-d-s-fingerprint-flow";
@@ -380,6 +393,15 @@ module ProcessOut {
                   })
                   refocus()
                 }
+                // Some gateways (e.g. MercadoPago) transiently close/reopen
+                // the redirect window, which would make the checks below fire
+                // a false "customer.canceled". When the action opts out via
+                // metadata, we skip all window-closed detection entirely and
+                // rely on explicit cancellation / postMessage completion.
+                if (!t.options.listenToWindowClosed) {
+                    return;
+                }
+
                 try {
                     // We want to run the newWindow.closed condition in a try
                     // catch as Chrome has a bug in which the access to the

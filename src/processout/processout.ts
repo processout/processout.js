@@ -1853,6 +1853,16 @@ module ProcessOut {
             )
           }.bind(this)
 
+          // Some gateways (e.g. MercadoPago) transiently close and reopen the
+          // redirect window/tab, which would make the ActionHandler raise a
+          // spurious "customer.canceled" ({ reason: "tab_closed" }). The action
+          // can opt out of window-closed monitoring via the
+          // no_listen_to_window_closed metadata flag (same mechanism as the
+          // no_iframe flag above).
+          var noListenToWindowClosed =
+            data.customer_action.metadata &&
+            data.customer_action.metadata.no_listen_to_window_closed === "true"
+
           switch (data.customer_action.type) {
             case "url":
               var opts = ActionHandlerOptions.ThreeDSChallengeFlow
@@ -1861,6 +1871,10 @@ module ProcessOut {
                 data.customer_action.metadata.no_iframe === "true"
               ) {
                 opts = ActionHandlerOptions.ThreeDSChallengeFlowNoIframe
+              }
+              var urlActionOptions = new ActionHandlerOptions(opts)
+              if (noListenToWindowClosed) {
+                urlActionOptions.listenToWindowClosed = false
               }
               // This is for 3DS1
               this.handleAction(
@@ -1880,7 +1894,7 @@ module ProcessOut {
                   )
                 }.bind(this),
                 error,
-                new ActionHandlerOptions(opts),
+                urlActionOptions,
                 resourceID,
               )
               break
@@ -1910,12 +1924,18 @@ module ProcessOut {
               break
 
             case "redirect":
+              var redirectActionOptions = new ActionHandlerOptions(
+                ActionHandlerOptions.ThreeDSChallengeFlow,
+              )
+              if (noListenToWindowClosed) {
+                redirectActionOptions.listenToWindowClosed = false
+              }
               // This is for 3DS2
               this.handleAction(
                 data.customer_action.value,
                 nextStep,
                 error,
-                new ActionHandlerOptions(ActionHandlerOptions.ThreeDSChallengeFlow),
+                redirectActionOptions,
                 resourceID,
               )
               break
