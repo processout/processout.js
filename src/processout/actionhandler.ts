@@ -533,6 +533,7 @@ module ProcessOut {
             var cur = ActionHandler.listenerCount;
             const telemetryClient = this.instance.telemetryClient
             const resourceID = this.resourceID;
+            var self = this;
 
             var alreadyDone = false;
             var handler = function(event) {
@@ -544,6 +545,18 @@ module ProcessOut {
                 if (ActionHandler.listenerCount != cur) {
                     // Reset the timer if it hasn't been done already
                     if (timer) { clearInterval(timer); timer = null; }
+                    return;
+                }
+
+                // Some gateways (e.g. MercadoPago cash) transiently close and
+                // reopen the payment window/tab. The checkout page running in
+                // that window tells us — via the no_listen_to_window_closed
+                // action metadata — to stop treating window.closed as a
+                // cancellation. This is NOT a terminal action, so we flip the
+                // flag the monitor reads and keep listening for the real
+                // success/cancel/error outcome.
+                if (data.action == "disable-window-close-monitoring") {
+                    self.options.listenToWindowClosed = false;
                     return;
                 }
 

@@ -1863,6 +1863,25 @@ module ProcessOut {
             data.customer_action.metadata &&
             data.customer_action.metadata.no_listen_to_window_closed === "true"
 
+          // When we're running inside the hosted-checkout tab (i.e. we have a
+          // window.opener), tell the parent page's ActionHandler — which is
+          // the one polling window.closed on this tab — to stop treating a
+          // closed window as a cancellation. The local ActionHandlerOptions
+          // below cover the in-tab handler; this covers the opener.
+          if (noListenToWindowClosed && window.opener && window.opener !== window) {
+            try {
+              window.opener.postMessage(
+                JSON.stringify({
+                  namespace: Message.checkoutNamespace,
+                  action: "disable-window-close-monitoring",
+                }),
+                "*",
+              )
+            } catch (e) {
+              // Cross-origin opener access can throw; nothing else to do.
+            }
+          }
+
           switch (data.customer_action.type) {
             case "url":
               var opts = ActionHandlerOptions.ThreeDSChallengeFlow
