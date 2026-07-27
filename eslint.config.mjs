@@ -8,6 +8,11 @@ export default [
   { files: ["**/*.{js,mjs,cjs,ts}"] },
   { files: ["**/*.js"], languageOptions: { sourceType: "script" } },
   { languageOptions: { globals: globals.browser } },
+  // Test files and Vitest config run in Node, not the browser.
+  {
+    files: ["test/**/*.ts", "vitest.config.ts"],
+    languageOptions: { globals: { ...globals.node } },
+  },
   { ignores: ["dist/*", "node_modules/*", "src/polyfills/*"] },
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,

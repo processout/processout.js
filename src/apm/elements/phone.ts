@@ -60,14 +60,14 @@ module ProcessOut {
   export const Phone = ({ dialing_codes, name, oninput, onblur, disabled, label, errored, className, value, id, ...props }: PhoneProps) => {
     // Use StateManager for internal state management
     const { state, setState } = useComponentState({
-      dialing_code: value && value.dialing_code || dialing_codes[0] && dialing_codes[0].value || '',
+      dialing_code: value && value.dialing_code || getDefaultDialingCode(dialing_codes),
       number: value && value.value || '',
       iso: ''
     });
 
     // Load libphonenumber and handle all state initialization in callback
     ContextImpl.context.page.loadScript('libphonenumber', 'https://cdnjs.cloudflare.com/ajax/libs/google-libphonenumber/3.2.42/libphonenumber.min.js', () => {
-      let dialingCode = state.dialing_code || dialing_codes[0].value;
+      let dialingCode = state.dialing_code || getDefaultDialingCode(dialing_codes);
       let phoneNumber = state.number || '';
       let iso = state.iso;
 
