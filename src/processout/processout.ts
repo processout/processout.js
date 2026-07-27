@@ -1877,6 +1877,22 @@ module ProcessOut {
                 }),
                 "*",
               )
+              try {
+                console.log(
+                  "[ProcessOut] sent disable-window-close-monitoring to opener",
+                  { invoiceId: resourceID },
+                )
+              } catch (e) {}
+              this.telemetryClient.reportWarning({
+                host: window && window.location ? window.location.host : "",
+                fileName: "processout.ts/handleCardActions",
+                lineNumber: 0,
+                message: "[action-window-monitor] sent disable-window-close-monitoring to opener",
+                stack: "apm-window-monitoring",
+                invoiceId: resourceID,
+                category: "apm-window-monitoring",
+                data: { customerActionType: data.customer_action.type },
+              })
             } catch (e) {
               // Cross-origin opener access can throw; nothing else to do.
             }

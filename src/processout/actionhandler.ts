@@ -332,7 +332,28 @@ module ProcessOut {
                 ({topLayer, newWindow} = this.createNewTabOrWindow(url));
             }
 
+            // Timestamp the moment the window/tab was opened so every
+            // subsequent log carries an elapsed-ms value. This is what lets us
+            // see the race between a closed-window cancel and a late
+            // disable-window-close-monitoring message from the checkout tab.
+            var openedAt = Date.now();
+
+            // Snapshot the state right after the window/tab was opened. If a
+            // cancellation fires "as soon as the page opened", this tells us
+            // whether the window came back already-closed, whether the action
+            // was pre-canceled, and whether window-closed monitoring is on.
+            this.debugLog("action window opened", {
+                flow: ActionFlow[this.options.flow],
+                hasNewWindow: !!newWindow,
+                newWindowClosed: newWindow ? newWindow.closed : null,
+                listenToWindowClosed: this.options.listenToWindowClosed,
+                isCanceled: this.isCanceled(),
+                hasOpener: !!(window.opener && window.opener !== window),
+                url: url,
+            });
+
             if (!newWindow) {
+                this.debugLog("no window returned -> popup-blocked");
                 error(new Exception("customer.popup-blocked"));
                 refocus();
                 return null;
@@ -343,20 +364,38 @@ module ProcessOut {
             // a misleading "customer.canceled" error. Only applies to real popup flows;
             // MockedIFrameWindow (IFrame/FingerprintIframe) initialises closed as undefined.
             if ((this.options.flow === ActionFlow.NewTab || this.options.flow === ActionFlow.NewWindow) && newWindow.closed) {
+                this.debugLog("window already closed right after open -> popup-blocked", {
+                    flow: ActionFlow[this.options.flow],
+                });
                 error(new Exception("customer.popup-blocked"));
                 refocus();
                 return null;
             }
 
+            // Grace window: an APM redirect tab often navigates straight to
+            // the gateway's login page the instant it opens, and the checkout
+            // tab's disable-window-close-monitoring message can arrive after
+            // the first 500ms tick. During this window we still LOG a
+            // would-be closed-window cancel but do not act on it, giving the
+            // message time to land. Explicit cancellation is unaffected.
+            var WINDOW_CLOSED_GRACE_MS = 2000;
+
             // We now want to monitor the payment page
             var timer = setInterval(function() {
                 if (!timer) return;
+
+                var elapsed = Date.now() - openedAt;
 
                 if (t.isCanceled()) {
                   clearInterval(timer)
                   timer = null
                   newWindow.close()
                   error(new Exception("customer.canceled"))
+
+                  t.debugLog("cancel via isCanceled() in timer", {
+                    elapsedMs: elapsed,
+                    listenToWindowClosed: t.options.listenToWindowClosed,
+                  })
 
                   telemetryClient.reportWarning({
                     host: window && window.location ? window.location.host : "",
@@ -379,6 +418,11 @@ module ProcessOut {
                   clearInterval(timer)
                   timer = null
                   error(new Exception("customer.canceled", undefined, { reason: "tab_closed" }))
+
+                  t.debugLog("cancel via window closed (cancelf)", {
+                    elapsedMs: elapsed,
+                    listenToWindowClosed: t.options.listenToWindowClosed,
+                  })
 
                   telemetryClient.reportWarning({
                     host: window && window.location ? window.location.host : "",
@@ -408,9 +452,32 @@ module ProcessOut {
                     // window is lost when the user navigates back (ie clicks
                     // on the back button)
                     if (!newWindow || newWindow.closed) {
+                        // Within the grace window, log but don't cancel yet —
+                        // this is where the "cancels as soon as it opens" race
+                        // shows up, and where a late disable message can still
+                        // save the flow.
+                        if (elapsed < WINDOW_CLOSED_GRACE_MS) {
+                            t.debugLog("window reported closed within grace window; deferring cancel", {
+                                elapsedMs: elapsed,
+                                graceMs: WINDOW_CLOSED_GRACE_MS,
+                                hasNewWindow: !!newWindow,
+                            });
+                            return;
+                        }
                         cancelf();
                     }
                 } catch (err) {
+                    // Accessing newWindow.closed can throw (Chrome back-button
+                    // bug). Honour the same grace window so a transient
+                    // access error right after open doesn't cancel the flow.
+                    if (elapsed < WINDOW_CLOSED_GRACE_MS) {
+                        t.debugLog("error reading window.closed within grace window; deferring cancel", {
+                            elapsedMs: elapsed,
+                            graceMs: WINDOW_CLOSED_GRACE_MS,
+                            errorMessage: err && err.message ? err.message : String(err),
+                        });
+                        return;
+                    }
                     // Close the newWindow, just in case it didn't crash for
                     // that reason
                     try { newWindow.close(); } catch (err) { }
@@ -535,11 +602,24 @@ module ProcessOut {
             const resourceID = this.resourceID;
             var self = this;
 
+            var listenStartedAt = Date.now();
             var alreadyDone = false;
             var handler = function(event) {
                 var data = Message.parseEvent(event);
                 if (data.namespace != Message.checkoutNamespace)
                     return;
+
+                // Trace every checkout-namespace message we receive, with the
+                // time since we started listening. Comparing this against the
+                // "cancel via window closed" elapsedMs shows whether the
+                // disable message simply arrived too late.
+                self.debugLog("checkout message received", {
+                    action: data.action,
+                    elapsedSinceListenMs: Date.now() - listenStartedAt,
+                    isLatestListener: ActionHandler.listenerCount == cur,
+                    alreadyDone: alreadyDone,
+                    listenToWindowClosed: self.options.listenToWindowClosed,
+                });
 
                 // Not the latest listener anymore
                 if (ActionHandler.listenerCount != cur) {
@@ -557,6 +637,7 @@ module ProcessOut {
                 // success/cancel/error outcome.
                 if (data.action == "disable-window-close-monitoring") {
                     self.options.listenToWindowClosed = false;
+                    self.debugLog("window-close monitoring disabled by checkout tab");
                     return;
                 }
 
@@ -647,6 +728,34 @@ module ProcessOut {
          */
         public isCanceled(): boolean {
             return this.canceled;
+        }
+
+        /**
+         * debugLog emits a trace both to the browser console and to the
+         * telemetry endpoint (so it shows up in server-side logs alongside the
+         * SCRIPT_VERSION). Used to diagnose spurious window-closed
+         * cancellations for APM redirects (e.g. MercadoPago).
+         * @param {string} message
+         * @param {Record<string, any>} data
+         * @return {void}
+         */
+        protected debugLog(message: string, data?: Record<string, any>): void {
+            try {
+                console.log("[ProcessOut.ActionHandler] " + message, data || "");
+            } catch (e) { /* console may be unavailable */ }
+
+            try {
+                this.instance.telemetryClient.reportWarning({
+                    host: window && window.location ? window.location.host : "",
+                    fileName: "actionhandler.ts/ActionHandler",
+                    lineNumber: 0,
+                    message: "[action-window-monitor] " + message,
+                    stack: "apm-window-monitoring",
+                    invoiceId: this.resourceID,
+                    category: "apm-window-monitoring",
+                    data: data,
+                });
+            } catch (e) { /* never let logging break the flow */ }
         }
 
     }
