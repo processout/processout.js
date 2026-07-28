@@ -243,6 +243,15 @@ module ProcessOut {
 
       if (currentValue.length < getDialingCode(dialingCode).length) {
         phoneNumber = cleanNumber;
+        // Propagate the (now empty/cleared) number to the form so validation
+        // reflects it — otherwise clearing the field back into the dialing-code
+        // prefix leaves a stale value in the form and required checks pass.
+        if (state.number !== phoneNumber) {
+          oninput && oninput(name, {
+            dialing_code: dialingCode,
+            number: phoneNumber,
+          });
+        }
         dialingCodesRef.focus()
         dialingCodesRef.showPicker()
         setState({
