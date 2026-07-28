@@ -4,6 +4,7 @@ module ProcessOut {
     "save-for-future-label": "Lagre for fremtidige betalinger",
     "continue-with-apm-button": "Fortsett med",
     "pay-button-text": "Betal",
+    "tokenize-payment-button-text": "Tokeniser betaling",
     "card-details-section-title": "Kortdetaljer",
     "cardholder-name-label": "Kortholders navn",
     "billing-address-section-title": "Faktureringsadresse",

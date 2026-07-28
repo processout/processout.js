@@ -4,6 +4,7 @@ module ProcessOut {
     "save-for-future-label": "今後の支払いのために保存",
     "continue-with-apm-button": "で続行",
     "pay-button-text": "支払う",
+    "tokenize-payment-button-text": "支払いをトークン化",
     "card-details-section-title": "カード情報",
     "cardholder-name-label": "カード名義人",
     "billing-address-section-title": "請求先住所",

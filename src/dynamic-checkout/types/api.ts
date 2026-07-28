@@ -76,6 +76,7 @@ type Card = {
   scheme_selection_enabled: boolean
   scheme_selection_default_order: string[]
   saving_allowed: boolean
+  tokenize_only?: boolean
   billing_address: BillingAddress
   restrict_to_iins: string[] | null
   restrict_to_schemes: string[] | null

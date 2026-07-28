@@ -144,6 +144,10 @@ module ProcessOut {
         cardPaymentOptions["save_source"] = saveForFutureCheckbox.checked
       }
 
+      if (this.paymentMethod.card.tokenize_only) {
+        cardPaymentOptions["save_source"] = true
+      }
+
       this.processOutInstance.makeCardPayment(
         this.paymentConfig.invoiceId,
         cardToken,
@@ -318,12 +322,14 @@ module ProcessOut {
         saveForFutureAttributes.disabled = "disabled"
       }
 
-      const payButtonText =
-        this.paymentConfig.payButtonText ||
-        `${Translations.getText(
-          "pay-button-text",
-          this.paymentConfig.locale,
-        )} ${this.paymentConfig.invoiceDetails.amount} ${this.paymentConfig.invoiceDetails.currency}`
+      const defaultPayButtonText = this.paymentMethod.card.tokenize_only
+        ? Translations.getText("tokenize-payment-button-text", this.paymentConfig.locale)
+        : `${Translations.getText(
+            "pay-button-text",
+            this.paymentConfig.locale,
+          )} ${this.paymentConfig.invoiceDetails.amount} ${this.paymentConfig.invoiceDetails.currency}`
+
+      const payButtonText = this.paymentConfig.payButtonText || defaultPayButtonText
 
       const [
         cardFormWrapper,
@@ -389,9 +395,12 @@ module ProcessOut {
 
       HTMLElements.appendChildren(cardFormSectionsWrapper, cardFormSectionsChildren)
 
+      const canShowSaveForFuture =
+        this.paymentMethod.card.saving_allowed && !this.paymentMethod.card.tokenize_only
+
       const children = [
         cardFormSectionsWrapper,
-        this.paymentMethod.card.saving_allowed ? saveForFutureWrapper : null,
+        canShowSaveForFuture ? saveForFutureWrapper : null,
         payButton,
       ].filter(Boolean)
 
