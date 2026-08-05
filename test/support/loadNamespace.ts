@@ -56,3 +56,16 @@ export function loadApmUtils(navigator: FakeNavigator = {}): Record<string, any>
   run(moduleShim, moduleShim.exports, navigator)
   return moduleShim.exports
 }
+
+/**
+ * Load a self-contained namespace source file and return its `ProcessOut`
+ * namespace. Only suitable for files with no dependencies on the rest of
+ * the bundle or on browser globals.
+ */
+export function loadNamespaceFile(relativePath: string): Record<string, any> {
+  const js = compile(relativePath)
+  const moduleShim = { exports: {} as Record<string, any> }
+  const run = new Function("module", "exports", `${js}\nmodule.exports = ProcessOut;`)
+  run(moduleShim, moduleShim.exports)
+  return moduleShim.exports
+}
