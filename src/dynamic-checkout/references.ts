@@ -38,6 +38,7 @@
 /// <reference path="locales/pt.ts" />
 /// <reference path="locales/ta.ts" />
 /// <reference path="locales/vi.ts" />
+/// <reference path="utils/errors.ts" />
 /// <reference path="utils/events.ts" />
 /// <reference path="utils/translations.ts" />
 /// <reference path="utils/elements.ts" />

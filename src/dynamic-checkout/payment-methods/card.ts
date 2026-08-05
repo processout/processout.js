@@ -220,7 +220,7 @@ module ProcessOut {
     }
 
     private handleCardPaymentError(error) {
-      if (error.code === "customer.canceled") {
+      if (isCustomerCancellationError(error)) {
         this.resetContainerHtml().appendChild(
           new DynamicCheckoutPaymentCancelledView(this.processOutInstance, this.paymentConfig)
             .element,

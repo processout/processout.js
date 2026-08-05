@@ -161,7 +161,7 @@ module ProcessOut {
             )
           },
           error => {
-            if (error.code === "customer.canceled") {
+            if (isCustomerCancellationError(error)) {
               this.resetContainerHtml().appendChild(
                 new DynamicCheckoutPaymentCancelledView(
                   this.processOutInstance,
@@ -255,7 +255,7 @@ module ProcessOut {
     }
 
     private handlePaymentError(error) {
-      if (error.code === "customer.canceled") {
+      if (isCustomerCancellationError(error)) {
         this.resetContainerHtml().appendChild(
           new DynamicCheckoutPaymentCancelledView(this.processOutInstance, this.paymentConfig)
             .element,
