@@ -37,18 +37,16 @@ module ProcessOut {
 
     state.values = forms.reduce((acc, form) => {
       form.parameters.parameter_definitions.forEach(param => {
-        // Check for prefilled data from initialData
-        const initialData = ContextImpl.context.initialData;
-        const prefilledValue = initialData && initialData[param.key];
+        // Check for prefilled data from initialData, by gateway parameter key or
+        // by canonical key for the parameter type (email, phone_number).
+        const prefilledValue = resolvePrefilledValue(ContextImpl.context.initialData, param);
 
         // If we have prefilled data, use it and exit early
         if (prefilledValue) {
-          // Special handling for phone numbers - convert string to expected object format
-          if (param.type === 'phone' && typeof prefilledValue === 'string') {
-            acc[param.key] = {
-              dialing_code: param.dialing_codes[0].value,
-              value: prefilledValue,
-            };
+          // Phone accepts an E.164 string or an object; both need splitting into
+          // the { dialing_code, value } shape the field renders.
+          if (param.type === 'phone') {
+            acc[param.key] = normalizePhoneValue(prefilledValue, param.dialing_codes);
           } else {
             acc[param.key] = prefilledValue;
           }
