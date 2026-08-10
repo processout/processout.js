@@ -93,12 +93,15 @@ module ProcessOut {
               this.setButtonLoading()
               this.tokenizedCardId = undefined
 
-              DynamicCheckoutEventsUtils.dispatchPaymentSubmittedEvent({
-                payment_method_name: "card",
-                payment_method_display_name: this.paymentMethodDisplayName,
-                invoice_id: this.paymentConfig.invoiceId,
-                return_url: this.paymentConfig.invoiceDetails.return_url || null,
-              })
+              DynamicCheckoutEventsUtils.dispatchPaymentSubmittedEvent(
+                {
+                  payment_method_name: "card",
+                  payment_method_display_name: this.paymentMethodDisplayName,
+                  invoice_id: this.paymentConfig.invoiceId,
+                  return_url: this.paymentConfig.invoiceDetails.return_url || null,
+                },
+                this.paymentConfig.isTokenizeOnly(),
+              )
 
               this.processOutInstance.tokenize(
                 cardForm,
@@ -118,6 +121,7 @@ module ProcessOut {
             this.paymentConfig.invoiceDetails.return_url || null,
             undefined,
             this.paymentMethodDisplayName,
+            this.paymentConfig.isTokenizeOnly(),
           ),
       )
     }
@@ -174,23 +178,28 @@ module ProcessOut {
         this.paymentConfig.invoiceDetails.return_url || null,
         undefined,
         this.paymentMethodDisplayName,
+        this.paymentConfig.isTokenizeOnly(),
       )
     }
 
     private handleCardPaymentSuccess(invoiceId: string, data?: any) {
-      DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent({
-        invoice_id: invoiceId,
-        return_url: this.paymentConfig.invoiceDetails.return_url || null,
-        payment_method_name: "card",
-        payment_method_display_name: this.paymentMethodDisplayName,
-        ...(this.tokenizedCardId && { card_id: this.tokenizedCardId }),
-        customer_token_id: data?.customer_token_id,
-        ...DynamicCheckoutEventsUtils.getPaymentStatusEventDetail(data),
-      })
+      DynamicCheckoutEventsUtils.dispatchPaymentSuccessEvent(
+        {
+          invoice_id: invoiceId,
+          return_url: this.paymentConfig.invoiceDetails.return_url || null,
+          payment_method_name: "card",
+          payment_method_display_name: this.paymentMethodDisplayName,
+          ...(this.tokenizedCardId && { card_id: this.tokenizedCardId }),
+          customer_token_id: data?.customer_token_id,
+          ...DynamicCheckoutEventsUtils.getPaymentStatusEventDetail(data),
+        },
+        this.paymentConfig.isTokenizeOnly(),
+      )
 
       if (this.paymentConfig.showStatusMessage) {
         this.resetContainerHtml().appendChild(
-          new DynamicCheckoutPaymentSuccessView(this.processOutInstance, this.paymentConfig).element,
+          new DynamicCheckoutPaymentSuccessView(this.processOutInstance, this.paymentConfig)
+            .element,
         )
       } else if (
         !this.paymentConfig.showStatusMessage &&
@@ -205,18 +214,22 @@ module ProcessOut {
     private handleCardPaymentPending(invoiceId: string, _reason: string | null, data?: any) {
       if (this.paymentConfig.showStatusMessage) {
         this.resetContainerHtml().appendChild(
-          new DynamicCheckoutPaymentPendingView(this.processOutInstance, this.paymentConfig).element,
+          new DynamicCheckoutPaymentPendingView(this.processOutInstance, this.paymentConfig)
+            .element,
         )
       }
 
-      DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent({
-        payment_method_name: "card",
-        payment_method_display_name: this.paymentMethodDisplayName,
-        invoice_id: invoiceId,
-        return_url: this.paymentConfig.invoiceDetails.return_url || null,
-        ...(this.tokenizedCardId && { card_id: this.tokenizedCardId }),
-        ...DynamicCheckoutEventsUtils.getPaymentStatusEventDetail(data),
-      })
+      DynamicCheckoutEventsUtils.dispatchPaymentPendingEvent(
+        {
+          payment_method_name: "card",
+          payment_method_display_name: this.paymentMethodDisplayName,
+          invoice_id: invoiceId,
+          return_url: this.paymentConfig.invoiceDetails.return_url || null,
+          ...(this.tokenizedCardId && { card_id: this.tokenizedCardId }),
+          ...DynamicCheckoutEventsUtils.getPaymentStatusEventDetail(data),
+        },
+        this.paymentConfig.isTokenizeOnly(),
+      )
     }
 
     private handleCardPaymentError(error) {
@@ -226,16 +239,19 @@ module ProcessOut {
             .element,
         )
 
-        DynamicCheckoutEventsUtils.dispatchPaymentCancelledEvent({
-          payment_method_name: "card",
-          payment_method_display_name: this.paymentMethodDisplayName,
-          invoice_id: this.paymentConfig.invoiceId,
-          return_url: this.paymentConfig.invoiceDetails.return_url || null,
-          // Card 3DS challenges run in an iframe overlay (no tab/window).
-          // The SDK can still report iframe closes as reason "tab_closed", but we treat this as an in-overlay cancel.
-          // For event reporting we therefore force `tab_closed: false` below.
-          tab_closed: false,
-        })
+        DynamicCheckoutEventsUtils.dispatchPaymentCancelledEvent(
+          {
+            payment_method_name: "card",
+            payment_method_display_name: this.paymentMethodDisplayName,
+            invoice_id: this.paymentConfig.invoiceId,
+            return_url: this.paymentConfig.invoiceDetails.return_url || null,
+            // Card 3DS challenges run in an iframe overlay (no tab/window).
+            // The SDK can still report iframe closes as reason "tab_closed", but we treat this as an in-overlay cancel.
+            // For event reporting we therefore force `tab_closed: false` below.
+            tab_closed: false,
+          },
+          this.paymentConfig.isTokenizeOnly(),
+        )
 
         return
       }
@@ -261,6 +277,7 @@ module ProcessOut {
         this.paymentConfig.invoiceDetails.return_url || null,
         undefined,
         this.paymentMethodDisplayName,
+        this.paymentConfig.isTokenizeOnly(),
       )
     }
 
@@ -724,7 +741,7 @@ module ProcessOut {
       payButton.textContent = ""
       payButton.setAttribute(
         "aria-label",
-        Translations.getText("processing-payment-label", this.paymentConfig.locale),
+        getStatusMessage("processing-payment-label", this.paymentConfig),
       )
 
       const spinner = HTMLElements.createElement({
