@@ -57,7 +57,7 @@
             form.getNumberField().on("input", function (e) {
               if (e.card_number_length == 8) {
                 client.getCardInformation(
-                  e.card_iin,
+                  e.card_iin8,
                   function(cardInfo) {
                     // Check for combo card types and display radio buttons if they exist
                     if (cardInfo.combo_card_types && Array.isArray(cardInfo.combo_card_types) && cardInfo.combo_card_types.length > 0) {

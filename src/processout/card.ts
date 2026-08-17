@@ -455,13 +455,25 @@ module ProcessOut {
         public static getIIN(number: string): string {
             number = Card.parseNumber(number); // Remove potential spaces
 
+            var l = number.length;
+            if (l > 6)
+                l = 6;
+            return number.substring(0, l);
+        }
+
+        /**
+         * GetIIN8 returns the IIN of the card number, exposing up to 8 digits
+         * when PCI rules allow it (scheme in the allow-list and a 16-digit
+         * PAN) and 6 digits otherwise.
+         * @param {string} number
+         * @return {string}
+         */
+        public static getIIN8(number: string): string {
+            number = Card.parseNumber(number); // Remove potential spaces
+
             if (number.length < 6)
                 return number;
 
-            // Only expose an 8-digit IIN when PCI rules allow it: the scheme
-            // must permit it and the full PAN must be exactly 16 digits.
-            // Everything else caps at 6 to avoid over-exposing the BIN.
-            // Mirrors binder's TruncateNumber / api (controllers/card_inn.go).
             if (Card.canExpose8DigitIIN(number))
                 return number.substring(0, 8);
 
