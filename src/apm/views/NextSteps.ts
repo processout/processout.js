@@ -61,7 +61,7 @@ module ProcessOut {
             break;
           case 'phone':
             acc[param.key] = {
-              dialing_code: param.dialing_codes[0].value,
+              dialing_code: getDefaultDialingCode(param.dialing_codes),
               value: '',
             }
             break;

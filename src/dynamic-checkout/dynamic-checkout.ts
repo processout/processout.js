@@ -162,7 +162,7 @@ module ProcessOut {
       this.widgetWrapper = document.createElement("div")
       this.widgetWrapper.setAttribute("class", "dynamic-checkout-widget-wrapper")
 
-      if (this.paymentConfig.locale === "ar") {
+      if (Translations.isRtlLocale(this.paymentConfig.locale)) {
         this.widgetWrapper.setAttribute("dir", "rtl")
       }
 
