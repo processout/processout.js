@@ -661,7 +661,10 @@ module ProcessOut {
           const eventData = e.data ? JSON.parse(e.data) : {}
 
           if (eventData.action === "inputEvent") {
-            if (eventData.data && eventData.data.card_iin !== undefined) {
+            if (
+              eventData.data &&
+              (eventData.data.card_iin8 !== undefined || eventData.data.card_iin !== undefined)
+            ) {
               this.handleIinRestrictionFromMessage(eventData.data)
             }
 
@@ -926,14 +929,21 @@ module ProcessOut {
         return
       }
 
-      const iin = data.card_iin || ""
+      // Prefer the 8-digit IIN when present so 8-digit allowlist entries can
+      // match; fall back to the legacy 6-digit card_iin.
+      const iin = data.card_iin8 || data.card_iin || ""
 
       if (iin.length === 0) {
         this.setCardRestrictionState(false)
         return
       }
 
-      const isAllowedIin = restrictToIins.indexOf(iin) !== -1
+      // card_iin8 may carry more digits than the configured entries (IINs can
+      // be 6 or 8 digits), so match on prefix: an allowed entry matches when
+      // the detected IIN starts with it.
+      const isAllowedIin = restrictToIins.some(function (allowedIin) {
+        return allowedIin.length > 0 && iin.substring(0, allowedIin.length) === allowedIin
+      })
 
       this.setCardRestrictionState(!isAllowedIin)
     }
