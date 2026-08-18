@@ -24,6 +24,7 @@ module ProcessOut {
         public cardNumberAutoNext: boolean = true;
         public enableCardSchemeSelection: boolean = false;
         public preferredSchemes: string[] = null;
+        public exposeIIN8: boolean = false;
 
         public constructor(type: string) {
             this.type = type;
@@ -33,10 +34,11 @@ module ProcessOut {
             if (o.placeholder)        this.placeholder = o.placeholder;
             if (o.style)              this.style       = o.style;
             if (o.requireCVC != null) this.requireCVC  = o.requireCVC;
-            if (o.expiryAutoNext !== undefined && o.expiryAutoNext !== null) this.expiryAutoNext = o.expiryAutoNext; 
-            if (o.cardNumberAutoNext !== undefined && o.cardNumberAutoNext !== null) this.cardNumberAutoNext = o.cardNumberAutoNext; 
-            if (o.enableCardSchemeSelection !== undefined && o.enableCardSchemeSelection !== null) this.enableCardSchemeSelection = o.enableCardSchemeSelection; 
-            if (o.preferredSchemes !== undefined && o.preferredSchemes !== null) this.preferredSchemes = o.preferredSchemes; 
+            if (o.expiryAutoNext !== undefined && o.expiryAutoNext !== null) this.expiryAutoNext = o.expiryAutoNext;
+            if (o.cardNumberAutoNext !== undefined && o.cardNumberAutoNext !== null) this.cardNumberAutoNext = o.cardNumberAutoNext;
+            if (o.enableCardSchemeSelection !== undefined && o.enableCardSchemeSelection !== null) this.enableCardSchemeSelection = o.enableCardSchemeSelection;
+            if (o.preferredSchemes !== undefined && o.preferredSchemes !== null) this.preferredSchemes = o.preferredSchemes;
+            if (o.exposeIIN8 !== undefined && o.exposeIIN8 !== null) this.exposeIIN8 = o.exposeIIN8;
 
             return this;
         }
@@ -77,55 +79,55 @@ module ProcessOut {
      * Card field class
      */
     export class CardField {
-        /** 
+        /**
          * Number is the credit card field type number
          * @var {string}
          */
         public static number = "number";
 
-        /** 
+        /**
          * Expiry is the credit card field type expiration date
          * @var {string}
          */
         public static expiry = "expiry";
 
-        /** 
+        /**
          * ExpiryMonth is the credit card field type expiration month
          * @var {string}
          */
         public static expiryMonth = "expiry-month";
 
-        /** 
+        /**
          * ExpiryYear is the credit card field type expiration year
          * @var {string}
          */
         public static expiryYear = "expiry-year";
 
-        /** 
+        /**
          * CVC is the credit card field type cvc
          * @var {string}
          */
         public static cvc = "cvc";
 
-        /** 
+        /**
          * Timeout is the number of ms to wait before timing out a field
          * @var {string}
          */
         protected static timeout = 20000;
 
-        /** 
+        /**
          * instance is the current ProcessOut instance
          * @var {ProcessOut}
          */
         protected instance: ProcessOut;
 
-        /** 
+        /**
          * El is the parent of the iframe used to embed the field
          * @var {string}
          */
         protected el: HTMLElement;
 
-        /** 
+        /**
          * Iframe is the iframe embedding the field
          * @var {string}
          */
@@ -143,7 +145,7 @@ module ProcessOut {
          */
         protected form: CardForm;
 
-        /** 
+        /**
          * Callback executed when an event is triggered on an input
          * @var {Callback}
          */
@@ -191,9 +193,9 @@ module ProcessOut {
          * @param {options} CardFieldOptions
          * @param {HTMLElement} el
          */
-        public constructor(instance: ProcessOut, form: CardForm, 
-            options: CardFieldOptions, container: HTMLElement, 
-            success:        ()  => void, 
+        public constructor(instance: ProcessOut, form: CardForm,
+            options: CardFieldOptions, container: HTMLElement,
+            success:        ()  => void,
             error:          (err:  Exception) => void) {
 
             if (!options || !options.type) {
@@ -256,7 +258,7 @@ module ProcessOut {
          * @return {void}
          */
         protected spawn(
-            success: () => void, 
+            success: () => void,
             error:   (err:   Exception) => void
         ): void {
             var tmp = Math.random().toString(36).substring(7);
@@ -278,7 +280,7 @@ module ProcessOut {
             if (typeof(error) !== typeof(Function)) {
                 error = function () {}
             }
-                        
+
             var errored = false;
             var iframeError = setTimeout(function() {
                 errored = true;
@@ -289,12 +291,12 @@ module ProcessOut {
                 try {
                     // We want to reset the iframe src to prevent
                     // Firefox from (wrongfully) caching the iframe
-                    // content: https://bugzilla.mozilla.org/show_bug.cgi?id=354176          
+                    // content: https://bugzilla.mozilla.org/show_bug.cgi?id=354176
                     if(navigator.userAgent.match(/firefox|fxios/i)) {
                         if (this.iframe && this.iframe.contentWindow) {
                             this.iframe.contentWindow.location.replace(endpoint);
                         }
-                    }                                 
+                    }
                 } catch(e) { /* ... */ }
             }.bind(this);
 
@@ -319,7 +321,7 @@ module ProcessOut {
                     // and the iframe should reply with a ready state
 
                     if (data.action == "alive") {
-                        
+
                         // The field's iframe is available, let's set it up
                         this.postMessage(JSON.stringify({
                             "namespace": Message.fieldNamespace,
@@ -387,7 +389,7 @@ module ProcessOut {
                 for (const mutation of mutations) {
                     for (const removedNode of Array.from(mutation.removedNodes)) {
                         // Check if our iframe was removed directly or as part of a parent
-                        if (removedNode === this.iframe || 
+                        if (removedNode === this.iframe ||
                             (removedNode instanceof Element && removedNode.contains(this.iframe))) {
                             this.destroy();
                             return;
@@ -395,7 +397,7 @@ module ProcessOut {
                     }
                 }
             });
-            
+
             // Observe the document body for child removals (subtree to catch parent removals)
             this.mutationObserver.observe(document.body, {
                 childList: true,
@@ -465,7 +467,7 @@ module ProcessOut {
                 if (this.eventCallback) this.eventCallback("onfocus", d);
                 break;
             case "blurEvent": // inverse of focus
-                // Remove the processout-input-focused class from the 
+                // Remove the processout-input-focused class from the
                 // parent element
                 this.el.className = this.el.className
                     .replace(/\bprocessout-input-focused\b/g, "")
@@ -490,8 +492,8 @@ module ProcessOut {
             case "resize":
                 if (this.options.style?.height) {
                     this.iframe.height = this.options.style.height;
-                } else { 
-                    this.iframe.height = data.data; 
+                } else {
+                    this.iframe.height = data.data;
                 }
                 break;
             }
@@ -512,7 +514,7 @@ module ProcessOut {
          * @return {void}
          */
         public update(options: CardFieldOptions): void {
-            if (options.placeholder) 
+            if (options.placeholder)
                 this.options.placeholder = options.placeholder;
             if (options.style)
                 this.options.style = (<any>Object).assign(
@@ -538,10 +540,10 @@ module ProcessOut {
         }
 
         /**
-         * addEventListener adds an event listener for the given event on 
+         * addEventListener adds an event listener for the given event on
          * the card field
-         * @param {string} e 
-         * @param {callback} h 
+         * @param {string} e
+         * @param {callback} h
          * @return {void}
          */
         public addEventListener(e: string, h: (e: any) => void): void {
@@ -570,8 +572,8 @@ module ProcessOut {
 
         /**
          * on adds an event listener for the given event on the card field
-         * @param {string} e 
-         * @param {callback} h 
+         * @param {string} e
+         * @param {callback} h
          * @return {void}
          */
         public on(e: string, h: (e: any) => void): void {
@@ -665,7 +667,7 @@ module ProcessOut {
                 setTimeout(function(){
                     error(new Exception("processout-js.field.unavailable"));
                 }, CardField.timeout);
-            
+
             window.addEventListener("message", function (event) {
                 var data = Message.parseEvent(event);
                 if (data.frameID != this.uid)
@@ -688,10 +690,10 @@ module ProcessOut {
             }.bind(this));
         }
 
-        /** 
+        /**
          * Tokenize asks the leader field to tokenize using the sub-fields
          * and calls success with the final card token
-         * @param {any[]}    fields 
+         * @param {any[]}    fields
          * @param {callback} success
          * @param {callback} error
          * @return {void}
@@ -702,7 +704,7 @@ module ProcessOut {
             if (typeof(error) !== typeof(Function)) {
                 error = () => {};
             }
-            
+
             // Tell our field it should start the tokenization process and
             // expect a response
             var id = Math.random().toString();
@@ -752,11 +754,11 @@ module ProcessOut {
             }.bind(this));
         }
 
-        /** 
-         * refreshCVC asks the field to refresh the CVC of the given card. 
+        /**
+         * refreshCVC asks the field to refresh the CVC of the given card.
          * The success callback is called with the card UID if it was successful
          * otherwise the error callback is called with the Exception
-         * @param {any[]}    fields 
+         * @param {any[]}    fields
          * @param {callback} success
          * @param {callback} error
          * @return {void}

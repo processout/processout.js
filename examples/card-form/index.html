@@ -51,11 +51,12 @@
                 color: "#ababab",
               },
             },
+            exposeIIN8: true,
           },
           function (form) {
             let preferredCardType = null;
             form.getNumberField().on("input", function (e) {
-              if (e.card_number_length == 6) {
+              if (e.card_number_length == 8) {
                 client.getCardInformation(
                   e.card_iin,
                   function(cardInfo) {
