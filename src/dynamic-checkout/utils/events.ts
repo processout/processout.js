@@ -19,6 +19,13 @@ module ProcessOut {
     DELETE_PAYMENT_METHOD_ERROR: "processout_dynamic_checkout_delete_payment_method_error",
     PAYMENT_SUBMITTED: "processout_dynamic_checkout_payment_submitted",
     PAYMENT_PENDING: "processout_dynamic_checkout_payment_pending",
+    // Tokenize-only checkouts verify a card instead of taking a payment, so they emit
+    // this parallel set of events rather than the PAYMENT_* ones above.
+    CARD_VERIFICATION_SUBMITTED: "processout_dynamic_checkout_card_verification_submitted",
+    CARD_VERIFICATION_SUCCESS: "processout_dynamic_checkout_card_verification_success",
+    CARD_VERIFICATION_PENDING: "processout_dynamic_checkout_card_verification_pending",
+    CARD_VERIFICATION_CANCELLED: "processout_dynamic_checkout_card_verification_cancelled",
+    CARD_VERIFICATION_ERROR: "processout_dynamic_checkout_card_verification_error",
   }
 
   interface DynamicCheckoutEventDetail {
@@ -104,6 +111,7 @@ module ProcessOut {
       returnUrl?: string | null,
       customerTokenId?: string,
       paymentMethodDisplayName?: string,
+      isCardVerification?: boolean,
     ) {
       const normalizedError = DynamicCheckoutEventsUtils.normalizePaymentError(
         invoiceId,
@@ -121,15 +129,22 @@ module ProcessOut {
       }
 
       const event = DynamicCheckoutEventsUtils.createEvent(
-        DYNAMIC_CHECKOUT_EVENTS.PAYMENT_ERROR,
+        isCardVerification
+          ? DYNAMIC_CHECKOUT_EVENTS.CARD_VERIFICATION_ERROR
+          : DYNAMIC_CHECKOUT_EVENTS.PAYMENT_ERROR,
         normalizedError,
       )
       return window.dispatchEvent(event)
     }
 
-    static dispatchPaymentSuccessEvent(response: DynamicCheckoutPaymentSuccessEventDetail) {
+    static dispatchPaymentSuccessEvent(
+      response: DynamicCheckoutPaymentSuccessEventDetail,
+      isCardVerification?: boolean,
+    ) {
       const event = DynamicCheckoutEventsUtils.createEvent(
-        DYNAMIC_CHECKOUT_EVENTS.PAYMENT_SUCCESS,
+        isCardVerification
+          ? DYNAMIC_CHECKOUT_EVENTS.CARD_VERIFICATION_SUCCESS
+          : DYNAMIC_CHECKOUT_EVENTS.PAYMENT_SUCCESS,
         {
           ...response,
           payment_method_name: response.payment_method_name || null,
@@ -258,52 +273,67 @@ module ProcessOut {
       return window.dispatchEvent(event)
     }
 
-    static dispatchPaymentSubmittedEvent(details: {
-      payment_method_name: string
-      payment_method_display_name: string
-      invoice_id: string
-      return_url: string | null
-      customer_token_id?: string
-      authorized?: boolean
-      captured?: boolean
-    }) {
+    static dispatchPaymentSubmittedEvent(
+      details: {
+        payment_method_name: string
+        payment_method_display_name: string
+        invoice_id: string
+        return_url: string | null
+        customer_token_id?: string
+        authorized?: boolean
+        captured?: boolean
+      },
+      isCardVerification?: boolean,
+    ) {
       const event = DynamicCheckoutEventsUtils.createEvent(
-        DYNAMIC_CHECKOUT_EVENTS.PAYMENT_SUBMITTED,
+        isCardVerification
+          ? DYNAMIC_CHECKOUT_EVENTS.CARD_VERIFICATION_SUBMITTED
+          : DYNAMIC_CHECKOUT_EVENTS.PAYMENT_SUBMITTED,
         details,
       )
 
       return window.dispatchEvent(event)
     }
 
-    static dispatchPaymentCancelledEvent(details: {
-      payment_method_name: string
-      payment_method_display_name: string
-      invoice_id: string
-      return_url: string | null
-      tab_closed?: boolean
-      authorized?: boolean
-      captured?: boolean
-    }) {
+    static dispatchPaymentCancelledEvent(
+      details: {
+        payment_method_name: string
+        payment_method_display_name: string
+        invoice_id: string
+        return_url: string | null
+        tab_closed?: boolean
+        authorized?: boolean
+        captured?: boolean
+      },
+      isCardVerification?: boolean,
+    ) {
       const event = DynamicCheckoutEventsUtils.createEvent(
-        DYNAMIC_CHECKOUT_EVENTS.PAYMENT_CANCELLED,
+        isCardVerification
+          ? DYNAMIC_CHECKOUT_EVENTS.CARD_VERIFICATION_CANCELLED
+          : DYNAMIC_CHECKOUT_EVENTS.PAYMENT_CANCELLED,
         details,
       )
 
       return window.dispatchEvent(event)
     }
 
-    static dispatchPaymentPendingEvent(details: {
-      payment_method_name: string
-      payment_method_display_name: string
-      invoice_id: string
-      return_url: string | null
-      card_id?: string
-      customer_token_id?: string
-      authorized?: boolean
-      captured?: boolean
-    }) {
+    static dispatchPaymentPendingEvent(
+      details: {
+        payment_method_name: string
+        payment_method_display_name: string
+        invoice_id: string
+        return_url: string | null
+        card_id?: string
+        customer_token_id?: string
+        authorized?: boolean
+        captured?: boolean
+      },
+      isCardVerification?: boolean,
+    ) {
       const event = DynamicCheckoutEventsUtils.createEvent(
-        DYNAMIC_CHECKOUT_EVENTS.PAYMENT_PENDING,
+        isCardVerification
+          ? DYNAMIC_CHECKOUT_EVENTS.CARD_VERIFICATION_PENDING
+          : DYNAMIC_CHECKOUT_EVENTS.PAYMENT_PENDING,
         {
           ...details,
           ...DynamicCheckoutEventsUtils.getPaymentStatusEventDetail(details),

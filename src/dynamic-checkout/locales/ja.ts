@@ -25,6 +25,13 @@ module ProcessOut {
       "お支払いを処理しています。このウィンドウを閉じていただいて構いません。",
     "payment-pending-message": "お支払いは保留中です。",
     "payment-error-generic-message": "お支払いを処理できませんでした。",
+    "verification-success-message": "確認が完了しました。",
+    "verification-cancelled-message": "確認がキャンセルされました。",
+    "verification-info-message":
+      "確認を処理しています。このウィンドウを閉じていただいて構いません。",
+    "verification-pending-message": "確認は保留中です。",
+    "verification-error-generic-message": "カードを確認できませんでした。",
+    "processing-verification-label": "確認を処理中",
     "street1-label": "住所1",
     "street2-label": "住所2",
     "city-label": "市区町村",

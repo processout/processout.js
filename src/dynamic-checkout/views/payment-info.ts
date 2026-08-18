@@ -16,7 +16,7 @@ module ProcessOut {
         {
           tagName: "p",
           classNames: ["dco-card-payment-success-text"],
-          textContent: Translations.getText("payment-info-message", paymentConfig.locale),
+          textContent: getStatusMessage("payment-info-message", paymentConfig),
         },
       ])
 

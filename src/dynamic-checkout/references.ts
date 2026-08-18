@@ -40,6 +40,7 @@
 /// <reference path="locales/vi.ts" />
 /// <reference path="utils/events.ts" />
 /// <reference path="utils/translations.ts" />
+/// <reference path="utils/status-messages.ts" />
 /// <reference path="utils/elements.ts" />
 /// <reference path="clients/apple-pay.ts" />
 /// <reference path="clients/google-pay.ts" />
