@@ -1853,6 +1853,51 @@ module ProcessOut {
             )
           }.bind(this)
 
+          // Some gateways (e.g. MercadoPago) transiently close and reopen the
+          // redirect window/tab, which would make the ActionHandler raise a
+          // spurious "customer.canceled" ({ reason: "tab_closed" }). The action
+          // can opt out of window-closed monitoring via the
+          // no_listen_to_window_closed metadata flag (same mechanism as the
+          // no_iframe flag above).
+          var noListenToWindowClosed =
+            data.customer_action.metadata &&
+            data.customer_action.metadata.no_listen_to_window_closed === "true"
+
+          // When we're running inside the hosted-checkout tab (i.e. we have a
+          // window.opener), tell the parent page's ActionHandler — which is
+          // the one polling window.closed on this tab — to stop treating a
+          // closed window as a cancellation. The local ActionHandlerOptions
+          // below cover the in-tab handler; this covers the opener.
+          if (noListenToWindowClosed && window.opener && window.opener !== window) {
+            try {
+              window.opener.postMessage(
+                JSON.stringify({
+                  namespace: Message.checkoutNamespace,
+                  action: "disable-window-close-monitoring",
+                }),
+                "*",
+              )
+              try {
+                console.log(
+                  "[ProcessOut] sent disable-window-close-monitoring to opener",
+                  { invoiceId: resourceID },
+                )
+              } catch (e) {}
+              this.telemetryClient.reportWarning({
+                host: window && window.location ? window.location.host : "",
+                fileName: "processout.ts/handleCardActions",
+                lineNumber: 0,
+                message: "[action-window-monitor] sent disable-window-close-monitoring to opener",
+                stack: "apm-window-monitoring",
+                invoiceId: resourceID,
+                category: "apm-window-monitoring",
+                data: { customerActionType: data.customer_action.type },
+              })
+            } catch (e) {
+              // Cross-origin opener access can throw; nothing else to do.
+            }
+          }
+
           switch (data.customer_action.type) {
             case "url":
               var opts = ActionHandlerOptions.ThreeDSChallengeFlow
@@ -1861,6 +1906,10 @@ module ProcessOut {
                 data.customer_action.metadata.no_iframe === "true"
               ) {
                 opts = ActionHandlerOptions.ThreeDSChallengeFlowNoIframe
+              }
+              var urlActionOptions = new ActionHandlerOptions(opts)
+              if (noListenToWindowClosed) {
+                urlActionOptions.listenToWindowClosed = false
               }
               // This is for 3DS1
               this.handleAction(
@@ -1880,7 +1929,7 @@ module ProcessOut {
                   )
                 }.bind(this),
                 error,
-                new ActionHandlerOptions(opts),
+                urlActionOptions,
                 resourceID,
               )
               break
@@ -1910,12 +1959,18 @@ module ProcessOut {
               break
 
             case "redirect":
+              var redirectActionOptions = new ActionHandlerOptions(
+                ActionHandlerOptions.ThreeDSChallengeFlow,
+              )
+              if (noListenToWindowClosed) {
+                redirectActionOptions.listenToWindowClosed = false
+              }
               // This is for 3DS2
               this.handleAction(
                 data.customer_action.value,
                 nextStep,
                 error,
-                new ActionHandlerOptions(ActionHandlerOptions.ThreeDSChallengeFlow),
+                redirectActionOptions,
                 resourceID,
               )
               break
