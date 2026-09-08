@@ -25,8 +25,11 @@ module ProcessOut {
     }
 
     let actualValue;
-    if (isPlainObject(value) && 'value' in value) {
-      actualValue = value.value;
+    if (isPlainObject(value)) {
+      // Phone holds { dialing_code, number } — validate the national number.
+      // `value` is the pre-#225 key, still accepted from merchant `initialData`.
+      const phone = value as { number?: string, value?: string };
+      actualValue = phone.number !== undefined ? phone.number : phone.value;
     } else {
       actualValue = value;
     }
@@ -192,7 +195,7 @@ module ProcessOut {
           onblur: onBlur(setState),
           errored: !!error,
           disabled: state.loading,
-          number: value as PhoneState,
+          value: value as PhoneState,
         });
         break;
       }

@@ -90,8 +90,8 @@ module ProcessOut {
   }
 
   /**
-   * Coerce a prefilled phone value into the `{ dialing_code, value }` shape the
-   * phone field renders.
+   * Coerce a prefilled phone value into the `{ dialing_code, number }` shape the
+   * phone field renders and submits.
    *
    * Accepts the object form and a bare E.164 string (`"+48123123123"`). The
    * string is split on a longest-prefix match against the gateway's own dialing
@@ -102,28 +102,28 @@ module ProcessOut {
   export function normalizePhoneValue(
     value: unknown,
     dialing_codes: Array<{ region_code: string, value: string }>,
-  ): { dialing_code: string, value: string } {
+  ): { dialing_code: string, number: string } {
     const defaultDialingCode = getDefaultDialingCode(dialing_codes);
 
     if (isPlainObject(value)) {
-      // `number` is the key the phone field emits on input, so accept it too:
-      // a value read back off a `field-change` event can be fed straight in.
+      // `value` is the key the prefill docs use, `number` the one the field emits
+      // on input, so a value read off a `field-change` event feeds straight back in.
       const object = value as { dialing_code?: string, value?: string, number?: string };
       return {
         dialing_code: object.dialing_code || defaultDialingCode,
-        value: digitsOnly(object.value || object.number || ''),
+        number: digitsOnly(object.value || object.number || ''),
       };
     }
 
     if (typeof value !== 'string') {
-      return { dialing_code: defaultDialingCode, value: '' };
+      return { dialing_code: defaultDialingCode, number: '' };
     }
 
     // Strip separators the docs allow around an E.164 number ("+48 123 123 123").
     const compact = value.replace(/[^\d+]/g, '');
 
     if (compact.charAt(0) !== '+') {
-      return { dialing_code: defaultDialingCode, value: digitsOnly(compact) };
+      return { dialing_code: defaultDialingCode, number: digitsOnly(compact) };
     }
 
     // Longest prefix first, so "+1" doesn't win over "+1242".
@@ -134,12 +134,12 @@ module ProcessOut {
     if (matches.length === 0) {
       // The gateway doesn't offer this country. Keep the digits so the merchant
       // sees what was passed rather than silently dropping it.
-      return { dialing_code: defaultDialingCode, value: digitsOnly(compact) };
+      return { dialing_code: defaultDialingCode, number: digitsOnly(compact) };
     }
 
     return {
       dialing_code: matches[0].value,
-      value: digitsOnly(compact.substring(matches[0].value.length)),
+      number: digitsOnly(compact.substring(matches[0].value.length)),
     };
   }
 
