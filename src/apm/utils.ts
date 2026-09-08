@@ -47,6 +47,107 @@ module ProcessOut {
   }
 
   /**
+   * Canonical `initialData` keys and the parameter type each one prefills.
+   *
+   * Payment methods name their own parameters, so a phone field can arrive as
+   * `customerPhone` rather than `phone_number`. Matching on type as well as on
+   * the raw key lets the documented canonical keys prefill on every payment
+   * method, without the merchant having to know each one's parameter names.
+   */
+  const CANONICAL_PREFILL_KEYS: Array<{ key: string, type: string }> = [
+    { key: 'email', type: 'email' },
+    { key: 'phone_number', type: 'phone' },
+  ]
+
+  /**
+   * Find the value in `initialData` that should prefill the given parameter.
+   * An exact key match wins, so a merchant can always target one specific
+   * gateway parameter (or override a canonical key); otherwise we fall back to
+   * the canonical key for the parameter's type.
+   */
+  export function resolvePrefilledValue(
+    initialData: object | undefined,
+    param: { key: string, type: string },
+  ): unknown {
+    if (!initialData) {
+      return undefined;
+    }
+
+    const data = initialData as Record<string, unknown>;
+
+    if (data[param.key] !== undefined && data[param.key] !== null) {
+      return data[param.key];
+    }
+
+    for (let i = 0; i < CANONICAL_PREFILL_KEYS.length; i++) {
+      const canonical = CANONICAL_PREFILL_KEYS[i];
+      if (canonical.type === param.type && data[canonical.key]) {
+        return data[canonical.key];
+      }
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Coerce a prefilled phone value into the `{ dialing_code, number }` shape the
+   * phone field renders and submits.
+   *
+   * Accepts the object form and a bare E.164 string (`"+48123123123"`). The
+   * string is split on a longest-prefix match against the gateway's own dialing
+   * codes so the right country is selected and only the national number lands
+   * in the input — otherwise the whole string ends up in the number box and the
+   * submitted value is malformed.
+   */
+  export function normalizePhoneValue(
+    value: unknown,
+    dialing_codes: Array<{ region_code: string, value: string }>,
+  ): { dialing_code: string, number: string } {
+    const defaultDialingCode = getDefaultDialingCode(dialing_codes);
+
+    if (isPlainObject(value)) {
+      // `value` is the key the prefill docs use, `number` the one the field emits
+      // on input, so a value read off a `field-change` event feeds straight back in.
+      const object = value as { dialing_code?: string, value?: string, number?: string };
+      return {
+        dialing_code: object.dialing_code || defaultDialingCode,
+        number: digitsOnly(object.value || object.number || ''),
+      };
+    }
+
+    if (typeof value !== 'string') {
+      return { dialing_code: defaultDialingCode, number: '' };
+    }
+
+    // Strip separators the docs allow around an E.164 number ("+48 123 123 123").
+    const compact = value.replace(/[^\d+]/g, '');
+
+    if (compact.charAt(0) !== '+') {
+      return { dialing_code: defaultDialingCode, number: digitsOnly(compact) };
+    }
+
+    // Longest prefix first, so "+1" doesn't win over "+1242".
+    const matches = (dialing_codes || [])
+      .filter(code => code.value && compact.indexOf(code.value) === 0)
+      .sort((a, b) => b.value.length - a.value.length);
+
+    if (matches.length === 0) {
+      // The gateway doesn't offer this country. Keep the digits so the merchant
+      // sees what was passed rather than silently dropping it.
+      return { dialing_code: defaultDialingCode, number: digitsOnly(compact) };
+    }
+
+    return {
+      dialing_code: matches[0].value,
+      number: digitsOnly(compact.substring(matches[0].value.length)),
+    };
+  }
+
+  function digitsOnly(value: string): string {
+    return value.replace(/\D/g, '');
+  }
+
+  /**
    * Simple hash function for content comparison (djb2 algorithm)
    * @param str - String to hash
    * @returns Short hash string in base36 format

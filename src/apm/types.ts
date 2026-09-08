@@ -37,12 +37,25 @@ module ProcessOut {
 
     export type Container = string | Element
 
+    /**
+     * Values used to prefill the payment method's form fields.
+     *
+     * `email` and `phone_number` are canonical: they match the field by type, so
+     * they work whatever the gateway names its own parameter. Any gateway
+     * parameter key can also be passed directly, and takes precedence over the
+     * canonical key for that type.
+     */
     export interface InitialData {
       email: string,
-      phone_number: {
-        dialing_code: string,
-        value: string,
-      }
+      /**
+       * Either an E.164 string ("+48123123123") or the split form, with the
+       * country given as a dialing code ("+48").
+       */
+      phone_number: string | {
+        dialing_code?: string,
+        value?: string,
+      },
+      [key: string]: unknown,
     }
 }
 

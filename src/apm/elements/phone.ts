@@ -9,7 +9,7 @@ module ProcessOut {
     }>
     oninput?: FormFieldUpdate,
     onblur?: (key: string, value: { dialing_code: string, number: string }) => void,
-    value?: { dialing_code: string, value: string },
+    value?: { dialing_code?: string, number?: string },
   }
 
   const { div, label: labelEl, img, input, select, option } = elements
@@ -61,7 +61,7 @@ module ProcessOut {
     // Use StateManager for internal state management
     const { state, setState } = useComponentState({
       dialing_code: value && value.dialing_code || getDefaultDialingCode(dialing_codes),
-      number: value && value.value || '',
+      number: value && value.number || '',
       iso: ''
     });
 
@@ -101,9 +101,10 @@ module ProcessOut {
         dialingCodesRef.value = iso;
       }
 
-      // Trigger callback to update form state if there's a value
+      // Seed the form in the wire shape. `state` also carries `iso`, which is
+      // internal to the flag picker and isn't a gateway parameter.
       if (value) {
-        oninput && oninput(name, state, true);
+        oninput && oninput(name, { dialing_code: dialingCode, number: phoneNumber }, true);
       }
 
       setState({
