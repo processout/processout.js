@@ -94,7 +94,7 @@ module ProcessOut {
           new DynamicCheckoutPaymentErrorView(
             this.processOutInstance,
             this.paymentConfig,
-            Translations.getText("payment-error-generic-message", this.paymentConfig.locale),
+            getStatusMessage("payment-error-generic-message", this.paymentConfig),
           ).element,
         )
 
@@ -106,12 +106,16 @@ module ProcessOut {
         )
       }
 
+      // Set before the status check below so the error view and event know whether this
+      // checkout is a tokenize-only (card verification) one.
+      this.paymentConfig.setInvoiceDetails(data.invoice)
+
       if (data.invoice.transaction.status !== "waiting") {
         this.loadView(
           new DynamicCheckoutPaymentErrorView(
             this.processOutInstance,
             this.paymentConfig,
-            Translations.getText("payment-error-generic-message", this.paymentConfig.locale),
+            getStatusMessage("payment-error-generic-message", this.paymentConfig),
           ).element,
         )
 
@@ -125,10 +129,11 @@ module ProcessOut {
           undefined,
           undefined,
           data.invoice.return_url || null,
+          undefined,
+          undefined,
+          this.paymentConfig.isTokenizeOnly(),
         )
       }
-
-      this.paymentConfig.setInvoiceDetails(data.invoice)
 
       this.loadDynamicCheckoutView()
     }

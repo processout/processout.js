@@ -47,12 +47,83 @@ export interface FakeNavigator {
 export function loadApmUtils(navigator: FakeNavigator = {}): Record<string, any> {
   const js = compile("src/apm/utils.ts")
   const moduleShim = { exports: {} as Record<string, any> }
+  const run = new Function("module", "exports", "navigator", `${js}\nmodule.exports = ProcessOut;`)
+  run(moduleShim, moduleShim.exports, navigator)
+  return moduleShim.exports
+}
+
+export const LOCALES = [
+  "ar",
+  "de",
+  "en",
+  "es",
+  "fi",
+  "fr",
+  "it",
+  "ja",
+  "ko",
+  "nb",
+  "pl",
+  "pt",
+  "ta",
+  "vi",
+]
+
+export interface CapturedEvent {
+  type: string
+  detail: any
+}
+
+export interface DynamicCheckoutNamespace {
+  namespace: Record<string, any>
+  dispatchedEvents: CapturedEvent[]
+}
+
+/**
+ * Load the Dynamic Checkout locale/config/event helpers and return the resulting
+ * `ProcessOut` namespace, plus the list of events the code dispatched.
+ *
+ * Each file is transpiled in isolation, so cross-file references (a locale const
+ * used by `Translations`, `Translations` used by `getStatusMessage`) compile to
+ * bare identifiers rather than `ProcessOut.x`. The bridge lines below re-expose
+ * the namespace members under those names, in the same order the real
+ * `tsc --outFile` bundle concatenates them.
+ */
+export function loadDynamicCheckout(): DynamicCheckoutNamespace {
+  const chunks = [
+    ...LOCALES.map(locale => compile(`src/dynamic-checkout/locales/${locale}.ts`)),
+    `const { ${LOCALES.join(", ")} } = ProcessOut;`,
+    compile("src/dynamic-checkout/utils/translations.ts"),
+    `const { Translations } = ProcessOut;`,
+    compile("src/dynamic-checkout/utils/status-messages.ts"),
+    compile("src/dynamic-checkout/config/payment-config.ts"),
+    compile("src/dynamic-checkout/utils/events.ts"),
+  ]
+
+  const dispatchedEvents: CapturedEvent[] = []
+
+  function FakeCustomEvent(this: any, type: string, init: any) {
+    this.type = type
+    this.detail = init ? init.detail : undefined
+  }
+
+  const windowShim = {
+    CustomEvent: FakeCustomEvent,
+    dispatchEvent: (event: CapturedEvent) => {
+      dispatchedEvents.push(event)
+      return true
+    },
+  }
+
+  const moduleShim = { exports: {} as Record<string, any> }
   const run = new Function(
     "module",
     "exports",
-    "navigator",
-    `${js}\nmodule.exports = ProcessOut;`,
+    "window",
+    "CustomEvent",
+    `${chunks.join("\n")}\nmodule.exports = ProcessOut;`,
   )
-  run(moduleShim, moduleShim.exports, navigator)
-  return moduleShim.exports
+  run(moduleShim, moduleShim.exports, windowShim, FakeCustomEvent)
+
+  return { namespace: moduleShim.exports, dispatchedEvents }
 }
