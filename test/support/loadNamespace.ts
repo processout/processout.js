@@ -52,21 +52,44 @@ export function loadApmUtils(navigator: FakeNavigator = {}): Record<string, any>
   return moduleShim.exports
 }
 
+/**
+ * Dynamic Checkout locale files and the `ProcessOut` const each one exports.
+ * The two differ only where the tag is not a valid identifier (zh-cn → zhCN).
+ */
 export const LOCALES = [
-  "ar",
-  "de",
-  "en",
-  "es",
-  "fi",
-  "fr",
-  "it",
-  "ja",
-  "ko",
-  "nb",
-  "pl",
-  "pt",
-  "ta",
-  "vi",
+  { file: "ar", name: "ar" },
+  { file: "bg", name: "bg" },
+  { file: "bn", name: "bn" },
+  { file: "cs", name: "cs" },
+  { file: "da", name: "da" },
+  { file: "de", name: "de" },
+  { file: "el", name: "el" },
+  { file: "en", name: "en" },
+  { file: "es", name: "es" },
+  { file: "fi", name: "fi" },
+  { file: "fr", name: "fr" },
+  { file: "he", name: "he" },
+  { file: "hi", name: "hi" },
+  { file: "id", name: "id" },
+  { file: "it", name: "it" },
+  { file: "ja", name: "ja" },
+  { file: "kn", name: "kn" },
+  { file: "ko", name: "ko" },
+  { file: "nb", name: "nb" },
+  { file: "nl", name: "nl" },
+  { file: "pl", name: "pl" },
+  { file: "pt", name: "pt" },
+  { file: "ro", name: "ro" },
+  { file: "ru", name: "ru" },
+  { file: "sv", name: "sv" },
+  { file: "ta", name: "ta" },
+  { file: "te", name: "te" },
+  { file: "th", name: "th" },
+  { file: "tr", name: "tr" },
+  { file: "uk", name: "uk" },
+  { file: "vi", name: "vi" },
+  { file: "zh-cn", name: "zhCN" },
+  { file: "zh-tw", name: "zhTW" },
 ]
 
 export interface CapturedEvent {
@@ -91,8 +114,8 @@ export interface DynamicCheckoutNamespace {
  */
 export function loadDynamicCheckout(): DynamicCheckoutNamespace {
   const chunks = [
-    ...LOCALES.map(locale => compile(`src/dynamic-checkout/locales/${locale}.ts`)),
-    `const { ${LOCALES.join(", ")} } = ProcessOut;`,
+    ...LOCALES.map(locale => compile(`src/dynamic-checkout/locales/${locale.file}.ts`)),
+    `const { ${LOCALES.map(locale => locale.name).join(", ")} } = ProcessOut;`,
     compile("src/dynamic-checkout/utils/translations.ts"),
     `const { Translations } = ProcessOut;`,
     compile("src/dynamic-checkout/utils/status-messages.ts"),
