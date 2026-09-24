@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it } from "vitest"
 import { CapturedEvent, LOCALES, loadDynamicCheckout } from "../support/loadNamespace"
 
+const LOCALE_TAGS = LOCALES.map(locale => locale.file)
+
 let ProcessOut: Record<string, any>
 let dispatchedEvents: CapturedEvent[]
 
@@ -59,7 +61,7 @@ describe("getStatusMessage", () => {
     "processing-payment-label",
   ]
 
-  it.each(LOCALES)("keeps the payment wording for a regular checkout in %s", locale => {
+  it.each(LOCALE_TAGS)("keeps the payment wording for a regular checkout in %s", locale => {
     const paymentConfig = createPaymentConfig([regularCardMethod], locale)
 
     mappedKeys.forEach(key => {
@@ -69,7 +71,7 @@ describe("getStatusMessage", () => {
     })
   })
 
-  it.each(LOCALES)("uses translated verification wording in %s", locale => {
+  it.each(LOCALE_TAGS)("uses translated verification wording in %s", locale => {
     const paymentConfig = createPaymentConfig([tokenizeOnlyMethod], locale)
 
     mappedKeys.forEach(key => {
