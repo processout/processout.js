@@ -56,7 +56,8 @@
           function (form) {
             let preferredCardType = null;
             form.getNumberField().on("input", function (e) {
-              if (e.card_iin.length >= 6) {
+              if (e.card_number_length == 6 || e.card_number_length == 16) {
+                // use 6 digit IIN or 8 digit IIN (accessible only when card_number_lenght == 16)
                 client.getCardInformation(
                   e.card_iin,
                   function(cardInfo) {
