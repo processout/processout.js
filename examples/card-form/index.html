@@ -56,7 +56,7 @@
           function (form) {
             let preferredCardType = null;
             form.getNumberField().on("input", function (e) {
-              if (e.card_number_length == 8) {
+              if (e.card_iin.length >= 6) {
                 client.getCardInformation(
                   e.card_iin,
                   function(cardInfo) {
