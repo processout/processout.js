@@ -21,10 +21,16 @@ module ProcessOut {
     "other-payment-methods-header": "Outros métodos de pagamento",
     "select-payment-method-label": "Selecionar método de pagamento",
     "payment-success-message": "Este pagamento foi concluído.",
-    "payment-info-message":
-      "Estamos a processar o seu pagamento. Pode agora fechar esta janela.",
+    "payment-info-message": "Estamos a processar o seu pagamento. Pode agora fechar esta janela.",
     "payment-pending-message": "O seu pagamento está pendente.",
     "payment-error-generic-message": "Não foi possível processar o seu pagamento.",
+    "verification-success-message": "Esta verificação foi concluída.",
+    "verification-cancelled-message": "A verificação foi cancelada.",
+    "verification-info-message":
+      "Estamos a processar a sua verificação. Pode agora fechar esta janela.",
+    "verification-pending-message": "A sua verificação está pendente.",
+    "verification-error-generic-message": "Não foi possível verificar o seu cartão.",
+    "processing-verification-label": "A processar verificação",
     "street1-label": "Morada, linha 1",
     "street2-label": "Morada, linha 2",
     "city-label": "Cidade",

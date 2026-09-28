@@ -25,6 +25,13 @@ module ProcessOut {
       "Chúng tôi đang xử lý thanh toán của bạn. Bạn có thể đóng cửa sổ này ngay bây giờ.",
     "payment-pending-message": "Thanh toán của bạn đang chờ xử lý.",
     "payment-error-generic-message": "Chúng tôi không thể xử lý thanh toán của bạn.",
+    "verification-success-message": "Xác minh này đã hoàn tất.",
+    "verification-cancelled-message": "Xác minh đã bị hủy.",
+    "verification-info-message":
+      "Chúng tôi đang xử lý xác minh của bạn. Bạn có thể đóng cửa sổ này ngay bây giờ.",
+    "verification-pending-message": "Xác minh của bạn đang chờ xử lý.",
+    "verification-error-generic-message": "Chúng tôi không thể xác minh thẻ của bạn.",
+    "processing-verification-label": "Đang xử lý xác minh",
     "street1-label": "Địa chỉ dòng 1",
     "street2-label": "Địa chỉ dòng 2",
     "city-label": "Thành phố",

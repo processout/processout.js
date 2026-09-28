@@ -24,7 +24,7 @@ module ProcessOut {
         {
           tagName: "div",
           classNames: ["dco-card-payment-error-text"],
-          textContent: Translations.getText("payment-cancelled-message", paymentConfig.locale),
+          textContent: getStatusMessage("payment-cancelled-message", paymentConfig),
         },
       ])
 

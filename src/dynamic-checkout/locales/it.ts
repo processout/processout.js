@@ -25,6 +25,13 @@ module ProcessOut {
       "Stiamo elaborando il tuo pagamento. Ora puoi chiudere questa finestra.",
     "payment-pending-message": "Il tuo pagamento è in sospeso.",
     "payment-error-generic-message": "Non è stato possibile elaborare il pagamento.",
+    "verification-success-message": "La verifica è stata completata.",
+    "verification-cancelled-message": "La verifica è stata annullata.",
+    "verification-info-message":
+      "Stiamo elaborando la tua verifica. Ora puoi chiudere questa finestra.",
+    "verification-pending-message": "La tua verifica è in sospeso.",
+    "verification-error-generic-message": "Non è stato possibile verificare la carta.",
+    "processing-verification-label": "Elaborazione della verifica",
     "street1-label": "Indirizzo riga 1",
     "street2-label": "Indirizzo riga 2",
     "city-label": "Città",

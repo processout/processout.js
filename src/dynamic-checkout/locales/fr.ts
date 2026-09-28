@@ -25,6 +25,13 @@ module ProcessOut {
       "Nous travaillons sur votre paiement. Vous pouvez maintenant fermer cette fenêtre.",
     "payment-pending-message": "Votre paiement est en attente.",
     "payment-error-generic-message": "Nous n'avons pas pu traiter votre paiement.",
+    "verification-success-message": "Cette vérification a été effectuée avec succès.",
+    "verification-cancelled-message": "La vérification a été annulée.",
+    "verification-info-message":
+      "Nous travaillons sur votre vérification. Vous pouvez maintenant fermer cette fenêtre.",
+    "verification-pending-message": "Votre vérification est en attente.",
+    "verification-error-generic-message": "Nous n'avons pas pu vérifier votre carte.",
+    "processing-verification-label": "Traitement de la vérification",
     "street1-label": "Adresse, ligne 1",
     "street2-label": "Adresse, ligne 2",
     "city-label": "Ville",

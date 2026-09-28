@@ -24,6 +24,13 @@ module ProcessOut {
     "payment-info-message": "نقوم بمعالجة عملية الدفع الخاصة بك. يمكنك الآن إغلاق هذه النافذة.",
     "payment-pending-message": "عملية الدفع الخاصة بك قيد الانتظار.",
     "payment-error-generic-message": "لم نتمكن من معالجة عملية الدفع الخاصة بك.",
+    "verification-success-message": "اكتملت عملية التحقق هذه.",
+    "verification-cancelled-message": "تم إلغاء عملية التحقق.",
+    "verification-info-message":
+      "نقوم بمعالجة عملية التحقق الخاصة بك. يمكنك الآن إغلاق هذه النافذة.",
+    "verification-pending-message": "عملية التحقق الخاصة بك قيد الانتظار.",
+    "verification-error-generic-message": "لم نتمكن من التحقق من بطاقتك.",
+    "processing-verification-label": "جارٍ معالجة التحقق",
     "street1-label": "العنوان السطر 1",
     "street2-label": "العنوان السطر 2",
     "city-label": "المدينة",

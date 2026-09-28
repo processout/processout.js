@@ -25,6 +25,13 @@ module ProcessOut {
       "Wir verarbeiten Ihre Zahlung. Sie können dieses Fenster jetzt schließen.",
     "payment-pending-message": "Ihre Zahlung steht noch aus.",
     "payment-error-generic-message": "Wir konnten Ihre Zahlung nicht verarbeiten.",
+    "verification-success-message": "Diese Verifizierung wurde abgeschlossen.",
+    "verification-cancelled-message": "Die Verifizierung wurde abgebrochen.",
+    "verification-info-message":
+      "Wir verarbeiten Ihre Verifizierung. Sie können dieses Fenster jetzt schließen.",
+    "verification-pending-message": "Ihre Verifizierung steht noch aus.",
+    "verification-error-generic-message": "Wir konnten Ihre Karte nicht verifizieren.",
+    "processing-verification-label": "Verifizierung wird verarbeitet",
     "street1-label": "Adresszeile 1",
     "street2-label": "Adresszeile 2",
     "city-label": "Stadt",

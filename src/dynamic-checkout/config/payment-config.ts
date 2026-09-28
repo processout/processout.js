@@ -70,6 +70,18 @@ module ProcessOut {
       this.invoiceDetails = invoiceDetails
     }
 
+    // Tokenize-only is exposed per payment method by the API, but it describes the whole
+    // checkout: the shopper is verifying a card, not paying for the invoice.
+    public isTokenizeOnly(): boolean {
+      if (!this.invoiceDetails || !this.invoiceDetails.payment_methods) {
+        return false
+      }
+
+      return this.invoiceDetails.payment_methods.some(
+        paymentMethod => paymentMethod.card && paymentMethod.card.tokenize_only,
+      )
+    }
+
     public getAdditionalDataForGateway(gatewayName: string): Record<string, string> {
       return this.additionalData[gatewayName] || {}
     }

@@ -24,6 +24,13 @@ module ProcessOut {
     "payment-info-message": "உங்கள் கட்டணத்தைச் செயலாக்குகிறோம். இப்போது இந்தச் சாளரத்தை மூடலாம்.",
     "payment-pending-message": "உங்கள் கட்டணம் நிலுவையில் உள்ளது.",
     "payment-error-generic-message": "உங்கள் கட்டணத்தைச் செயலாக்க முடியவில்லை.",
+    "verification-success-message": "இந்தச் சரிபார்ப்பு முடிந்தது.",
+    "verification-cancelled-message": "சரிபார்ப்பு ரத்து செய்யப்பட்டது.",
+    "verification-info-message":
+      "உங்கள் சரிபார்ப்பைச் செயலாக்குகிறோம். இப்போது இந்தச் சாளரத்தை மூடலாம்.",
+    "verification-pending-message": "உங்கள் சரிபார்ப்பு நிலுவையில் உள்ளது.",
+    "verification-error-generic-message": "உங்கள் அட்டையைச் சரிபார்க்க முடியவில்லை.",
+    "processing-verification-label": "சரிபார்ப்பு செயலாக்கப்படுகிறது",
     "street1-label": "முகவரி வரி 1",
     "street2-label": "முகவரி வரி 2",
     "city-label": "நகரம்",

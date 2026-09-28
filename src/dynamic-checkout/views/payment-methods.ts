@@ -28,7 +28,7 @@ module ProcessOut {
         return new DynamicCheckoutPaymentErrorView(
           this.processOutInstance,
           this.paymentConfig,
-          Translations.getText("payment-error-generic-message", this.paymentConfig.locale),
+          getStatusMessage("payment-error-generic-message", this.paymentConfig),
         ).element as HTMLElement
       }
 
@@ -377,18 +377,12 @@ module ProcessOut {
     }
 
     private getVisiblePaymentMethods() {
-      if (!this.paymentConfig.hideSavedPaymentMethods && !this.hasTokenizeOnlyCard()) {
+      if (!this.paymentConfig.hideSavedPaymentMethods && !this.paymentConfig.isTokenizeOnly()) {
         return this.paymentConfig.invoiceDetails.payment_methods
       }
 
       return this.paymentConfig.invoiceDetails.payment_methods.filter(
         paymentMethod => !this.isSavedPaymentMethod(paymentMethod),
-      )
-    }
-
-    private hasTokenizeOnlyCard() {
-      return this.paymentConfig.invoiceDetails.payment_methods.some(
-        paymentMethod => paymentMethod.card && paymentMethod.card.tokenize_only,
       )
     }
 
