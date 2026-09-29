@@ -1676,7 +1676,10 @@ module ProcessOut {
         return
       }
 
-      const iin = cardNumber.substring(0, 6)
+      // Support 8-digit IINs (some networks issue 8-digit IINs, which yield
+      // more accurate issuer information); otherwise fall back to 6 digits so
+      // only 6- or 8-digit IINs are ever sent to the API.
+      const iin = cardNumber.substring(0, cardNumber.length >= 8 ? 8 : 6)
       const apiEndpoint = `iins/${iin}`
 
       this.apiRequest(

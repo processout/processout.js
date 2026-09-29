@@ -462,6 +462,63 @@ module ProcessOut {
         }
 
         /**
+         * GetIIN8 returns the IIN of the card number, exposing up to 8 digits
+         * when PCI rules allow it (scheme in the allow-list and a 16-digit
+         * PAN) and 6 digits otherwise.
+         * @param {string} number
+         * @return {string}
+         */
+        public static getIIN8(number: string): string {
+            number = Card.parseNumber(number); // Remove potential spaces
+
+            if (number.length < 6)
+                return number;
+
+            if (Card.canExpose8DigitIIN(number))
+                return number.substring(0, 8);
+
+            return number.substring(0, 6);
+        }
+
+        /**
+         * Schemes permitted to surface an 8-digit IIN, mirroring the backend
+         * allow-list in api (controllers/card_inn.go). Every other scheme -
+         * notably American Express - is capped at 6 digits. Note the JS
+         * scheme key "union-pay" maps to the backend's "china union pay".
+         */
+        private static iin8DigitSchemes: Array<string> = [
+            "visa", "mastercard", "discover", "jcb", "union-pay", "carte bancaire"
+        ];
+
+        /**
+         * canExpose8DigitIIN reports whether an 8-digit IIN may be surfaced
+         * for the given card number. Mirrors binder's TruncateNumber: the PAN
+         * must be exactly 16 digits and every detected scheme must be in the
+         * allow-list. Conservative on co-badged or ambiguous prefixes (and
+         * unknown schemes), which fall back to 6 digits.
+         * @param {string} number
+         * @return {boolean}
+         */
+        public static canExpose8DigitIIN(number: string): boolean {
+            number = Card.parseNumber(number); // Remove potential spaces
+
+            // PCI: 8-digit BINs are only defined for 16-digit PANs.
+            if (number.length != 16)
+                return false;
+
+            var schemes = Card.getPossibleSchemes(number);
+            if (schemes.length == 0)
+                return false;
+
+            for (var i = 0; i < schemes.length; i++) {
+                if (Card.iin8DigitSchemes.indexOf(schemes[i]) === -1)
+                    return false;
+            }
+
+            return true;
+        }
+
+        /**
          * GetLast4Digits returns the last4 digits of the card number
          * @param {string} number
          * @return {string}
