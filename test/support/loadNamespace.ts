@@ -121,6 +121,12 @@ export function loadDynamicCheckout(): DynamicCheckoutNamespace {
     compile("src/dynamic-checkout/utils/status-messages.ts"),
     compile("src/dynamic-checkout/config/payment-config.ts"),
     compile("src/dynamic-checkout/utils/events.ts"),
+    `const { DynamicCheckoutEventsUtils } = ProcessOut;`,
+    // Core SDK types the Google Pay client constructs; not part of the Dynamic Checkout bundle.
+    `const TokenType = { GooglePay: "googlepay" };`,
+    `function PaymentToken(type, token) { this.type = type; this.token = token; }`,
+    compile("src/dynamic-checkout/clients/google-pay.ts"),
+    compile("src/dynamic-checkout/clients/apple-pay.ts"),
   ]
 
   const dispatchedEvents: CapturedEvent[] = []
