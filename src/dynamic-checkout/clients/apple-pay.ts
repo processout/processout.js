@@ -93,12 +93,20 @@ module ProcessOut {
           ),
       )
 
-      session.onpaymentauthorizedPostprocess = () =>
+      session.onpaymentauthorizedPostprocess = () => {
+        DynamicCheckoutEventsUtils.dispatchPaymentSubmittedEvent({
+          payment_method_name: "apple_pay",
+          payment_method_display_name: this.getApplePayPaymentMethodName(invoiceData),
+          invoice_id: this.paymentConfig.invoiceId,
+          return_url: this.paymentConfig.invoiceDetails.return_url || null,
+        })
+
         DynamicCheckoutEventsUtils.dispatchApplePayAuthorizedPostProcessEvent(
           this.paymentConfig.invoiceId,
           this.getApplePayPaymentMethodName(invoiceData),
           this.paymentConfig.invoiceDetails.return_url || null,
         )
+      }
 
       return session
     }

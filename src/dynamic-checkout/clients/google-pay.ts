@@ -124,6 +124,13 @@ module ProcessOut {
       this.googleClient
         .loadPaymentData(this.paymentRequest)
         .then(paymentData => {
+          DynamicCheckoutEventsUtils.dispatchPaymentSubmittedEvent({
+            payment_method_name: "google_pay",
+            payment_method_display_name: this.getGooglePayPaymentMethodName(invoiceData),
+            invoice_id: this.paymentConfig.invoiceId,
+            return_url: this.paymentConfig.invoiceDetails.return_url || null,
+          })
+
           const paymentToken = new PaymentToken(
             TokenType.GooglePay,
             JSON.parse(paymentData.paymentMethodData.tokenizationData.token),
