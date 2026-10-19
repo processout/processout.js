@@ -156,3 +156,14 @@ export function loadDynamicCheckout(): DynamicCheckoutNamespace {
 
   return { namespace: moduleShim.exports, dispatchedEvents }
 }
+
+/**
+ * Load `src/processout/telemetry.ts` and return its `ProcessOut` namespace.
+ */
+export function loadTelemetry(): Record<string, any> {
+  const js = compile("src/processout/telemetry.ts")
+  const moduleShim = { exports: {} as Record<string, any> }
+  const run = new Function("module", "exports", `${js}\nmodule.exports = ProcessOut;`)
+  run(moduleShim, moduleShim.exports)
+  return moduleShim.exports
+}

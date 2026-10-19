@@ -24,6 +24,18 @@ module ProcessOut {
 
   type LogLevel = "error" | "warn" | "info" | "debug"
 
+  const processOutScriptURL =
+    /^https?:\/\/[^/]*\.processout\.(com|ninja|dev)\/processout\.js([?#]|$)/
+
+  /**
+   * Whether a window error event was thrown by processout.js itself. Some
+   * browsers attribute errors from their injected scripts to the page URL, so
+   * matching any ProcessOut-hosted file reports errors that aren't ours.
+   */
+  export function isProcessOutScriptError(event: ErrorEvent): boolean {
+    return !!event && !!event.error && processOutScriptURL.test(event.filename || "")
+  }
+
   export class TelemetryClient {
     protected processOutInstance: ProcessOut
 

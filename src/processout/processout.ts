@@ -239,7 +239,7 @@ module ProcessOut {
           return
         }
 
-        if (/^https?:\/\/.*\.processout\.((com)|(ninja)|(dev))\//.test(event.filename)) {
+        if (isProcessOutScriptError(event)) {
           setTimeout(() => {
             this.telemetryClient.reportError({
               host: window && window.location ? window.location.host : "",
