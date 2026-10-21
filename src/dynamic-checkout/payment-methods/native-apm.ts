@@ -25,8 +25,14 @@ module ProcessOut {
     ) {
       const { display, apm } = paymentMethod
       const { invoiceId, invoiceDetails } = paymentConfig
+      const displayOverride = paymentConfig.getPaymentMethodDisplayOverride(apm.gateway_name)
 
-      super(processOutInstance, display.name, display.logo.dark_url.vector, display.name)
+      super(
+        processOutInstance,
+        displayOverride.displayName || display.name,
+        displayOverride.logoUrl || display.logo.dark_url.vector,
+        display.name,
+      )
 
       this.paymentConfig = paymentConfig
       this.paymentMethodName = apm.gateway_name

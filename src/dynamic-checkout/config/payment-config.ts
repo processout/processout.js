@@ -5,6 +5,16 @@ module ProcessOut {
     [gatewayName: string]: Record<string, string>
   }
 
+  export type DynamicCheckoutPaymentMethodOverride = {
+    displayName?: string
+    logoUrl?: string
+  }
+
+  // Keyed by "card" or by the APM gateway name, the same way as additionalData
+  interface DynamicCheckoutPaymentMethodsOverrides {
+    [paymentMethodKey: string]: DynamicCheckoutPaymentMethodOverride
+  }
+
   export type DynamicCheckoutPublicConfigType = {
     invoiceId: string
     projectId: string
@@ -19,6 +29,7 @@ module ProcessOut {
     additionalData?: DynamicCheckoutAdditionalDataByGateway
     cvcLabel?: string
     cvcPlaceholder?: string
+    paymentMethodsOverrides?: DynamicCheckoutPaymentMethodsOverrides
   }
 
   export type DynamicCheckoutInternalConfigType = {
@@ -42,6 +53,7 @@ module ProcessOut {
     additionalData: DynamicCheckoutPublicConfigType["additionalData"] = {}
     cvcLabel: DynamicCheckoutPublicConfigType["cvcLabel"] = ""
     cvcPlaceholder: DynamicCheckoutPublicConfigType["cvcPlaceholder"] = ""
+    paymentMethodsOverrides: DynamicCheckoutPublicConfigType["paymentMethodsOverrides"] = {}
     invoiceDetails: DynamicCheckoutInternalConfigType["invoiceDetails"]
 
     constructor(config: DynamicCheckoutPublicConfigType) {
@@ -63,6 +75,7 @@ module ProcessOut {
         payButtonText: this.payButtonText,
         cvcLabel: this.cvcLabel,
         cvcPlaceholder: this.cvcPlaceholder,
+        paymentMethodsOverrides: this.paymentMethodsOverrides,
       }
     }
 
@@ -86,6 +99,37 @@ module ProcessOut {
       return this.additionalData[gatewayName] || {}
     }
 
+    // Merchants embed Dynamic Checkout with plain JS, so the overrides are untrusted input:
+    // anything malformed must degrade to "no override" instead of throwing and breaking checkout.
+    public getPaymentMethodDisplayOverride(
+      paymentMethodKey: string,
+    ): DynamicCheckoutPaymentMethodOverride {
+      const overrides = this.paymentMethodsOverrides
+      const isPlainObject = (value: unknown) =>
+        typeof value === "object" && value !== null && !Array.isArray(value)
+
+      if (
+        !isPlainObject(overrides) ||
+        !Object.prototype.hasOwnProperty.call(overrides, paymentMethodKey)
+      ) {
+        return {}
+      }
+
+      const entry = overrides[paymentMethodKey]
+
+      if (!isPlainObject(entry)) {
+        return {}
+      }
+
+      const isNonEmptyString = (value: unknown): value is string =>
+        typeof value === "string" && value.length > 0
+
+      return {
+        ...(isNonEmptyString(entry.displayName) && { displayName: entry.displayName }),
+        ...(isNonEmptyString(entry.logoUrl) && { logoUrl: entry.logoUrl }),
+      }
+    }
+
     private setInitialConfig(config: DynamicCheckoutPublicConfigType) {
       if (!this.isValidConfig(config)) {
         throw new Error(
@@ -105,6 +149,7 @@ module ProcessOut {
       this.additionalData = config.additionalData || {}
       this.cvcLabel = config.cvcLabel || ""
       this.cvcPlaceholder = config.cvcPlaceholder || ""
+      this.paymentMethodsOverrides = config.paymentMethodsOverrides || {}
 
       if (config.showStatusMessage !== undefined && config.showStatusMessage !== null) {
         this.showStatusMessage = config.showStatusMessage

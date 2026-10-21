@@ -18,6 +18,7 @@ module ProcessOut {
       resetContainerHtml: () => HTMLElement,
     ) {
       const { display } = paymentMethod
+      const displayOverride = paymentConfig.getPaymentMethodDisplayOverride("card")
 
       const rightContent = HTMLElements.createElement({
         tagName: "div",
@@ -26,8 +27,8 @@ module ProcessOut {
 
       super(
         processOutInstance,
-        Translations.getText("card-label", paymentConfig.locale),
-        display.logo.light_url.vector,
+        displayOverride.displayName || Translations.getText("card-label", paymentConfig.locale),
+        displayOverride.logoUrl || display.logo.light_url.vector,
         display.name,
         rightContent,
       )
