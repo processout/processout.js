@@ -17,6 +17,7 @@ module ProcessOut {
     private paymentConfig: DynamicCheckoutPaymentConfig
     private paymentMethod: PaymentMethod
     private paymentMethodDisplayName: string
+    private displayOverride: DynamicCheckoutPaymentMethodOverride
     private theme: DynamicCheckoutThemeType
     private resetContainerHtml: () => HTMLElement
 
@@ -27,10 +28,14 @@ module ProcessOut {
       theme: DynamicCheckoutThemeType,
       resetContainerHtml: () => HTMLElement,
     ) {
+      const displayOverride = paymentConfig.getPaymentMethodDisplayOverride(
+        paymentMethod.apm.gateway_name,
+      )
+
       super(
         processOutInstance,
-        paymentMethod.display.name,
-        paymentMethod.display.logo.dark_url.vector,
+        displayOverride.displayName || paymentMethod.display.name,
+        displayOverride.logoUrl || paymentMethod.display.logo.dark_url.vector,
         paymentMethod.display.name,
       )
 
@@ -38,6 +43,7 @@ module ProcessOut {
       this.paymentConfig = paymentConfig
       this.paymentMethod = paymentMethod
       this.paymentMethodDisplayName = paymentMethod.display.name
+      this.displayOverride = displayOverride
       this.theme = theme
       this.resetContainerHtml = resetContainerHtml
 
@@ -49,9 +55,10 @@ module ProcessOut {
       const { clientSecret } = this.paymentConfig
       const canSavePaymentMethod = apm.saving_allowed
 
+      // gateway_name is the action type that selects the flow, so only the logo can be overridden
       const actionHandlerOptions = new ActionHandlerOptions(
         apm.gateway_name,
-        apm.gateway_logo.dark_url.raster,
+        this.displayOverride.logoUrl || apm.gateway_logo.dark_url.raster,
       )
 
       const cardPaymentOptions = {
@@ -511,7 +518,7 @@ module ProcessOut {
             `${Translations.getText(
               "continue-with-apm-button",
               this.paymentConfig.locale,
-            )} ${this.paymentMethod.display.name}`,
+            )} ${this.displayOverride.displayName || this.paymentMethod.display.name}`,
         },
       ])
 

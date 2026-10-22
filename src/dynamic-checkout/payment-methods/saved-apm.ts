@@ -6,6 +6,7 @@ module ProcessOut {
     private paymentConfig: DynamicCheckoutPaymentConfig
     private paymentMethod: PaymentMethod
     private paymentMethodDisplayName: string
+    private displayOverride: DynamicCheckoutPaymentMethodOverride
     private resetContainerHtml: () => HTMLElement
 
     constructor(
@@ -17,10 +18,14 @@ module ProcessOut {
       deleteMode?: boolean,
       handleDeletePaymentMethod?: () => void,
     ) {
+      const displayOverride = paymentConfig.getPaymentMethodDisplayOverride(
+        paymentMethod.apm_customer_token.gateway_name,
+      )
+
       super(
         processOutInstance,
-        paymentMethod.display.name,
-        paymentMethod.display.logo.dark_url.vector,
+        displayOverride.displayName || paymentMethod.display.name,
+        displayOverride.logoUrl || paymentMethod.display.logo.dark_url.vector,
         paymentMethod.apm_customer_token.customer_token_id,
         paymentMethod.display.description,
         deleteMode,
@@ -33,6 +38,7 @@ module ProcessOut {
       this.paymentConfig = paymentConfig
       this.paymentMethod = paymentMethod
       this.paymentMethodDisplayName = paymentMethod.display.name
+      this.displayOverride = displayOverride
       this.resetContainerHtml = resetContainerHtml
 
       if (!deleteMode) {
@@ -53,9 +59,10 @@ module ProcessOut {
         clientSecret,
       }
 
+      // gateway_name is the action type that selects the flow, so only the logo can be overridden
       const actionHandlerOptions = new ActionHandlerOptions(
         apm_customer_token.gateway_name,
-        apm_customer_token.gateway_logo.dark_url.raster,
+        this.displayOverride.logoUrl || apm_customer_token.gateway_logo.dark_url.raster,
       )
 
       this.setLoading(this.paymentConfig.locale)
