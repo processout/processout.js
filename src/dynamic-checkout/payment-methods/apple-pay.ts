@@ -10,10 +10,16 @@ module ProcessOut {
       paymentConfig: DynamicCheckoutPaymentConfig,
       invoiceData: Invoice,
       resetContainerHtml: () => HTMLElement,
+      onButtonDisplayed: () => void,
     ) {
       this.applePayClient = new ApplePayClient(processOutInstance, paymentConfig)
       this.element = this.getApplePayButtonElement()
-      this.applePayClient.loadButton(this.element, invoiceData, resetContainerHtml)
+      this.applePayClient.loadButton(
+        this.element,
+        invoiceData,
+        resetContainerHtml,
+        onButtonDisplayed,
+      )
     }
 
     private getApplePayButtonElement() {
