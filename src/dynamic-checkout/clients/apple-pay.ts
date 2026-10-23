@@ -14,12 +14,13 @@ module ProcessOut {
       buttonContainer: HTMLElement,
       invoiceData: Invoice,
       getViewContainer: () => HTMLElement,
+      onButtonDisplayed: () => void,
     ) {
       const applePayScript = document.createElement("script")
       applePayScript.src = applePaySdkUrl
       applePayScript.onload = () => {
         buttonContainer.innerHTML = `<apple-pay-button buttonstyle="white-outline" type="plain" locale="en-US"></apple-pay-button>`
-        this.initializeApplePay(invoiceData, buttonContainer, getViewContainer)
+        this.initializeApplePay(invoiceData, buttonContainer, getViewContainer, onButtonDisplayed)
       }
 
       document.head.appendChild(applePayScript)
@@ -29,6 +30,7 @@ module ProcessOut {
       invoiceData: Invoice,
       buttonContainer: HTMLElement,
       getViewContainer: () => HTMLElement,
+      onButtonDisplayed: () => void,
     ) {
       const applePayPaymentMethodData = this.getApplePayPaymentMethodData(invoiceData)
 
@@ -38,6 +40,7 @@ module ProcessOut {
             console.log(err)
           } else {
             buttonContainer.classList.add("visible")
+            onButtonDisplayed()
 
             document.querySelector("apple-pay-button").addEventListener("click", () => {
               this.tokenizeApplePay(invoiceData, getViewContainer)

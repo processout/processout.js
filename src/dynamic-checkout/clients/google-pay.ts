@@ -63,6 +63,7 @@ module ProcessOut {
       buttonContainer: HTMLElement,
       invoiceData: Invoice,
       getViewContainer: () => HTMLElement,
+      onButtonDisplayed: () => void,
     ) {
       const googleClientScript = document.createElement("script")
       googleClientScript.src = googlePaySdkUrl
@@ -81,7 +82,7 @@ module ProcessOut {
               })
             : null
 
-        this.initizalizeGooglePay(buttonContainer, getViewContainer, invoiceData)
+        this.initizalizeGooglePay(buttonContainer, getViewContainer, invoiceData, onButtonDisplayed)
       }
 
       document.head.appendChild(googleClientScript)
@@ -91,6 +92,7 @@ module ProcessOut {
       buttonContainer: HTMLElement,
       getViewContainer: () => HTMLElement,
       invoiceData: Invoice,
+      onButtonDisplayed: () => void,
     ) {
       this.prepareIsReadyToPayRequest(invoiceData)
       this.preparePaymentRequest(invoiceData)
@@ -108,6 +110,7 @@ module ProcessOut {
             })
 
             buttonContainer.appendChild(button)
+            onButtonDisplayed()
           }
         })
         .catch(error =>
