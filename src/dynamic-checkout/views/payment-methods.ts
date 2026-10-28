@@ -73,6 +73,12 @@ module ProcessOut {
       }
 
       if (expressPaymentMethods.length > 0 || walletPaymentMethods.length > 0) {
+        // Wallets confirm availability asynchronously, so a wallets-only section
+        // stays hidden until one of them actually displays its button
+        if (expressPaymentMethods.length === 0) {
+          expressCheckoutWrapper.style.display = "none"
+        }
+
         wrapper.appendChild(expressCheckoutWrapper)
       }
 
@@ -251,6 +257,7 @@ module ProcessOut {
               this.paymentConfig,
               this.paymentConfig.invoiceDetails,
               this.resetContainerHtml.bind(this),
+              this.showExpressCheckoutWrapper.bind(this),
             )
 
             return walletPaymentMethods.push(googlePayPaymentMethod)
@@ -267,6 +274,7 @@ module ProcessOut {
                 this.paymentConfig,
                 this.paymentConfig.invoiceDetails,
                 this.resetContainerHtml.bind(this),
+                this.showExpressCheckoutWrapper.bind(this),
               )
 
               return walletPaymentMethods.push(applePayPaymentMethod)
@@ -352,6 +360,16 @@ module ProcessOut {
     private resetContainerHtml() {
       this.element.innerHTML = ""
       return this.element
+    }
+
+    private showExpressCheckoutWrapper() {
+      const expressCheckoutWrapper = this.element.querySelector(
+        ".dco-express-checkout-wrapper",
+      ) as HTMLElement
+
+      if (expressCheckoutWrapper) {
+        expressCheckoutWrapper.style.display = ""
+      }
     }
 
     private shouldShowSettingsButton() {
