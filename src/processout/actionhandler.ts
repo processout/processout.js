@@ -82,6 +82,9 @@ module ProcessOut {
         // gatewayLogo is shown when the action is done on another tab or window
         public gatewayLogo?: string;
 
+        // Set for 3DS challenges so scheme passkeys (WebAuthn in the ACS frame) aren't blocked
+        public allowPasskeys: boolean = false;
+
         /** When set, iframe modal and new-window overlay are appended here instead of document.body */
         public overlayMountParent?: HTMLElement;
 
@@ -103,6 +106,7 @@ module ProcessOut {
             // in an iframe (if it is supported)
             case ActionHandlerOptions.ThreeDSChallengeFlow:
                 this.flow = ActionFlow.IFrame;
+                this.allowPasskeys = true;
                 break;
 
             // The 3DS flow where iframe is not supported
@@ -238,6 +242,10 @@ module ProcessOut {
                 var iframe = document.createElement("iframe");
                 iframe.setAttribute("style", `margin: 1em auto; width: ${this.options.iframeWidth}px; height: ${this.options.iframeHeight}px; max-width: 100%; max-height: 100%; display: block; box-shadow: 0 15px 35px rgba(50, 50, 93, 0.1), 0 5px 15px rgba(0, 0, 0, 0.07); background-color: #ECEFF1; background-image: url("${this.instance.endpoint("js", "/images/loader.gif")}"); background-repeat: no-repeat; background-position: center;")`);
                 iframe.setAttribute("frameborder", "0");
+                if (this.options.allowPasskeys) {
+                    // "*" because the frame redirects to issuer ACS origins we can't enumerate
+                    iframe.setAttribute("allow", "payment *; publickey-credentials-get *; publickey-credentials-create *");
+                }
                 iframe.onload = function() {
                     // Remove the background loader once it is actually loaded
                     iframe.style.backgroundImage = null;
