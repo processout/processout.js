@@ -110,6 +110,18 @@ module ProcessOut {
     captureStart = null
 
     /**
+     * Markdown and QR code libraries still loading
+     * @type {number}
+     */
+    pendingInstructionLibraries = 2
+
+    /**
+     * Callbacks to run once the markdown and QR code libraries are loaded (or failed to load)
+     * @type {Function[]}
+     */
+    instructionLibrariesCallbacks: Function[] = []
+
+    /**
      * NativeAPM constructor
      * @param  {NativeApmConfig} config
      */
@@ -204,6 +216,7 @@ module ProcessOut {
         )
 
         EventsUtils.dispatchWidgetReadyEvent()
+        this.refreshInstructionsWhenLibrariesLoad(nativeApmFormView)
 
         return this.loadView(nativeApmFormView.getViewElement())
       }
@@ -320,6 +333,7 @@ module ProcessOut {
         )
 
         EventsUtils.dispatchPaymentAdditionalInputEvent()
+        this.refreshInstructionsWhenLibrariesLoad(customerInputView)
 
         return this.loadView(customerInputView.getViewElement())
       }
@@ -533,14 +547,42 @@ module ProcessOut {
           window.globalThis && window.globalThis.showdown
             ? new window.globalThis.showdown.Converter({ openLinksInNewWindow: true })
             : null
+        this.markInstructionLibraryLoaded()
       }
+      markdownScript.onerror = () => this.markInstructionLibraryLoaded()
       document.head.appendChild(markdownScript)
     }
 
     private loadQrCodesLibrary() {
       const qrCodeScript = document.createElement("script")
       qrCodeScript.src = this.processOutInstance.endpoint("js", "/js/libraries/qrcode.min.js")
+      qrCodeScript.onload = () => this.markInstructionLibraryLoaded()
+      qrCodeScript.onerror = () => this.markInstructionLibraryLoaded()
       document.head.appendChild(qrCodeScript)
+    }
+
+    private markInstructionLibraryLoaded() {
+      this.pendingInstructionLibraries--
+      if (this.pendingInstructionLibraries > 0) {
+        return
+      }
+
+      const callbacks = this.instructionLibrariesCallbacks
+      this.instructionLibrariesCallbacks = []
+      callbacks.forEach(callback => callback())
+    }
+
+    /**
+     * A form can render before the markdown and QR code libraries are loaded: its instructions are drawn again then
+     */
+    private refreshInstructionsWhenLibrariesLoad(formView: NativeApmFormView) {
+      if (this.pendingInstructionLibraries <= 0) {
+        return
+      }
+
+      this.instructionLibrariesCallbacks.push(() =>
+        formView.refreshCustomerInstructions(this.formMarkdownLibraryInstance),
+      )
     }
     private loadPhoneNumberInputLibrary() {
       const phoneInputScript = document.createElement("script")

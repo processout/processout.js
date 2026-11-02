@@ -79,6 +79,12 @@ module ProcessOut {
     markdownLibraryInstance: any
 
     /**
+     * Container of the customer message and QR code
+     * @type {HTMLElement}
+     */
+    instructionsElement: HTMLElement
+
+    /**
      * Native APM Form constructor
      */
     constructor(
@@ -135,7 +141,9 @@ module ProcessOut {
       })
 
       form.appendChild(paymentProviderImage)
-      this.appendCustomerInstructions(form)
+      if (this.hasCustomerInstructions()) {
+        form.appendChild(this.createInstructionsElement())
+      }
       form.appendChild(inputsWrapper)
       form.appendChild(this.submitButton.getButtonElement())
 
@@ -145,16 +153,49 @@ module ProcessOut {
     }
 
     /**
-     * This function appends the customer message and QR code sent with the step, if any.
+     * This function draws the customer instructions again, once the markdown and QR code libraries are loaded
+     */
+    public refreshCustomerInstructions(markdownLibraryInstance: any) {
+      if (!this.instructionsElement) {
+        return
+      }
+
+      this.markdownLibraryInstance = markdownLibraryInstance
+      this.instructionsElement.innerHTML = ""
+      this.renderCustomerInstructions()
+    }
+
+    /**
+     * This function checks whether the step sent a customer message or a QR code
+     */
+    private hasCustomerInstructions() {
+      return (
+        !!NativeApmCustomerInstructions.getMessage(this.formData.customerInstructions) ||
+        !!NativeApmCustomerInstructions.getBarcode(this.formData.customerInstructions)
+      )
+    }
+
+    /**
+     * This function creates the container of the customer message and QR code sent with the step
+     */
+    private createInstructionsElement() {
+      this.instructionsElement = document.createElement("div")
+      this.instructionsElement.setAttribute("class", "native-apm-instructions")
+      this.renderCustomerInstructions()
+
+      return this.instructionsElement
+    }
+
+    /**
      * A rendering error must never break the form, so the instructions are skipped instead.
      */
-    private appendCustomerInstructions(form: HTMLFormElement) {
+    private renderCustomerInstructions() {
       const message = NativeApmCustomerInstructions.getMessage(this.formData.customerInstructions)
       const barcode = NativeApmCustomerInstructions.getBarcode(this.formData.customerInstructions)
 
       try {
         if (message) {
-          form.appendChild(
+          this.instructionsElement.appendChild(
             NativeApmCustomerInstructions.createMessageElement(
               this.markdownLibraryInstance,
               this.theme,
@@ -164,7 +205,9 @@ module ProcessOut {
         }
 
         if (barcode) {
-          form.appendChild(NativeApmCustomerInstructions.createQrCodeElement(this.theme, barcode))
+          this.instructionsElement.appendChild(
+            NativeApmCustomerInstructions.createQrCodeElement(this.theme, barcode),
+          )
         }
       } catch (error) {
         console.error("Failed to render native APM customer instructions", error)
