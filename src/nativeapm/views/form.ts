@@ -7,6 +7,7 @@ type NativeApmFormData = {
     amount: string
     currency_code: string
   }
+  customerInstructions?: NativeApmCustomerInstructionsValues
 }
 
 /**
@@ -72,6 +73,12 @@ module ProcessOut {
     payButtonText?: string
 
     /**
+     * Markdown library instance used to render the customer message
+     * @type {any}
+     */
+    markdownLibraryInstance: any
+
+    /**
      * Native APM Form constructor
      */
     constructor(
@@ -81,6 +88,7 @@ module ProcessOut {
       theme: NativeApmThemeConfigType,
       prefilledData: PrefilledData,
       payButtonText?: string,
+      markdownLibraryInstance?: any,
     ) {
       if (!formData) {
         throw new Exception(
@@ -94,6 +102,7 @@ module ProcessOut {
       this.prefilledData = prefilledData
       this.formData = formData
       this.payButtonText = payButtonText
+      this.markdownLibraryInstance = markdownLibraryInstance
       this.onSubmitHandler = onSubmitHandler
       this.formInputs = this.createFormInputs()
       this.submitButton = this.createSubmitButton()
@@ -126,12 +135,40 @@ module ProcessOut {
       })
 
       form.appendChild(paymentProviderImage)
+      this.appendCustomerInstructions(form)
       form.appendChild(inputsWrapper)
       form.appendChild(this.submitButton.getButtonElement())
 
       form.addEventListener("submit", this.submitForm.bind(this))
 
       return form
+    }
+
+    /**
+     * This function appends the customer message and QR code sent with the step, if any.
+     * A rendering error must never break the form, so the instructions are skipped instead.
+     */
+    private appendCustomerInstructions(form: HTMLFormElement) {
+      const message = NativeApmCustomerInstructions.getMessage(this.formData.customerInstructions)
+      const barcode = NativeApmCustomerInstructions.getBarcode(this.formData.customerInstructions)
+
+      try {
+        if (message) {
+          form.appendChild(
+            NativeApmCustomerInstructions.createMessageElement(
+              this.markdownLibraryInstance,
+              this.theme,
+              message,
+            ),
+          )
+        }
+
+        if (barcode) {
+          form.appendChild(NativeApmCustomerInstructions.createQrCodeElement(this.theme, barcode))
+        }
+      } catch (error) {
+        console.error("Failed to render native APM customer instructions", error)
+      }
     }
 
     /**

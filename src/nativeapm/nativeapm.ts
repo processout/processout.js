@@ -61,6 +61,13 @@ module ProcessOut {
     markdownLibraryInstance: any
 
     /**
+     * Instance of JS library which handles markdown on the form view.
+     * Its links open in a new window, so a payment link doesn't replace the checkout page.
+     * @type {any}
+     */
+    formMarkdownLibraryInstance: any
+
+    /**
      * Native APM container element for mounting the widget
      * @type {Element}
      */
@@ -185,11 +192,15 @@ module ProcessOut {
       ) {
         const nativeApmFormView = new NativeApmFormView(
           this.processOutInstance,
-          this.gatewayConfiguration.native_apm,
+          {
+            ...this.gatewayConfiguration.native_apm,
+            customerInstructions: this.gatewayConfiguration.native_apm.parameter_values,
+          },
           this.proceedPayment.bind(this),
           this.theme,
           this.prefilledData,
           this.paymentConfig.payButtonText,
+          this.formMarkdownLibraryInstance,
         )
 
         EventsUtils.dispatchWidgetReadyEvent()
@@ -299,11 +310,13 @@ module ProcessOut {
             gateway: this.gatewayConfiguration.native_apm.gateway,
             parameters: data.native_apm.parameterDefinitions,
             invoice: this.gatewayConfiguration.native_apm.invoice,
+            customerInstructions: data.native_apm.parameterValues,
           },
           this.proceedPayment.bind(this),
           this.theme,
           this.prefilledData,
           this.paymentConfig.payButtonText,
+          this.formMarkdownLibraryInstance,
         )
 
         EventsUtils.dispatchPaymentAdditionalInputEvent()
@@ -515,6 +528,10 @@ module ProcessOut {
         this.markdownLibraryInstance =
           window.globalThis && window.globalThis.showdown
             ? new window.globalThis.showdown.Converter()
+            : null
+        this.formMarkdownLibraryInstance =
+          window.globalThis && window.globalThis.showdown
+            ? new window.globalThis.showdown.Converter({ openLinksInNewWindow: true })
             : null
       }
       document.head.appendChild(markdownScript)

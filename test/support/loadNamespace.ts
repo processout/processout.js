@@ -167,3 +167,28 @@ export function loadTelemetry(): Record<string, any> {
   run(moduleShim, moduleShim.exports)
   return moduleShim.exports
 }
+
+/**
+ * Load the native APM customer instructions helper (with `StylesUtils`, which it uses) and return its
+ * `ProcessOut` namespace. `document` and `window` are injected so the DOM helpers run without a browser.
+ */
+export function loadNativeApmCustomerInstructions(
+  document: Record<string, any>,
+  window: Record<string, any>,
+): Record<string, any> {
+  const js = [
+    compile("src/nativeapm/utils/styles.ts"),
+    `const { StylesUtils } = ProcessOut;`,
+    compile("src/nativeapm/views/customer-instructions.ts"),
+  ].join("\n")
+  const moduleShim = { exports: {} as Record<string, any> }
+  const run = new Function(
+    "module",
+    "exports",
+    "document",
+    "window",
+    `${js}\nmodule.exports = ProcessOut;`,
+  )
+  run(moduleShim, moduleShim.exports, document, window)
+  return moduleShim.exports
+}

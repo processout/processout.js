@@ -16,6 +16,7 @@
 /// <reference path="elements/inputs/phone-with-country.ts" />
 /// <reference path="elements/inputs/select.ts" />
 /// <reference path="elements/inputs/input.ts" />
+/// <reference path="views/customer-instructions.ts" />
 /// <reference path="views/form.ts" />
 /// <reference path="views/pending.ts" />
 /// <reference path="views/error.ts" />
