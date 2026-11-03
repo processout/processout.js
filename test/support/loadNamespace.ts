@@ -167,3 +167,56 @@ export function loadTelemetry(): Record<string, any> {
   run(moduleShim, moduleShim.exports)
   return moduleShim.exports
 }
+
+export interface FakeElement {
+  tagName: string
+  attributes: Record<string, string>
+  style: Record<string, unknown>
+  children: FakeElement[]
+  setAttribute(name: string, value: string): void
+  appendChild(child: FakeElement): void
+}
+
+/**
+ * Load `src/processout/actionhandler.ts` with a minimal DOM shim that records
+ * every element the handler creates, so tests can inspect iframe attributes.
+ */
+export function loadActionHandler(): {
+  namespace: Record<string, any>
+  createdElements: FakeElement[]
+} {
+  const createdElements: FakeElement[] = []
+  const makeElement = (tagName: string): FakeElement => {
+    const el: FakeElement = {
+      tagName,
+      attributes: {},
+      style: {},
+      children: [],
+      setAttribute(name, value) {
+        el.attributes[name] = value
+      },
+      appendChild(child) {
+        el.children.push(child)
+      },
+    }
+    createdElements.push(el)
+    return el
+  }
+  const documentShim = { createElement: makeElement, createEvent: () => ({ initEvent() {} }) }
+  const windowShim = { addEventListener() {}, dispatchEvent() {} }
+  const translatorShim = { translateMessage: (_key: string, fallback: string) => fallback }
+
+  const js = compile("src/processout/actionhandler.ts")
+  const moduleShim = { exports: {} as Record<string, any> }
+  const run = new Function(
+    "module",
+    "exports",
+    "document",
+    "window",
+    "navigator",
+    "Translator",
+    `${js}\nmodule.exports = ProcessOut;`,
+  )
+  run(moduleShim, moduleShim.exports, documentShim, windowShim, { userAgent: "" }, translatorShim)
+  return { namespace: moduleShim.exports, createdElements }
+}
