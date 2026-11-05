@@ -61,6 +61,13 @@ module ProcessOut {
     markdownLibraryInstance: any
 
     /**
+     * Instance of JS library which handles markdown on the form view.
+     * Its links open in a new window, so a payment link doesn't replace the checkout page.
+     * @type {any}
+     */
+    formMarkdownLibraryInstance: any
+
+    /**
      * Native APM container element for mounting the widget
      * @type {Element}
      */
@@ -101,6 +108,18 @@ module ProcessOut {
      * @type {number}
      */
     captureStart = null
+
+    /**
+     * Markdown and QR code libraries still loading
+     * @type {number}
+     */
+    pendingInstructionLibraries = 2
+
+    /**
+     * Callbacks to run once the markdown and QR code libraries are loaded (or failed to load)
+     * @type {Function[]}
+     */
+    instructionLibrariesCallbacks: Function[] = []
 
     /**
      * NativeAPM constructor
@@ -185,14 +204,19 @@ module ProcessOut {
       ) {
         const nativeApmFormView = new NativeApmFormView(
           this.processOutInstance,
-          this.gatewayConfiguration.native_apm,
+          {
+            ...this.gatewayConfiguration.native_apm,
+            customerInstructions: this.gatewayConfiguration.native_apm.parameter_values,
+          },
           this.proceedPayment.bind(this),
           this.theme,
           this.prefilledData,
           this.paymentConfig.payButtonText,
+          this.formMarkdownLibraryInstance,
         )
 
         EventsUtils.dispatchWidgetReadyEvent()
+        this.refreshInstructionsWhenLibrariesLoad(nativeApmFormView)
 
         return this.loadView(nativeApmFormView.getViewElement())
       }
@@ -299,14 +323,17 @@ module ProcessOut {
             gateway: this.gatewayConfiguration.native_apm.gateway,
             parameters: data.native_apm.parameterDefinitions,
             invoice: this.gatewayConfiguration.native_apm.invoice,
+            customerInstructions: data.native_apm.parameterValues,
           },
           this.proceedPayment.bind(this),
           this.theme,
           this.prefilledData,
           this.paymentConfig.payButtonText,
+          this.formMarkdownLibraryInstance,
         )
 
         EventsUtils.dispatchPaymentAdditionalInputEvent()
+        this.refreshInstructionsWhenLibrariesLoad(customerInputView)
 
         return this.loadView(customerInputView.getViewElement())
       }
@@ -516,14 +543,46 @@ module ProcessOut {
           window.globalThis && window.globalThis.showdown
             ? new window.globalThis.showdown.Converter()
             : null
+        this.formMarkdownLibraryInstance =
+          window.globalThis && window.globalThis.showdown
+            ? new window.globalThis.showdown.Converter({ openLinksInNewWindow: true })
+            : null
+        this.markInstructionLibraryLoaded()
       }
+      markdownScript.onerror = () => this.markInstructionLibraryLoaded()
       document.head.appendChild(markdownScript)
     }
 
     private loadQrCodesLibrary() {
       const qrCodeScript = document.createElement("script")
       qrCodeScript.src = this.processOutInstance.endpoint("js", "/js/libraries/qrcode.min.js")
+      qrCodeScript.onload = () => this.markInstructionLibraryLoaded()
+      qrCodeScript.onerror = () => this.markInstructionLibraryLoaded()
       document.head.appendChild(qrCodeScript)
+    }
+
+    private markInstructionLibraryLoaded() {
+      this.pendingInstructionLibraries--
+      if (this.pendingInstructionLibraries > 0) {
+        return
+      }
+
+      const callbacks = this.instructionLibrariesCallbacks
+      this.instructionLibrariesCallbacks = []
+      callbacks.forEach(callback => callback())
+    }
+
+    /**
+     * A form can render before the markdown and QR code libraries are loaded: its instructions are drawn again then
+     */
+    private refreshInstructionsWhenLibrariesLoad(formView: NativeApmFormView) {
+      if (this.pendingInstructionLibraries <= 0) {
+        return
+      }
+
+      this.instructionLibrariesCallbacks.push(() =>
+        formView.refreshCustomerInstructions(this.formMarkdownLibraryInstance),
+      )
     }
     private loadPhoneNumberInputLibrary() {
       const phoneInputScript = document.createElement("script")
