@@ -255,6 +255,9 @@ const defaultTheme: NativeApmThemeConfigType = {
   actionImage: {
     marginTop: "1.3rem",
     marginBottom: "1.3rem",
+    // auto side margins center the fixed-width action image/QR within its container
+    marginLeft: "auto",
+    marginRight: "auto",
     width: "15rem",
     height: "auto",
     display: "flex",

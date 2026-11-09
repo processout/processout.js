@@ -7,6 +7,7 @@ type NativeApmFormData = {
     amount: string
     currency_code: string
   }
+  customerInstructions?: NativeApmCustomerInstructionsValues
 }
 
 /**
@@ -72,6 +73,18 @@ module ProcessOut {
     payButtonText?: string
 
     /**
+     * Markdown library instance used to render the customer message
+     * @type {any}
+     */
+    markdownLibraryInstance: any
+
+    /**
+     * Container of the customer message and QR code
+     * @type {HTMLElement}
+     */
+    instructionsElement: HTMLElement
+
+    /**
      * Native APM Form constructor
      */
     constructor(
@@ -81,6 +94,7 @@ module ProcessOut {
       theme: NativeApmThemeConfigType,
       prefilledData: PrefilledData,
       payButtonText?: string,
+      markdownLibraryInstance?: any,
     ) {
       if (!formData) {
         throw new Exception(
@@ -94,6 +108,7 @@ module ProcessOut {
       this.prefilledData = prefilledData
       this.formData = formData
       this.payButtonText = payButtonText
+      this.markdownLibraryInstance = markdownLibraryInstance
       this.onSubmitHandler = onSubmitHandler
       this.formInputs = this.createFormInputs()
       this.submitButton = this.createSubmitButton()
@@ -126,12 +141,77 @@ module ProcessOut {
       })
 
       form.appendChild(paymentProviderImage)
+      if (this.hasCustomerInstructions()) {
+        form.appendChild(this.createInstructionsElement())
+      }
       form.appendChild(inputsWrapper)
       form.appendChild(this.submitButton.getButtonElement())
 
       form.addEventListener("submit", this.submitForm.bind(this))
 
       return form
+    }
+
+    /**
+     * This function draws the customer instructions again, once the markdown and QR code libraries are loaded
+     */
+    public refreshCustomerInstructions(markdownLibraryInstance: any) {
+      if (!this.instructionsElement) {
+        return
+      }
+
+      this.markdownLibraryInstance = markdownLibraryInstance
+      this.instructionsElement.innerHTML = ""
+      this.renderCustomerInstructions()
+    }
+
+    /**
+     * This function checks whether the step sent a customer message or a QR code
+     */
+    private hasCustomerInstructions() {
+      return (
+        !!NativeApmCustomerInstructions.getMessage(this.formData.customerInstructions) ||
+        !!NativeApmCustomerInstructions.getBarcode(this.formData.customerInstructions)
+      )
+    }
+
+    /**
+     * This function creates the container of the customer message and QR code sent with the step
+     */
+    private createInstructionsElement() {
+      this.instructionsElement = document.createElement("div")
+      this.instructionsElement.setAttribute("class", "native-apm-instructions")
+      this.renderCustomerInstructions()
+
+      return this.instructionsElement
+    }
+
+    /**
+     * A rendering error must never break the form, so the instructions are skipped instead.
+     */
+    private renderCustomerInstructions() {
+      const message = NativeApmCustomerInstructions.getMessage(this.formData.customerInstructions)
+      const barcode = NativeApmCustomerInstructions.getBarcode(this.formData.customerInstructions)
+
+      try {
+        if (message) {
+          this.instructionsElement.appendChild(
+            NativeApmCustomerInstructions.createMessageElement(
+              this.markdownLibraryInstance,
+              this.theme,
+              message,
+            ),
+          )
+        }
+
+        if (barcode) {
+          this.instructionsElement.appendChild(
+            NativeApmCustomerInstructions.createQrCodeElement(this.theme, barcode),
+          )
+        }
+      } catch (error) {
+        console.error("Failed to render native APM customer instructions", error)
+      }
     }
 
     /**
