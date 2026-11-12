@@ -68,8 +68,18 @@ module ProcessOut {
       const applePayPaymentMethodData = this.getApplePayPaymentMethodData(invoiceData)
       const supportedNetworks = this.getSupportedNetworks(invoiceData)
 
-      const session = this.processOutInstance.applePay.newSession(
-        {
+      const dispatchSessionError = (err: any) =>
+        DynamicCheckoutEventsUtils.dispatchApplePaySessionError(
+          this.paymentConfig.invoiceId,
+          err,
+          this.getApplePayPaymentMethodName(invoiceData),
+          this.paymentConfig.invoiceDetails.return_url || null,
+        )
+
+      let session: ApplePay
+
+      try {
+        session = this.processOutInstance.applePay.newSession({
           total: {
             label: invoiceData.name,
             amount: invoiceData.amount,
@@ -80,21 +90,21 @@ module ProcessOut {
           merchantCapabilities: applePayPaymentMethodData.merchant_capabilities,
           merchantApplePayCertificateId: applePayPaymentMethodData.merchant_id,
           applePaySessionVersion: 14,
-        },
-        () =>
-          DynamicCheckoutEventsUtils.dispatchApplePayNewSessionEvent(
-            this.paymentConfig.invoiceId,
-            this.getApplePayPaymentMethodName(invoiceData),
-            this.paymentConfig.invoiceDetails.return_url || null,
-          ),
-        err =>
-          DynamicCheckoutEventsUtils.dispatchApplePaySessionError(
-            this.paymentConfig.invoiceId,
-            err,
-            this.getApplePayPaymentMethodName(invoiceData),
-            this.paymentConfig.invoiceDetails.return_url || null,
-          ),
-      )
+        })
+      } catch (err) {
+        dispatchSessionError(err)
+
+        throw err
+      }
+
+      session.onmerchantvalidated = () =>
+        DynamicCheckoutEventsUtils.dispatchApplePayNewSessionEvent(
+          this.paymentConfig.invoiceId,
+          this.getApplePayPaymentMethodName(invoiceData),
+          this.paymentConfig.invoiceDetails.return_url || null,
+        )
+
+      session.onmerchantvalidationerror = dispatchSessionError
 
       session.onpaymentauthorizedPostprocess = () => {
         DynamicCheckoutEventsUtils.dispatchPaymentSubmittedEvent({
