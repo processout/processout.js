@@ -202,7 +202,9 @@ module ProcessOut {
       const event = DynamicCheckoutEventsUtils.createEvent(
         DYNAMIC_CHECKOUT_EVENTS.APPLE_PAY_SESSION_ERROR,
         {
-          ...err,
+          // ProcessOut exceptions carry a string `code`; errors thrown by the Apple Pay SDK only a `name`
+          error_type: (err && (typeof err.code === "string" ? err.code : err.name)) || null,
+          error_message: (err && err.message) || null,
           invoice_id: invoiceId,
           payment_method_name: "apple_pay",
           payment_method_display_name: paymentMethodDisplayName,

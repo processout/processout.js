@@ -84,6 +84,21 @@ module ProcessOut {
     public onpaymentauthorizedPostprocess: (event: any) => void;
 
     /**
+     * onmerchantvalidated can be set to handle the event when the merchant
+     * was validated and the Apple Pay session is ready to be used
+     * @type {() => void}
+     */
+    public onmerchantvalidated: () => void;
+
+    /**
+     * onmerchantvalidationerror can be set to handle the event when the
+     * merchant could not be validated. It is called in addition to (and
+     * right before) the error handler given to tokenize
+     * @type {(err: Exception) => void}
+     */
+    public onmerchantvalidationerror: (err: Exception) => void;
+
+    /**
      * ApplePay constructor
      * @param {ProcessOut} instance
      * @param {ApplePayPaymentRequest} req
@@ -121,17 +136,25 @@ module ProcessOut {
           },
           function (data: any, req: XMLHttpRequest, e: Event): void {
             if (!data.success) {
-              t.onerror(new Exception(data.error_code, data.message));
-              t.session.abort();
-            } else t.session.completeMerchantValidation(data.session_payload);
+              t.handleMerchantValidationError(
+                new Exception(data.error_code, data.message)
+              );
+
+              return;
+            }
+
+            t.session.completeMerchantValidation(data.session_payload);
+
+            if (t.onmerchantvalidated) {
+              t.onmerchantvalidated();
+            }
           },
           function (
             req: XMLHttpRequest,
             e: Event,
             errorCode: ApiRequestError
           ): void {
-            t.onerror(new Exception(errorCode));
-            t.session.abort();
+            t.handleMerchantValidationError(new Exception(errorCode));
           }
         );
       };
@@ -180,6 +203,24 @@ module ProcessOut {
         this.onShippingContactSelectedHandler.bind(this);
       this.session.onshippingmethodselected =
         this.onShippingMethodSelectedHandler.bind(this);
+    }
+
+    /**
+     * handleMerchantValidationError notifies the optional
+     * onmerchantvalidationerror handler, then reports the error and aborts
+     * the session exactly as before, even if that handler throws
+     * @param {Exception} err
+     * @return {void}
+     */
+    protected handleMerchantValidationError(err: Exception): void {
+      try {
+        if (this.onmerchantvalidationerror) {
+          this.onmerchantvalidationerror(err);
+        }
+      } finally {
+        this.onerror(err);
+        this.session.abort();
+      }
     }
 
     /**
