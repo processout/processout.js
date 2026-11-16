@@ -54,11 +54,11 @@ module ProcessOut {
         /**
          * newSession creates a new Apple Pay session
          * @param {ApplePayPaymentRequest} req
-         * @param {callback} onsuccess 
-         * @param {callback} onerror 
+         * @param {callback} onsuccess unused, kept for backward compatibility
+         * @param {callback} onerror unused, kept for backward compatibility
          */
         public newSession(req: ApplePayPaymentRequest,
-            onsuccess: (e: any) => void, onerror?: (e: any) => void): ApplePay {
+            onsuccess?: (e: any) => void, onerror?: (e: any) => void): ApplePay {
             
             return new ApplePay(this.instance, req);
         }

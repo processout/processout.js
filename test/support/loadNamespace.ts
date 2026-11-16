@@ -158,6 +158,30 @@ export function loadDynamicCheckout(): DynamicCheckoutNamespace {
 }
 
 /**
+ * Load the core Apple Pay session class and its wrapper and return their `ProcessOut`
+ * namespace. `ApplePaySession` is the browser global the SDK wraps, so tests inject a fake.
+ */
+export function loadApplePay(ApplePaySession: unknown): Record<string, any> {
+  const js = [
+    // Core SDK exception; the real one pulls in the translator.
+    `function Exception(code, message) { this.code = code; this.message = message; }`,
+    compile("src/processout/applepay.ts"),
+    `const { ApplePay } = ProcessOut;`,
+    compile("src/processout/applepay-wrapper.ts"),
+  ].join("\n")
+  const moduleShim = { exports: {} as Record<string, any> }
+  const run = new Function(
+    "module",
+    "exports",
+    "window",
+    "ApplePaySession",
+    `${js}\nmodule.exports = ProcessOut;`,
+  )
+  run(moduleShim, moduleShim.exports, { location: { hostname: "merchant.test" } }, ApplePaySession)
+  return moduleShim.exports
+}
+
+/**
  * Load `src/processout/telemetry.ts` and return its `ProcessOut` namespace.
  */
 export function loadTelemetry(): Record<string, any> {

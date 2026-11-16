@@ -115,4 +115,69 @@ describe("Apple Pay", () => {
       return_url: "https://merchant.test",
     })
   })
+
+  function createClient(newSession: () => unknown) {
+    const client = new ProcessOut.ApplePayClient(
+      { applePay: { newSession } },
+      createPaymentConfig(),
+    )
+    client.getSupportedNetworks = () => []
+
+    return client
+  }
+
+  function createSessionCallbacks() {
+    const session = createClient(() => ({})).createApplePaySession(invoiceData)
+
+    return { onSuccess: session.onmerchantvalidated, onError: session.onmerchantvalidationerror }
+  }
+
+  it("does not pass callbacks to the public newSession API", () => {
+    const newSession = vi.fn((..._args: unknown[]) => ({}))
+
+    createClient(newSession).createApplePaySession(invoiceData)
+
+    expect(newSession.mock.calls[0]).toHaveLength(1)
+    expect(dispatchedEvents).toHaveLength(0)
+  })
+
+  it("dispatches apple_pay_session_error and rethrows when the session cannot be constructed", () => {
+    const sdkError = new TypeError("Invalid version")
+    const client = createClient(() => {
+      throw sdkError
+    })
+
+    expect(() => client.createApplePaySession(invoiceData)).toThrow(sdkError)
+    expect(getEventTypes()).toEqual(["processout_dynamic_checkout_apple_pay_session_error"])
+    expect(dispatchedEvents[0].detail).toMatchObject({
+      error_type: "TypeError",
+      error_message: "Invalid version",
+    })
+  })
+
+  it("dispatches apple_pay_new_session when the session is created", () => {
+    createSessionCallbacks().onSuccess()
+
+    expect(getEventTypes()).toEqual(["processout_dynamic_checkout_apple_pay_new_session"])
+    expect(dispatchedEvents[0].detail).toEqual({
+      payment_method_name: "apple_pay",
+      payment_method_display_name: "Apple Pay (CAT)",
+      invoice_id: "iv_test",
+      return_url: "https://merchant.test",
+    })
+  })
+
+  it("dispatches apple_pay_session_error with the error code and message", () => {
+    createSessionCallbacks().onError({ code: "request.validation.error", message: "Bad domain" })
+
+    expect(getEventTypes()).toEqual(["processout_dynamic_checkout_apple_pay_session_error"])
+    expect(dispatchedEvents[0].detail).toEqual({
+      error_type: "request.validation.error",
+      error_message: "Bad domain",
+      payment_method_name: "apple_pay",
+      payment_method_display_name: "Apple Pay (CAT)",
+      invoice_id: "iv_test",
+      return_url: "https://merchant.test",
+    })
+  })
 })
