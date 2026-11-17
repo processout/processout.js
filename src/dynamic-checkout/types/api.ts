@@ -93,6 +93,8 @@ type Apm = {
   redirect_url?: string
   customer_token_id?: string
   gateway_name?: string
+  // "off" | "shadow" | "on"; see DynamicCheckoutOpenerLossUtils
+  opener_loss_handling?: string
   gateway_logo: {
     light_url: {
       raster: string

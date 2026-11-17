@@ -87,6 +87,7 @@ module ProcessOut {
           customer_token_id: apm_customer_token.customer_token_id,
         })
 
+        const actionStartedAt = Date.now()
         return this.processOutInstance.handleAction(
           redirectUrl,
           paymentToken => {
@@ -168,6 +169,10 @@ module ProcessOut {
             )
           },
           error => {
+            if (this.handleOpenerLoss(error, actionStartedAt)) {
+              return
+            }
+
             if (error.code === "customer.canceled") {
               this.resetContainerHtml().appendChild(
                 new DynamicCheckoutPaymentCancelledView(
@@ -224,6 +229,32 @@ module ProcessOut {
         requestOptions,
         this.handlePaymentPending.bind(this),
       )
+    }
+
+    /**
+     * Must run first in the handleAction error callback: PO.js refocuses the window right after it.
+     * Returns true when the tab_closed was a lost opener and DC shows pending instead of cancelled.
+     */
+    private handleOpenerLoss(error: Exception, actionStartedAt: number): boolean {
+      const { apm_customer_token } = this.paymentMethod
+      const isOpenerLoss = DynamicCheckoutOpenerLossUtils.isOpenerLoss(
+        this.processOutInstance,
+        error,
+        {
+          mode: apm_customer_token.opener_loss_handling,
+          gatewayName: apm_customer_token.gateway_name,
+          invoiceId: this.paymentConfig.invoiceId,
+          actionStartedAt,
+        },
+      )
+      if (!isOpenerLoss) {
+        return false
+      }
+
+      this.resetContainerHtml().appendChild(
+        new DynamicCheckoutPaymentPendingView(this.processOutInstance, this.paymentConfig).element,
+      )
+      return true
     }
 
     private handlePaymentSuccess(invoiceId: string, data) {
