@@ -23,6 +23,9 @@ module ProcessOut {
     "payment-success-message": "Това плащане е завършено.",
     "payment-info-message": "Обработваме вашето плащане. Вече можете да затворите този прозорец.",
     "payment-pending-message": "Плащането ви е в изчакване.",
+    "payment-awaiting-confirmation-message":
+      "Завършете плащането в другия раздел. Тази страница ще се обнови автоматично.",
+    "payment-awaiting-confirmation-cancel-button": "Отказ",
     "payment-error-generic-message": "Не успяхме да обработим плащането ви.",
     "verification-success-message": "Тази проверка е завършена.",
     "verification-cancelled-message": "Проверката беше отменена.",

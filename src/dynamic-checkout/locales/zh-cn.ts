@@ -23,6 +23,8 @@ module ProcessOut {
     "payment-success-message": "付款已完成。",
     "payment-info-message": "我们正在处理您的付款。您现在可以关闭此窗口。",
     "payment-pending-message": "您的付款正在等待处理。",
+    "payment-awaiting-confirmation-message": "请在另一个标签页中完成付款。此页面将自动更新。",
+    "payment-awaiting-confirmation-cancel-button": "取消",
     "payment-error-generic-message": "我们无法处理您的付款。",
     "verification-success-message": "验证已完成。",
     "verification-cancelled-message": "验证已取消。",

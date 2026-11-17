@@ -24,6 +24,9 @@ module ProcessOut {
     "payment-info-message":
       "Plata dumneavoastră este în curs de procesare. Puteți închide această fereastră.",
     "payment-pending-message": "Plata dumneavoastră este în așteptare.",
+    "payment-awaiting-confirmation-message":
+      "Finalizați plata în cealaltă filă. Această pagină se va actualiza automat.",
+    "payment-awaiting-confirmation-cancel-button": "Anulează",
     "payment-error-generic-message": "Nu am putut procesa plata dumneavoastră.",
     "verification-success-message": "Verificarea a fost finalizată.",
     "verification-cancelled-message": "Verificarea a fost anulată.",

@@ -24,6 +24,9 @@ module ProcessOut {
     "payment-info-message":
       "మేము మీ చెల్లింపును ప్రాసెస్ చేస్తున్నాము. మీరు ఇప్పుడు ఈ విండోను మూసివేయవచ్చు.",
     "payment-pending-message": "మీ చెల్లింపు పెండింగ్‌లో ఉంది.",
+    "payment-awaiting-confirmation-message":
+      "మరో ట్యాబ్‌లో చెల్లింపును పూర్తి చేయండి. ఈ పేజీ స్వయంచాలకంగా అప్‌డేట్ అవుతుంది.",
+    "payment-awaiting-confirmation-cancel-button": "రద్దు చేయి",
     "payment-error-generic-message": "మేము మీ చెల్లింపును ప్రాసెస్ చేయలేకపోయాము.",
     "verification-success-message": "ఈ ధృవీకరణ పూర్తయింది.",
     "verification-cancelled-message": "ధృవీకరణ రద్దు చేయబడింది.",

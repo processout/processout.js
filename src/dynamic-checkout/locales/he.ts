@@ -23,6 +23,9 @@ module ProcessOut {
     "payment-success-message": "התשלום הושלם.",
     "payment-info-message": "התשלום שלכם בטיפול. כעת ניתן לסגור חלון זה.",
     "payment-pending-message": "התשלום שלכם ממתין לאישור.",
+    "payment-awaiting-confirmation-message":
+      "השלימו את התשלום בכרטיסייה האחרת. דף זה יתעדכן אוטומטית.",
+    "payment-awaiting-confirmation-cancel-button": "ביטול",
     "payment-error-generic-message": "לא הצלחנו לעבד את התשלום שלכם.",
     "verification-success-message": "האימות הושלם.",
     "verification-cancelled-message": "האימות בוטל.",

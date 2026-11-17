@@ -23,6 +23,9 @@ module ProcessOut {
     "payment-success-message": "Denne betaling er gennemført.",
     "payment-info-message": "Vi behandler din betaling. Du kan nu lukke dette vindue.",
     "payment-pending-message": "Din betaling afventer.",
+    "payment-awaiting-confirmation-message":
+      "Gennemfør betalingen i den anden fane. Denne side opdateres automatisk.",
+    "payment-awaiting-confirmation-cancel-button": "Annuller",
     "payment-error-generic-message": "Vi kunne ikke behandle din betaling.",
     "verification-success-message": "Denne verificering er gennemført.",
     "verification-cancelled-message": "Verificeringen er blevet annulleret.",

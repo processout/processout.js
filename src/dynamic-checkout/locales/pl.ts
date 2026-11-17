@@ -23,6 +23,9 @@ module ProcessOut {
     "payment-success-message": "Płatność została zakończona pomyślnie.",
     "payment-info-message": "Przetwarzamy Twoją płatność. Możesz teraz zamknąć tę okno.",
     "payment-pending-message": "Twoja płatność oczekuje na realizację.",
+    "payment-awaiting-confirmation-message":
+      "Dokończ płatność w drugiej karcie. Ta strona zaktualizuje się automatycznie.",
+    "payment-awaiting-confirmation-cancel-button": "Anuluj",
     "payment-error-generic-message": "Nie udało nam się przetworzyć Twojej płatności.",
     "verification-success-message": "Weryfikacja została zakończona pomyślnie.",
     "verification-cancelled-message": "Weryfikacja została anulowana.",

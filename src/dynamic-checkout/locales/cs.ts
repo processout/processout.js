@@ -23,6 +23,9 @@ module ProcessOut {
     "payment-success-message": "Tato platba byla dokončena.",
     "payment-info-message": "Vaši platbu zpracováváme. Toto okno můžete nyní zavřít.",
     "payment-pending-message": "Vaše platba čeká na zpracování.",
+    "payment-awaiting-confirmation-message":
+      "Dokončete platbu na druhé kartě. Tato stránka se automaticky aktualizuje.",
+    "payment-awaiting-confirmation-cancel-button": "Zrušit",
     "payment-error-generic-message": "Vaši platbu se nepodařilo zpracovat.",
     "verification-success-message": "Toto ověření bylo dokončeno.",
     "verification-cancelled-message": "Ověření bylo zrušeno.",
