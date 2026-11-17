@@ -137,3 +137,19 @@ describe("DynamicCheckoutOpenerLossUtils.isOpenerLoss", () => {
     vi.restoreAllMocks()
   })
 })
+
+describe("DynamicCheckoutOpenerLossUtils.markRedirectUrl", () => {
+  it.each([
+    [
+      "https://checkout.processout.com/proj_1/iv_1/redirect/gway_conf_1",
+      "https://checkout.processout.com/proj_1/iv_1/redirect/gway_conf_1?po_flow=dynamic-checkout",
+    ],
+    [
+      "https://checkout.processout.com/proj_1/iv_1/redirect/gway_conf_1?additional_data[a]=b",
+      "https://checkout.processout.com/proj_1/iv_1/redirect/gway_conf_1?additional_data[a]=b&po_flow=dynamic-checkout",
+    ],
+    ["", ""],
+  ])("marks %s", (input, expected) => {
+    expect(OpenerLoss.markRedirectUrl(input)).toBe(expected)
+  })
+})

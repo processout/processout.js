@@ -73,12 +73,14 @@ module ProcessOut {
           apm_customer_token.gateway_name,
         )
 
-        const redirectUrl = Object.keys(additionalData).length > 0
-          ? this.processOutInstance.appendAdditionalDataToUrl(
-              apm_customer_token.redirect_url,
-              additionalData,
-            )
-          : apm_customer_token.redirect_url
+        const redirectUrl = DynamicCheckoutOpenerLossUtils.markRedirectUrl(
+          Object.keys(additionalData).length > 0
+            ? this.processOutInstance.appendAdditionalDataToUrl(
+                apm_customer_token.redirect_url,
+                additionalData,
+              )
+            : apm_customer_token.redirect_url,
+        )
 
         DynamicCheckoutEventsUtils.dispatchPaymentSubmittedEvent({
           payment_method_name: apm_customer_token.gateway_name,

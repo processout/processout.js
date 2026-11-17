@@ -20,9 +20,19 @@ module ProcessOut {
   }
 
   const OPENER_LOSS_MODES: OpenerLossHandling[] = ["off", "shadow", "on"]
+  // Read by checkout /redirect, so /continue can show a "you can close this tab" landing instead of
+  // forwarding to the merchant when the PSP tab lost its link to the checkout.
+  const DYNAMIC_CHECKOUT_FLOW_QUERY = "po_flow=dynamic-checkout"
   const OPENER_LOSS_TELEMETRY_MESSAGE = "dynamic checkout opener loss verdict"
 
   export class DynamicCheckoutOpenerLossUtils {
+    static markRedirectUrl(url: string): string {
+      if (!url) {
+        return url
+      }
+      return url + (url.indexOf("?") === -1 ? "?" : "&") + DYNAMIC_CHECKOUT_FLOW_QUERY
+    }
+
     static getMode(value?: string): OpenerLossHandling {
       return OPENER_LOSS_MODES.indexOf(value as OpenerLossHandling) !== -1
         ? (value as OpenerLossHandling)
