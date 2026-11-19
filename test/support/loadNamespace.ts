@@ -269,3 +269,25 @@ export function loadActionHandler(): {
   run(moduleShim, moduleShim.exports, documentShim, windowShim, { userAgent: "" }, translatorShim)
   return { namespace: moduleShim.exports, createdElements }
 }
+
+/**
+ * Load `src/dynamic-checkout/utils/opener-loss.ts` and return its `ProcessOut` namespace.
+ * `window` and `navigator` are injected so the telemetry fields are deterministic.
+ */
+export function loadOpenerLoss(
+  windowShim: unknown = { location: { host: "merchant.test" } },
+  navigatorShim: unknown = { userAgent: "test-agent" },
+): Record<string, any> {
+  const js = compile("src/dynamic-checkout/utils/opener-loss.ts")
+  const moduleShim = { exports: {} as Record<string, any> }
+  const run = new Function(
+    "module",
+    "exports",
+    "window",
+    "navigator",
+    "document",
+    `${js}\nmodule.exports = ProcessOut;`,
+  )
+  run(moduleShim, moduleShim.exports, windowShim, navigatorShim, undefined)
+  return moduleShim.exports
+}
