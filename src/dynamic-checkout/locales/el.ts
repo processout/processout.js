@@ -24,6 +24,9 @@ module ProcessOut {
     "payment-info-message":
       "Επεξεργαζόμαστε την πληρωμή σας. Μπορείτε τώρα να κλείσετε αυτό το παράθυρο.",
     "payment-pending-message": "Η πληρωμή σας εκκρεμεί.",
+    "payment-awaiting-confirmation-message":
+      "Ολοκληρώστε την πληρωμή στην άλλη καρτέλα. Αυτή η σελίδα θα ενημερωθεί αυτόματα.",
+    "payment-awaiting-confirmation-cancel-button": "Ακύρωση",
     "payment-error-generic-message": "Δεν ήταν δυνατή η επεξεργασία της πληρωμής σας.",
     "verification-success-message": "Η επαλήθευση ολοκληρώθηκε.",
     "verification-cancelled-message": "Η επαλήθευση ακυρώθηκε.",

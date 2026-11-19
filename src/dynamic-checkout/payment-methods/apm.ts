@@ -20,6 +20,7 @@ module ProcessOut {
     private displayOverride: DynamicCheckoutPaymentMethodOverride
     private theme: DynamicCheckoutThemeType
     private resetContainerHtml: () => HTMLElement
+    private openerLossFlow: DynamicCheckoutOpenerLossFlow | null = null
 
     constructor(
       processOutInstance: ProcessOut,
@@ -115,10 +116,16 @@ module ProcessOut {
         return_url: this.paymentConfig.invoiceDetails.return_url || null,
       })
 
+      this.resetOpenerLossFlow()
+
       const actionStartedAt = Date.now()
       this.processOutInstance.handleAction(
         redirectUrl,
         paymentToken => {
+          if (this.isOpenerLossResolved()) {
+            return
+          }
+
           this.resetContainerHtml().appendChild(
             new DynamicCheckoutInvoiceLoadingView(this.paymentConfig.locale).element,
           )
@@ -286,10 +293,16 @@ module ProcessOut {
             return
           }
 
+          this.resetOpenerLossFlow()
+
           const actionStartedAt = Date.now()
           this.processOutInstance.handleAction(
             data.customer_action.value,
             paymentToken => {
+              if (this.isOpenerLossResolved()) {
+                return
+              }
+
               this.resetContainerHtml().appendChild(
                 new DynamicCheckoutInvoiceLoadingView(this.paymentConfig.locale).element,
               )
@@ -479,10 +492,27 @@ module ProcessOut {
         return false
       }
 
-      this.resetContainerHtml().appendChild(
-        new DynamicCheckoutPaymentPendingView(this.processOutInstance, this.paymentConfig).element,
-      )
+      this.openerLossFlow = new DynamicCheckoutOpenerLossFlow({
+        processOutInstance: this.processOutInstance,
+        paymentConfig: this.paymentConfig,
+        resetContainerHtml: this.resetContainerHtml,
+        gatewayName: apm.gateway_name,
+        paymentMethodDisplayName: this.paymentMethodDisplayName,
+      })
+      this.openerLossFlow.start()
       return true
+    }
+
+    private resetOpenerLossFlow() {
+      if (this.openerLossFlow) {
+        this.openerLossFlow.takeOver()
+        this.openerLossFlow = null
+      }
+    }
+
+    // A late postMessage token after a lost opener: the first outcome wins.
+    private isOpenerLossResolved(): boolean {
+      return !!this.openerLossFlow && this.openerLossFlow.takeOver()
     }
 
     private getChildrenElement() {

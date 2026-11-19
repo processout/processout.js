@@ -23,6 +23,9 @@ module ProcessOut {
     "payment-success-message": "การชำระเงินเสร็จสมบูรณ์แล้ว",
     "payment-info-message": "เรากำลังดำเนินการชำระเงินของคุณ คุณสามารถปิดหน้าต่างนี้ได้",
     "payment-pending-message": "การชำระเงินของคุณอยู่ระหว่างรอดำเนินการ",
+    "payment-awaiting-confirmation-message":
+      "ชำระเงินให้เสร็จสิ้นในแท็บอื่น หน้านี้จะอัปเดตโดยอัตโนมัติ",
+    "payment-awaiting-confirmation-cancel-button": "ยกเลิก",
     "payment-error-generic-message": "เราไม่สามารถดำเนินการชำระเงินของคุณได้",
     "verification-success-message": "การยืนยันเสร็จสมบูรณ์แล้ว",
     "verification-cancelled-message": "การยืนยันถูกยกเลิกแล้ว",

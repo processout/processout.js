@@ -8,6 +8,7 @@ module ProcessOut {
     private paymentMethodDisplayName: string
     private displayOverride: DynamicCheckoutPaymentMethodOverride
     private resetContainerHtml: () => HTMLElement
+    private openerLossFlow: DynamicCheckoutOpenerLossFlow | null = null
 
     constructor(
       processOutInstance: ProcessOut,
@@ -89,10 +90,16 @@ module ProcessOut {
           customer_token_id: apm_customer_token.customer_token_id,
         })
 
+        this.resetOpenerLossFlow()
+
         const actionStartedAt = Date.now()
         return this.processOutInstance.handleAction(
           redirectUrl,
           paymentToken => {
+            if (this.isOpenerLossResolved()) {
+              return
+            }
+
             this.processOutInstance.makeCardPayment(
               invoiceId,
               paymentToken,
@@ -253,10 +260,28 @@ module ProcessOut {
         return false
       }
 
-      this.resetContainerHtml().appendChild(
-        new DynamicCheckoutPaymentPendingView(this.processOutInstance, this.paymentConfig).element,
-      )
+      this.openerLossFlow = new DynamicCheckoutOpenerLossFlow({
+        processOutInstance: this.processOutInstance,
+        paymentConfig: this.paymentConfig,
+        resetContainerHtml: this.resetContainerHtml,
+        gatewayName: apm_customer_token.gateway_name,
+        paymentMethodDisplayName: this.paymentMethodDisplayName,
+        customerTokenId: apm_customer_token.customer_token_id,
+      })
+      this.openerLossFlow.start()
       return true
+    }
+
+    private resetOpenerLossFlow() {
+      if (this.openerLossFlow) {
+        this.openerLossFlow.takeOver()
+        this.openerLossFlow = null
+      }
+    }
+
+    // A late postMessage token after a lost opener: the first outcome wins.
+    private isOpenerLossResolved(): boolean {
+      return !!this.openerLossFlow && this.openerLossFlow.takeOver()
     }
 
     private handlePaymentSuccess(invoiceId: string, data) {

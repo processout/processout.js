@@ -23,6 +23,9 @@ module ProcessOut {
     "payment-success-message": "اكتملت عملية الدفع هذه.",
     "payment-info-message": "نقوم بمعالجة عملية الدفع الخاصة بك. يمكنك الآن إغلاق هذه النافذة.",
     "payment-pending-message": "عملية الدفع الخاصة بك قيد الانتظار.",
+    "payment-awaiting-confirmation-message":
+      "أكمل الدفع في علامة التبويب الأخرى. سيتم تحديث هذه الصفحة تلقائيًا.",
+    "payment-awaiting-confirmation-cancel-button": "إلغاء",
     "payment-error-generic-message": "لم نتمكن من معالجة عملية الدفع الخاصة بك.",
     "verification-success-message": "اكتملت عملية التحقق هذه.",
     "verification-cancelled-message": "تم إلغاء عملية التحقق.",

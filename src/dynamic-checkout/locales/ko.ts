@@ -23,6 +23,9 @@ module ProcessOut {
     "payment-success-message": "결제가 완료되었습니다.",
     "payment-info-message": "결제를 처리하고 있습니다. 이 창을 닫으셔도 됩니다.",
     "payment-pending-message": "결제가 대기 중입니다.",
+    "payment-awaiting-confirmation-message":
+      "다른 탭에서 결제를 완료하세요. 이 페이지는 자동으로 업데이트됩니다.",
+    "payment-awaiting-confirmation-cancel-button": "취소",
     "payment-error-generic-message": "결제를 처리할 수 없습니다.",
     "verification-success-message": "인증이 완료되었습니다.",
     "verification-cancelled-message": "인증이 취소되었습니다.",

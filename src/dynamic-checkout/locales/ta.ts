@@ -23,6 +23,9 @@ module ProcessOut {
     "payment-success-message": "இந்தக் கட்டணம் முடிந்தது.",
     "payment-info-message": "உங்கள் கட்டணத்தைச் செயலாக்குகிறோம். இப்போது இந்தச் சாளரத்தை மூடலாம்.",
     "payment-pending-message": "உங்கள் கட்டணம் நிலுவையில் உள்ளது.",
+    "payment-awaiting-confirmation-message":
+      "மற்ற தாவலில் கட்டணத்தை முடிக்கவும். இந்தப் பக்கம் தானாகவே புதுப்பிக்கப்படும்.",
+    "payment-awaiting-confirmation-cancel-button": "ரத்துசெய்",
     "payment-error-generic-message": "உங்கள் கட்டணத்தைச் செயலாக்க முடியவில்லை.",
     "verification-success-message": "இந்தச் சரிபார்ப்பு முடிந்தது.",
     "verification-cancelled-message": "சரிபார்ப்பு ரத்து செய்யப்பட்டது.",

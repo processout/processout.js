@@ -24,6 +24,9 @@ module ProcessOut {
     "payment-info-message":
       "Nous travaillons sur votre paiement. Vous pouvez maintenant fermer cette fenêtre.",
     "payment-pending-message": "Votre paiement est en attente.",
+    "payment-awaiting-confirmation-message":
+      "Finalisez le paiement dans l'autre onglet. Cette page se mettra à jour automatiquement.",
+    "payment-awaiting-confirmation-cancel-button": "Annuler",
     "payment-error-generic-message": "Nous n'avons pas pu traiter votre paiement.",
     "verification-success-message": "Cette vérification a été effectuée avec succès.",
     "verification-cancelled-message": "La vérification a été annulée.",
