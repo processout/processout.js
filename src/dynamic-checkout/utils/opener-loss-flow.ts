@@ -19,6 +19,8 @@ module ProcessOut {
     private options: DynamicCheckoutOpenerLossFlowOptions
     private poller: DynamicCheckoutTransactionPoller | null = null
     private view: Element | null = null
+    private closeCheckPending = false
+    private closeCheckReported = false
 
     constructor(options: DynamicCheckoutOpenerLossFlowOptions) {
       this.options = options
@@ -47,20 +49,70 @@ module ProcessOut {
     }
 
     /**
+     * After a real tab close: checks the transaction once instead of reporting "payment cancelled" right away.
+     * Success → the same views and event as polling; anything else, or a request error → "payment cancelled".
+     */
+    public confirmClose() {
+      const { processOutInstance, paymentConfig } = this.options
+
+      this.view = new DynamicCheckoutInvoiceLoadingView(paymentConfig.locale).element
+      this.options.resetContainerHtml().appendChild(this.view)
+      this.closeCheckPending = true
+
+      processOutInstance.apiRequest(
+        "GET",
+        `invoices/${paymentConfig.invoiceId}?expand=transaction`,
+        {},
+        data => this.finishCloseCheck(data && data.invoice ? data.invoice.transaction : null),
+        () => this.finishCloseCheck(null),
+        0,
+        {
+          isLegacy: false,
+          clientSecret: paymentConfig.clientSecret,
+        },
+      )
+    }
+
+    /**
      * Called when the normal flow returns a result after all (e.g. a postMessage that got through).
      * Returns true when this flow already reported an outcome, so the caller must ignore its result.
      */
     public takeOver(): boolean {
-      if (!this.poller) {
+      if (this.closeCheckPending) {
+        this.closeCheckPending = false
         return false
+      }
+      if (!this.poller) {
+        return this.closeCheckReported
       }
       const alreadyResolved = this.poller.isFinished()
       this.poller.stop()
       return alreadyResolved
     }
 
+    private finishCloseCheck(transaction: PolledTransaction | null) {
+      if (!this.closeCheckPending) {
+        return
+      }
+      this.closeCheckPending = false
+      if (!this.view || !document.body.contains(this.view)) {
+        return
+      }
+
+      this.closeCheckReported = true
+      if (transaction && DynamicCheckoutTransactionPoller.isSuccessfulStatus(transaction.status)) {
+        this.showSuccess(transaction)
+      } else {
+        this.showCancelled()
+      }
+    }
+
     private cancel() {
       this.poller.stop()
+      this.showCancelled()
+    }
+
+    private showCancelled() {
       this.options
         .resetContainerHtml()
         .appendChild(

@@ -322,6 +322,7 @@ export function loadOpenerLossFlow(): DynamicCheckoutNamespace {
     viewStub("DynamicCheckoutPaymentInfoView"),
     viewStub("DynamicCheckoutPaymentErrorView"),
     viewStub("DynamicCheckoutPaymentPendingView"),
+    viewStub("DynamicCheckoutInvoiceLoadingView"),
     compile("src/dynamic-checkout/utils/transaction-poller.ts"),
     `const { DynamicCheckoutTransactionPoller } = ProcessOut;`,
     compile("src/dynamic-checkout/utils/opener-loss-flow.ts"),

@@ -29,14 +29,26 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-function createFlow(statuses: string[], options: { showStatusMessage?: boolean } = {}) {
+function createFlow(
+  statuses: string[],
+  options: { showStatusMessage?: boolean; respond?: boolean; requestFails?: boolean } = {},
+) {
   const shownViews: any[] = []
   const container = { appendChild: (element: any) => shownViews.push(element) }
   let call = 0
-  const apiRequest = vi.fn((_method, _path, _data, success) => {
+  const pendingResponses: Array<() => void> = []
+  const apiRequest = vi.fn((_method, _path, _data, success, failure) => {
     const status = statuses[Math.min(call, statuses.length - 1)]
     call++
-    success({ invoice: { transaction: { status, authorized: true, captured: true } } })
+    const respond = () =>
+      options.requestFails
+        ? failure()
+        : success({ invoice: { transaction: { status, authorized: true, captured: true } } })
+    if (options.respond === false) {
+      pendingResponses.push(respond)
+    } else {
+      respond()
+    }
   })
   const paymentConfig = {
     invoiceId: "iv_test",
@@ -52,7 +64,12 @@ function createFlow(statuses: string[], options: { showStatusMessage?: boolean }
     paymentMethodDisplayName: "Mercado Pago",
   })
 
-  return { flow, apiRequest, shownViews: () => shownViews.map(element => element.view) }
+  return {
+    flow,
+    apiRequest,
+    shownViews: () => shownViews.map(element => element.view),
+    respondNow: () => pendingResponses.splice(0).forEach(respond => respond()),
+  }
 }
 
 const eventBase = {
@@ -169,6 +186,89 @@ describe("DynamicCheckoutOpenerLossFlow", () => {
     const resolved = createFlow(["completed"])
     resolved.flow.start()
     expect(resolved.flow.takeOver()).toBe(true)
+  })
+
+  describe("confirmClose()", () => {
+    it("checks the transaction once and emits payment_success when the payment went through", () => {
+      const { flow, apiRequest, shownViews } = createFlow(["completed"])
+
+      flow.confirmClose()
+      vi.advanceTimersByTime(INTERVAL_MS * 5)
+
+      expect(apiRequest).toHaveBeenCalledOnce()
+      expect(apiRequest.mock.calls[0][1]).toBe("invoices/iv_test?expand=transaction")
+      expect(shownViews()).toEqual([
+        "DynamicCheckoutInvoiceLoadingView",
+        "DynamicCheckoutPaymentSuccessView",
+      ])
+      expect(dispatchedEvents).toEqual([
+        { type: PAYMENT_SUCCESS, detail: { ...eventBase, authorized: true, captured: true } },
+      ])
+    })
+
+    it.each([["waiting"], ["failed"]])(
+      "emits payment_cancelled with tab_closed when the transaction is %s",
+      status => {
+        const { flow, apiRequest, shownViews } = createFlow([status])
+
+        flow.confirmClose()
+        vi.advanceTimersByTime(INTERVAL_MS * 5)
+
+        expect(apiRequest).toHaveBeenCalledOnce()
+        expect(shownViews()).toEqual([
+          "DynamicCheckoutInvoiceLoadingView",
+          "DynamicCheckoutPaymentCancelledView",
+        ])
+        expect(dispatchedEvents).toEqual([
+          { type: PAYMENT_CANCELLED, detail: { ...eventBase, tab_closed: true } },
+        ])
+      },
+    )
+
+    it("emits payment_cancelled when the status request fails", () => {
+      const { flow, shownViews } = createFlow(["completed"], { requestFails: true })
+
+      flow.confirmClose()
+
+      expect(shownViews()).toEqual([
+        "DynamicCheckoutInvoiceLoadingView",
+        "DynamicCheckoutPaymentCancelledView",
+      ])
+      expect(dispatchedEvents.map(event => event.type)).toEqual([PAYMENT_CANCELLED])
+    })
+
+    it("emits nothing when a new attempt takes over before the response", () => {
+      const { flow, shownViews, respondNow } = createFlow(["completed"], { respond: false })
+
+      flow.confirmClose()
+      expect(flow.takeOver()).toBe(false)
+      respondNow()
+
+      expect(shownViews()).toEqual(["DynamicCheckoutInvoiceLoadingView"])
+      expect(dispatchedEvents).toEqual([])
+    })
+
+    it("emits nothing when the widget was removed before the response", () => {
+      vi.stubGlobal("document", {
+        visibilityState: "visible",
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        body: { contains: () => false },
+      })
+      const { flow } = createFlow(["completed"])
+
+      flow.confirmClose()
+
+      expect(dispatchedEvents).toEqual([])
+    })
+
+    it("takeOver() after the check tells that an outcome was reported", () => {
+      const { flow } = createFlow(["completed"])
+
+      flow.confirmClose()
+
+      expect(flow.takeOver()).toBe(true)
+    })
   })
 
   it("takeOver() before start() reports nothing to ignore", () => {

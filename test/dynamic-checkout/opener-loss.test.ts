@@ -138,6 +138,40 @@ describe("DynamicCheckoutOpenerLossUtils.isOpenerLoss", () => {
   })
 })
 
+describe("DynamicCheckoutOpenerLossUtils.getTabClosedHandling", () => {
+  const context = { gatewayName: "mercadopagomxcashinaccount", invoiceId: "iv_test" }
+
+  it.each([
+    // mode, hasFocus, visibility, expected handling
+    ["off", true, "visible", "cancel"],
+    ["off", false, "hidden", "cancel"],
+    ["shadow", true, "visible", "cancel"],
+    ["shadow", false, "hidden", "cancel"],
+    ["on", false, "hidden", "opener_loss"],
+    ["on", true, "visible", "confirm_close"],
+  ])("mode=%s hasFocus=%s visibility=%s -> %s", (mode, hasFocus, visibilityState, expected) => {
+    const handling = OpenerLoss.getTabClosedHandling(
+      fakeProcessOut(),
+      tabClosed,
+      { ...context, mode },
+      fakeDocument(hasFocus, visibilityState),
+    )
+
+    expect(handling).toBe(expected)
+  })
+
+  it("cancels a cancel that isn't a closed tab, even in on mode", () => {
+    const handling = OpenerLoss.getTabClosedHandling(
+      fakeProcessOut(),
+      overlayCancel,
+      { ...context, mode: "on" },
+      fakeDocument(true, "visible"),
+    )
+
+    expect(handling).toBe("cancel")
+  })
+})
+
 describe("DynamicCheckoutOpenerLossUtils.markRedirectUrl", () => {
   it.each([
     [

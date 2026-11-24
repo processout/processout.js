@@ -474,11 +474,12 @@ module ProcessOut {
 
     /**
      * Must run first in the handleAction error callback: PO.js refocuses the window right after it.
-     * Returns true when the tab_closed was a lost opener and DC shows pending instead of cancelled.
+     * Returns true when the opener-loss flow took over: pending for a lost opener, or a status check before
+     * "payment cancelled" for a real close (`on` mode only).
      */
     private handleOpenerLoss(error: Exception, actionStartedAt: number): boolean {
       const { apm } = this.paymentMethod
-      const isOpenerLoss = DynamicCheckoutOpenerLossUtils.isOpenerLoss(
+      const handling = DynamicCheckoutOpenerLossUtils.getTabClosedHandling(
         this.processOutInstance,
         error,
         {
@@ -488,7 +489,7 @@ module ProcessOut {
           actionStartedAt,
         },
       )
-      if (!isOpenerLoss) {
+      if (handling === "cancel") {
         return false
       }
 
@@ -499,7 +500,11 @@ module ProcessOut {
         gatewayName: apm.gateway_name,
         paymentMethodDisplayName: this.paymentMethodDisplayName,
       })
-      this.openerLossFlow.start()
+      if (handling === "opener_loss") {
+        this.openerLossFlow.start()
+      } else {
+        this.openerLossFlow.confirmClose()
+      }
       return true
     }
 

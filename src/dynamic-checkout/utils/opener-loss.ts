@@ -7,6 +7,14 @@ module ProcessOut {
 
   export type OpenerLossVerdict = "real_close" | "severed_link"
 
+  /**
+   * What DC does after a `tab_closed`:
+   * - `cancel`: today's "payment cancelled".
+   * - `opener_loss`: wait for the outcome (awaiting view and polling).
+   * - `confirm_close`: check the transaction once, then show success or "payment cancelled".
+   */
+  export type TabClosedHandling = "cancel" | "opener_loss" | "confirm_close"
+
   export type OpenerLossPageState = {
     hasFocus: boolean
     visibilityState: string
@@ -65,17 +73,38 @@ module ProcessOut {
       context: OpenerLossContext,
       doc: Document = document,
     ): boolean {
+      return (
+        DynamicCheckoutOpenerLossUtils.getTabClosedHandling(
+          processOutInstance,
+          error,
+          context,
+          doc,
+        ) === "opener_loss"
+      )
+    }
+
+    /**
+     * Same check as `isOpenerLoss`, with the outcome for a real close in `on` mode: `confirm_close`.
+     * A shopper whose PSP tab lost only its own opener sees the "you can close this tab" landing, closes it,
+     * and DC sees a real close although the payment may be done; one status check avoids a false "cancelled".
+     */
+    static getTabClosedHandling(
+      processOutInstance: ProcessOut,
+      error: Exception,
+      context: OpenerLossContext,
+      doc: Document = document,
+    ): TabClosedHandling {
       if (
         error.code !== "customer.canceled" ||
         !error.metadata ||
         error.metadata.reason !== "tab_closed"
       ) {
-        return false
+        return "cancel"
       }
 
       const mode = DynamicCheckoutOpenerLossUtils.getMode(context.mode)
       if (mode === "off") {
-        return false
+        return "cancel"
       }
 
       const state = DynamicCheckoutOpenerLossUtils.readPageState(doc)
@@ -83,7 +112,10 @@ module ProcessOut {
 
       DynamicCheckoutOpenerLossUtils.report(processOutInstance, context, mode, verdict, state)
 
-      return mode === "on" && verdict === "severed_link"
+      if (mode !== "on") {
+        return "cancel"
+      }
+      return verdict === "severed_link" ? "opener_loss" : "confirm_close"
     }
 
     private static report(
