@@ -269,3 +269,96 @@ export function loadActionHandler(): {
   run(moduleShim, moduleShim.exports, documentShim, windowShim, { userAgent: "" }, translatorShim)
   return { namespace: moduleShim.exports, createdElements }
 }
+
+export type MessageListener = (event: { origin?: string; source?: unknown; data?: string }) => void
+
+/**
+ * Load `ActionHandler` together with the real `Message` parser so tests can
+ * drive `listenEvents` with postMessage events. `MessageHub` is stubbed and
+ * records the `onnotify` callback it receives.
+ */
+export function loadActionHandlerMessaging(): {
+  namespace: Record<string, any>
+  messageListeners: MessageListener[]
+  hubNotifiers: Array<(key: string, value: string) => void>
+} {
+  const messageListeners: MessageListener[] = []
+  const hubNotifiers: Array<(key: string, value: string) => void> = []
+
+  const windowShim = {
+    addEventListener(type: string, listener: MessageListener) {
+      if (type === "message") messageListeners.push(listener)
+    },
+    dispatchEvent() {},
+    focus() {},
+    location: { host: "merchant.test" },
+  }
+  const documentShim = { createElement: () => ({}), createEvent: () => ({ initEvent() {} }) }
+  const translatorShim = { translateMessage: (_key: string, fallback: string) => fallback }
+  function FakeMessageHub(_instance: unknown, _onready: unknown, onnotify: (k: string, v: string) => void) {
+    hubNotifiers.push(onnotify)
+  }
+
+  const js = [
+    `function Exception(code, message) { this.code = code; this.message = message; }`,
+    compile("src/processout/message.ts"),
+    `const { Message } = ProcessOut;`,
+    compile("src/processout/actionhandler.ts"),
+  ].join("\n")
+  const moduleShim = { exports: {} as Record<string, any> }
+  const run = new Function(
+    "module",
+    "exports",
+    "document",
+    "window",
+    "navigator",
+    "Translator",
+    "MessageHub",
+    `${js}\nmodule.exports = ProcessOut;`,
+  )
+  run(
+    moduleShim,
+    moduleShim.exports,
+    documentShim,
+    windowShim,
+    { userAgent: "" },
+    translatorShim,
+    FakeMessageHub,
+  )
+  return { namespace: moduleShim.exports, messageListeners, hubNotifiers }
+}
+
+/**
+ * Load `src/processout/messagehub.ts` with the real `Message` parser and a
+ * minimal DOM. Returns the hub iframe's `contentWindow` so tests can post
+ * messages that appear to come from it.
+ */
+export function loadMessageHub(): {
+  namespace: Record<string, any>
+  messageListeners: MessageListener[]
+  hubWindow: Record<string, any>
+} {
+  const messageListeners: MessageListener[] = []
+  const hubWindow = { postMessage() {} }
+
+  const windowShim = {
+    addEventListener(type: string, listener: MessageListener) {
+      if (type === "message") messageListeners.push(listener)
+    },
+    location: { href: "https://merchant.test/checkout" },
+  }
+  const documentShim = {
+    createElement: () => ({ contentWindow: hubWindow, setAttribute() {} }),
+    body: { appendChild() {} },
+  }
+
+  const js = [
+    compile("src/processout/message.ts"),
+    `const { Message } = ProcessOut;`,
+    compile("src/processout/messagehub.ts"),
+  ].join("\n")
+  const moduleShim = { exports: {} as Record<string, any> }
+  const run = new Function("module", "exports", "document", "window", `${js}\nmodule.exports = ProcessOut;`)
+  run(moduleShim, moduleShim.exports, documentShim, windowShim)
+  return { namespace: moduleShim.exports, messageListeners, hubWindow }
+}
