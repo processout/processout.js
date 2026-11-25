@@ -11,6 +11,7 @@ module ProcessOut {
     export class MessageHub {
         protected instance:      ProcessOut;
         protected static iframe: HTMLIFrameElement;
+        protected static origin: string;
         protected onnotify?:     (k: string, v: any) => void;
         protected active:        boolean;
 
@@ -27,6 +28,7 @@ module ProcessOut {
 
             window.addEventListener("message", function (event) {
                 if (!this.active) return;
+                if (!MessageHub.isFromHub(event)) return;
 
                 var data = Message.parseEvent(event);
                 if (!data || data.namespace != Message.messageHubNamespace)
@@ -45,6 +47,8 @@ module ProcessOut {
                 window.addEventListener("message", function(event) {
                     if (ready)
                         return;
+                    if (!MessageHub.isFromHub(event))
+                        return;
 
                     var data = Message.parseEvent(event);
                     if (!data || data.namespace != Message.messageHubNamespace)
@@ -56,6 +60,8 @@ module ProcessOut {
                     if (onready) onready(this);
                 }.bind(this));
 
+                var originMatch = /^https?:\/\/[^\/?#]+/.exec(src);
+                MessageHub.origin = originMatch ? originMatch[0] : "";
                 MessageHub.iframe = document.createElement("iframe");
                 MessageHub.iframe.id = "processout-message-hub";
                 MessageHub.iframe.name = "processout message hub";
@@ -70,6 +76,15 @@ module ProcessOut {
             }
 
             this.active = true;
+        }
+
+        /**
+         * Only the hub iframe we created may relay stored values
+         */
+        protected static isFromHub(event: MessageEvent): boolean {
+            return !!MessageHub.iframe && !!MessageHub.origin &&
+                event.source === MessageHub.iframe.contentWindow &&
+                event.origin === MessageHub.origin;
         }
 
         public get(key: string): void {

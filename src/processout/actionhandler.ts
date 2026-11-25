@@ -520,9 +520,12 @@ module ProcessOut {
             const telemetryClient = this.instance.telemetryClient
             const resourceID = this.resourceID;
 
+            // Only the checkout bridge pages may report the action outcome;
+            // any other window could otherwise fire the merchant callbacks
+            const checkoutOrigin = this.instance.endpoint("checkout", "");
+
             var alreadyDone = false;
-            var handler = function(event) {
-                var data = Message.parseEvent(event);
+            var processMessage = function(data: Message) {
                 if (data.namespace != Message.checkoutNamespace)
                     return;
 
@@ -593,16 +596,18 @@ module ProcessOut {
                     break;
                 }
             };
-            window.addEventListener("message", handler);
+            window.addEventListener("message", function(event: MessageEvent) {
+                if (event.origin !== checkoutOrigin) return;
+                processMessage(Message.parseEvent(event));
+            });
 
+            // MessageHub verifies its own sender before notifying us
             new MessageHub(this.instance, null, function(k: string, v: string) {
                 var data = Message.parseEvent(<MessageEvent>{
                     data: v,
                 });
                 data.namespace = k;
-                handler({
-                    data: JSON.stringify(data)
-                });
+                processMessage(data);
             });
         }
 
