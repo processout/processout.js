@@ -2,7 +2,22 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { LOCALES, loadDynamicCheckout, loadTransactionPoller } from "../support/loadNamespace"
 
 const INTERVAL_MS = 3000
+const MAX_INTERVAL_MS = 30 * 1000
+const BACKOFF_FACTOR = 1.5
 const TIMEOUT_MS = 15 * 60 * 1000
+
+// Start times of the checks while the page stays visible: 0, 3 s, 7.5 s, … with the interval capped at 30 s.
+function checkTimesUntil(endMs: number): number[] {
+  const times: number[] = []
+  let at = 0
+  let delay = INTERVAL_MS
+  while (at < endMs) {
+    times.push(at)
+    at += Math.min(delay, endMs - at)
+    delay = Math.min(delay * BACKOFF_FACTOR, MAX_INTERVAL_MS)
+  }
+  return times
+}
 
 let Poller: any
 
@@ -17,7 +32,11 @@ afterEach(() => {
 
 type FakeResponse = { status?: string; error?: boolean }
 
-function createHarness(responses: FakeResponse[], visibilityState = "visible") {
+function createHarness(
+  responses: FakeResponse[],
+  visibilityState = "visible",
+  options: { timeoutMs?: number } = {},
+) {
   const listeners: Record<string, Array<() => void>> = {}
   const addListener = (type: string, listener: () => void) => {
     listeners[type] = [...(listeners[type] || []), listener]
@@ -59,6 +78,7 @@ function createHarness(responses: FakeResponse[], visibilityState = "visible") {
     now: () => Date.now(),
     win,
     doc,
+    ...options,
   })
 
   return {
@@ -87,7 +107,7 @@ describe("DynamicCheckoutTransactionPoller", () => {
     expect(h.apiRequest.mock.calls[0][6]).toEqual({ isLegacy: false, clientSecret: "secret" })
   })
 
-  it("polls every 3 s until a successful status, then reports it once and stops", () => {
+  it("polls until a successful status, then reports it once and stops", () => {
     const h = createHarness([{ status: "waiting" }, { status: "pending" }, { status: "completed" }])
 
     h.poller.start()
@@ -152,6 +172,32 @@ describe("DynamicCheckoutTransactionPoller", () => {
     expect(h.apiRequest).toHaveBeenCalledTimes(2)
   })
 
+  it("starts at 3 s and grows the interval by 1.5x up to 30 s", () => {
+    const h = createHarness([{ status: "waiting" }])
+    const expectedDelays = [3000, 4500, 6750, 10125, 15187.5, 22781.25, 30000, 30000]
+
+    h.poller.start()
+    for (const [index, delay] of expectedDelays.entries()) {
+      vi.advanceTimersByTime(delay - 1)
+      expect(h.apiRequest).toHaveBeenCalledTimes(index + 1)
+      vi.advanceTimersByTime(1)
+      expect(h.apiRequest).toHaveBeenCalledTimes(index + 2)
+    }
+  })
+
+  it("starts again at 3 s when the shopper comes back to the page", () => {
+    const h = createHarness([{ status: "waiting" }])
+
+    h.poller.start()
+    vi.advanceTimersByTime(3000 + 4500 + 6750)
+    expect(h.apiRequest).toHaveBeenCalledTimes(4)
+
+    h.fire("focus")
+    expect(h.apiRequest).toHaveBeenCalledTimes(5)
+    vi.advanceTimersByTime(INTERVAL_MS)
+    expect(h.apiRequest).toHaveBeenCalledTimes(6)
+  })
+
   it("times out after 15 min with a single timeout callback", () => {
     const h = createHarness([{ status: "waiting" }])
 
@@ -160,8 +206,20 @@ describe("DynamicCheckoutTransactionPoller", () => {
 
     expect(h.callbacks.onTimeout).toHaveBeenCalledOnce()
     expect(h.callbacks.onSuccess).not.toHaveBeenCalled()
-    expect(h.apiRequest).toHaveBeenCalledTimes(TIMEOUT_MS / INTERVAL_MS)
+    expect(h.apiRequest).toHaveBeenCalledTimes(checkTimesUntil(TIMEOUT_MS).length)
     expect(h.listenerCount()).toBe(0)
+  })
+
+  it("doesn't wait past the timeout when the interval is longer than the time left", () => {
+    const h = createHarness([{ status: "waiting" }], "visible", { timeoutMs: 10000 })
+
+    h.poller.start()
+    vi.advanceTimersByTime(9999)
+    expect(h.callbacks.onTimeout).not.toHaveBeenCalled()
+
+    vi.advanceTimersByTime(1)
+    expect(h.callbacks.onTimeout).toHaveBeenCalledOnce()
+    expect(h.apiRequest).toHaveBeenCalledTimes(3)
   })
 
   it("times out even while the page stays hidden", () => {

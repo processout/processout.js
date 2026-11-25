@@ -3,7 +3,11 @@ module ProcessOut {
   const SUCCESSFUL_TRANSACTION_STATUSES = ["authorized", "pending-capture", "completed"]
   const FAILED_TRANSACTION_STATUSES = ["failed", "voided", "blocked"]
 
+  // The interval starts at 3 s and grows by 1.5x after each check, up to 30 s, so a shopper who keeps the
+  // DC tab open doesn't poll every 3 s for 15 minutes. Coming back to the tab checks at once and starts again at 3 s.
   export const TRANSACTION_POLLING_INTERVAL_MS = 3000
+  export const TRANSACTION_POLLING_MAX_INTERVAL_MS = 30 * 1000
+  export const TRANSACTION_POLLING_BACKOFF_FACTOR = 1.5
   // Same as the APM v2 default timeout.
   export const TRANSACTION_POLLING_TIMEOUT_MS = 15 * 60 * 1000
 
@@ -22,7 +26,9 @@ module ProcessOut {
     onTimeout: () => void
     // Polling stops silently once this returns false, e.g. when the merchant removes the widget.
     isMounted: () => boolean
+    // First interval; it grows by TRANSACTION_POLLING_BACKOFF_FACTOR up to maxIntervalMs.
     intervalMs?: number
+    maxIntervalMs?: number
     timeoutMs?: number
     now?: () => number
     win?: Window
@@ -38,6 +44,7 @@ module ProcessOut {
     private startedAt = 0
     private timer: number | null = null
     private requestInFlight = false
+    private delayMs = 0
     private finished = false
 
     constructor(options: DynamicCheckoutTransactionPollerOptions) {
@@ -47,6 +54,7 @@ module ProcessOut {
 
     public start() {
       this.startedAt = this.now()
+      this.delayMs = this.getInitialIntervalMs()
       this.getWindow().addEventListener("focus", this.onPageActive)
       this.getDocument().addEventListener("visibilitychange", this.onPageActive)
       this.check()
@@ -74,6 +82,7 @@ module ProcessOut {
 
     private onPageActive() {
       if (this.isPageVisible()) {
+        this.delayMs = this.getInitialIntervalMs()
         this.check()
       }
     }
@@ -109,6 +118,7 @@ module ProcessOut {
         () => {
           this.requestInFlight = false
           this.scheduleNext()
+          this.growDelay()
         },
         0,
         {
@@ -136,17 +146,34 @@ module ProcessOut {
       }
 
       this.scheduleNext()
+      this.growDelay()
     }
 
+    // Never waits past the timeout, so onTimeout fires on time even with a long interval.
     private scheduleNext() {
       if (this.finished) {
         return
       }
       this.clearTimer()
-      this.timer = this.getWindow().setTimeout(() => {
-        this.timer = null
-        this.check()
-      }, this.options.intervalMs || TRANSACTION_POLLING_INTERVAL_MS)
+      const remainingMs = this.getTimeoutMs() - (this.now() - this.startedAt)
+      this.timer = this.getWindow().setTimeout(
+        () => {
+          this.timer = null
+          this.check()
+        },
+        Math.max(0, Math.min(this.delayMs, remainingMs)),
+      )
+    }
+
+    private growDelay() {
+      this.delayMs = Math.min(
+        this.delayMs * TRANSACTION_POLLING_BACKOFF_FACTOR,
+        this.options.maxIntervalMs || TRANSACTION_POLLING_MAX_INTERVAL_MS,
+      )
+    }
+
+    private getInitialIntervalMs() {
+      return this.options.intervalMs || TRANSACTION_POLLING_INTERVAL_MS
     }
 
     private clearTimer() {
