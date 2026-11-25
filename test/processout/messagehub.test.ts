@@ -3,10 +3,10 @@ import { loadMessageHub } from "../support/loadNamespace"
 
 const HUB_ORIGIN = "https://js.example"
 
-function createHub() {
+function createHub(hubUrl = `${HUB_ORIGIN}/messagehub.html`) {
   const { namespace, messageListeners, hubWindow } = loadMessageHub()
   const instance = {
-    getProcessOutMessageHubEndpoint: (suffix: string) => `${HUB_ORIGIN}/messagehub.html${suffix}`,
+    getProcessOutMessageHubEndpoint: (suffix: string) => `${hubUrl}${suffix}`,
   }
   const onready = vi.fn()
   const onnotify = vi.fn()
@@ -50,5 +50,21 @@ describe("MessageHub sender check", () => {
     expect(onready).not.toHaveBeenCalled()
     post(HUB_ORIGIN, hubWindow, ready)
     expect(onready).toHaveBeenCalledTimes(1)
+  })
+
+  it.each([
+    ["an uppercase host with the default port", "https://JS.Example:443/messagehub.html", HUB_ORIGIN],
+    ["a relative URL", "/messagehub.html", "https://merchant.test"],
+  ])("matches the browser-normalised origin for %s", (_case, hubUrl, origin) => {
+    const { post, hubWindow, onnotify } = createHub(hubUrl)
+    post(origin, hubWindow, value)
+    expect(onnotify).toHaveBeenCalledWith(value.data.key, value.data.value)
+  })
+
+  it("ignores every message when the hub URL cannot be parsed", () => {
+    const { post, hubWindow, onnotify } = createHub("https://")
+    post("", hubWindow, value)
+    post("null", hubWindow, value)
+    expect(onnotify).not.toHaveBeenCalled()
   })
 })

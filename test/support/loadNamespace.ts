@@ -345,6 +345,7 @@ export function loadMessageHub(): {
     addEventListener(type: string, listener: MessageListener) {
       if (type === "message") messageListeners.push(listener)
     },
+    location: { href: "https://merchant.test/checkout" },
   }
   const documentShim = {
     createElement: () => ({ contentWindow: hubWindow, setAttribute() {} }),

@@ -60,8 +60,14 @@ module ProcessOut {
                     if (onready) onready(this);
                 }.bind(this));
 
-                var originMatch = /^https?:\/\/[^\/?#]+/.exec(src);
-                MessageHub.origin = originMatch ? originMatch[0] : "";
+                // Let the browser normalise the origin so it matches event.origin;
+                // an unparsable src leaves it empty, which rejects every message
+                MessageHub.origin = "";
+                try {
+                    MessageHub.origin = new URL(src, window.location.href).origin;
+                } catch (e) {
+                    //
+                }
                 MessageHub.iframe = document.createElement("iframe");
                 MessageHub.iframe.id = "processout-message-hub";
                 MessageHub.iframe.name = "processout message hub";
