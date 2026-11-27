@@ -24,6 +24,9 @@ module ProcessOut {
     "payment-info-message":
       "আমরা আপনার পেমেন্ট প্রক্রিয়া করছি। আপনি এখন এই উইন্ডোটি বন্ধ করতে পারেন।",
     "payment-pending-message": "আপনার পেমেন্ট মুলতুবি রয়েছে।",
+    "payment-awaiting-confirmation-message":
+      "অন্য ট্যাবে পেমেন্টটি সম্পন্ন করুন। এই পৃষ্ঠাটি স্বয়ংক্রিয়ভাবে আপডেট হবে।",
+    "payment-awaiting-confirmation-cancel-button": "বাতিল করুন",
     "payment-error-generic-message": "আমরা আপনার পেমেন্ট প্রক্রিয়া করতে পারিনি।",
     "verification-success-message": "এই যাচাইকরণ সম্পন্ন হয়েছে।",
     "verification-cancelled-message": "যাচাইকরণ বাতিল করা হয়েছে।",

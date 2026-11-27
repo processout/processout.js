@@ -24,6 +24,9 @@ module ProcessOut {
     "payment-info-message":
       "ನಿಮ್ಮ ಪಾವತಿಯನ್ನು ನಾವು ಪ್ರಕ್ರಿಯೆಗೊಳಿಸುತ್ತಿದ್ದೇವೆ. ಈಗ ನೀವು ಈ ವಿಂಡೋವನ್ನು ಮುಚ್ಚಬಹುದು.",
     "payment-pending-message": "ನಿಮ್ಮ ಪಾವತಿ ಬಾಕಿ ಇದೆ.",
+    "payment-awaiting-confirmation-message":
+      "ಇನ್ನೊಂದು ಟ್ಯಾಬ್‌ನಲ್ಲಿ ಪಾವತಿಯನ್ನು ಪೂರ್ಣಗೊಳಿಸಿ. ಈ ಪುಟವು ಸ್ವಯಂಚಾಲಿತವಾಗಿ ನವೀಕರಿಸಲ್ಪಡುತ್ತದೆ.",
+    "payment-awaiting-confirmation-cancel-button": "ರದ್ದುಮಾಡಿ",
     "payment-error-generic-message": "ನಿಮ್ಮ ಪಾವತಿಯನ್ನು ಪ್ರಕ್ರಿಯೆಗೊಳಿಸಲು ನಮಗೆ ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.",
     "verification-success-message": "ಈ ಪರಿಶೀಲನೆ ಪೂರ್ಣಗೊಂಡಿದೆ.",
     "verification-cancelled-message": "ಪರಿಶೀಲನೆಯನ್ನು ರದ್ದುಗೊಳಿಸಲಾಗಿದೆ.",

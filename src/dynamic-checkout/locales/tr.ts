@@ -23,6 +23,9 @@ module ProcessOut {
     "payment-success-message": "Bu ödeme tamamlandı.",
     "payment-info-message": "Ödemeniz işleniyor. Bu pencereyi şimdi kapatabilirsiniz.",
     "payment-pending-message": "Ödemeniz beklemede.",
+    "payment-awaiting-confirmation-message":
+      "Ödemeyi diğer sekmede tamamlayın. Bu sayfa otomatik olarak güncellenecektir.",
+    "payment-awaiting-confirmation-cancel-button": "İptal",
     "payment-error-generic-message": "Ödemenizi işleyemedik.",
     "verification-success-message": "Bu doğrulama tamamlandı.",
     "verification-cancelled-message": "Doğrulama iptal edildi.",

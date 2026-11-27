@@ -23,6 +23,9 @@ module ProcessOut {
     "payment-success-message": "This payment is completed.",
     "payment-info-message": "We are processing your payment. You can now close this window.",
     "payment-pending-message": "Your payment is pending.",
+    "payment-awaiting-confirmation-message":
+      "Complete the payment in the other tab. This page will update automatically.",
+    "payment-awaiting-confirmation-cancel-button": "Cancel",
     "payment-error-generic-message": "We were unable to process your payment.",
     "verification-success-message": "This verification is completed.",
     "verification-cancelled-message": "Verification has been cancelled.",

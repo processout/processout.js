@@ -20,6 +20,7 @@ module ProcessOut {
     private displayOverride: DynamicCheckoutPaymentMethodOverride
     private theme: DynamicCheckoutThemeType
     private resetContainerHtml: () => HTMLElement
+    private openerLossFlow: DynamicCheckoutOpenerLossFlow | null = null
 
     constructor(
       processOutInstance: ProcessOut,
@@ -115,10 +116,16 @@ module ProcessOut {
         return_url: this.paymentConfig.invoiceDetails.return_url || null,
       })
 
+      this.resetOpenerLossFlow()
+
       const actionStartedAt = Date.now()
       this.processOutInstance.handleAction(
         redirectUrl,
         paymentToken => {
+          if (this.isOpenerLossResolved()) {
+            return
+          }
+
           this.resetContainerHtml().appendChild(
             new DynamicCheckoutInvoiceLoadingView(this.paymentConfig.locale).element,
           )
@@ -185,7 +192,7 @@ module ProcessOut {
           )
         },
         error => {
-          if (this.handleOpenerLoss(error, actionStartedAt)) {
+          if (this.isOpenerLossResolved() || this.handleOpenerLoss(error, actionStartedAt)) {
             return
           }
 
@@ -286,10 +293,16 @@ module ProcessOut {
             return
           }
 
+          this.resetOpenerLossFlow()
+
           const actionStartedAt = Date.now()
           this.processOutInstance.handleAction(
             data.customer_action.value,
             paymentToken => {
+              if (this.isOpenerLossResolved()) {
+                return
+              }
+
               this.resetContainerHtml().appendChild(
                 new DynamicCheckoutInvoiceLoadingView(this.paymentConfig.locale).element,
               )
@@ -378,7 +391,10 @@ module ProcessOut {
               )
             },
             error => {
-              if (this.handleOpenerLoss(error, actionStartedAt)) {
+              if (
+                this.isOpenerLossResolved() ||
+                this.handleOpenerLoss(error, actionStartedAt, data.customer_token_id)
+              ) {
                 return
               }
 
@@ -461,11 +477,16 @@ module ProcessOut {
 
     /**
      * Must run first in the handleAction error callback: PO.js refocuses the window right after it.
-     * Returns true when the tab_closed was a lost opener and DC shows pending instead of cancelled.
+     * Returns true when the opener-loss flow took over: pending for a lost opener, or a status check before
+     * "payment cancelled" for a real close (`on` mode only).
      */
-    private handleOpenerLoss(error: Exception, actionStartedAt: number): boolean {
+    private handleOpenerLoss(
+      error: Exception,
+      actionStartedAt: number,
+      customerTokenId?: string,
+    ): boolean {
       const { apm } = this.paymentMethod
-      const isOpenerLoss = DynamicCheckoutOpenerLossUtils.isOpenerLoss(
+      const handling = DynamicCheckoutOpenerLossUtils.getTabClosedHandling(
         this.processOutInstance,
         error,
         {
@@ -475,14 +496,36 @@ module ProcessOut {
           actionStartedAt,
         },
       )
-      if (!isOpenerLoss) {
+      if (handling === "cancel") {
         return false
       }
 
-      this.resetContainerHtml().appendChild(
-        new DynamicCheckoutPaymentPendingView(this.processOutInstance, this.paymentConfig).element,
-      )
+      this.openerLossFlow = new DynamicCheckoutOpenerLossFlow({
+        processOutInstance: this.processOutInstance,
+        paymentConfig: this.paymentConfig,
+        resetContainerHtml: this.resetContainerHtml,
+        gatewayName: apm.gateway_name,
+        paymentMethodDisplayName: this.paymentMethodDisplayName,
+        customerTokenId,
+      })
+      if (handling === "opener_loss") {
+        this.openerLossFlow.start()
+      } else {
+        this.openerLossFlow.confirmClose()
+      }
       return true
+    }
+
+    private resetOpenerLossFlow() {
+      if (this.openerLossFlow) {
+        this.openerLossFlow.takeOver()
+        this.openerLossFlow = null
+      }
+    }
+
+    // A late postMessage result (token or error) after a lost opener: the first outcome wins.
+    private isOpenerLossResolved(): boolean {
+      return !!this.openerLossFlow && this.openerLossFlow.takeOver()
     }
 
     private getChildrenElement() {

@@ -329,6 +329,8 @@ module ProcessOut {
         customer_token_id?: string
         authorized?: boolean
         captured?: boolean
+        reason?: string
+        timeout?: boolean
       },
       isCardVerification?: boolean,
     ) {

@@ -24,6 +24,9 @@ module ProcessOut {
     "payment-info-message":
       "Stiamo elaborando il tuo pagamento. Ora puoi chiudere questa finestra.",
     "payment-pending-message": "Il tuo pagamento è in sospeso.",
+    "payment-awaiting-confirmation-message":
+      "Completa il pagamento nell'altra scheda. Questa pagina si aggiornerà automaticamente.",
+    "payment-awaiting-confirmation-cancel-button": "Annulla",
     "payment-error-generic-message": "Non è stato possibile elaborare il pagamento.",
     "verification-success-message": "La verifica è stata completata.",
     "verification-cancelled-message": "La verifica è stata annullata.",

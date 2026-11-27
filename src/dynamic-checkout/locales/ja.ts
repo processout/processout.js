@@ -24,6 +24,9 @@ module ProcessOut {
     "payment-info-message":
       "お支払いを処理しています。このウィンドウを閉じていただいて構いません。",
     "payment-pending-message": "お支払いは保留中です。",
+    "payment-awaiting-confirmation-message":
+      "もう一方のタブでお支払いを完了してください。このページは自動的に更新されます。",
+    "payment-awaiting-confirmation-cancel-button": "キャンセル",
     "payment-error-generic-message": "お支払いを処理できませんでした。",
     "verification-success-message": "確認が完了しました。",
     "verification-cancelled-message": "確認がキャンセルされました。",

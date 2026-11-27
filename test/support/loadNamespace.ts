@@ -112,7 +112,7 @@ export interface DynamicCheckoutNamespace {
  * the namespace members under those names, in the same order the real
  * `tsc --outFile` bundle concatenates them.
  */
-export function loadDynamicCheckout(): DynamicCheckoutNamespace {
+export function loadDynamicCheckout(extraChunks: string[] = []): DynamicCheckoutNamespace {
   const chunks = [
     ...LOCALES.map(locale => compile(`src/dynamic-checkout/locales/${locale.file}.ts`)),
     `const { ${LOCALES.map(locale => locale.name).join(", ")} } = ProcessOut;`,
@@ -127,6 +127,7 @@ export function loadDynamicCheckout(): DynamicCheckoutNamespace {
     `function PaymentToken(type, token) { this.type = type; this.token = token; }`,
     compile("src/dynamic-checkout/clients/google-pay.ts"),
     compile("src/dynamic-checkout/clients/apple-pay.ts"),
+    ...extraChunks,
   ]
 
   const dispatchedEvents: CapturedEvent[] = []
@@ -142,6 +143,10 @@ export function loadDynamicCheckout(): DynamicCheckoutNamespace {
       dispatchedEvents.push(event)
       return true
     },
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    setTimeout: (fn: () => void, ms: number) => setTimeout(fn, ms),
+    clearTimeout: (id: ReturnType<typeof setTimeout>) => clearTimeout(id),
   }
 
   const moduleShim = { exports: {} as Record<string, any> }
@@ -290,4 +295,36 @@ export function loadOpenerLoss(
   )
   run(moduleShim, moduleShim.exports, windowShim, navigatorShim, undefined)
   return moduleShim.exports
+}
+
+/**
+ * Load `src/dynamic-checkout/utils/transaction-poller.ts` and return its `ProcessOut` namespace.
+ */
+export function loadTransactionPoller(): Record<string, any> {
+  const js = compile("src/dynamic-checkout/utils/transaction-poller.ts")
+  const moduleShim = { exports: {} as Record<string, any> }
+  const run = new Function("module", "exports", `${js}\nmodule.exports = ProcessOut;`)
+  run(moduleShim, moduleShim.exports)
+  return moduleShim.exports
+}
+
+/**
+ * Load the opener-loss flow on top of the Dynamic Checkout events. Views are stubbed with classes
+ * that record their name, so tests can assert which view is shown without a DOM.
+ */
+export function loadOpenerLossFlow(): DynamicCheckoutNamespace {
+  const viewStub = (name: string) =>
+    `var ${name} = function () { this.element = { view: "${name}", args: Array.prototype.slice.call(arguments) } };`
+  return loadDynamicCheckout([
+    viewStub("DynamicCheckoutPaymentAwaitingConfirmationView"),
+    viewStub("DynamicCheckoutPaymentCancelledView"),
+    viewStub("DynamicCheckoutPaymentSuccessView"),
+    viewStub("DynamicCheckoutPaymentInfoView"),
+    viewStub("DynamicCheckoutPaymentErrorView"),
+    viewStub("DynamicCheckoutPaymentPendingView"),
+    viewStub("DynamicCheckoutInvoiceLoadingView"),
+    compile("src/dynamic-checkout/utils/transaction-poller.ts"),
+    `const { DynamicCheckoutTransactionPoller } = ProcessOut;`,
+    compile("src/dynamic-checkout/utils/opener-loss-flow.ts"),
+  ])
 }

@@ -23,6 +23,9 @@ module ProcessOut {
     "payment-success-message": "यह भुगतान पूरा हो गया है।",
     "payment-info-message": "हम आपके भुगतान को संसाधित कर रहे हैं। अब आप यह विंडो बंद कर सकते हैं।",
     "payment-pending-message": "आपका भुगतान लंबित है।",
+    "payment-awaiting-confirmation-message":
+      "दूसरे टैब में भुगतान पूरा करें। यह पेज अपने आप अपडेट हो जाएगा।",
+    "payment-awaiting-confirmation-cancel-button": "रद्द करें",
     "payment-error-generic-message": "हम आपका भुगतान संसाधित नहीं कर सके।",
     "verification-success-message": "यह सत्यापन पूरा हो गया है।",
     "verification-cancelled-message": "सत्यापन रद्द कर दिया गया है।",

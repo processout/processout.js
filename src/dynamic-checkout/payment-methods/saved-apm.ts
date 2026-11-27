@@ -8,6 +8,7 @@ module ProcessOut {
     private paymentMethodDisplayName: string
     private displayOverride: DynamicCheckoutPaymentMethodOverride
     private resetContainerHtml: () => HTMLElement
+    private openerLossFlow: DynamicCheckoutOpenerLossFlow | null = null
 
     constructor(
       processOutInstance: ProcessOut,
@@ -89,10 +90,16 @@ module ProcessOut {
           customer_token_id: apm_customer_token.customer_token_id,
         })
 
+        this.resetOpenerLossFlow()
+
         const actionStartedAt = Date.now()
         return this.processOutInstance.handleAction(
           redirectUrl,
           paymentToken => {
+            if (this.isOpenerLossResolved()) {
+              return
+            }
+
             this.processOutInstance.makeCardPayment(
               invoiceId,
               paymentToken,
@@ -171,7 +178,7 @@ module ProcessOut {
             )
           },
           error => {
-            if (this.handleOpenerLoss(error, actionStartedAt)) {
+            if (this.isOpenerLossResolved() || this.handleOpenerLoss(error, actionStartedAt)) {
               return
             }
 
@@ -235,11 +242,12 @@ module ProcessOut {
 
     /**
      * Must run first in the handleAction error callback: PO.js refocuses the window right after it.
-     * Returns true when the tab_closed was a lost opener and DC shows pending instead of cancelled.
+     * Returns true when the opener-loss flow took over: pending for a lost opener, or a status check before
+     * "payment cancelled" for a real close (`on` mode only).
      */
     private handleOpenerLoss(error: Exception, actionStartedAt: number): boolean {
       const { apm_customer_token } = this.paymentMethod
-      const isOpenerLoss = DynamicCheckoutOpenerLossUtils.isOpenerLoss(
+      const handling = DynamicCheckoutOpenerLossUtils.getTabClosedHandling(
         this.processOutInstance,
         error,
         {
@@ -249,14 +257,36 @@ module ProcessOut {
           actionStartedAt,
         },
       )
-      if (!isOpenerLoss) {
+      if (handling === "cancel") {
         return false
       }
 
-      this.resetContainerHtml().appendChild(
-        new DynamicCheckoutPaymentPendingView(this.processOutInstance, this.paymentConfig).element,
-      )
+      this.openerLossFlow = new DynamicCheckoutOpenerLossFlow({
+        processOutInstance: this.processOutInstance,
+        paymentConfig: this.paymentConfig,
+        resetContainerHtml: this.resetContainerHtml,
+        gatewayName: apm_customer_token.gateway_name,
+        paymentMethodDisplayName: this.paymentMethodDisplayName,
+        customerTokenId: apm_customer_token.customer_token_id,
+      })
+      if (handling === "opener_loss") {
+        this.openerLossFlow.start()
+      } else {
+        this.openerLossFlow.confirmClose()
+      }
       return true
+    }
+
+    private resetOpenerLossFlow() {
+      if (this.openerLossFlow) {
+        this.openerLossFlow.takeOver()
+        this.openerLossFlow = null
+      }
+    }
+
+    // A late postMessage result (token or error) after a lost opener: the first outcome wins.
+    private isOpenerLossResolved(): boolean {
+      return !!this.openerLossFlow && this.openerLossFlow.takeOver()
     }
 
     private handlePaymentSuccess(invoiceId: string, data) {

@@ -24,6 +24,9 @@ module ProcessOut {
     "payment-info-message":
       "Kami sedang memproses pembayaran Anda. Anda dapat menutup jendela ini sekarang.",
     "payment-pending-message": "Pembayaran Anda sedang menunggu.",
+    "payment-awaiting-confirmation-message":
+      "Selesaikan pembayaran di tab lain. Halaman ini akan diperbarui secara otomatis.",
+    "payment-awaiting-confirmation-cancel-button": "Batal",
     "payment-error-generic-message": "Kami tidak dapat memproses pembayaran Anda.",
     "verification-success-message": "Verifikasi ini telah selesai.",
     "verification-cancelled-message": "Verifikasi telah dibatalkan.",

@@ -23,6 +23,9 @@ module ProcessOut {
     "payment-success-message": "Tämä maksu on suoritettu.",
     "payment-info-message": "Käsittelemme maksuasi. Voit nyt sulkea tämän ikkunan.",
     "payment-pending-message": "Maksusi on käsittelyssä.",
+    "payment-awaiting-confirmation-message":
+      "Viimeistele maksu toisella välilehdellä. Tämä sivu päivittyy automaattisesti.",
+    "payment-awaiting-confirmation-cancel-button": "Peruuta",
     "payment-error-generic-message": "Maksuasi ei voitu käsitellä.",
     "verification-success-message": "Tämä vahvistus on suoritettu.",
     "verification-cancelled-message": "Vahvistus on peruutettu.",

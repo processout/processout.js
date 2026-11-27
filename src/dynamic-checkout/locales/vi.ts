@@ -24,6 +24,9 @@ module ProcessOut {
     "payment-info-message":
       "Chúng tôi đang xử lý thanh toán của bạn. Bạn có thể đóng cửa sổ này ngay bây giờ.",
     "payment-pending-message": "Thanh toán của bạn đang chờ xử lý.",
+    "payment-awaiting-confirmation-message":
+      "Hoàn tất thanh toán ở tab còn lại. Trang này sẽ tự động cập nhật.",
+    "payment-awaiting-confirmation-cancel-button": "Hủy",
     "payment-error-generic-message": "Chúng tôi không thể xử lý thanh toán của bạn.",
     "verification-success-message": "Xác minh này đã hoàn tất.",
     "verification-cancelled-message": "Xác minh đã bị hủy.",
