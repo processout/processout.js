@@ -3,6 +3,7 @@ import { CapturedEvent, loadOpenerLossFlow } from "../support/loadNamespace"
 
 const INTERVAL_MS = 3000
 const TIMEOUT_MS = 15 * 60 * 1000
+const CLOSE_CHECK_TIMEOUT_MS = 10 * 1000
 const PAYMENT_SUCCESS = "processout_dynamic_checkout_payment_success"
 const PAYMENT_ERROR = "processout_dynamic_checkout_payment_error"
 const PAYMENT_PENDING = "processout_dynamic_checkout_payment_pending"
@@ -176,6 +177,17 @@ describe("DynamicCheckoutOpenerLossFlow", () => {
     ])
   })
 
+  it("ignores Cancel on the awaiting view left for the merchant redirect after success", () => {
+    const { flow, shownViews } = createFlow(["completed"], { showStatusMessage: false })
+
+    flow.start()
+    const onCancel = flow["view"].args[2]
+    onCancel()
+
+    expect(shownViews()).toEqual(["DynamicCheckoutPaymentAwaitingConfirmationView"])
+    expect(dispatchedEvents.map(event => event.type)).toEqual([PAYMENT_SUCCESS])
+  })
+
   it("takeOver() stops polling and tells whether an outcome was already reported", () => {
     const pending = createFlow(["waiting"])
     pending.flow.start()
@@ -258,6 +270,33 @@ describe("DynamicCheckoutOpenerLossFlow", () => {
       const { flow } = createFlow(["completed"])
 
       flow.confirmClose()
+
+      expect(dispatchedEvents).toEqual([])
+    })
+
+    it("emits payment_cancelled when the status request doesn't answer within 10 s, and ignores a late answer", () => {
+      const { flow, shownViews, respondNow } = createFlow(["completed"], { respond: false })
+
+      flow.confirmClose()
+      vi.advanceTimersByTime(CLOSE_CHECK_TIMEOUT_MS - 1)
+      expect(dispatchedEvents).toEqual([])
+
+      vi.advanceTimersByTime(1)
+      respondNow()
+
+      expect(shownViews()).toEqual([
+        "DynamicCheckoutInvoiceLoadingView",
+        "DynamicCheckoutPaymentCancelledView",
+      ])
+      expect(dispatchedEvents.map(event => event.type)).toEqual([PAYMENT_CANCELLED])
+    })
+
+    it("emits nothing at the 10 s deadline when a new attempt took over", () => {
+      const { flow } = createFlow(["completed"], { respond: false })
+
+      flow.confirmClose()
+      flow.takeOver()
+      vi.advanceTimersByTime(CLOSE_CHECK_TIMEOUT_MS)
 
       expect(dispatchedEvents).toEqual([])
     })

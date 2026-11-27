@@ -10,6 +10,8 @@ module ProcessOut {
   export const TRANSACTION_POLLING_BACKOFF_FACTOR = 1.5
   // Same as the APM v2 default timeout.
   export const TRANSACTION_POLLING_TIMEOUT_MS = 15 * 60 * 1000
+  // apiRequest has no XHR timeout: a request that never answers counts as an error after this, so polling goes on.
+  export const TRANSACTION_POLLING_REQUEST_TIMEOUT_MS = 30 * 1000
 
   export type PolledTransaction = {
     status: string
@@ -30,6 +32,7 @@ module ProcessOut {
     intervalMs?: number
     maxIntervalMs?: number
     timeoutMs?: number
+    requestTimeoutMs?: number
     now?: () => number
     win?: Window
     doc?: Document
@@ -43,7 +46,9 @@ module ProcessOut {
     private options: DynamicCheckoutTransactionPollerOptions
     private startedAt = 0
     private timer: number | null = null
+    private requestTimer: number | null = null
     private requestInFlight = false
+    private requestCount = 0
     private delayMs = 0
     private finished = false
 
@@ -64,6 +69,7 @@ module ProcessOut {
     public stop() {
       this.finished = true
       this.clearTimer()
+      this.clearRequestTimer()
       this.getWindow().removeEventListener("focus", this.onPageActive)
       this.getDocument().removeEventListener("visibilitychange", this.onPageActive)
     }
@@ -107,19 +113,21 @@ module ProcessOut {
 
       this.clearTimer()
       this.requestInFlight = true
+      const request = ++this.requestCount
+      const remainingMs = this.getTimeoutMs() - (this.now() - this.startedAt)
+      this.requestTimer = this.getWindow().setTimeout(
+        () => this.finishRequest(request, null),
+        Math.min(this.getRequestTimeoutMs(), remainingMs),
+      )
       this.options.processOutInstance.apiRequest(
         "GET",
         `invoices/${this.options.invoiceId}?expand=transaction`,
         {},
-        data => {
-          this.requestInFlight = false
-          this.handleTransaction(data && data.invoice ? data.invoice.transaction : null)
-        },
-        () => {
-          this.requestInFlight = false
-          this.scheduleNext()
-          this.growDelay()
-        },
+        data =>
+          this.finishRequest(request, {
+            transaction: data && data.invoice ? data.invoice.transaction : null,
+          }),
+        () => this.finishRequest(request, null),
         0,
         {
           isLegacy: false,
@@ -128,8 +136,31 @@ module ProcessOut {
       )
     }
 
+    // response is null for a request error or timeout. A response after the request timed out is ignored.
+    private finishRequest(
+      request: number,
+      response: { transaction: PolledTransaction | null } | null,
+    ) {
+      if (request !== this.requestCount || !this.requestInFlight) {
+        return
+      }
+      this.requestInFlight = false
+      this.clearRequestTimer()
+
+      if (response) {
+        this.handleTransaction(response.transaction)
+        return
+      }
+      this.scheduleNext()
+      this.growDelay()
+    }
+
     private handleTransaction(transaction: PolledTransaction | null) {
       if (this.finished) {
+        return
+      }
+      if (!this.options.isMounted()) {
+        this.stop()
         return
       }
 
@@ -183,12 +214,23 @@ module ProcessOut {
       }
     }
 
+    private clearRequestTimer() {
+      if (this.requestTimer !== null) {
+        this.getWindow().clearTimeout(this.requestTimer)
+        this.requestTimer = null
+      }
+    }
+
     private isPageVisible() {
       return this.getDocument().visibilityState === "visible"
     }
 
     private getTimeoutMs() {
       return this.options.timeoutMs || TRANSACTION_POLLING_TIMEOUT_MS
+    }
+
+    private getRequestTimeoutMs() {
+      return this.options.requestTimeoutMs || TRANSACTION_POLLING_REQUEST_TIMEOUT_MS
     }
 
     private now() {

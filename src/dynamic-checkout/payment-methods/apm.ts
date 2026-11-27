@@ -192,7 +192,7 @@ module ProcessOut {
           )
         },
         error => {
-          if (this.handleOpenerLoss(error, actionStartedAt)) {
+          if (this.isOpenerLossResolved() || this.handleOpenerLoss(error, actionStartedAt)) {
             return
           }
 
@@ -391,7 +391,10 @@ module ProcessOut {
               )
             },
             error => {
-              if (this.handleOpenerLoss(error, actionStartedAt)) {
+              if (
+                this.isOpenerLossResolved() ||
+                this.handleOpenerLoss(error, actionStartedAt, data.customer_token_id)
+              ) {
                 return
               }
 
@@ -477,7 +480,11 @@ module ProcessOut {
      * Returns true when the opener-loss flow took over: pending for a lost opener, or a status check before
      * "payment cancelled" for a real close (`on` mode only).
      */
-    private handleOpenerLoss(error: Exception, actionStartedAt: number): boolean {
+    private handleOpenerLoss(
+      error: Exception,
+      actionStartedAt: number,
+      customerTokenId?: string,
+    ): boolean {
       const { apm } = this.paymentMethod
       const handling = DynamicCheckoutOpenerLossUtils.getTabClosedHandling(
         this.processOutInstance,
@@ -499,6 +506,7 @@ module ProcessOut {
         resetContainerHtml: this.resetContainerHtml,
         gatewayName: apm.gateway_name,
         paymentMethodDisplayName: this.paymentMethodDisplayName,
+        customerTokenId,
       })
       if (handling === "opener_loss") {
         this.openerLossFlow.start()
@@ -515,7 +523,7 @@ module ProcessOut {
       }
     }
 
-    // A late postMessage token after a lost opener: the first outcome wins.
+    // A late postMessage result (token or error) after a lost opener: the first outcome wins.
     private isOpenerLossResolved(): boolean {
       return !!this.openerLossFlow && this.openerLossFlow.takeOver()
     }

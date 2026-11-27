@@ -5,6 +5,7 @@ const INTERVAL_MS = 3000
 const MAX_INTERVAL_MS = 30 * 1000
 const BACKOFF_FACTOR = 1.5
 const TIMEOUT_MS = 15 * 60 * 1000
+const REQUEST_TIMEOUT_MS = 30 * 1000
 
 // Start times of the checks while the page stays visible: 0, 3 s, 7.5 s, … with the interval capped at 30 s.
 function checkTimesUntil(endMs: number): number[] {
@@ -271,6 +272,54 @@ describe("DynamicCheckoutTransactionPoller", () => {
     pendingSuccess!({ invoice: { transaction: { status: "completed" } } })
 
     expect(h.callbacks.onSuccess).not.toHaveBeenCalled()
+  })
+
+  it("counts a request that never answers as an error after 30 s and polls again", () => {
+    let lateSuccess: ((data: any) => void) | null = null
+    const h = createHarness([{ status: "completed" }])
+    h.apiRequest.mockImplementationOnce((_m, _p, _d, success) => {
+      lateSuccess = success
+    })
+
+    h.poller.start()
+    h.fire("focus")
+    vi.advanceTimersByTime(REQUEST_TIMEOUT_MS - 1)
+    expect(h.apiRequest).toHaveBeenCalledOnce()
+
+    vi.advanceTimersByTime(1 + INTERVAL_MS)
+    expect(h.apiRequest).toHaveBeenCalledTimes(2)
+    expect(h.callbacks.onSuccess).toHaveBeenCalledOnce()
+
+    lateSuccess!({ invoice: { transaction: { status: "failed" } } })
+    expect(h.callbacks.onFailure).not.toHaveBeenCalled()
+  })
+
+  it("times out after 15 min even when requests never answer", () => {
+    const h = createHarness([{ status: "waiting" }])
+    h.apiRequest.mockImplementation(() => {})
+
+    h.poller.start()
+    vi.advanceTimersByTime(TIMEOUT_MS - 1)
+    expect(h.callbacks.onTimeout).not.toHaveBeenCalled()
+
+    vi.advanceTimersByTime(1)
+    expect(h.callbacks.onTimeout).toHaveBeenCalledOnce()
+  })
+
+  it("ignores a final status that arrives after the widget was removed", () => {
+    let pendingSuccess: ((data: any) => void) | null = null
+    const h = createHarness([{ status: "waiting" }])
+    h.apiRequest.mockImplementationOnce((_m, _p, _d, success) => {
+      pendingSuccess = success
+    })
+
+    h.poller.start()
+    h.unmount()
+    pendingSuccess!({ invoice: { transaction: { status: "completed" } } })
+
+    expect(h.callbacks.onSuccess).not.toHaveBeenCalled()
+    expect(h.poller.isFinished()).toBe(true)
+    expect(h.listenerCount()).toBe(0)
   })
 })
 

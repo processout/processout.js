@@ -1,5 +1,7 @@
 module ProcessOut {
   export const OPENER_LOSS_PENDING_REASON = "opener_isolated"
+  // apiRequest has no XHR timeout: without an answer by then, the close check falls back to "payment cancelled".
+  export const OPENER_LOSS_CLOSE_CHECK_TIMEOUT_MS = 10 * 1000
 
   export type DynamicCheckoutOpenerLossFlowOptions = {
     processOutInstance: ProcessOut
@@ -20,6 +22,7 @@ module ProcessOut {
     private poller: DynamicCheckoutTransactionPoller | null = null
     private view: Element | null = null
     private closeCheckPending = false
+    private closeCheckTimer: number | null = null
     private closeCheckReported = false
 
     constructor(options: DynamicCheckoutOpenerLossFlowOptions) {
@@ -58,6 +61,10 @@ module ProcessOut {
       this.view = new DynamicCheckoutInvoiceLoadingView(paymentConfig.locale).element
       this.options.resetContainerHtml().appendChild(this.view)
       this.closeCheckPending = true
+      this.closeCheckTimer = window.setTimeout(
+        () => this.finishCloseCheck(null),
+        OPENER_LOSS_CLOSE_CHECK_TIMEOUT_MS,
+      )
 
       processOutInstance.apiRequest(
         "GET",
@@ -80,6 +87,7 @@ module ProcessOut {
     public takeOver(): boolean {
       if (this.closeCheckPending) {
         this.closeCheckPending = false
+        this.clearCloseCheckTimer()
         return false
       }
       if (!this.poller) {
@@ -95,6 +103,7 @@ module ProcessOut {
         return
       }
       this.closeCheckPending = false
+      this.clearCloseCheckTimer()
       if (!this.view || !document.body.contains(this.view)) {
         return
       }
@@ -107,9 +116,20 @@ module ProcessOut {
       }
     }
 
+    // The awaiting view stays mounted after success when the merchant redirects, so Cancel must not report a second outcome.
     private cancel() {
+      if (this.poller.isFinished()) {
+        return
+      }
       this.poller.stop()
       this.showCancelled()
+    }
+
+    private clearCloseCheckTimer() {
+      if (this.closeCheckTimer !== null) {
+        window.clearTimeout(this.closeCheckTimer)
+        this.closeCheckTimer = null
+      }
     }
 
     private showCancelled() {

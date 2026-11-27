@@ -178,7 +178,7 @@ module ProcessOut {
             )
           },
           error => {
-            if (this.handleOpenerLoss(error, actionStartedAt)) {
+            if (this.isOpenerLossResolved() || this.handleOpenerLoss(error, actionStartedAt)) {
               return
             }
 
@@ -284,7 +284,7 @@ module ProcessOut {
       }
     }
 
-    // A late postMessage token after a lost opener: the first outcome wins.
+    // A late postMessage result (token or error) after a lost opener: the first outcome wins.
     private isOpenerLossResolved(): boolean {
       return !!this.openerLossFlow && this.openerLossFlow.takeOver()
     }
